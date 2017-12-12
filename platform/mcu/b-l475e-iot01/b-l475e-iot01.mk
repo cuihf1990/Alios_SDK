@@ -7,9 +7,9 @@
 #  permission of MXCHIP Corporation.
 #
 
-NAME := STM32L4xx
+NAME := b-l475e-iot01
 
-HOST_OPENOCD := stm32l4x
+HOST_OPENOCD := b-l475e-iot01
 
 STM32_NONSTD_SOCKET := true
 
@@ -26,19 +26,24 @@ GLOBAL_DEFINES += CONFIG_AOS_KV_SECOND_PTN=7
 GLOBAL_DEFINES += CONFIG_AOS_KV_PTN_SIZE=4096
 GLOBAL_DEFINES += CONFIG_AOS_KV_BUFFER_SIZE=8192
 
-GLOBAL_INCLUDES += ../../arch/arm/armv7m/gcc/m4 \
-                   ../../../include/hal
-GLOBAL_INCLUDES += include \
-                   startup    \
-                   driver  \
-                   bsp/B-L475E-IOT01 \
-                   bsp/Components/es_wifi \
-                   bsp/Components/hts221 \
-                   bsp/Components/lis3mdl \
-                   bsp/Components/lps22hb \
-                   bsp/Components/lsm6dsl \
-                   bsp/Components/vl53l0x \
-                   wifi/inc
+GLOBAL_INCLUDES += ../../arch/arm/armv7m/gcc/m4 
+
+GLOBAL_INCLUDES +=		\
+				   src/common/csp/wifi/inc	\
+				   src/B-L475E-IOT01/include \
+                   src/B-L475E-IOT01/runapp    \
+                   Drivers/STM32L4xx_HAL_Driver/Inc  \
+				   Drivers/STM32L4xx_HAL_Driver/Inc/Legacy	\
+                   Drivers/BSP/B-L475E-IOT01 \
+                   Drivers/BSP/Components/es_wifi \
+                   Drivers/BSP/Components/hts221 \
+                   Drivers/BSP/Components/lis3mdl \
+                   Drivers/BSP/Components/lps22hb \
+                   Drivers/BSP/Components/lsm6dsl \
+                   Drivers/BSP/Components/vl53l0x \
+				   Drivers/CMSIS/Include \
+				   ../../../include/hal	
+				   
 
 
 GLOBAL_CFLAGS += -DSTM32L475xx 
@@ -61,63 +66,64 @@ $(NAME)_CFLAGS  += -Wall -Werror
 
 GLOBAL_LDFLAGS += -T platform/mcu/b-l475e-iot01/STM32L475VGTx_FLASH.ld
 
-$(NAME)_SOURCES := startup/startup_stm32l475xx.s \
-                   startup/stm32l4xx_hal_msp.c      \
-                   startup/stm32l4xx_it.c           \
-                   startup/soc_init.c          \
-                   cmsis/system_stm32l4xx.c      \
-                   driver/stm32l4xx_hal.c        \
-                   driver/flash_l4.c  \
-                   driver/stm32l4xx_hal_flash.c  \
-                   driver/stm32l4xx_hal_flash_ex.c \
-                   driver/stm32l4xx_hal_flash_ramfunc.c \
-                   driver/stm32l4xx_hal_i2c.c    \
-                   driver/stm32l4xx_hal_i2c_ex.c \
-                   driver/stm32l4xx_hal_pwr.c    \
-                   driver/stm32l4xx_hal_qspi.c   \
-                   driver/stm32l4xx_hal_rcc_ex.c \
-                   driver/stm32l4xx_hal_rng.c    \
-                   driver/stm32l4xx_hal_rtc.c    \
-                   driver/stm32l4xx_hal_rtc_ex.c \
-                   driver/stm32l4xx_hal_spi.c    \
-                   driver/stm32l4xx_hal_spi_ex.c \
-                   driver/stm32l4xx_hal_rcc.c    \
-                   driver/stm32l4xx_hal_uart.c   \
-                   driver/stm32l4xx_hal_uart_ex.c  \
-                   driver/stm32l4xx_hal_gpio.c   \
-                   driver/stm32l4xx_hal_dma.c    \
-                   driver/stm32l4xx_hal_pwr_ex.c \
-                   driver/stm32l4xx_hal_cortex.c \
-                   bsp/B-L475E-IOT01/stm32l475e_iot01_accelero.c \
-                   bsp/B-L475E-IOT01/stm32l475e_iot01_gyro.c \
-                   bsp/B-L475E-IOT01/stm32l475e_iot01_hsensor.c \
-                   bsp/B-L475E-IOT01/stm32l475e_iot01_magneto.c \
-                   bsp/B-L475E-IOT01/stm32l475e_iot01_psensor.c \
-                   bsp/B-L475E-IOT01/stm32l475e_iot01_tsensor.c \
-                   bsp/B-L475E-IOT01/stm32l475e_iot01.c \
-                   bsp/Components/es_wifi/es_wifi.c \
-                   bsp/Components/hts221/hts221.c \
-                   bsp/Components/lis3mdl/lis3mdl.c \
-                   bsp/Components/lps22hb/lps22hb.c \
-                   bsp/Components/lsm6dsl/lsm6dsl.c \
-                   bsp/Components/vl53l0x/vl53l0x_api.c \
-                   bsp/Components/vl53l0x/vl53l0x_api_calibration.c \
-                   bsp/Components/vl53l0x/vl53l0x_api_core.c \
-                   bsp/Components/vl53l0x/vl53l0x_api_ranging.c \
-                   bsp/Components/vl53l0x/vl53l0x_api_strings.c \
-                   bsp/Components/vl53l0x/vl53l0x_platform_log.c \
+$(NAME)_SOURCES := src/B-L475E-IOT01/runapp/startup_stm32l475xx_gcc.s \
+                   src/B-L475E-IOT01/runapp/stm32l4xx_hal_msp.c      \
+                   src/B-L475E-IOT01/runapp/stm32l4xx_it.c           \
+                   src/B-L475E-IOT01/runapp/soc_init.c          \
+                   src/B-L475E-IOT01/runapp/system_stm32l4xx.c      \
+                   Drivers/STM32L4xx_HAL_Driver/Src/stm32l4xx_hal.c        \
+                   src/B-L475E-IOT01/hal/flash_l4.c  \
+                   Drivers/STM32L4xx_HAL_Driver/Src/stm32l4xx_hal_flash.c  \
+                   Drivers/STM32L4xx_HAL_Driver/Src/stm32l4xx_hal_flash_ex.c \
+                   Drivers/STM32L4xx_HAL_Driver/Src/stm32l4xx_hal_flash_ramfunc.c \
+                   Drivers/STM32L4xx_HAL_Driver/Src/stm32l4xx_hal_i2c.c    \
+                   Drivers/STM32L4xx_HAL_Driver/Src/stm32l4xx_hal_i2c_ex.c \
+                   Drivers/STM32L4xx_HAL_Driver/Src/stm32l4xx_hal_pwr.c    \
+                   Drivers/STM32L4xx_HAL_Driver/Src/stm32l4xx_hal_qspi.c   \
+                   Drivers/STM32L4xx_HAL_Driver/Src/stm32l4xx_hal_rcc_ex.c \
+                   Drivers/STM32L4xx_HAL_Driver/Src/stm32l4xx_hal_rng.c    \
+                   Drivers/STM32L4xx_HAL_Driver/Src/stm32l4xx_hal_rtc.c    \
+                   Drivers/STM32L4xx_HAL_Driver/Src/stm32l4xx_hal_rtc_ex.c \
+                   Drivers/STM32L4xx_HAL_Driver/Src/stm32l4xx_hal_spi.c    \
+                   Drivers/STM32L4xx_HAL_Driver/Src/stm32l4xx_hal_spi_ex.c \
+                   Drivers/STM32L4xx_HAL_Driver/Src/stm32l4xx_hal_rcc.c    \
+                   Drivers/STM32L4xx_HAL_Driver/Src/stm32l4xx_hal_uart.c   \
+                   Drivers/STM32L4xx_HAL_Driver/Src/stm32l4xx_hal_uart_ex.c  \
+                   Drivers/STM32L4xx_HAL_Driver/Src/stm32l4xx_hal_gpio.c   \
+                   Drivers/STM32L4xx_HAL_Driver/Src/stm32l4xx_hal_dma.c    \
+                   Drivers/STM32L4xx_HAL_Driver/Src/stm32l4xx_hal_pwr_ex.c \
+                   Drivers/STM32L4xx_HAL_Driver/Src/stm32l4xx_hal_cortex.c \
+                   Drivers/BSP/B-L475E-IOT01/stm32l475e_iot01_accelero.c \
+                   Drivers/BSP/B-L475E-IOT01/stm32l475e_iot01_gyro.c \
+                   Drivers/BSP/B-L475E-IOT01/stm32l475e_iot01_hsensor.c \
+                   Drivers/BSP/B-L475E-IOT01/stm32l475e_iot01_magneto.c \
+                   Drivers/BSP/B-L475E-IOT01/stm32l475e_iot01_psensor.c \
+                   Drivers/BSP/B-L475E-IOT01/stm32l475e_iot01_tsensor.c \
+                   Drivers/BSP/B-L475E-IOT01/stm32l475e_iot01.c \
+                   Drivers/BSP/Components/es_wifi/es_wifi.c \
+                   Drivers/BSP/Components/hts221/hts221.c \
+                   Drivers/BSP/Components/lis3mdl/lis3mdl.c \
+                   Drivers/BSP/Components/lps22hb/lps22hb.c \
+                   Drivers/BSP/Components/lsm6dsl/lsm6dsl.c \
+                   Drivers/BSP/Components/vl53l0x/vl53l0x_api.c \
+                   Drivers/BSP/Components/vl53l0x/vl53l0x_api_calibration.c \
+                   Drivers/BSP/Components/vl53l0x/vl53l0x_api_core.c \
+                   Drivers/BSP/Components/vl53l0x/vl53l0x_api_ranging.c \
+                   Drivers/BSP/Components/vl53l0x/vl53l0x_api_strings.c \
+                   Drivers/BSP/Components/vl53l0x/vl53l0x_platform_log.c \
                    aos/soc_impl.c                \
                    aos/trace_impl.c             \
-                   aos/aos.c                    \
-                   wifi/src/es_wifi_io.c        \
-                   wifi/src/wifi.c              \
-                   hal/hw.c                     \
-                   hal/wifi_port.c              \
-                   hal/flash_port.c              \
-                   hal/ota_port.c              \
-                   hal/hal_i2c_stm32l4.c       \
-                   sensor/vl53l0x_platform.c \
-                   sensor/vl53l0x_proximity.c \
-                   sensor/sensors_data.c \
-                   sensor/sensors.c \
-                   sensor/qspi.c \
+                   src/B-L475E-IOT01/runapp/aos.c                    \
+                   src/common/csp/wifi/src/es_wifi_io.c        \
+                   src/common/csp/wifi/src/wifi.c              \
+                   src/B-L475E-IOT01/hal/hw.c                     \
+                   src/B-L475E-IOT01/hal/wifi_port.c              \
+                   src/B-L475E-IOT01/hal/flash_port.c              \
+                   src/B-L475E-IOT01/hal/ota_port.c              \
+                   src/B-L475E-IOT01/hal/hal_i2c_stm32l4.c       \
+                   src/B-L475E-IOT01/sensor/vl53l0x_platform.c \
+                   src/B-L475E-IOT01/sensor/vl53l0x_proximity.c \
+                   src/B-L475E-IOT01/sensor/sensors_data.c \
+                   src/B-L475E-IOT01/sensor/sensors.c \
+                   src/B-L475E-IOT01/sensor/qspi.c 
+
