@@ -3,7 +3,7 @@ NAME := yts
 $(NAME)_SOURCES := main.c
 $(NAME)_COMPONENTS := testcase rhino.test log vfs yloop hal
 
-$(NAME)_CFLAGS += -Wall -Werror
+$(NAME)_CFLAGS += -Wall -Werror -Wno-unused-variable
 
 ifneq (,$(findstring linux, $(BUILD_STRING)))
 $(NAME)_COMPONENTS += protocols.net protocols.mesh dda netmgr modules.fs.fatfs framework.common
