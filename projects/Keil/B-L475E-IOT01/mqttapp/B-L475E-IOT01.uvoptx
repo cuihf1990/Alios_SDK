@@ -203,7 +203,7 @@
   </Target>
 
   <Group>
-    <GroupName>platform/mcu/stm32l4xx/bsp/B-L475E-IOT01</GroupName>
+    <GroupName>platform/mcu/B-L475E-IOT01/bsp/B-L475E-IOT01</GroupName>
     <tvExp>0</tvExp>
     <tvExpOptDlg>0</tvExpOptDlg>
     <cbSel>0</cbSel>
@@ -215,7 +215,7 @@
       <tvExp>0</tvExp>
       <tvExpOptDlg>0</tvExpOptDlg>
       <bDave2>0</bDave2>
-      <PathWithFileName>..\..\..\..\platform\mcu\stm32l4xx\bsp\B-L475E-IOT01\stm32l475e_iot01.c</PathWithFileName>
+      <PathWithFileName>..\..\..\..\platform\mcu\B-L475E-IOT01\bsp\B-L475E-IOT01\stm32l475e_iot01.c</PathWithFileName>
       <FilenameWithoutPath>stm32l475e_iot01.c</FilenameWithoutPath>
       <RteFlg>0</RteFlg>
       <bShared>0</bShared>
@@ -227,7 +227,7 @@
       <tvExp>0</tvExp>
       <tvExpOptDlg>0</tvExpOptDlg>
       <bDave2>0</bDave2>
-      <PathWithFileName>..\..\..\..\platform\mcu\stm32l4xx\bsp\B-L475E-IOT01\stm32l475e_iot01_accelero.c</PathWithFileName>
+      <PathWithFileName>..\..\..\..\platform\mcu\B-L475E-IOT01\bsp\B-L475E-IOT01\stm32l475e_iot01_accelero.c</PathWithFileName>
       <FilenameWithoutPath>stm32l475e_iot01_accelero.c</FilenameWithoutPath>
       <RteFlg>0</RteFlg>
       <bShared>0</bShared>
@@ -239,7 +239,7 @@
       <tvExp>0</tvExp>
       <tvExpOptDlg>0</tvExpOptDlg>
       <bDave2>0</bDave2>
-      <PathWithFileName>..\..\..\..\platform\mcu\stm32l4xx\bsp\B-L475E-IOT01\stm32l475e_iot01_gyro.c</PathWithFileName>
+      <PathWithFileName>..\..\..\..\platform\mcu\B-L475E-IOT01\bsp\B-L475E-IOT01\stm32l475e_iot01_gyro.c</PathWithFileName>
       <FilenameWithoutPath>stm32l475e_iot01_gyro.c</FilenameWithoutPath>
       <RteFlg>0</RteFlg>
       <bShared>0</bShared>
@@ -251,7 +251,7 @@
       <tvExp>0</tvExp>
       <tvExpOptDlg>0</tvExpOptDlg>
       <bDave2>0</bDave2>
-      <PathWithFileName>..\..\..\..\platform\mcu\stm32l4xx\bsp\B-L475E-IOT01\stm32l475e_iot01_hsensor.c</PathWithFileName>
+      <PathWithFileName>..\..\..\..\platform\mcu\B-L475E-IOT01\bsp\B-L475E-IOT01\stm32l475e_iot01_hsensor.c</PathWithFileName>
       <FilenameWithoutPath>stm32l475e_iot01_hsensor.c</FilenameWithoutPath>
       <RteFlg>0</RteFlg>
       <bShared>0</bShared>
@@ -263,7 +263,7 @@
       <tvExp>0</tvExp>
       <tvExpOptDlg>0</tvExpOptDlg>
       <bDave2>0</bDave2>
-      <PathWithFileName>..\..\..\..\platform\mcu\stm32l4xx\bsp\B-L475E-IOT01\stm32l475e_iot01_magneto.c</PathWithFileName>
+      <PathWithFileName>..\..\..\..\platform\mcu\B-L475E-IOT01\bsp\B-L475E-IOT01\stm32l475e_iot01_magneto.c</PathWithFileName>
       <FilenameWithoutPath>stm32l475e_iot01_magneto.c</FilenameWithoutPath>
       <RteFlg>0</RteFlg>
       <bShared>0</bShared>
@@ -275,7 +275,7 @@
       <tvExp>0</tvExp>
       <tvExpOptDlg>0</tvExpOptDlg>
       <bDave2>0</bDave2>
-      <PathWithFileName>..\..\..\..\platform\mcu\stm32l4xx\bsp\B-L475E-IOT01\stm32l475e_iot01_psensor.c</PathWithFileName>
+      <PathWithFileName>..\..\..\..\platform\mcu\B-L475E-IOT01\bsp\B-L475E-IOT01\stm32l475e_iot01_psensor.c</PathWithFileName>
       <FilenameWithoutPath>stm32l475e_iot01_psensor.c</FilenameWithoutPath>
       <RteFlg>0</RteFlg>
       <bShared>0</bShared>
@@ -287,7 +287,7 @@
       <tvExp>0</tvExp>
       <tvExpOptDlg>0</tvExpOptDlg>
       <bDave2>0</bDave2>
-      <PathWithFileName>..\..\..\..\platform\mcu\stm32l4xx\bsp\B-L475E-IOT01\stm32l475e_iot01_qspi.c</PathWithFileName>
+      <PathWithFileName>..\..\..\..\platform\mcu\B-L475E-IOT01\bsp\B-L475E-IOT01\stm32l475e_iot01_qspi.c</PathWithFileName>
       <FilenameWithoutPath>stm32l475e_iot01_qspi.c</FilenameWithoutPath>
       <RteFlg>0</RteFlg>
       <bShared>0</bShared>
@@ -299,7 +299,7 @@
       <tvExp>0</tvExp>
       <tvExpOptDlg>0</tvExpOptDlg>
       <bDave2>0</bDave2>
-      <PathWithFileName>..\..\..\..\platform\mcu\stm32l4xx\bsp\B-L475E-IOT01\stm32l475e_iot01_tsensor.c</PathWithFileName>
+      <PathWithFileName>..\..\..\..\platform\mcu\B-L475E-IOT01\bsp\B-L475E-IOT01\stm32l475e_iot01_tsensor.c</PathWithFileName>
       <FilenameWithoutPath>stm32l475e_iot01_tsensor.c</FilenameWithoutPath>
       <RteFlg>0</RteFlg>
       <bShared>0</bShared>
@@ -307,7 +307,7 @@
   </Group>
 
   <Group>
-    <GroupName>platform/mcu/stm32l4xx/bsp/Components/es_wifi</GroupName>
+    <GroupName>platform/mcu/B-L475E-IOT01/bsp/Components/es_wifi</GroupName>
     <tvExp>0</tvExp>
     <tvExpOptDlg>0</tvExpOptDlg>
     <cbSel>0</cbSel>
@@ -319,7 +319,7 @@
       <tvExp>0</tvExp>
       <tvExpOptDlg>0</tvExpOptDlg>
       <bDave2>0</bDave2>
-      <PathWithFileName>..\..\..\..\platform\mcu\stm32l4xx\bsp\Components\es_wifi\es_wifi.c</PathWithFileName>
+      <PathWithFileName>..\..\..\..\platform\mcu\B-L475E-IOT01\bsp\Components\es_wifi\es_wifi.c</PathWithFileName>
       <FilenameWithoutPath>es_wifi.c</FilenameWithoutPath>
       <RteFlg>0</RteFlg>
       <bShared>0</bShared>
@@ -327,7 +327,7 @@
   </Group>
 
   <Group>
-    <GroupName>platform/mcu/stm32l4xx/bsp/Components/hts221</GroupName>
+    <GroupName>platform/mcu/B-L475E-IOT01/bsp/Components/hts221</GroupName>
     <tvExp>0</tvExp>
     <tvExpOptDlg>0</tvExpOptDlg>
     <cbSel>0</cbSel>
@@ -339,7 +339,7 @@
       <tvExp>0</tvExp>
       <tvExpOptDlg>0</tvExpOptDlg>
       <bDave2>0</bDave2>
-      <PathWithFileName>..\..\..\..\platform\mcu\stm32l4xx\bsp\Components\hts221\hts221.c</PathWithFileName>
+      <PathWithFileName>..\..\..\..\platform\mcu\B-L475E-IOT01\bsp\Components\hts221\hts221.c</PathWithFileName>
       <FilenameWithoutPath>hts221.c</FilenameWithoutPath>
       <RteFlg>0</RteFlg>
       <bShared>0</bShared>
@@ -347,7 +347,7 @@
   </Group>
 
   <Group>
-    <GroupName>platform/mcu/stm32l4xx/bsp/Components/lis3mdl</GroupName>
+    <GroupName>platform/mcu/B-L475E-IOT01/bsp/Components/lis3mdl</GroupName>
     <tvExp>0</tvExp>
     <tvExpOptDlg>0</tvExpOptDlg>
     <cbSel>0</cbSel>
@@ -359,7 +359,7 @@
       <tvExp>0</tvExp>
       <tvExpOptDlg>0</tvExpOptDlg>
       <bDave2>0</bDave2>
-      <PathWithFileName>..\..\..\..\platform\mcu\stm32l4xx\bsp\Components\lis3mdl\lis3mdl.c</PathWithFileName>
+      <PathWithFileName>..\..\..\..\platform\mcu\B-L475E-IOT01\bsp\Components\lis3mdl\lis3mdl.c</PathWithFileName>
       <FilenameWithoutPath>lis3mdl.c</FilenameWithoutPath>
       <RteFlg>0</RteFlg>
       <bShared>0</bShared>
@@ -367,7 +367,7 @@
   </Group>
 
   <Group>
-    <GroupName>platform/mcu/stm32l4xx/bsp/Components/lps22hb</GroupName>
+    <GroupName>platform/mcu/B-L475E-IOT01/bsp/Components/lps22hb</GroupName>
     <tvExp>0</tvExp>
     <tvExpOptDlg>0</tvExpOptDlg>
     <cbSel>0</cbSel>
@@ -379,7 +379,7 @@
       <tvExp>0</tvExp>
       <tvExpOptDlg>0</tvExpOptDlg>
       <bDave2>0</bDave2>
-      <PathWithFileName>..\..\..\..\platform\mcu\stm32l4xx\bsp\Components\lps22hb\lps22hb.c</PathWithFileName>
+      <PathWithFileName>..\..\..\..\platform\mcu\B-L475E-IOT01\bsp\Components\lps22hb\lps22hb.c</PathWithFileName>
       <FilenameWithoutPath>lps22hb.c</FilenameWithoutPath>
       <RteFlg>0</RteFlg>
       <bShared>0</bShared>
@@ -387,7 +387,7 @@
   </Group>
 
   <Group>
-    <GroupName>platform/mcu/stm32l4xx/bsp/Components/lsm6dsl</GroupName>
+    <GroupName>platform/mcu/B-L475E-IOT01/bsp/Components/lsm6dsl</GroupName>
     <tvExp>0</tvExp>
     <tvExpOptDlg>0</tvExpOptDlg>
     <cbSel>0</cbSel>
@@ -399,7 +399,7 @@
       <tvExp>0</tvExp>
       <tvExpOptDlg>0</tvExpOptDlg>
       <bDave2>0</bDave2>
-      <PathWithFileName>..\..\..\..\platform\mcu\stm32l4xx\bsp\Components\lsm6dsl\lsm6dsl.c</PathWithFileName>
+      <PathWithFileName>..\..\..\..\platform\mcu\B-L475E-IOT01\bsp\Components\lsm6dsl\lsm6dsl.c</PathWithFileName>
       <FilenameWithoutPath>lsm6dsl.c</FilenameWithoutPath>
       <RteFlg>0</RteFlg>
       <bShared>0</bShared>
@@ -407,7 +407,7 @@
   </Group>
 
   <Group>
-    <GroupName>platform/mcu/stm32l4xx/bsp/Components/vl53l0x</GroupName>
+    <GroupName>platform/mcu/B-L475E-IOT01/bsp/Components/vl53l0x</GroupName>
     <tvExp>0</tvExp>
     <tvExpOptDlg>0</tvExpOptDlg>
     <cbSel>0</cbSel>
@@ -419,7 +419,7 @@
       <tvExp>0</tvExp>
       <tvExpOptDlg>0</tvExpOptDlg>
       <bDave2>0</bDave2>
-      <PathWithFileName>..\..\..\..\platform\mcu\stm32l4xx\bsp\Components\vl53l0x\vl53l0x_api.c</PathWithFileName>
+      <PathWithFileName>..\..\..\..\platform\mcu\B-L475E-IOT01\bsp\Components\vl53l0x\vl53l0x_api.c</PathWithFileName>
       <FilenameWithoutPath>vl53l0x_api.c</FilenameWithoutPath>
       <RteFlg>0</RteFlg>
       <bShared>0</bShared>
@@ -431,7 +431,7 @@
       <tvExp>0</tvExp>
       <tvExpOptDlg>0</tvExpOptDlg>
       <bDave2>0</bDave2>
-      <PathWithFileName>..\..\..\..\platform\mcu\stm32l4xx\bsp\Components\vl53l0x\vl53l0x_api_calibration.c</PathWithFileName>
+      <PathWithFileName>..\..\..\..\platform\mcu\B-L475E-IOT01\bsp\Components\vl53l0x\vl53l0x_api_calibration.c</PathWithFileName>
       <FilenameWithoutPath>vl53l0x_api_calibration.c</FilenameWithoutPath>
       <RteFlg>0</RteFlg>
       <bShared>0</bShared>
@@ -443,7 +443,7 @@
       <tvExp>0</tvExp>
       <tvExpOptDlg>0</tvExpOptDlg>
       <bDave2>0</bDave2>
-      <PathWithFileName>..\..\..\..\platform\mcu\stm32l4xx\bsp\Components\vl53l0x\vl53l0x_api_core.c</PathWithFileName>
+      <PathWithFileName>..\..\..\..\platform\mcu\B-L475E-IOT01\bsp\Components\vl53l0x\vl53l0x_api_core.c</PathWithFileName>
       <FilenameWithoutPath>vl53l0x_api_core.c</FilenameWithoutPath>
       <RteFlg>0</RteFlg>
       <bShared>0</bShared>
@@ -455,7 +455,7 @@
       <tvExp>0</tvExp>
       <tvExpOptDlg>0</tvExpOptDlg>
       <bDave2>0</bDave2>
-      <PathWithFileName>..\..\..\..\platform\mcu\stm32l4xx\bsp\Components\vl53l0x\vl53l0x_api_ranging.c</PathWithFileName>
+      <PathWithFileName>..\..\..\..\platform\mcu\B-L475E-IOT01\bsp\Components\vl53l0x\vl53l0x_api_ranging.c</PathWithFileName>
       <FilenameWithoutPath>vl53l0x_api_ranging.c</FilenameWithoutPath>
       <RteFlg>0</RteFlg>
       <bShared>0</bShared>
@@ -467,7 +467,7 @@
       <tvExp>0</tvExp>
       <tvExpOptDlg>0</tvExpOptDlg>
       <bDave2>0</bDave2>
-      <PathWithFileName>..\..\..\..\platform\mcu\stm32l4xx\bsp\Components\vl53l0x\vl53l0x_api_strings.c</PathWithFileName>
+      <PathWithFileName>..\..\..\..\platform\mcu\B-L475E-IOT01\bsp\Components\vl53l0x\vl53l0x_api_strings.c</PathWithFileName>
       <FilenameWithoutPath>vl53l0x_api_strings.c</FilenameWithoutPath>
       <RteFlg>0</RteFlg>
       <bShared>0</bShared>
@@ -479,7 +479,7 @@
       <tvExp>0</tvExp>
       <tvExpOptDlg>0</tvExpOptDlg>
       <bDave2>0</bDave2>
-      <PathWithFileName>..\..\..\..\platform\mcu\stm32l4xx\bsp\Components\vl53l0x\vl53l0x_platform_log.c</PathWithFileName>
+      <PathWithFileName>..\..\..\..\platform\mcu\B-L475E-IOT01\bsp\Components\vl53l0x\vl53l0x_platform_log.c</PathWithFileName>
       <FilenameWithoutPath>vl53l0x_platform_log.c</FilenameWithoutPath>
       <RteFlg>0</RteFlg>
       <bShared>0</bShared>
@@ -487,7 +487,7 @@
   </Group>
 
   <Group>
-    <GroupName>platform/mcu/stm32l4xx/cmsis</GroupName>
+    <GroupName>platform/mcu/B-L475E-IOT01/cmsis</GroupName>
     <tvExp>0</tvExp>
     <tvExpOptDlg>0</tvExpOptDlg>
     <cbSel>0</cbSel>
@@ -499,7 +499,7 @@
       <tvExp>0</tvExp>
       <tvExpOptDlg>0</tvExpOptDlg>
       <bDave2>0</bDave2>
-      <PathWithFileName>..\..\..\..\platform\mcu\stm32l4xx\cmsis\system_stm32l4xx.c</PathWithFileName>
+      <PathWithFileName>..\..\..\..\platform\mcu\B-L475E-IOT01\cmsis\system_stm32l4xx.c</PathWithFileName>
       <FilenameWithoutPath>system_stm32l4xx.c</FilenameWithoutPath>
       <RteFlg>0</RteFlg>
       <bShared>0</bShared>
@@ -507,7 +507,7 @@
   </Group>
 
   <Group>
-    <GroupName>platform/mcu/stm32l4xx/driver</GroupName>
+    <GroupName>platform/mcu/B-L475E-IOT01/driver</GroupName>
     <tvExp>0</tvExp>
     <tvExpOptDlg>0</tvExpOptDlg>
     <cbSel>0</cbSel>
@@ -519,7 +519,7 @@
       <tvExp>0</tvExp>
       <tvExpOptDlg>0</tvExpOptDlg>
       <bDave2>0</bDave2>
-      <PathWithFileName>..\..\..\..\platform\mcu\stm32l4xx\driver\stm32l4xx_hal.c</PathWithFileName>
+      <PathWithFileName>..\..\..\..\platform\mcu\B-L475E-IOT01\driver\stm32l4xx_hal.c</PathWithFileName>
       <FilenameWithoutPath>stm32l4xx_hal.c</FilenameWithoutPath>
       <RteFlg>0</RteFlg>
       <bShared>0</bShared>
@@ -531,7 +531,7 @@
       <tvExp>0</tvExp>
       <tvExpOptDlg>0</tvExpOptDlg>
       <bDave2>0</bDave2>
-      <PathWithFileName>..\..\..\..\platform\mcu\stm32l4xx\driver\stm32l4xx_hal_cortex.c</PathWithFileName>
+      <PathWithFileName>..\..\..\..\platform\mcu\B-L475E-IOT01\driver\stm32l4xx_hal_cortex.c</PathWithFileName>
       <FilenameWithoutPath>stm32l4xx_hal_cortex.c</FilenameWithoutPath>
       <RteFlg>0</RteFlg>
       <bShared>0</bShared>
@@ -543,7 +543,7 @@
       <tvExp>0</tvExp>
       <tvExpOptDlg>0</tvExpOptDlg>
       <bDave2>0</bDave2>
-      <PathWithFileName>..\..\..\..\platform\mcu\stm32l4xx\driver\stm32l4xx_hal_dma.c</PathWithFileName>
+      <PathWithFileName>..\..\..\..\platform\mcu\B-L475E-IOT01\driver\stm32l4xx_hal_dma.c</PathWithFileName>
       <FilenameWithoutPath>stm32l4xx_hal_dma.c</FilenameWithoutPath>
       <RteFlg>0</RteFlg>
       <bShared>0</bShared>
@@ -555,7 +555,7 @@
       <tvExp>0</tvExp>
       <tvExpOptDlg>0</tvExpOptDlg>
       <bDave2>0</bDave2>
-      <PathWithFileName>..\..\..\..\platform\mcu\stm32l4xx\driver\stm32l4xx_hal_flash.c</PathWithFileName>
+      <PathWithFileName>..\..\..\..\platform\mcu\B-L475E-IOT01\driver\stm32l4xx_hal_flash.c</PathWithFileName>
       <FilenameWithoutPath>stm32l4xx_hal_flash.c</FilenameWithoutPath>
       <RteFlg>0</RteFlg>
       <bShared>0</bShared>
@@ -567,7 +567,7 @@
       <tvExp>0</tvExp>
       <tvExpOptDlg>0</tvExpOptDlg>
       <bDave2>0</bDave2>
-      <PathWithFileName>..\..\..\..\platform\mcu\stm32l4xx\driver\stm32l4xx_hal_flash_ex.c</PathWithFileName>
+      <PathWithFileName>..\..\..\..\platform\mcu\B-L475E-IOT01\driver\stm32l4xx_hal_flash_ex.c</PathWithFileName>
       <FilenameWithoutPath>stm32l4xx_hal_flash_ex.c</FilenameWithoutPath>
       <RteFlg>0</RteFlg>
       <bShared>0</bShared>
@@ -579,7 +579,7 @@
       <tvExp>0</tvExp>
       <tvExpOptDlg>0</tvExpOptDlg>
       <bDave2>0</bDave2>
-      <PathWithFileName>..\..\..\..\platform\mcu\stm32l4xx\driver\stm32l4xx_hal_gpio.c</PathWithFileName>
+      <PathWithFileName>..\..\..\..\platform\mcu\B-L475E-IOT01\driver\stm32l4xx_hal_gpio.c</PathWithFileName>
       <FilenameWithoutPath>stm32l4xx_hal_gpio.c</FilenameWithoutPath>
       <RteFlg>0</RteFlg>
       <bShared>0</bShared>
@@ -591,7 +591,7 @@
       <tvExp>0</tvExp>
       <tvExpOptDlg>0</tvExpOptDlg>
       <bDave2>0</bDave2>
-      <PathWithFileName>..\..\..\..\platform\mcu\stm32l4xx\driver\stm32l4xx_hal_i2c.c</PathWithFileName>
+      <PathWithFileName>..\..\..\..\platform\mcu\B-L475E-IOT01\driver\stm32l4xx_hal_i2c.c</PathWithFileName>
       <FilenameWithoutPath>stm32l4xx_hal_i2c.c</FilenameWithoutPath>
       <RteFlg>0</RteFlg>
       <bShared>0</bShared>
@@ -603,7 +603,7 @@
       <tvExp>0</tvExp>
       <tvExpOptDlg>0</tvExpOptDlg>
       <bDave2>0</bDave2>
-      <PathWithFileName>..\..\..\..\platform\mcu\stm32l4xx\driver\stm32l4xx_hal_i2c_ex.c</PathWithFileName>
+      <PathWithFileName>..\..\..\..\platform\mcu\B-L475E-IOT01\driver\stm32l4xx_hal_i2c_ex.c</PathWithFileName>
       <FilenameWithoutPath>stm32l4xx_hal_i2c_ex.c</FilenameWithoutPath>
       <RteFlg>0</RteFlg>
       <bShared>0</bShared>
@@ -615,7 +615,7 @@
       <tvExp>0</tvExp>
       <tvExpOptDlg>0</tvExpOptDlg>
       <bDave2>0</bDave2>
-      <PathWithFileName>..\..\..\..\platform\mcu\stm32l4xx\driver\stm32l4xx_hal_pwr.c</PathWithFileName>
+      <PathWithFileName>..\..\..\..\platform\mcu\B-L475E-IOT01\driver\stm32l4xx_hal_pwr.c</PathWithFileName>
       <FilenameWithoutPath>stm32l4xx_hal_pwr.c</FilenameWithoutPath>
       <RteFlg>0</RteFlg>
       <bShared>0</bShared>
@@ -627,7 +627,7 @@
       <tvExp>0</tvExp>
       <tvExpOptDlg>0</tvExpOptDlg>
       <bDave2>0</bDave2>
-      <PathWithFileName>..\..\..\..\platform\mcu\stm32l4xx\driver\stm32l4xx_hal_pwr_ex.c</PathWithFileName>
+      <PathWithFileName>..\..\..\..\platform\mcu\B-L475E-IOT01\driver\stm32l4xx_hal_pwr_ex.c</PathWithFileName>
       <FilenameWithoutPath>stm32l4xx_hal_pwr_ex.c</FilenameWithoutPath>
       <RteFlg>0</RteFlg>
       <bShared>0</bShared>
@@ -639,7 +639,7 @@
       <tvExp>0</tvExp>
       <tvExpOptDlg>0</tvExpOptDlg>
       <bDave2>0</bDave2>
-      <PathWithFileName>..\..\..\..\platform\mcu\stm32l4xx\driver\stm32l4xx_hal_qspi.c</PathWithFileName>
+      <PathWithFileName>..\..\..\..\platform\mcu\B-L475E-IOT01\driver\stm32l4xx_hal_qspi.c</PathWithFileName>
       <FilenameWithoutPath>stm32l4xx_hal_qspi.c</FilenameWithoutPath>
       <RteFlg>0</RteFlg>
       <bShared>0</bShared>
@@ -651,7 +651,7 @@
       <tvExp>0</tvExp>
       <tvExpOptDlg>0</tvExpOptDlg>
       <bDave2>0</bDave2>
-      <PathWithFileName>..\..\..\..\platform\mcu\stm32l4xx\driver\stm32l4xx_hal_rcc.c</PathWithFileName>
+      <PathWithFileName>..\..\..\..\platform\mcu\B-L475E-IOT01\driver\stm32l4xx_hal_rcc.c</PathWithFileName>
       <FilenameWithoutPath>stm32l4xx_hal_rcc.c</FilenameWithoutPath>
       <RteFlg>0</RteFlg>
       <bShared>0</bShared>
@@ -663,7 +663,7 @@
       <tvExp>0</tvExp>
       <tvExpOptDlg>0</tvExpOptDlg>
       <bDave2>0</bDave2>
-      <PathWithFileName>..\..\..\..\platform\mcu\stm32l4xx\driver\stm32l4xx_hal_rcc_ex.c</PathWithFileName>
+      <PathWithFileName>..\..\..\..\platform\mcu\B-L475E-IOT01\driver\stm32l4xx_hal_rcc_ex.c</PathWithFileName>
       <FilenameWithoutPath>stm32l4xx_hal_rcc_ex.c</FilenameWithoutPath>
       <RteFlg>0</RteFlg>
       <bShared>0</bShared>
@@ -675,7 +675,7 @@
       <tvExp>0</tvExp>
       <tvExpOptDlg>0</tvExpOptDlg>
       <bDave2>0</bDave2>
-      <PathWithFileName>..\..\..\..\platform\mcu\stm32l4xx\driver\stm32l4xx_hal_rng.c</PathWithFileName>
+      <PathWithFileName>..\..\..\..\platform\mcu\B-L475E-IOT01\driver\stm32l4xx_hal_rng.c</PathWithFileName>
       <FilenameWithoutPath>stm32l4xx_hal_rng.c</FilenameWithoutPath>
       <RteFlg>0</RteFlg>
       <bShared>0</bShared>
@@ -687,7 +687,7 @@
       <tvExp>0</tvExp>
       <tvExpOptDlg>0</tvExpOptDlg>
       <bDave2>0</bDave2>
-      <PathWithFileName>..\..\..\..\platform\mcu\stm32l4xx\driver\stm32l4xx_hal_rtc.c</PathWithFileName>
+      <PathWithFileName>..\..\..\..\platform\mcu\B-L475E-IOT01\driver\stm32l4xx_hal_rtc.c</PathWithFileName>
       <FilenameWithoutPath>stm32l4xx_hal_rtc.c</FilenameWithoutPath>
       <RteFlg>0</RteFlg>
       <bShared>0</bShared>
@@ -699,7 +699,7 @@
       <tvExp>0</tvExp>
       <tvExpOptDlg>0</tvExpOptDlg>
       <bDave2>0</bDave2>
-      <PathWithFileName>..\..\..\..\platform\mcu\stm32l4xx\driver\stm32l4xx_hal_rtc_ex.c</PathWithFileName>
+      <PathWithFileName>..\..\..\..\platform\mcu\B-L475E-IOT01\driver\stm32l4xx_hal_rtc_ex.c</PathWithFileName>
       <FilenameWithoutPath>stm32l4xx_hal_rtc_ex.c</FilenameWithoutPath>
       <RteFlg>0</RteFlg>
       <bShared>0</bShared>
@@ -711,7 +711,7 @@
       <tvExp>0</tvExp>
       <tvExpOptDlg>0</tvExpOptDlg>
       <bDave2>0</bDave2>
-      <PathWithFileName>..\..\..\..\platform\mcu\stm32l4xx\driver\stm32l4xx_hal_spi.c</PathWithFileName>
+      <PathWithFileName>..\..\..\..\platform\mcu\B-L475E-IOT01\driver\stm32l4xx_hal_spi.c</PathWithFileName>
       <FilenameWithoutPath>stm32l4xx_hal_spi.c</FilenameWithoutPath>
       <RteFlg>0</RteFlg>
       <bShared>0</bShared>
@@ -723,7 +723,7 @@
       <tvExp>0</tvExp>
       <tvExpOptDlg>0</tvExpOptDlg>
       <bDave2>0</bDave2>
-      <PathWithFileName>..\..\..\..\platform\mcu\stm32l4xx\driver\stm32l4xx_hal_spi_ex.c</PathWithFileName>
+      <PathWithFileName>..\..\..\..\platform\mcu\B-L475E-IOT01\driver\stm32l4xx_hal_spi_ex.c</PathWithFileName>
       <FilenameWithoutPath>stm32l4xx_hal_spi_ex.c</FilenameWithoutPath>
       <RteFlg>0</RteFlg>
       <bShared>0</bShared>
@@ -735,7 +735,7 @@
       <tvExp>0</tvExp>
       <tvExpOptDlg>0</tvExpOptDlg>
       <bDave2>0</bDave2>
-      <PathWithFileName>..\..\..\..\platform\mcu\stm32l4xx\driver\stm32l4xx_hal_uart.c</PathWithFileName>
+      <PathWithFileName>..\..\..\..\platform\mcu\B-L475E-IOT01\driver\stm32l4xx_hal_uart.c</PathWithFileName>
       <FilenameWithoutPath>stm32l4xx_hal_uart.c</FilenameWithoutPath>
       <RteFlg>0</RteFlg>
       <bShared>0</bShared>
@@ -747,7 +747,7 @@
       <tvExp>0</tvExp>
       <tvExpOptDlg>0</tvExpOptDlg>
       <bDave2>0</bDave2>
-      <PathWithFileName>..\..\..\..\platform\mcu\stm32l4xx\driver\stm32l4xx_hal_uart_ex.c</PathWithFileName>
+      <PathWithFileName>..\..\..\..\platform\mcu\B-L475E-IOT01\driver\stm32l4xx_hal_uart_ex.c</PathWithFileName>
       <FilenameWithoutPath>stm32l4xx_hal_uart_ex.c</FilenameWithoutPath>
       <RteFlg>0</RteFlg>
       <bShared>0</bShared>
@@ -759,7 +759,7 @@
       <tvExp>0</tvExp>
       <tvExpOptDlg>0</tvExpOptDlg>
       <bDave2>0</bDave2>
-      <PathWithFileName>..\..\..\..\platform\mcu\stm32l4xx\driver\flash_l4.c</PathWithFileName>
+      <PathWithFileName>..\..\..\..\platform\mcu\B-L475E-IOT01\driver\flash_l4.c</PathWithFileName>
       <FilenameWithoutPath>flash_l4.c</FilenameWithoutPath>
       <RteFlg>0</RteFlg>
       <bShared>0</bShared>
@@ -767,7 +767,7 @@
   </Group>
 
   <Group>
-    <GroupName>platform/mcu/stm32l4xx/startup</GroupName>
+    <GroupName>platform/mcu/B-L475E-IOT01/startup</GroupName>
     <tvExp>0</tvExp>
     <tvExpOptDlg>0</tvExpOptDlg>
     <cbSel>0</cbSel>
@@ -779,7 +779,7 @@
       <tvExp>0</tvExp>
       <tvExpOptDlg>0</tvExpOptDlg>
       <bDave2>0</bDave2>
-      <PathWithFileName>..\..\..\..\platform\mcu\stm32l4xx\startup\soc_init.c</PathWithFileName>
+      <PathWithFileName>..\..\..\..\platform\mcu\B-L475E-IOT01\startup\soc_init.c</PathWithFileName>
       <FilenameWithoutPath>soc_init.c</FilenameWithoutPath>
       <RteFlg>0</RteFlg>
       <bShared>0</bShared>
@@ -791,7 +791,7 @@
       <tvExp>0</tvExp>
       <tvExpOptDlg>0</tvExpOptDlg>
       <bDave2>0</bDave2>
-      <PathWithFileName>..\..\..\..\platform\mcu\stm32l4xx\startup\stm32l4xx_hal_msp.c</PathWithFileName>
+      <PathWithFileName>..\..\..\..\platform\mcu\B-L475E-IOT01\startup\stm32l4xx_hal_msp.c</PathWithFileName>
       <FilenameWithoutPath>stm32l4xx_hal_msp.c</FilenameWithoutPath>
       <RteFlg>0</RteFlg>
       <bShared>0</bShared>
@@ -803,7 +803,7 @@
       <tvExp>0</tvExp>
       <tvExpOptDlg>0</tvExpOptDlg>
       <bDave2>0</bDave2>
-      <PathWithFileName>..\..\..\..\platform\mcu\stm32l4xx\startup\stm32l4xx_it.c</PathWithFileName>
+      <PathWithFileName>..\..\..\..\platform\mcu\B-L475E-IOT01\startup\stm32l4xx_it.c</PathWithFileName>
       <FilenameWithoutPath>stm32l4xx_it.c</FilenameWithoutPath>
       <RteFlg>0</RteFlg>
       <bShared>0</bShared>
@@ -815,7 +815,7 @@
       <tvExp>0</tvExp>
       <tvExpOptDlg>0</tvExpOptDlg>
       <bDave2>0</bDave2>
-      <PathWithFileName>..\..\..\..\platform\mcu\stm32l4xx\startup\MDK-ARM\startup_stm32l475xx.s</PathWithFileName>
+      <PathWithFileName>..\..\..\..\platform\mcu\B-L475E-IOT01\startup\MDK-ARM\startup_stm32l475xx.s</PathWithFileName>
       <FilenameWithoutPath>startup_stm32l475xx.s</FilenameWithoutPath>
       <RteFlg>0</RteFlg>
       <bShared>0</bShared>
@@ -855,7 +855,7 @@
   </Group>
 
   <Group>
-    <GroupName>platform/mcu/stm32l4xx/aos</GroupName>
+    <GroupName>platform/mcu/B-L475E-IOT01/aos</GroupName>
     <tvExp>0</tvExp>
     <tvExpOptDlg>0</tvExpOptDlg>
     <cbSel>0</cbSel>
@@ -867,7 +867,7 @@
       <tvExp>0</tvExp>
       <tvExpOptDlg>0</tvExpOptDlg>
       <bDave2>0</bDave2>
-      <PathWithFileName>..\..\..\..\platform\mcu\stm32l4xx\aos\aos.c</PathWithFileName>
+      <PathWithFileName>..\..\..\..\platform\mcu\B-L475E-IOT01\aos\aos.c</PathWithFileName>
       <FilenameWithoutPath>aos.c</FilenameWithoutPath>
       <RteFlg>0</RteFlg>
       <bShared>0</bShared>
@@ -879,7 +879,7 @@
       <tvExp>0</tvExp>
       <tvExpOptDlg>0</tvExpOptDlg>
       <bDave2>0</bDave2>
-      <PathWithFileName>..\..\..\..\platform\mcu\stm32l4xx\aos\soc_impl.c</PathWithFileName>
+      <PathWithFileName>..\..\..\..\platform\mcu\B-L475E-IOT01\aos\soc_impl.c</PathWithFileName>
       <FilenameWithoutPath>soc_impl.c</FilenameWithoutPath>
       <RteFlg>0</RteFlg>
       <bShared>0</bShared>
@@ -891,7 +891,7 @@
       <tvExp>0</tvExp>
       <tvExpOptDlg>0</tvExpOptDlg>
       <bDave2>0</bDave2>
-      <PathWithFileName>..\..\..\..\platform\mcu\stm32l4xx\aos\trace_impl.c</PathWithFileName>
+      <PathWithFileName>..\..\..\..\platform\mcu\B-L475E-IOT01\aos\trace_impl.c</PathWithFileName>
       <FilenameWithoutPath>trace_impl.c</FilenameWithoutPath>
       <RteFlg>0</RteFlg>
       <bShared>0</bShared>
@@ -899,7 +899,7 @@
   </Group>
 
   <Group>
-    <GroupName>platform/mcu/stm32l4xx/hal</GroupName>
+    <GroupName>platform/mcu/B-L475E-IOT01/hal</GroupName>
     <tvExp>0</tvExp>
     <tvExpOptDlg>0</tvExpOptDlg>
     <cbSel>0</cbSel>
@@ -911,7 +911,7 @@
       <tvExp>0</tvExp>
       <tvExpOptDlg>0</tvExpOptDlg>
       <bDave2>0</bDave2>
-      <PathWithFileName>..\..\..\..\platform\mcu\stm32l4xx\hal\flash_port.c</PathWithFileName>
+      <PathWithFileName>..\..\..\..\platform\mcu\B-L475E-IOT01\hal\flash_port.c</PathWithFileName>
       <FilenameWithoutPath>flash_port.c</FilenameWithoutPath>
       <RteFlg>0</RteFlg>
       <bShared>0</bShared>
@@ -923,7 +923,7 @@
       <tvExp>0</tvExp>
       <tvExpOptDlg>0</tvExpOptDlg>
       <bDave2>0</bDave2>
-      <PathWithFileName>..\..\..\..\platform\mcu\stm32l4xx\hal\hw.c</PathWithFileName>
+      <PathWithFileName>..\..\..\..\platform\mcu\B-L475E-IOT01\hal\hw.c</PathWithFileName>
       <FilenameWithoutPath>hw.c</FilenameWithoutPath>
       <RteFlg>0</RteFlg>
       <bShared>0</bShared>
@@ -935,7 +935,7 @@
       <tvExp>0</tvExp>
       <tvExpOptDlg>0</tvExpOptDlg>
       <bDave2>0</bDave2>
-      <PathWithFileName>..\..\..\..\platform\mcu\stm32l4xx\hal\ota_port.c</PathWithFileName>
+      <PathWithFileName>..\..\..\..\platform\mcu\B-L475E-IOT01\hal\ota_port.c</PathWithFileName>
       <FilenameWithoutPath>ota_port.c</FilenameWithoutPath>
       <RteFlg>0</RteFlg>
       <bShared>0</bShared>
@@ -947,7 +947,7 @@
       <tvExp>0</tvExp>
       <tvExpOptDlg>0</tvExpOptDlg>
       <bDave2>0</bDave2>
-      <PathWithFileName>..\..\..\..\platform\mcu\stm32l4xx\hal\wifi_port.c</PathWithFileName>
+      <PathWithFileName>..\..\..\..\platform\mcu\B-L475E-IOT01\hal\wifi_port.c</PathWithFileName>
       <FilenameWithoutPath>wifi_port.c</FilenameWithoutPath>
       <RteFlg>0</RteFlg>
       <bShared>0</bShared>
@@ -955,7 +955,7 @@
   </Group>
 
   <Group>
-    <GroupName>platform/mcu/stm32l4xx/wifi</GroupName>
+    <GroupName>platform/mcu/B-L475E-IOT01/wifi</GroupName>
     <tvExp>0</tvExp>
     <tvExpOptDlg>0</tvExpOptDlg>
     <cbSel>0</cbSel>
@@ -967,7 +967,7 @@
       <tvExp>0</tvExp>
       <tvExpOptDlg>0</tvExpOptDlg>
       <bDave2>0</bDave2>
-      <PathWithFileName>..\..\..\..\platform\mcu\stm32l4xx\wifi\src\es_wifi_io.c</PathWithFileName>
+      <PathWithFileName>..\..\..\..\platform\mcu\B-L475E-IOT01\wifi\src\es_wifi_io.c</PathWithFileName>
       <FilenameWithoutPath>es_wifi_io.c</FilenameWithoutPath>
       <RteFlg>0</RteFlg>
       <bShared>0</bShared>
@@ -979,7 +979,7 @@
       <tvExp>0</tvExp>
       <tvExpOptDlg>0</tvExpOptDlg>
       <bDave2>0</bDave2>
-      <PathWithFileName>..\..\..\..\platform\mcu\stm32l4xx\wifi\src\wifi.c</PathWithFileName>
+      <PathWithFileName>..\..\..\..\platform\mcu\B-L475E-IOT01\wifi\src\wifi.c</PathWithFileName>
       <FilenameWithoutPath>wifi.c</FilenameWithoutPath>
       <RteFlg>0</RteFlg>
       <bShared>0</bShared>
@@ -987,7 +987,7 @@
   </Group>
 
   <Group>
-    <GroupName>platform/mcu/stm32l4xx/sensor</GroupName>
+    <GroupName>platform/mcu/B-L475E-IOT01/sensor</GroupName>
     <tvExp>0</tvExp>
     <tvExpOptDlg>0</tvExpOptDlg>
     <cbSel>0</cbSel>
@@ -999,7 +999,7 @@
       <tvExp>0</tvExp>
       <tvExpOptDlg>0</tvExpOptDlg>
       <bDave2>0</bDave2>
-      <PathWithFileName>..\..\..\..\platform\mcu\stm32l4xx\sensor\sensors_data.c</PathWithFileName>
+      <PathWithFileName>..\..\..\..\platform\mcu\B-L475E-IOT01\sensor\sensors_data.c</PathWithFileName>
       <FilenameWithoutPath>sensors_data.c</FilenameWithoutPath>
       <RteFlg>0</RteFlg>
       <bShared>0</bShared>
@@ -1011,7 +1011,7 @@
       <tvExp>0</tvExp>
       <tvExpOptDlg>0</tvExpOptDlg>
       <bDave2>0</bDave2>
-      <PathWithFileName>..\..\..\..\platform\mcu\stm32l4xx\sensor\vl53l0x_platform.c</PathWithFileName>
+      <PathWithFileName>..\..\..\..\platform\mcu\B-L475E-IOT01\sensor\vl53l0x_platform.c</PathWithFileName>
       <FilenameWithoutPath>vl53l0x_platform.c</FilenameWithoutPath>
       <RteFlg>0</RteFlg>
       <bShared>0</bShared>
@@ -1023,7 +1023,7 @@
       <tvExp>0</tvExp>
       <tvExpOptDlg>0</tvExpOptDlg>
       <bDave2>0</bDave2>
-      <PathWithFileName>..\..\..\..\platform\mcu\stm32l4xx\sensor\vl53l0x_proximity.c</PathWithFileName>
+      <PathWithFileName>..\..\..\..\platform\mcu\B-L475E-IOT01\sensor\vl53l0x_proximity.c</PathWithFileName>
       <FilenameWithoutPath>vl53l0x_proximity.c</FilenameWithoutPath>
       <RteFlg>0</RteFlg>
       <bShared>0</bShared>
@@ -2335,7 +2335,7 @@
       <tvExp>0</tvExp>
       <tvExpOptDlg>0</tvExpOptDlg>
       <bDave2>0</bDave2>
-      <PathWithFileName>D:\alios_things_sortpro\security\mbedtls\lib\Cortex-M4\KEIL\libmbedtls.lib</PathWithFileName>
+      <PathWithFileName>..\..\..\..\security\mbedtls\lib\Cortex-M4\KEIL\libmbedtls.lib</PathWithFileName>
       <FilenameWithoutPath>libmbedtls.lib</FilenameWithoutPath>
       <RteFlg>0</RteFlg>
       <bShared>0</bShared>
@@ -2355,7 +2355,7 @@
       <tvExp>0</tvExp>
       <tvExpOptDlg>0</tvExpOptDlg>
       <bDave2>0</bDave2>
-      <PathWithFileName>D:\alios_things_sortpro\security\alicrypto\lib\Cortex-M4\KEIL\libalicrypto.lib</PathWithFileName>
+      <PathWithFileName>..\..\..\..\security\alicrypto\lib\Cortex-M4\KEIL\libalicrypto.lib</PathWithFileName>
       <FilenameWithoutPath>libalicrypto.lib</FilenameWithoutPath>
       <RteFlg>0</RteFlg>
       <bShared>0</bShared>
@@ -2367,7 +2367,7 @@
       <tvExp>0</tvExp>
       <tvExpOptDlg>0</tvExpOptDlg>
       <bDave2>0</bDave2>
-      <PathWithFileName>D:\alios_things_sortpro\security\alicrypto\lib\Cortex-M4\KEIL\libmbedcrypto.lib</PathWithFileName>
+      <PathWithFileName>..\..\..\..\security\alicrypto\lib\Cortex-M4\KEIL\libmbedcrypto.lib</PathWithFileName>
       <FilenameWithoutPath>libmbedcrypto.lib</FilenameWithoutPath>
       <RteFlg>0</RteFlg>
       <bShared>0</bShared>

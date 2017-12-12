@@ -5,7 +5,7 @@ JTAG := stlink-v2-1
 $(NAME)_TYPE := kernel
 MODULE               := 1062
 HOST_ARCH            := Cortex-M4
-HOST_MCU_FAMILY      := stm32l4xx
+HOST_MCU_FAMILY      := b-l475e-iot01
 SUPPORT_BINS         := no
 
 $(NAME)_SOURCES := board.c osa_flash.c
