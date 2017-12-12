@@ -173,7 +173,7 @@ int hal_umesh_disable(umesh_hal_module_t *module);
  * @param[in] context The context
  *
  * @return
- *     Send frame request result, 0 if success, -1 if fail
+ *     Send frame request result, 0 if success, -1 if fail, -2 if drop
  */
 int hal_umesh_send_ucast_request(umesh_hal_module_t *module,
                                  frame_t *frame, mac_address_t *dest,
@@ -188,7 +188,7 @@ int hal_umesh_send_ucast_request(umesh_hal_module_t *module,
  * @param[in] context The context
  *
  * @return
- *     Send frame request result, 0 if success, -1 if fail
+ *     Send frame request result, 0 if success, -1 if fail, -2 if drop
  */
 int hal_umesh_send_bcast_request(umesh_hal_module_t *module,
                                  frame_t *frame,

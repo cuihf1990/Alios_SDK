@@ -1222,7 +1222,7 @@ void become_detached(interface_state_t reason)
 
     if (g_mm_state.device.state != DEVICE_STATE_DETACHED) {
         reset_network_context();
-        MESH_LOG_INFO("become detached");
+        MESH_LOG_INFO("become detached,reason %d", reason);
         g_mm_state.device.state = DEVICE_STATE_DETACHED;
     }
 
@@ -1281,6 +1281,9 @@ static ur_error_t attach_start(neighbor_t *nbr)
 
     nbr = choose_attach_candidate(nbr);
     if (nbr == NULL) {
+        if (g_mm_state.device.state < DEVICE_STATE_LEAF) {
+            become_detached(INTERFACE_DOWN_ATTACH_FAIL);
+        }
         return UR_ERROR_FAIL;
     }
     network->attach_candidate = nbr;

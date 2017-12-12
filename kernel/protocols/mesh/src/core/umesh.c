@@ -301,6 +301,7 @@ ur_error_t umesh_init(node_mode_t mode)
 
     umesh_mm_init(mode, &g_um_state.mm_cb);
     link_mgmt_init();
+    frags_init();
     address_mgmt_init();
     mf_init();
     nd_init();
@@ -340,7 +341,6 @@ ur_error_t umesh_start(void)
     umesh_pal_radio_wakeup();
     interface_start();
     umesh_mm_start();
-    lp_start();
 
     if (umesh_kv_get("extnetid", extnetid.netid, &extnetid_len) == 0) {
         extnetid.len = extnetid_len;
@@ -364,7 +364,6 @@ ur_error_t umesh_stop(void)
     }
 
     g_um_state.started = false;
-    lp_stop();
     umesh_mm_stop();
     interface_stop();
 

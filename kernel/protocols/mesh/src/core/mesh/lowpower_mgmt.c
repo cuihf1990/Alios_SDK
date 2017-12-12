@@ -226,6 +226,7 @@ static ur_error_t mesh_interface_down(interface_state_t state)
     stop_timers();
     g_lowpower_state.attach_node = NULL;
     g_lowpower_state.schedule_type = LOWPOWER_NONE_SCHEDULE;
+    g_lowpower_state.up = true;
 
     if ((umesh_get_mode() & MODE_RX_ON) == 0) {
         g_lowpower_state.up = false;

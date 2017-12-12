@@ -286,13 +286,15 @@ static void start_discover(void)
     network_context_t *network;
     hal_context_t *hal;
 
-
 #ifdef CONFIG_AOS_MESH_LOWPOWER
-    if (lowpower_is_radio_up() == false) {
+    if ((umesh_get_mode() & MODE_RX_ON) == 0 && lowpower_is_radio_up() == false) {
         g_nm_state.discover_pending = true;
         return;
     }
 #endif
+    if (g_nm_state.started == false) {
+        umesh_mm_set_prev_channel();
+    }
     g_nm_state.started = true;
     network = get_default_network_context();
     hal = network->hal;
@@ -303,7 +305,6 @@ static void start_discover(void)
                                                handle_discovery_timer, NULL);
     memset(&g_nm_state.discover_result, 0, sizeof(g_nm_state.discover_result));
     g_nm_state.discover_result.meshnetid = BCAST_NETID;
-    umesh_mm_set_prev_channel();
 }
 
 void umesh_network_mgmt_register_callback(discovered_handler_t handler)
@@ -318,9 +319,10 @@ static void handle_start_discover_timer(void *args)
 
 static void start_discover_timer(void)
 {
-    ur_stop_timer(&g_nm_state.discover_start_timer, NULL);
-    g_nm_state.discover_start_timer = ur_start_timer(ACTIVE_DISCOVER_INTERVAL,
-                                                     handle_start_discover_timer, NULL);
+    if (g_nm_state.discover_start_timer == NULL) {
+        g_nm_state.discover_start_timer = ur_start_timer(ACTIVE_DISCOVER_INTERVAL,
+                                                         handle_start_discover_timer, NULL);
+    }
 }
 
 static ur_error_t mesh_interface_up(void)
