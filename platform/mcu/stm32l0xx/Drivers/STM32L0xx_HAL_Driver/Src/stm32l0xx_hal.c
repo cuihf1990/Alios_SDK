@@ -50,7 +50,6 @@
 
 /* Includes ------------------------------------------------------------------*/
 #include "stm32l0xx_hal.h"
-#include "k_config.h"
 
 /** @addtogroup STM32L0xx_HAL_Driver
   * @{
@@ -259,7 +258,7 @@ __weak void HAL_MspDeInit(void)
 __weak HAL_StatusTypeDef HAL_InitTick(uint32_t TickPriority)
 {
   /*Configure the SysTick to have interrupt in 1ms time basis*/
-  HAL_SYSTICK_Config(SystemCoreClock/RHINO_CONFIG_TICKS_PER_SECOND);
+  HAL_SYSTICK_Config(SystemCoreClock/1000U);
 
   /*Configure the SysTick IRQ priority */
   HAL_NVIC_SetPriority(SysTick_IRQn, TickPriority ,0U);

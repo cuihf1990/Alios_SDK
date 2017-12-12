@@ -1,78 +1,45 @@
 /**
   ******************************************************************************
-  * @file    Cloud/AWS/Src/main.c
-  * @author  MCD Application Team
-  * @version V1.0.1
-  * @date    12-April-2017
-  * @brief   Main program body.
+  * File Name          : main.c
+  * Description        : Main program body
   ******************************************************************************
-  * @attention
+  ** This notice applies to any and all portions of this file
+  * that are not between comment pairs USER CODE BEGIN and
+  * USER CODE END. Other portions of this file, whether 
+  * inserted by the user or by software development tools
+  * are owned by their respective copyright owners.
   *
-  * <h2><center>&copy; Copyright (c) 2017 STMicroelectronics International N.V. 
-  * All rights reserved.</center></h2>
+  * COPYRIGHT(c) 2017 STMicroelectronics
   *
-  * Redistribution and use in source and binary forms, with or without 
-  * modification, are permitted, provided that the following conditions are met:
+  * Redistribution and use in source and binary forms, with or without modification,
+  * are permitted provided that the following conditions are met:
+  *   1. Redistributions of source code must retain the above copyright notice,
+  *      this list of conditions and the following disclaimer.
+  *   2. Redistributions in binary form must reproduce the above copyright notice,
+  *      this list of conditions and the following disclaimer in the documentation
+  *      and/or other materials provided with the distribution.
+  *   3. Neither the name of STMicroelectronics nor the names of its contributors
+  *      may be used to endorse or promote products derived from this software
+  *      without specific prior written permission.
   *
-  * 1. Redistribution of source code must retain the above copyright notice, 
-  *    this list of conditions and the following disclaimer.
-  * 2. Redistributions in binary form must reproduce the above copyright notice,
-  *    this list of conditions and the following disclaimer in the documentation
-  *    and/or other materials provided with the distribution.
-  * 3. Neither the name of STMicroelectronics nor the names of other 
-  *    contributors to this software may be used to endorse or promote products 
-  *    derived from this software without specific written permission.
-  * 4. This software, including modifications and/or derivative works of this 
-  *    software, must execute solely and exclusively on microcontroller or
-  *    microprocessor devices manufactured by or for STMicroelectronics.
-  * 5. Redistribution and use of this software other than as permitted under 
-  *    this license is void and will automatically terminate your rights under 
-  *    this license. 
-  *
-  * THIS SOFTWARE IS PROVIDED BY STMICROELECTRONICS AND CONTRIBUTORS "AS IS" 
-  * AND ANY EXPRESS, IMPLIED OR STATUTORY WARRANTIES, INCLUDING, BUT NOT 
-  * LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY, FITNESS FOR A 
-  * PARTICULAR PURPOSE AND NON-INFRINGEMENT OF THIRD PARTY INTELLECTUAL PROPERTY
-  * RIGHTS ARE DISCLAIMED TO THE FULLEST EXTENT PERMITTED BY LAW. IN NO EVENT 
-  * SHALL STMICROELECTRONICS OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT,
-  * INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
-  * LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, 
-  * OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF 
-  * LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING 
-  * NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE,
-  * EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+  * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
+  * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+  * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
+  * DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE
+  * FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
+  * DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
+  * SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
+  * CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
+  * OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
+  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
   *
   ******************************************************************************
   */
 
 /* Includes ------------------------------------------------------------------*/
 #include "soc_init.h"
-#include "hal/soc/uart.h"
-#include "aos/kernel.h"
-#include "k_types.h"
-#include "errno.h"
-
-#if !defined(TERMINAL_IO_OUT)
-/* UART handler declaration */
-UART_HandleTypeDef     UartHandle;
-#endif
-
-/**
-  * @brief COM variables
-  */
-USART_TypeDef* COM_USART[COMn]  = {BSP_COM1}; 
-
-GPIO_TypeDef* COM_TX_PORT[COMn] = {BSP_COM1_TX_GPIO_PORT};
- 
-GPIO_TypeDef* COM_RX_PORT[COMn] = {BSP_COM1_RX_GPIO_PORT};
-
-const uint16_t COM_TX_PIN[COMn] = {BSP_COM1_TX_PIN};
-
-const uint16_t COM_RX_PIN[COMn] = {BSP_COM1_RX_PIN};
-
-const uint16_t COM_TX_AF[COMn]  = {BSP_COM1_TX_AF};
-
-const uint16_t COM_RX_AF[COMn]  = {BSP_COM1_RX_AF};
+#include "k_config.h"
+#include "stm32l0xx_hal.h"
 
 #if defined (__CC_ARM) && defined(__MICROLIB)
 void __aeabi_assert(const char *expr, const char *file, int line)
@@ -81,146 +48,237 @@ void __aeabi_assert(const char *expr, const char *file, int line)
 }
 #endif
 
-/* Private function prototypes -----------------------------------------------*/
-#ifdef __GNUC__
-/* With GCC, small printf (option LD Linker->Libraries->Small printf
+#if defined (__CC_ARM) && defined(__MICROLIB)
+#define PUTCHAR_PROTOTYPE int fputc(int ch, FILE *f)
+#define GETCHAR_PROTOTYPE int fgetc(FILE *f)
+#elif defined(__ICCARM__)
+#define PUTCHAR_PROTOTYPE int fputc(int ch, FILE *f)
+#define GETCHAR_PROTOTYPE int fgetc(FILE *f)
+#else
+/* With GCC/RAISONANCE, small printf (option LD Linker->Libraries->Small printf
    set to 'Yes') calls __io_putchar() */
 #define PUTCHAR_PROTOTYPE int __io_putchar(int ch)
-#else
-#define PUTCHAR_PROTOTYPE int fputc(int ch, FILE *f)
-#endif /* __GNUC__ */
+#define GETCHAR_PROTOTYPE int __io_getchar(void)
+#endif /* defined (__CC_ARM) && defined(__MICROLIB) */
 
-/**
-  * @brief  Configures COM port.
-  * @param  COM: Specifies the COM port to be configured.
-  *   This parameter can be one of following parameters:    
-  *     @arg COM1  
-  * @param  huart: pointer to a UART_HandleTypeDef structure that
-  *   contains the configuration information for the specified UART peripheral.
-  * @retval None
-  */
-void BSP_COM_Init(COM_TypeDef COM, UART_HandleTypeDef* huart)
+
+/* USER CODE BEGIN Includes */
+
+/* USER CODE END Includes */
+
+/* Private variables ---------------------------------------------------------*/
+UART_HandleTypeDef huart2;
+
+/* USER CODE BEGIN PV */
+/* Private variables ---------------------------------------------------------*/
+
+/* USER CODE END PV */
+
+/* Private function prototypes -----------------------------------------------*/
+void SystemClock_Config(void);
+static void MX_GPIO_Init(void);
+static void MX_USART2_UART_Init(void);
+
+/* USER CODE BEGIN PFP */
+/* Private function prototypes -----------------------------------------------*/
+
+/* USER CODE END PFP */
+
+/* USER CODE BEGIN 0 */
+
+/* USER CODE END 0 */
+
+void stm32_soc_init(void)
 {
-    GPIO_InitTypeDef GPIO_InitStruct;
 
-    /* Enable GPIO clock */
-    COMx_TX_GPIO_CLK_ENABLE(COM);
-    COMx_RX_GPIO_CLK_ENABLE(COM);
+  /* USER CODE BEGIN 1 */
 
-    /* Enable USART clock */
-    COMx_CLK_ENABLE(COM);
+  /* USER CODE END 1 */
 
-    /* Configure USART Tx as alternate function push-pull */
-    GPIO_InitStruct.Pin = COM_TX_PIN[COM];
-    GPIO_InitStruct.Mode = GPIO_MODE_AF_PP;
-    GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_VERY_HIGH;
-    GPIO_InitStruct.Pull = GPIO_PULLUP;
-    GPIO_InitStruct.Alternate = COM_TX_AF[COM];
-    HAL_GPIO_Init(COM_TX_PORT[COM], &GPIO_InitStruct);
+  /* MCU Configuration----------------------------------------------------------*/
 
-    /* Configure USART Rx as alternate function push-pull */
-    GPIO_InitStruct.Pin = COM_RX_PIN[COM];
-    GPIO_InitStruct.Alternate = COM_RX_AF[COM];
-    HAL_GPIO_Init(COM_RX_PORT[COM], &GPIO_InitStruct);
+  /* Reset of all peripherals, Initializes the Flash interface and the Systick. */
+  HAL_Init();
 
-    /* USART configuration */
-    huart->Instance = COM_USART[COM];
-    HAL_UART_Init(huart);
+  /* USER CODE BEGIN Init */
+
+  /* USER CODE END Init */
+
+  /* Configure the system clock */
+  SystemClock_Config();
+
+  /* USER CODE BEGIN SysInit */
+
+  /* USER CODE END SysInit */
+
+  /* Initialize all configured peripherals */
+  MX_GPIO_Init();
+  MX_USART2_UART_Init();
 }
 
-
-/**
-  * @brief  System Clock Configuration
-  *         The system Clock is configured as follow : 
-  *            System Clock source            = MSI
-  *            SYSCLK(Hz)                     = 2000000
-  *            HCLK(Hz)                       = 2000000
-  *            AHB Prescaler                  = 1
-  *            APB1 Prescaler                 = 1
-  *            APB2 Prescaler                 = 1
-  *            Flash Latency(WS)              = 0
-  *            Main regulator output voltage  = Scale3 mode
-  * @retval None
-  */
+/** System Clock Configuration
+*/
 void SystemClock_Config(void)
 {
-    RCC_ClkInitTypeDef RCC_ClkInitStruct = {0};
-    RCC_OscInitTypeDef RCC_OscInitStruct = {0};
 
-    /* Enable MSI Oscillator */
-    RCC_OscInitStruct.OscillatorType = RCC_OSCILLATORTYPE_MSI;
-    RCC_OscInitStruct.MSIState = RCC_MSI_ON;
-    RCC_OscInitStruct.MSIClockRange = RCC_MSIRANGE_5;
-    RCC_OscInitStruct.MSICalibrationValue=0x00;
-    RCC_OscInitStruct.PLL.PLLState = RCC_PLL_NONE;
-    if (HAL_RCC_OscConfig(&RCC_OscInitStruct)!= HAL_OK)
-    {
-        /* Initialization Error */
-        while(1); 
-    }
+  RCC_OscInitTypeDef RCC_OscInitStruct;
+  RCC_ClkInitTypeDef RCC_ClkInitStruct;
+  RCC_PeriphCLKInitTypeDef PeriphClkInit;
 
-    /* Select MSI as system clock source and configure the HCLK, PCLK1 and PCLK2 
-    clocks dividers */
-    RCC_ClkInitStruct.ClockType = (RCC_CLOCKTYPE_SYSCLK | RCC_CLOCKTYPE_HCLK | RCC_CLOCKTYPE_PCLK1 | RCC_CLOCKTYPE_PCLK2);
-    RCC_ClkInitStruct.SYSCLKSource = RCC_SYSCLKSOURCE_MSI;
-    RCC_ClkInitStruct.AHBCLKDivider = RCC_SYSCLK_DIV1;
-    RCC_ClkInitStruct.APB1CLKDivider = RCC_HCLK_DIV1;  
-    RCC_ClkInitStruct.APB2CLKDivider = RCC_HCLK_DIV1;  
-    if (HAL_RCC_ClockConfig(&RCC_ClkInitStruct, FLASH_LATENCY_0)!= HAL_OK)
-    {
-        /* Initialization Error */
-        while(1); 
-    }
-    /* Enable Power Control clock */
-    __HAL_RCC_PWR_CLK_ENABLE();
+    /**Configure the main internal regulator output voltage 
+    */
+  __HAL_PWR_VOLTAGESCALING_CONFIG(PWR_REGULATOR_VOLTAGE_SCALE1);
 
-    /* The voltage scaling allows optimizing the power consumption when the device is 
-    clocked below the maximum system frequency, to update the voltage scaling value 
-    regarding system frequency refer to product datasheet.  */
-    __HAL_PWR_VOLTAGESCALING_CONFIG(PWR_REGULATOR_VOLTAGE_SCALE3);
+    /**Initializes the CPU, AHB and APB busses clocks 
+    */
+  RCC_OscInitStruct.OscillatorType = RCC_OSCILLATORTYPE_MSI;
+  RCC_OscInitStruct.MSIState = RCC_MSI_ON;
+  RCC_OscInitStruct.MSICalibrationValue = 0;
+  RCC_OscInitStruct.MSIClockRange = RCC_MSIRANGE_5;
+  RCC_OscInitStruct.PLL.PLLState = RCC_PLL_NONE;
+  if (HAL_RCC_OscConfig(&RCC_OscInitStruct) != HAL_OK)
+  {
+    _Error_Handler(__FILE__, __LINE__);
+  }
 
-    /* Disable Power Control clock */
-    __HAL_RCC_PWR_CLK_DISABLE();
+    /**Initializes the CPU, AHB and APB busses clocks 
+    */
+  RCC_ClkInitStruct.ClockType = RCC_CLOCKTYPE_HCLK|RCC_CLOCKTYPE_SYSCLK
+                              |RCC_CLOCKTYPE_PCLK1|RCC_CLOCKTYPE_PCLK2;
+  RCC_ClkInitStruct.SYSCLKSource = RCC_SYSCLKSOURCE_MSI;
+  RCC_ClkInitStruct.AHBCLKDivider = RCC_SYSCLK_DIV1;
+  RCC_ClkInitStruct.APB1CLKDivider = RCC_HCLK_DIV1;
+  RCC_ClkInitStruct.APB2CLKDivider = RCC_HCLK_DIV1;
+
+  if (HAL_RCC_ClockConfig(&RCC_ClkInitStruct, FLASH_LATENCY_0) != HAL_OK)
+  {
+    _Error_Handler(__FILE__, __LINE__);
+  }
+
+  PeriphClkInit.PeriphClockSelection = RCC_PERIPHCLK_USART2;
+  PeriphClkInit.Usart2ClockSelection = RCC_USART2CLKSOURCE_PCLK1;
+  if (HAL_RCCEx_PeriphCLKConfig(&PeriphClkInit) != HAL_OK)
+  {
+    _Error_Handler(__FILE__, __LINE__);
+  }
+
+    /**Configure the Systick interrupt time 
+    */
+  HAL_SYSTICK_Config(HAL_RCC_GetHCLKFreq()/RHINO_CONFIG_TICKS_PER_SECOND);
+
+    /**Configure the Systick 
+    */
+  HAL_SYSTICK_CLKSourceConfig(SYSTICK_CLKSOURCE_HCLK);
+
+  /* SysTick_IRQn interrupt configuration */
+  HAL_NVIC_SetPriority(SysTick_IRQn, 0, 0);
+}
+
+/* USART2 init function */
+static void MX_USART2_UART_Init(void)
+{
+
+  huart2.Instance = USART2;
+  huart2.Init.BaudRate = 115200;
+  huart2.Init.WordLength = UART_WORDLENGTH_8B;
+  huart2.Init.StopBits = UART_STOPBITS_1;
+  huart2.Init.Parity = UART_PARITY_NONE;
+  huart2.Init.Mode = UART_MODE_TX_RX;
+  huart2.Init.HwFlowCtl = UART_HWCONTROL_NONE;
+  huart2.Init.OverSampling = UART_OVERSAMPLING_16;
+  huart2.Init.OneBitSampling = UART_ONE_BIT_SAMPLE_DISABLE;
+  huart2.AdvancedInit.AdvFeatureInit = UART_ADVFEATURE_NO_INIT;
+  if (HAL_UART_Init(&huart2) != HAL_OK)
+  {
+    _Error_Handler(__FILE__, __LINE__);
+  }
 
 }
 
+/** Configure pins as 
+        * Analog 
+        * Input 
+        * Output
+        * EVENT_OUT
+        * EXTI
+*/
+static void MX_GPIO_Init(void)
+{
+
+  GPIO_InitTypeDef GPIO_InitStruct;
+
+  /* GPIO Ports Clock Enable */
+  __HAL_RCC_GPIOC_CLK_ENABLE();
+  __HAL_RCC_GPIOH_CLK_ENABLE();
+  __HAL_RCC_GPIOA_CLK_ENABLE();
+
+  /*Configure GPIO pin Output Level */
+  HAL_GPIO_WritePin(LD2_GPIO_Port, LD2_Pin, GPIO_PIN_RESET);
+
+  /*Configure GPIO pin : B1_Pin */
+  GPIO_InitStruct.Pin = B1_Pin;
+  GPIO_InitStruct.Mode = GPIO_MODE_IT_FALLING;
+  GPIO_InitStruct.Pull = GPIO_NOPULL;
+  HAL_GPIO_Init(B1_GPIO_Port, &GPIO_InitStruct);
+
+  /*Configure GPIO pin : LD2_Pin */
+  GPIO_InitStruct.Pin = LD2_Pin;
+  GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
+  GPIO_InitStruct.Pull = GPIO_NOPULL;
+  GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
+  HAL_GPIO_Init(LD2_GPIO_Port, &GPIO_InitStruct);
+
+}
+
+/* USER CODE BEGIN 4 */
+
+/* USER CODE END 4 */
+
 /**
-  * @brief  Main program
+  * @brief  This function is executed in case of error occurrence.
   * @param  None
   * @retval None
   */
-void stm32_soc_init(void)
+void _Error_Handler(char * file, int line)
 {
-    /* STM32L0xx HAL library initialization:
-       - Configure the Flash prefetch, Flash preread and Buffer caches
-       - Systick timer is configured by default as source of time base, but user 
-             can eventually implement his proper time base source (a general purpose 
-             timer for example or other time source), keeping in mind that Time base 
-             duration should be kept 1ms since PPP_TIMEOUT_VALUEs are defined and 
-             handled in milliseconds basis.
-       - Low Level Initialization
-     */
-    HAL_Init();
+  /* USER CODE BEGIN Error_Handler_Debug */
+  /* User can add his own implementation to report the HAL error return state */
+  while(1) 
+  {
+  }
+  /* USER CODE END Error_Handler_Debug */ 
+}
 
-    /* Configure the system clock to 2 MHz */
-    SystemClock_Config();
+#ifdef USE_FULL_ASSERT
 
-#if defined(TERMINAL_IO_OUT)
-    /* Configure Key Button */
-    BSP_PB_Init(BUTTON_KEY, BUTTON_MODE_GPIO);
-#else 
-    /* Configure the COM port */
-    UartHandle.Init.BaudRate = 115200;
-    UartHandle.Init.WordLength = UART_WORDLENGTH_8B;
-    UartHandle.Init.StopBits = UART_STOPBITS_1;
-    UartHandle.Init.Parity = UART_PARITY_NONE;
-    UartHandle.Init.HwFlowCtl = UART_HWCONTROL_NONE;
-    UartHandle.Init.Mode = UART_MODE_TX_RX;
-    BSP_COM_Init(COM1, &UartHandle);
+/**
+   * @brief Reports the name of the source file and the source line number
+   * where the assert_param error has occurred.
+   * @param file: pointer to the source file name
+   * @param line: assert_param error line source number
+   * @retval None
+   */
+void assert_failed(uint8_t* file, uint32_t line)
+{
+  /* USER CODE BEGIN 6 */
+  /* User can add his own implementation to report the file name and line number,
+    ex: printf("Wrong parameters value: file %s on line %d\r\n", file, line) */
+  /* USER CODE END 6 */
+
+}
+
 #endif
 
-    /* Configures LED */
-    //BSP_LED_Init(LED2);
+HAL_StatusTypeDef HAL_InitTick(uint32_t TickPriority)
+{
+  /*Configure the SysTick to have interrupt in 1ms time basis*/
+  HAL_SYSTICK_Config(SystemCoreClock/RHINO_CONFIG_TICKS_PER_SECOND);
+
+  /*Configure the SysTick IRQ priority */
+  HAL_NVIC_SetPriority(SysTick_IRQn, TickPriority ,0U);
+
+   /* Return function status */
+  return HAL_OK;
 }
 
 /**
@@ -230,14 +288,35 @@ void stm32_soc_init(void)
   */
 PUTCHAR_PROTOTYPE
 {
-    if (ch == '\n') {
-        HAL_UART_Transmit(&UartHandle, (void *)"\r", 1,3000);
-    }
-    /* Place your implementation of fputc here */
-    /* e.g. write a character to the BSP_COM1 and Loop until the end of transmission */
-    HAL_UART_Transmit(&UartHandle, (uint8_t *)&ch, 1, TIMEOUT_VALUE);
-
-    return ch;
+  if (ch == '\n') {
+    //hal_uart_send(&console_uart, (void *)"\r", 1, 30000);
+    HAL_UART_Transmit(&huart2, (void *)"\r", 1,30000);
+  }
+  HAL_UART_Transmit(&huart2, (uint8_t *)&ch, 1, 0xFFFF);
+  return ch;
 }
+
+/**
+  * @brief  Retargets the C library scanf function to the USART.
+  * @param  None
+  * @retval None
+  */
+GETCHAR_PROTOTYPE
+{
+  /* Place your implementation of fgetc here */
+  /* e.g. readwrite a character to the USART2 and Loop until the end of transmission */
+  uint8_t ch = 0;
+  //uint32_t recv_size;
+  HAL_UART_Receive(&huart2, &ch, 1,30000);
+  return ch;
+}
+
+/**
+  * @}
+  */ 
+
+/**
+  * @}
+*/ 
 
 /************************ (C) COPYRIGHT STMicroelectronics *****END OF FILE****/

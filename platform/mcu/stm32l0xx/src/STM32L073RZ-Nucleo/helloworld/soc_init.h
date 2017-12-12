@@ -1,12 +1,15 @@
 /**
   ******************************************************************************
-  * @file    CRYP/CRYP_AESModes/Inc/main.h
-  * @author  MCD Application Team
-  * @brief   Header for main.c module
+  * File Name          : main.hpp
+  * Description        : This file contains the common defines of the application
   ******************************************************************************
-  * @attention
+  ** This notice applies to any and all portions of this file
+  * that are not between comment pairs USER CODE BEGIN and
+  * USER CODE END. Other portions of this file, whether 
+  * inserted by the user or by software development tools
+  * are owned by their respective copyright owners.
   *
-  * <h2><center>&copy; COPYRIGHT(c) 2016 STMicroelectronics</center></h2>
+  * COPYRIGHT(c) 2017 STMicroelectronics
   *
   * Redistribution and use in source and binary forms, with or without modification,
   * are permitted provided that the following conditions are met:
@@ -32,92 +35,61 @@
   *
   ******************************************************************************
   */
-
 /* Define to prevent recursive inclusion -------------------------------------*/
 #ifndef __SOC_INIT_H
 #define __SOC_INIT_H
+  /* Includes ------------------------------------------------------------------*/
 
 /* Includes ------------------------------------------------------------------*/
-#include "stm32l0xx_hal.h"
-#include "stm32l0xx_nucleo.h"
-#include "stdio.h"
-#include "string.h"
+/* USER CODE BEGIN Includes */
 
+/* USER CODE END Includes */
 
-/* Exported types ------------------------------------------------------------*/
-/* COM Types Definition */
-typedef enum { COM1 = 0}COM_TypeDef;
+/* Private define ------------------------------------------------------------*/
 
-/* Exported constants --------------------------------------------------------*/
-#define  TIMEOUT_VALUE 0xFFFF
+#define B1_Pin GPIO_PIN_13
+#define B1_GPIO_Port GPIOC
+#define MCO_Pin GPIO_PIN_0
+#define MCO_GPIO_Port GPIOH
+#define USART_TX_Pin GPIO_PIN_2
+#define USART_TX_GPIO_Port GPIOA
+#define USART_RX_Pin GPIO_PIN_3
+#define USART_RX_GPIO_Port GPIOA
+#define LD2_Pin GPIO_PIN_5
+#define LD2_GPIO_Port GPIOA
+#define TMS_Pin GPIO_PIN_13
+#define TMS_GPIO_Port GPIOA
+#define TCK_Pin GPIO_PIN_14
+#define TCK_GPIO_Port GPIOA
 
-/* Definition for COM port1, connected to USART1 */ 
-#define COMn                            1
+/* ########################## Assert Selection ############################## */
+/**
+  * @brief Uncomment the line below to expanse the "assert_param" macro in the 
+  *        HAL drivers code
+  */
+/* #define USE_FULL_ASSERT    1U */
 
-#if 0 
-/* USART1 as COM */
-#define BSP_COM1                       USART1
-#define BSP_COM1_CLK_ENABLE()          __HAL_RCC_USART1_CLK_ENABLE()
-#define BSP_COM1_CLK_DISABLE()         __HAL_RCC_USART1_CLK_DISABLE()
+/* USER CODE BEGIN Private defines */
 
-#define BSP_COM1_FORCE_RESET()         __HAL_RCC_USART1_FORCE_RESET()
-#define BSP_COM1_RELEASE_RESET()       __HAL_RCC_USART1_RELEASE_RESET()
-  
-#define BSP_COM1_TX_PIN                GPIO_PIN_9
-#define BSP_COM1_TX_GPIO_PORT          GPIOA
-#define BSP_COM1_TX_GPIO_CLK_ENABLE()  __HAL_RCC_GPIOA_CLK_ENABLE()
-#define BSP_COM1_TX_GPIO_CLK_DISABLE() __HAL_RCC_GPIOA_CLK_DISABLE()
-#define BSP_COM1_TX_AF                 GPIO_AF4_USART1
+/* USER CODE END Private defines */
 
-#define BSP_COM1_RX_PIN                GPIO_PIN_10
-#define BSP_COM1_RX_GPIO_PORT          GPIOA
-#define BSP_COM1_RX_GPIO_CLK_ENABLE()  __HAL_RCC_GPIOA_CLK_ENABLE()
-#define BSP_COM1_RX_GPIO_CLK_DISABLE() __HAL_RCC_GPIOA_CLK_DISABLE()
-#define BSP_COM1_RX_AF                 GPIO_AF4_USART1
+#ifdef __cplusplus
+ extern "C" {
+#endif
+void _Error_Handler(char *, int);
 
-#define BSP_COM1_IRQn                  USART1_IRQn
-
-#else
-/* USART2 as COM */
-#define BSP_COM1                       USART2
-#define BSP_COM1_CLK_ENABLE()          __HAL_RCC_USART2_CLK_ENABLE()
-#define BSP_COM1_CLK_DISABLE()         __HAL_RCC_USART2_CLK_DISABLE()
-
-#define BSP_COM1_FORCE_RESET()         __HAL_RCC_USART2_FORCE_RESET()
-#define BSP_COM1_RELEASE_RESET()       __HAL_RCC_USART2_RELEASE_RESET()
-  
-#define BSP_COM1_TX_PIN                GPIO_PIN_2
-#define BSP_COM1_TX_GPIO_PORT          GPIOA
-#define BSP_COM1_TX_GPIO_CLK_ENABLE()  __HAL_RCC_GPIOA_CLK_ENABLE()
-#define BSP_COM1_TX_GPIO_CLK_DISABLE() __HAL_RCC_GPIOA_CLK_DISABLE()
-#define BSP_COM1_TX_AF                 GPIO_AF4_USART2
-
-#define BSP_COM1_RX_PIN                GPIO_PIN_3
-#define BSP_COM1_RX_GPIO_PORT          GPIOA
-#define BSP_COM1_RX_GPIO_CLK_ENABLE()  __HAL_RCC_GPIOA_CLK_ENABLE()
-#define BSP_COM1_RX_GPIO_CLK_DISABLE() __HAL_RCC_GPIOA_CLK_DISABLE()
-#define BSP_COM1_RX_AF                 GPIO_AF4_USART2
-
-#define BSP_COM1_IRQn                  USART2_IRQn
+#define Error_Handler() _Error_Handler(__FILE__, __LINE__)
+#ifdef __cplusplus
+}
 #endif
 
-#define COMx_CLK_ENABLE(__COM__)        (((__COM__) == COM1) ? BSP_COM1_CLK_ENABLE() : 0)
-#define COMx_CLK_DISABLE(__COM__)       (((__COM__) == COM1) ? BSP_COM1_CLK_DISABLE() : 0)
+/**
+  * @}
+  */ 
 
-#define COMx_TX_GPIO_CLK_ENABLE(__COM__) do { if(__COM__ == COM1) BSP_COM1_TX_GPIO_CLK_ENABLE(); } while (0)
-#define COMx_TX_GPIO_CLK_DISABLE(__COM__) (((__COM__) == COM1) ? BSP_COM1_TX_GPIO_CLK_DISABLE() : 0)
-
-#define COMx_RX_GPIO_CLK_ENABLE(__COM__) do { if(__COM__ == COM1) BSP_COM1_RX_GPIO_CLK_ENABLE(); } while (0)
-#define COMx_RX_GPIO_CLK_DISABLE(__COM__) (((__COM__) == COM1) ? BSP_COM1_RX_GPIO_CLK_DISABLE() : 0)
-
-
-
-
-
-/* Exported macro ------------------------------------------------------------*/
-/* Exported functions ------------------------------------------------------- */
-void              BSP_COM_Init(COM_TypeDef COM, UART_HandleTypeDef* huart);
+/**
+  * @}
+*/ 
 
 #endif /* __SOC_INIT_H */
-
 /************************ (C) COPYRIGHT STMicroelectronics *****END OF FILE****/

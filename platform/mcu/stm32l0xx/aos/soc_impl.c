@@ -6,22 +6,28 @@
 #include <assert.h>
 #include <stdio.h>
 
-#if (RHINO_CONFIG_MM_DEBUG > 0)
+#if (RHINO_CONFIG_MM_TLF > 0)
+
+#if !defined (__CC_ARM) /* Keil / armcc */
 extern void         *heap_start;
+extern void         *heap_end;
 extern void         *heap_len;
 
-k_mm_region_t g_mm_region[] = {{(uint8_t*)&heap_start,(size_t)&heap_len}};
-int           g_region_num  = sizeof(g_mm_region)/sizeof(k_mm_region_t);
-
-extern int __bss_start__, __bss_end__, _sdata, _edata;
-
-void aos_mm_leak_region_init(void)
-{
-    krhino_mm_leak_region_init(&__bss_start__, &__bss_end__);
-    krhino_mm_leak_region_init(&_sdata, &_edata);
-}
+extern void         *heap2_start;
+extern void         *heap2_len;
 #endif
 
+
+#if defined (__CC_ARM) /* Keil / armcc */
+#define HEAP_BUFFER_SIZE 1024*5
+uint8_t g_heap_buf[HEAP_BUFFER_SIZE];
+k_mm_region_t g_mm_region[] = {{g_heap_buf, HEAP_BUFFER_SIZE}, {(uint8_t *)0x10000000, 0x8000}};
+#else
+k_mm_region_t g_mm_region[] = {{(uint8_t*)&heap_start,(size_t)&heap_len},{(uint8_t*)&heap2_start,(size_t)&heap2_len}};
+#endif
+int           g_region_num  = sizeof(g_mm_region)/sizeof(k_mm_region_t);
+
+#endif
 
 size_t soc_get_cur_sp()
 {
