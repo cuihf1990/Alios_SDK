@@ -1,3 +1,7 @@
+/*
+ * Copyright (C) 2015-2017 Alibaba Group Holding Limited
+ */
+
 #include "internal/sal_sockets_internal.h"
 
 /* Here for now until needed in other places in lwIP */
