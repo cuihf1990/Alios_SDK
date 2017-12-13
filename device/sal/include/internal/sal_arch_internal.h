@@ -17,9 +17,16 @@ uint32_t sys_now(void);
 //#define EVENT_SIMPLE
 #define SAL_ARCH_TIMEOUT 0xffffffffUL
 
+/** sys_mbox_tryfetch() returns SAL_MBOX_EMPTY if appropriate.
+ * For now we use the same magic value, but we allow this to change in future.
+ */
+#define SAL_MBOX_EMPTY SAL_ARCH_TIMEOUT
+
 #define SAL_SEM_NULL  NULL
 
 #define SAL_LIGHTWEIGHT_PROT  1
+
+#define SAL_DEFAULT_RECVMBOX_SIZE       8
 
 typedef aos_sem_t sal_sem_t;
 
@@ -31,6 +38,10 @@ typedef uint32_t sal_prot_t;
 typedef aos_mutex_t sal_mutex_t;
 #define sal_mutex_valid(mutex)       aos_mutex_is_valid(mutex)
 #define sal_mutex_set_invalid(mutex) do { if(mutex != NULL) { (mutex)->hdl = NULL; }}while(0)
+
+typedef aos_queue_t sal_mbox_t;
+#define sal_mbox_valid(mbox)       aos_queue_is_valid(mbox)
+#define sal_mbox_set_invalid(mbox) do { if(mbox != NULL) { (mbox)->hdl = NULL; }}while(0)
 
 typedef void *sal_thread_t;
 /**
@@ -138,6 +149,93 @@ void sal_sem_set_invalid(sal_sem_t *sem);
 void sal_mutex_arch_init(void);
 
 void sal_mutex_arch_free(void);
+
+/* Mailbox functions. */
+
+/**
+ * @ingroup sys_mbox
+ * Create a new mbox of specified size
+ * @param mbox pointer to the mbox to create
+ * @param size (minimum) number of messages in this mbox
+ * @return ERR_OK if successful, another err_t otherwise
+ */
+err_t sal_mbox_new(sal_mbox_t *mbox, int size);
+/**
+ * @ingroup sys_mbox
+ * Post a message to an mbox - may not fail
+ * -> blocks if full, only used from tasks not from ISR
+ * @param mbox mbox to posts the message
+ * @param msg message to post (ATTENTION: can be NULL)
+ */
+void sal_mbox_post(sal_mbox_t *mbox, void *msg);
+/**
+ * @ingroup sys_mbox
+ * Try to post a message to an mbox - may fail if full or ISR
+ * @param mbox mbox to posts the message
+ * @param msg message to post (ATTENTION: can be NULL)
+ */
+err_t sal_mbox_trypost(sal_mbox_t *mbox, void *msg);
+/**
+ * @ingroup sys_mbox
+ * Wait for a new message to arrive in the mbox
+ * @param mbox mbox to get a message from
+ * @param msg pointer where the message is stored
+ * @param timeout maximum time (in milliseconds) to wait for a message (0 = wait forever)
+ * @return time (in milliseconds) waited for a message, may be 0 if not waited
+           or SYS_ARCH_TIMEOUT on timeout
+ *         The returned time has to be accurate to prevent timer jitter!
+ */
+u32_t sal_arch_mbox_fetch(sal_mbox_t *mbox, void **msg, u32_t timeout);
+/* Allow port to override with a macro, e.g. special timeout for sys_arch_mbox_fetch() */
+#ifndef sal_arch_mbox_tryfetch
+/**
+ * @ingroup sys_mbox
+ * Wait for a new message to arrive in the mbox
+ * @param mbox mbox to get a message from
+ * @param msg pointer where the message is stored
+ * @return 0 (milliseconds) if a message has been received
+ *         or SAL_MBOX_EMPTY if the mailbox is empty
+ */
+u32_t sal_arch_mbox_tryfetch(sal_mbox_t *mbox, void **msg);
+#endif
+/**
+ * For now, we map straight to sys_arch implementation.
+ */
+#define sal_mbox_tryfetch(mbox, msg) sal_arch_mbox_tryfetch(mbox, msg)
+/**
+ * @ingroup sys_mbox
+ * Delete an mbox
+ * @param mbox mbox to delete
+ */
+void sal_mbox_free(sal_mbox_t *mbox);
+
+#define sal_mbox_fetch(mbox, msg) sal_arch_mbox_fetch(mbox, msg, 0)
+#ifndef sal_mbox_valid
+/**
+ * @ingroup sys_mbox
+ * Check if an mbox is valid/allocated: return 1 for valid, 0 for invalid
+ */
+int sal_mbox_valid(sal_mbox_t *mbox);
+#endif
+#ifndef sal_mbox_set_invalid
+/**
+ * @ingroup sys_mbox
+ * Set an mbox invalid so that sys_mbox_valid returns 0
+ */
+void sal_mbox_set_invalid(sal_mbox_t *mbox);
+#endif
+#ifndef sal_mbox_valid_val
+/**
+ * Same as sys_mbox_valid() but taking a value, not a pointer
+ */
+#define sal_mbox_valid_val(mbox)       sal_mbox_valid(&(mbox))
+#endif
+#ifndef sal_mbox_set_invalid_val
+/**
+ * Same as sys_mbox_set_invalid() but taking a value, not a pointer
+ */
+#define sal_mbox_set_invalid_val(mbox) sal_mbox_set_invalid(&(mbox))
+#endif
 
 
 /**
