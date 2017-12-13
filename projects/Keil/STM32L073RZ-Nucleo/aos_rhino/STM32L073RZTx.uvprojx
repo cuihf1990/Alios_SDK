@@ -682,7 +682,7 @@
             <File>
               <FileName>board.c</FileName>
               <FileType>1</FileType>
-              <FilePath>..\..\..\..\board\STM32L073RZ-Nucleo\board.c</FilePath>
+              <FilePath>..\..\..\..\board\stm32l073rz-nucleo\board.c</FilePath>
             </File>
           </Files>
         </Group>

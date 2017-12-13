@@ -893,7 +893,7 @@
       <tvExp>0</tvExp>
       <tvExpOptDlg>0</tvExpOptDlg>
       <bDave2>0</bDave2>
-      <PathWithFileName>..\..\..\..\board\STM32L073RZ-Nucleo\board.c</PathWithFileName>
+      <PathWithFileName>..\..\..\..\board\stm32l073rz-nucleo\board.c</PathWithFileName>
       <FilenameWithoutPath>board.c</FilenameWithoutPath>
       <RteFlg>0</RteFlg>
       <bShared>0</bShared>
