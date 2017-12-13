@@ -26,14 +26,14 @@ GLOBAL_DEFINES += CONFIG_AOS_KV_SECOND_PTN=7
 GLOBAL_DEFINES += CONFIG_AOS_KV_PTN_SIZE=4096
 GLOBAL_DEFINES += CONFIG_AOS_KV_BUFFER_SIZE=8192
 
-GLOBAL_INCLUDES += ../../arch/arm/armv7m/gcc/m4 
+GLOBAL_INCLUDES += ../../arch/arm/armv7m/gcc/m4
 
-GLOBAL_INCLUDES +=		\
-				   src/common/csp/wifi/inc	\
-				   src/B-L475E-IOT01/include \
+GLOBAL_INCLUDES += \
+                   src/common/csp/wifi/inc     \
+		   src/B-L475E-IOT01/include   \
                    src/B-L475E-IOT01/runapp    \
-                   Drivers/STM32L4xx_HAL_Driver/Inc  \
-				   Drivers/STM32L4xx_HAL_Driver/Inc/Legacy	\
+                   Drivers/STM32L4xx_HAL_Driver/Inc \
+		   Drivers/STM32L4xx_HAL_Driver/Inc/Legacy \
                    Drivers/BSP/B-L475E-IOT01 \
                    Drivers/BSP/Components/es_wifi \
                    Drivers/BSP/Components/hts221 \
@@ -41,28 +41,40 @@ GLOBAL_INCLUDES +=		\
                    Drivers/BSP/Components/lps22hb \
                    Drivers/BSP/Components/lsm6dsl \
                    Drivers/BSP/Components/vl53l0x \
-				   Drivers/CMSIS/Include \
-				   ../../../include/hal	
-				   
+                   Drivers/CMSIS/Include \
+		   ../../../include/hal
 
 
-GLOBAL_CFLAGS += -DSTM32L475xx 
+GLOBAL_CFLAGS += -DSTM32L475xx
 
+ifeq ($(COMPILER),armcc)
+GLOBAL_CFLAGS += --c99 -c --cpu Cortex-M4.fp -D__MICROLIB -g --apcs=interwork --split_sections
+else
 GLOBAL_CFLAGS += -mcpu=cortex-m4 \
-                 -march=armv7-m \
-                 -mthumb -mthumb-interwork \
-                 -mlittle-endian
+                 -march=armv7-m  \
+                 -mlittle-endian \
+                 -w
+endif
 
-GLOBAL_CFLAGS += -w
-
-GLOBAL_LDFLAGS += -mcpu=cortex-m4        \
-                  -mthumb -mthumb-interwork \
-                  -mlittle-endian \
-                  -nostartfiles \
+ifeq ($(COMPILER),armcc)
+GLOBAL_LDFLAGS += --cpu Cortex-M4.fp   \
+                  --littleend  \
+		  --branchpatch=sdcomp-29491-629360 \
+		   *.o \
+                  --library_type=microlib \
+		  --strict \
+		  --scatter "platform\mcu\stm32l4xx\B-L475E-IOT01.sct" \
+                  --summary_stderr \
+		  --info summarysizes --xref --callgraph --symbols \
+                  --info sizes --info totals --info unused --info veneers
+else
+GLOBAL_LDFLAGS += -mcpu=cortex-m4  \
+                  -mlittle-endian  \
+                  -nostartfiles    \
                   --specs=nosys.specs \
                   $(CLIB_LDFLAGS_NANO_FLOAT)
+endif
 
-$(NAME)_CFLAGS  += -Wall -Werror 
 
 GLOBAL_LDFLAGS += -T platform/mcu/b-l475e-iot01/STM32L475VGTx_FLASH.ld
 
@@ -125,5 +137,5 @@ $(NAME)_SOURCES := src/B-L475E-IOT01/runapp/startup_stm32l475xx_gcc.s \
                    src/B-L475E-IOT01/sensor/vl53l0x_proximity.c \
                    src/B-L475E-IOT01/sensor/sensors_data.c \
                    src/B-L475E-IOT01/sensor/sensors.c \
-                   src/B-L475E-IOT01/sensor/qspi.c 
+                   src/B-L475E-IOT01/sensor/qspi.c
 
