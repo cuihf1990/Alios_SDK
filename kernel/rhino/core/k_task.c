@@ -260,7 +260,6 @@ ktask_t *krhino_cur_task_get(void)
     return task;
 }
 
-#if (RHINO_CONFIG_TASK_SUSPEND > 0)
 kstat_t task_suspend(ktask_t *task)
 {
     CPSR_ALLOC();
@@ -394,7 +393,6 @@ kstat_t krhino_task_resume(ktask_t *task)
 
     return task_resume(task);
 }
-#endif
 
 kstat_t krhino_task_stack_min_free(ktask_t *task, size_t *free)
 {
@@ -533,12 +531,13 @@ kstat_t task_pri_change(ktask_t *task, uint8_t new_pri)
     return RHINO_SUCCESS;
 }
 
+#if (RHINO_CONFIG_TASK_PRI_CHG > 0)
 kstat_t krhino_task_pri_change(ktask_t *task, uint8_t pri, uint8_t *old_pri)
 {
     CPSR_ALLOC();
 
     uint8_t pri_limit;
-    kstat_t  error;
+    kstat_t error;
 
     NULL_PARA_CHK(task);
     NULL_PARA_CHK(old_pri);
@@ -583,6 +582,7 @@ kstat_t krhino_task_pri_change(ktask_t *task, uint8_t pri, uint8_t *old_pri)
 
     return RHINO_SUCCESS;
 }
+#endif
 
 #if (RHINO_CONFIG_TASK_WAIT_ABORT > 0)
 kstat_t krhino_task_wait_abort(ktask_t *task)

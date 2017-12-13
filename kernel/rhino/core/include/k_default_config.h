@@ -96,8 +96,8 @@
 #endif
 
 /* kernel task conf */
-#ifndef RHINO_CONFIG_TASK_SUSPEND
-#define RHINO_CONFIG_TASK_SUSPEND            0
+#ifndef RHINO_CONFIG_TASK_PRI_CHG
+#define RHINO_CONFIG_TASK_PRI_CHG            1
 #endif
 
 #ifndef RHINO_CONFIG_TASK_INFO
