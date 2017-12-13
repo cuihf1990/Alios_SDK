@@ -35,7 +35,7 @@ kobj_list_t  g_kobj_list;
 
 #if (RHINO_CONFIG_TIMER > 0)
 klist_t      g_timer_head;
-tick_t       g_timer_count;
+sys_time_t   g_timer_count;
 ktask_t      g_timer_task;
 cpu_stack_t  g_timer_task_stack[RHINO_CONFIG_TIMER_TASK_STACK_SIZE];
 kqueue_t     g_timer_queue;
