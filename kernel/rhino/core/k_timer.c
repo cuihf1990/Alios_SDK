@@ -7,11 +7,11 @@
 #if (RHINO_CONFIG_TIMER > 0)
 static void timer_list_pri_insert(klist_t *head, ktimer_t *timer)
 {
-    tick_t    val;
-    klist_t  *q;
-    klist_t  *start;
-    klist_t  *end;
-    ktimer_t *task_iter_temp;
+    sys_time_t val;
+    klist_t   *q;
+    klist_t   *start;
+    klist_t   *end;
+    ktimer_t  *task_iter_temp;
 
     start = end = head;
     val = timer->remain;
@@ -38,7 +38,7 @@ static void timer_list_rm(ktimer_t *timer)
 }
 
 static kstat_t timer_create(ktimer_t *timer, const name_t *name, timer_cb_t cb,
-                            tick_t first, tick_t round, void *arg, uint8_t auto_run,
+                            sys_time_t first, sys_time_t round, void *arg, uint8_t auto_run,
                             uint8_t mm_alloc_flag)
 {
     CPSR_ALLOC();
@@ -79,7 +79,7 @@ static kstat_t timer_create(ktimer_t *timer, const name_t *name, timer_cb_t cb,
 }
 
 kstat_t krhino_timer_create(ktimer_t *timer, const name_t *name, timer_cb_t cb,
-                            tick_t first, tick_t round, void *arg, uint8_t auto_run)
+                            sys_time_t first, sys_time_t round, void *arg, uint8_t auto_run)
 {
     return timer_create(timer, name, cb, first, round, arg, auto_run,
                         K_OBJ_STATIC_ALLOC);
@@ -111,7 +111,7 @@ kstat_t krhino_timer_del(ktimer_t *timer)
 #if (RHINO_CONFIG_KOBJ_DYN_ALLOC > 0)
 kstat_t krhino_timer_dyn_create(ktimer_t **timer, const name_t *name,
                                 timer_cb_t cb,
-                                tick_t first, tick_t round, void *arg, uint8_t auto_run)
+                                sys_time_t first, sys_time_t round, void *arg, uint8_t auto_run)
 {
     kstat_t   ret;
     ktimer_t *timer_obj;
@@ -207,7 +207,7 @@ kstat_t krhino_timer_stop(ktimer_t *timer)
     return RHINO_SUCCESS;
 }
 
-kstat_t krhino_timer_change(ktimer_t *timer, tick_t first, tick_t round)
+kstat_t krhino_timer_change(ktimer_t *timer, sys_time_t first, sys_time_t round)
 {
     k_timer_queue_cb *cb;
     kstat_t err;
@@ -437,7 +437,7 @@ static void timer_task(void *pa)
     kstat_t           err;
     sys_time_t        tick_start;
     sys_time_t        tick_end;
-    int32_t           delta;
+    int64_t           delta;
 
     (void)pa;
 
