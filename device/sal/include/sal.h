@@ -38,6 +38,7 @@ typedef enum netconn_evt {
 } netconn_evt_t;
 
 typedef void (*netconn_evt_cb_t)(int s, enum netconn_evt evt);
+typedef int (*netconn_data_input_cb_t)(int s, void *data, size_t len, ip_addr_t *addr, u16_t port);
 
 typedef struct sal_op_s {
     char *version; /* Reserved for furture use. */
@@ -75,25 +76,6 @@ typedef struct sal_op_s {
                 char remote_ip[16], int32_t remote_port);
 
     /**
-     * Receive data from module.
-     * This function returns either when expected length data read,
-     * or no more data left. This OUT "len" reflects the real length read.
-     * The caller is epected to check the returned len.
-     *
-     * @param[in]   fd - the file descripter to operate on.
-     * @param[out]  data - pointer to data to send.
-     * @param[out]  len - expected length of the data when IN,
-     *                    and real read len when OUT.
-     * @param[out]  remote_ip - remote ip address. Caller manages the
-                                memory (optional).
-     * @param[out]  remote_port - remote port number (optional).
-     *
-     * @return  0 - success, -1 - failure
-     */
-    int (*recv)(int fd, uint8_t *buf, uint32_t *len,
-                char remote_ip[16], int32_t remote_port);
-
-    /**
      * Get IP information of the corresponding domain.
      * Currently only one IP string is returned (even when the domain
      * coresponses to mutliple IPs). Note: only IPv4 is supported.
@@ -121,6 +103,23 @@ typedef struct sal_op_s {
      * @return  0 - success, -1 - failure
      */
     int (*deinit)(void);
+
+    /**
+     * Register network connection data input function
+     * Input data from module.
+     * This callback should be called when the data is received from the module
+     * It should tell the sal where the data comes from.
+     * @param[in]  fd - the file descripter to operate on.
+     * @param[in]  data - the received data.
+     * @param[in]  len - expected length of the data when IN,
+     *                    and real read len when OUT.
+     * @param[in]  addr - remote ip address. Caller manages the
+                                memory (optional).
+     * @param[in]  port - remote port number (optional).
+     *
+     * @return  0 - success, -1 - failure
+     */
+    int (*register_netconn_data_input_cb)(netconn_data_input_cb_t cb);
 
     /**
      * Register network connection event callback function.
@@ -183,25 +182,6 @@ int sal_module_send(int fd, uint8_t *data, uint32_t len,
                         char remote_ip[16], int32_t remote_port);
 
 /**
- * Receive data from module.
- * This function returns either when expected length data read,
- * or no more data left. This OUT "len" reflects the real length read.
- * The caller is epected to check the returned len.
- *
- * @param[in]   fd - the file descripter to operate on.
- * @param[out]  data - pointer to data to send.
- * @param[out]  len - expected length of the data when IN,
- *                    and real read len when OUT.
- * @param[out]  remote_ip - remote ip address. Caller manages the
-                            memory (optional).
- * @param[out]  remote_port - remote port number (optional).
- *
- * @return  0 - success, -1 - failure
- */
-int sal_module_recv(int fd, uint8_t *buf, uint32_t *len,
-                        char remote_ip[16], int32_t remote_port);
-
-/**
  * Get IP information of the corresponding domain.
  * Currently only one IP string is returned (even when the domain
  * coresponses to mutliple IPs). Note: only IPv4 is supported.
@@ -231,6 +211,23 @@ int sal_module_close(int fd, int32_t remote_port);
 int sal_module_deinit(void);
 
 /**
+ * Register network connection data input function
+ * Input data from module.
+ * This callback should be called when the data is received from the module
+ * It should tell the sal where the data comes from.
+ * @param[in]  fd - the file descripter to operate on.
+ * @param[in]  data - the received data.
+ * @param[in]  len - expected length of the data when IN,
+ *                    and real read len when OUT.
+ * @param[in]  addr - remote ip address. Caller manages the
+                            memory (optional).
+ * @param[in]  port - remote port number (optional).
+ *
+ * @return  0 - success, -1 - failure
+ */
+int sal_module_register_netconn_data_input_cb(netconn_data_input_cb_t cb);
+
+/**
  * Register network connection event callback function.
  * This callback should be called by following below rules:
  *
@@ -248,6 +245,8 @@ int sal_module_deinit(void);
  *      g_netconn_evt_cb(fd, NETCONN_EVT_ERROR);
  */
 int sal_module_register_netconn_evt_cb(netconn_evt_cb_t cb);
+
+
 
 
 #ifdef __cplusplus

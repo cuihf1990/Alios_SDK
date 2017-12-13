@@ -52,7 +52,7 @@ static err_t at_output(struct netif *netif, struct pbuf *p)
 #endif
 
     // send payload directly
-    at.send_data_2stage(fst, p->payload, p->len, out);
+    at.send_data_2stage(fst, p->payload, p->len, out, sizeof(out));
 
     if (strstr(out, "OK") == NULL) {
         LOGE(TAG, "AT send failed");
@@ -86,7 +86,7 @@ static void enter_enet_raw_mode()
 {
     char out[256];
     at.set_timeout(5000);
-    at.send_raw(AT_CMD_ENTER_ENET_MODE, out);
+    at.send_raw(AT_CMD_ENTER_ENET_MODE, out, sizeof(out));
     if (strstr(out, "ERROR") != NULL)
         LOGE(TAG, "AT enter enet raw mode failed.");
 }
@@ -165,15 +165,16 @@ static void enet_raw_data_handler()
 {
     long len = 0, i = 0;
     char buf[16] = {0};
-    int c, ret, tot_read, pbuf_read, to_read;
+    char c;
+    int  ret, tot_read, pbuf_read, to_read;
     struct pbuf *pbuf, *q;
     void *tsk;
 
     while (i+1 <= sizeof(buf)) {
-            c = at.getch();
-            if (c < 0) return;
-            if (c == ',') break;
-            buf[i++] = c;
+        ret = at.getch(&c);
+        if (ret != 0) return;
+        if (c == ',') break;
+        buf[i++] = c;
     }
     buf[i] = '\0';
 

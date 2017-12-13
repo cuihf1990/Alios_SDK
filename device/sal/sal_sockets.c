@@ -583,7 +583,24 @@ static int salpcb_new(sal_netconn_t *conn)
     return ERR_OK;
 }
 
-
+static void salnetconn_drain(sal_netconn_t *conn)
+{
+    sal_netbuf_t *mem;
+    if (sal_mbox_valid(&conn->recvmbox)){
+        while(sal_mbox_tryfetch(&conn->recvmbox, (void **)(&mem)) != SAL_MBOX_EMPTY){
+            if (mem != NULL){
+                if (mem->payload){
+                    aos_free(mem->payload);
+                    mem->payload = NULL;
+                }
+                aos_free(mem);
+            }
+        }
+        sal_mbox_free(&conn->recvmbox);
+        sal_mbox_set_invalid(&conn->recvmbox);
+    }
+    return;
+}
 
 static sal_netconn_t *salnetconn_new(enum netconn_type t)
 {
@@ -593,17 +610,23 @@ static sal_netconn_t *salnetconn_new(enum netconn_type t)
     conn = (sal_netconn_t *)aos_malloc(sizeof(sal_netconn_t));
     if (conn == NULL) {
         SAL_ERROR("salnetconn_new fail to new net conn \n");
-        UNLOCK_SAL_CORE;
         return NULL;
     }
 
     memset(conn, 0, sizeof(sal_netconn_t));
     conn->type = t;
+    conn->socket = -1;
+    if (sal_mbox_new(&conn->recvmbox, SAL_DEFAULT_RECVMBOX_SIZE) != ERR_OK){
+        SAL_ERROR("fai to new conn receive mail box, size is %d \n", SAL_DEFAULT_RECVMBOX_SIZE);
+        aos_free(conn);
+        return NULL;
+    }
+    
     err = salpcb_new(conn);
     if (ERR_OK != err) {
         SAL_ERROR("salnetconn_new fail to new pcb return value is %d \n", err);
+        sal_mbox_free(&conn->recvmbox);
         aos_free(conn);
-        UNLOCK_SAL_CORE;
         return NULL;
     }
 
@@ -619,6 +642,7 @@ static err_t salnetconn_delete(sal_netconn_t *conn)
         return ERR_OK;
     }
 
+    salnetconn_drain(conn);
     if (NULL != conn->pcb.tcp) {
         switch (NETCONNTYPE_GROUP(conn->type)) {
             case NETCONN_TCP:
@@ -787,6 +811,33 @@ static err_t salnetconn_bind(sal_netconn_t *conn, const ip_addr_t *addr, u16_t p
 
     return ERR_OK;
 
+}
+
+static err_t salnetconn_recv_data(sal_netconn_t *conn, sal_netbuf_t **new_buf)
+{
+    int ret = 0;
+    void *buf = NULL;
+    
+    if(NULL == conn || NULL == new_buf){
+        SAL_ERROR("invalid input\n");
+        return ERR_ARG;
+    }
+    
+    if (!sal_mbox_valid(&conn->recvmbox)){
+        SAL_ERROR("socket %d connect invalid recvmbox\n", conn->socket);
+        return ERR_CONN;
+    }
+
+    ret = sal_arch_mbox_fetch(&conn->recvmbox, &buf, conn->recv_timeout);
+    sal_deal_event(conn->socket, NETCONN_EVT_RCVMINUS);
+    if (ret == SAL_ARCH_TIMEOUT){
+        SAL_ERROR("sal recv data time out, socket %d conn %p timeout %d\n", conn->socket, conn, conn->recv_timeout);
+        return ERR_TIMEOUT;
+    }
+
+    *new_buf = buf;
+    return ERR_OK;
+    
 }
 
 int sal_select(int maxfdp1, fd_set *readset, fd_set *writeset,
@@ -1078,24 +1129,20 @@ int sal_recvfrom(int s, void *mem, size_t len, int flags,
                  struct sockaddr *from, socklen_t *fromlen)
 {
     struct sal_sock        *pstsock = NULL;
-    uint8_t                *pucrecvbuf = NULL;
-    uint32_t               uirecvlen = 0;
-    uint32_t               uitotalrecvlen = 0;
-#if SAL_RCVTIMEO
-    uint32_t               begin_ms = 0;
-    uint32_t               end_ms = 0;
-#endif
+    sal_netbuf_t           *buf = NULL;
+    int                    off = 0;
+    u16_t                  buflen = 0;
+    u16_t                  copylen = 0;
     err_t                  err = ERR_OK;
     uint8_t                done = 0;
-    int8_t                 ipstr[SAL_SOCKET_IP4_ADDR_LEN] = {0};
-    int32_t                remoteport = 0;
-    ip_addr_t              fromaddr;
     union sockaddr_aligned saddr;
 
     if (NULL == mem || 0 == len) {
         SAL_ERROR("sal_recvfrom invalid input\n");
         return -1;
     }
+    
+    SAL_DEBUG("sal recvfrom input s=%d mem=%p len=%u flags=0x%x \n", s, mem, len, flags);
 
     pstsock = get_socket(s);
     if (NULL == pstsock) {
@@ -1103,60 +1150,91 @@ int sal_recvfrom(int s, void *mem, size_t len, int flags,
         return -1;
     }
 
-    /* If this is non-blocking call, then check first */
-    if (((flags & MSG_DONTWAIT) || netconn_is_nonblocking(pstsock->conn)) &&
-        (pstsock->rcvevent <= 0)) {
-        SAL_ERROR("sal_recvfrom(%d): returning EWOULDBLOCK\n", s);
-        sock_set_errno(pstsock, EWOULDBLOCK);
-        return -1;
-    }
-
-    pucrecvbuf = (uint8_t *)mem;
-    uirecvlen = len;
-#if SAL_RCVTIMEO
-    begin_ms = sys_now();
-#endif
-    do {
-        err = sal_module_recv(s, (uint8_t *)(pucrecvbuf + uitotalrecvlen), &uirecvlen, (char *)ipstr, remoteport);
-        if (err != ERR_OK) {
-            SAL_ERROR("sal_recvfrom(%d): sal_module_recv returning %d\n", s, err);
-            return -1;
-        }
-
-        uitotalrecvlen += uirecvlen;
-        uirecvlen = len - uirecvlen;
-
-        if (uitotalrecvlen == 0) {
-            aos_msleep(5);
-#if SAL_RCVTIMEO
-            if (pstsock->conn->recv_timeout != 0) {
-                end_ms = sys_now();
-                if (end_ms - begin_ms >= pstsock->conn->recv_timeout) {
-                    SAL_ERROR("sal_recvfrom(%d): recv timeout\n", s);
-                    return ERR_TIMEOUT;
+    do{
+        SAL_DEBUG("sal recvfrom : top while sock->lastdata=%p\n", pstsock->lastdata);
+        if (pstsock->lastdata){
+            buf = pstsock->lastdata;
+        }else{
+            if (((flags & MSG_DONTWAIT) || netconn_is_nonblocking(pstsock->conn)) &&
+                (pstsock->rcvevent <= 0)){
+                if (off > 0){
+                    sock_set_errno(pstsock, 0);
+                    return off;
                 }
+                SAL_ERROR("sal_recvfrom(%d): returning EWOULDBLOCK\n", s);
+                sock_set_errno(pstsock, EWOULDBLOCK);
+                return -1;
             }
-#endif
-            continue;
+
+            err = salnetconn_recv_data(pstsock->conn, &buf);
+            SAL_DEBUG("sal_recvfrom neconn_recv err=%d, netbuf=%p\n", err, buf);
+            if (err != ERR_OK || buf == NULL || buf->payload == NULL){
+                if(off > 0){
+                    sock_set_errno(pstsock, 0);
+                    return off;
+                }
+
+                sock_set_errno(pstsock, err_to_errno(err));
+                return -1;
+            }
+
+            pstsock->lastdata = buf;
+        }
+        buflen = buf->len;
+        SAL_DEBUG("sal recvfrom: buflen=%u, len=%u, off=%d, lastoffset=%u\n", buflen, len, off, pstsock->lastoffset);
+
+        buflen -= pstsock->lastoffset;
+        if(len > buflen){
+            copylen =buflen;
+        }else{
+            copylen = len;
         }
 
-        if (uitotalrecvlen > 0) {
+        memcpy(&((u8_t *)mem)[off], &((u8_t *)buf->payload)[pstsock->lastoffset], copylen);
+        off += copylen;
+
+        if (NETCONNTYPE_GROUP(pstsock->conn->type) == NETCONN_TCP){
+            if (len < copylen){
+                SAL_ERROR("invalid copylen %d, len = %d, it would underflow\n", copylen, len);
+                return -1;
+            }
+            if ((len == copylen) || (pstsock->rcvevent <= 0) || ((flags & MSG_PEEK) != 0)){
+                done = 1;
+            }
+        }else{
             done = 1;
         }
 
-        if (from && fromlen) {
-            fromaddr.type = IPADDR_TYPE_V4;
-            ipstr_to_u32((char *)ipstr, &(fromaddr.u_addr.ip4.addr));
-            IPADDR_PORT_TO_SOCKADDR(&saddr, &fromaddr, remoteport);
-            if (*fromlen > saddr.sa.sa_len) {
-                *fromlen = saddr.sa.sa_len;
+        if (done){
+            if (from && fromlen){
+                if (NETCONNTYPE_GROUP(pstsock->conn->type) == NETCONN_TCP){
+                    IPADDR_PORT_TO_SOCKADDR(&saddr, &(pstsock->conn->pcb.tcp->remote_ip), (pstsock->conn->pcb.tcp->remote_port));
+                }else{
+                    IPADDR_PORT_TO_SOCKADDR(&saddr, &(buf->addr), buf->port);
+                }
+                if (*fromlen > saddr.sa.sa_len) {
+                    *fromlen = saddr.sa.sa_len;
+                }
+                memcpy(from, &saddr, *fromlen);
             }
-            memcpy(from, &saddr, *fromlen);
         }
-    } while (!done);
+
+        if ((flags & MSG_PEEK)  == 0){
+            if ((NETCONNTYPE_GROUP(pstsock->conn->type) == NETCONN_TCP) && (buflen > copylen)){
+                pstsock->lastdata = buf;
+                pstsock->lastoffset += copylen;
+            }else{
+                pstsock->lastdata = NULL;
+                pstsock->lastoffset = 0;
+                aos_free(buf->payload);
+                aos_free(buf);
+                buf = NULL;
+            }
+        }
+    }while(!done);
 
     sock_set_errno(pstsock, 0);
-    return uitotalrecvlen;
+    return off;
 }
 
 int sal_read(int s, void *mem, size_t len)
@@ -1199,7 +1277,7 @@ int sal_sendto(int s, const void *data, size_t size, int flags,
     if (NETCONNTYPE_GROUP(pstsalsock->conn->type) == NETCONN_TCP) {
         if (pstsalsock->conn->state == NETCONN_NONE) {
             SAL_ERROR("sal_sendto socket %d connect state is %d\n", s, pstsalsock->conn->state);
-            UNLOCK_SAL_CORE;
+            //UNLOCK_SAL_CORE;
             return ERR_VAL;
         }
     }
@@ -1268,6 +1346,78 @@ int sal_write(int s, const void *data, size_t size)
     return sal_send(s, data, size, 0);
 }
 
+static int salnetconn_packet_input(sal_netconn_t *conn, void *data, size_t len, ip_addr_t *addr, u16_t port)
+{
+    sal_netbuf_t *buf;
+
+    if (NULL == conn || !sal_mbox_valid(&conn->recvmbox)){
+        SAL_ERROR("invalid connection to input packet\n");
+        return -1;
+    }
+    
+    buf = (sal_netbuf_t *)aos_malloc(sizeof(sal_netbuf_t));
+    if (NULL == buf){
+        SAL_ERROR("memory is not enough, malloc size %d fail\n", sizeof(sal_netbuf_t));
+        return -1;
+    }
+
+    memset(buf, 0, sizeof(*buf));
+    
+    buf->payload = aos_malloc(len);
+    if (NULL == buf->payload){
+        aos_free(buf);
+        SAL_ERROR("memory is no enough, malloc size %d fail\n", len);
+        return -1;
+    }
+    memcpy(buf->payload, data, len);
+    buf->len = len;
+    if (NULL != addr){
+        ip_addr_set(&buf->addr, addr);
+    }
+    buf->port = port;
+
+    if(sal_mbox_trypost(&conn->recvmbox, buf) != ERR_OK){
+        aos_free(buf->payload);
+        aos_free(buf);
+        SAL_ERROR("try post recv packet fail \n");
+        return -1;
+    }
+
+    return 0;
+}
+
+int sal_packet_input(int s, void *data, size_t len, ip_addr_t *addr, u16_t port)
+{
+    struct sal_sock *sock = NULL;
+    int             ret = 0;
+    
+    if (NULL == data || 0 == len){
+        SAL_ERROR("low level invalid input data\n");
+        return -1;
+    }
+
+    sock = get_socket(s);
+    if (NULL == sock){
+        SAL_ERROR("low level invalid input , socket %d doesn't exist\n", s);
+        return -1;
+    }
+
+    if (sock->conn == NULL){
+        SAL_ERROR("socket %d invalid for haven't creat connnet yet\n");
+        return -1;
+    }
+
+    //LOCK_SAL_CORE;
+    ret = salnetconn_packet_input(sock->conn, data, len, addr, port);
+    //UNLOCK_SAL_CORE;
+    if (ret){
+        SAL_ERROR("sal packet input fail\n");
+    }
+    
+    sal_deal_event(s, NETCONN_EVT_RCVPLUS);
+    
+    return ret;
+}
 
 void sal_deal_event(int s, enum netconn_evt evt)
 {
@@ -1282,10 +1432,10 @@ void sal_deal_event(int s, enum netconn_evt evt)
     /* Set event as required */
     switch (evt) {
         case NETCONN_EVT_RCVPLUS:
-            sock->rcvevent = 1;
+            sock->rcvevent++;
             break;
         case NETCONN_EVT_RCVMINUS:
-            sock->rcvevent = 0;
+            sock->rcvevent--;
             break;
         case NETCONN_EVT_SENDPLUS:
             sock->sendevent = 1;
@@ -1469,7 +1619,14 @@ int sal_init()
         sal_mutex_free(&lock_sal_core);
         return -1;
     }
-
+    
+    if (sal_module_register_netconn_data_input_cb(&sal_packet_input) != ERR_OK) {
+        SAL_ERROR("failed to reg sal packet input cb\n");
+        sal_mutex_arch_free();
+        sal_mutex_free(&lock_sal_core);
+        return -1;
+    }
+    
     /* Low level init. */
     if (sal_module_init() != ERR_OK) {
         SAL_ERROR("sal low level init fail\n");
@@ -1782,9 +1939,7 @@ int sal_setsockopt(int s, int level, int optname,
         case SOL_SOCKET:
             switch (optname) {
                 case SO_RCVTIMEO:
-#if SAL_RCVTIMEO
                     sock->conn->recv_timeout = SAL_SO_SNDRCVTIMEO_GET_MS(optval);
-#endif
                     break;
                 case SO_REUSEADDR:
                     break;
@@ -1844,8 +1999,8 @@ int sal_fcntl(int s, int cmd, int val)
 
 int sal_shutdown(int s, int how)
 {
-    SAL_ERROR("Nothing implemeted yet in %s!!!", __func__);
-    return 0;
+    SAL_ERROR("%s call sal_close for now\n", __func__);
+    return sal_close(s);
 }
 
 int sal_getaddrinfo(const char *nodename, const char *servname,

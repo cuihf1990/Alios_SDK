@@ -79,31 +79,51 @@ ssize_t Write(int fd, const void* buf, size_t n){
     return num;
 }
 
-void echo(listenfd){
+void echo(int listenfd){
     ssize_t n;
     char write_buff[MAX_LINE];
     char read_buff[MAX_LINE];
+    fd_set readfds;
     
-    memset(write_buff, 0, MAX_LINE);
-    memset(read_buff, 0, MAX_LINE);
 
-    n = read(listenfd, read_buff, MAX_LINE);
-    read_buff[n] = '\0';
-    fprintf(stdout, "Receive string from client: %s\r\n", read_buff);
+    while ( 1 )
+    {
+        FD_ZERO( &readfds );
+        FD_SET( listenfd, &readfds );
 
-    strcpy(write_buff, "from server echo: ");
-    n = strlen("from server echo: ");
-    strcpy(write_buff+n, read_buff);
+        select( listenfd+1, &readfds, NULL, NULL, NULL);
 
-    n += strlen(read_buff);
-    write_buff[n] = '\0';
+        if ( FD_ISSET( listenfd, &readfds ) ) /*one client has data*/
+        {
+            memset(write_buff, 0, MAX_LINE);
+            memset(read_buff, 0, MAX_LINE);
+            n = 0;
+            n = read(listenfd, read_buff, MAX_LINE);
+            if ( n == 0 ){
+                fprintf(stdout, "TCP Client is disconnected, fd: %d\n", listenfd);
+                break;
+            }
+            read_buff[n] = '\0';
+            fprintf(stdout, "Receive string from client: %s\r\n", read_buff);
 
-    fprintf(stdout, "Begin to send echo string to client: %s\r\n", write_buff);
-    n = write(listenfd, write_buff, strlen(write_buff));   
+            strcpy(write_buff, "from server echo: ");
+            n = strlen("from server echo: ");
+            strcpy(write_buff+n, read_buff);
+
+            n += strlen(read_buff);
+            write_buff[n] = '\0';
+
+            fprintf(stdout, "Begin to send echo string to client: %s\r\n", write_buff);
+            n = write(listenfd, write_buff, strlen(write_buff));
+        }
+    }
+    Close(listenfd);
+    return;
 }
 
 int main(int argc, char **argv){
     int servfd, clientfd, port, clientlen;
+    fd_set readfds;
     struct sockaddr_in servaddr;
     struct sockaddr_in cliaddr;
     struct hostent *host;
@@ -127,12 +147,18 @@ int main(int argc, char **argv){
     Bind(servfd, (struct sockaddr*)&servaddr, sizeof(servaddr));
     Listen(servfd, MAX_LISTEN);
 
-    while(1){   // init server
-        memset(&cliaddr, 0, sizeof(cliaddr));
-        clientfd = Accept(servfd, (struct sockaddr*)&cliaddr, &clientlen);
-        //host = Gethostbyaddr((const char*)&cliaddr.sin_addr.s_addr, sizeof(cliaddr.sin_addr.s_addr), AF_INET);
-        //printf("server connect to host: %s %s\n",host->h_name, inet_ntoa(cliaddr.sin_addr));
-        echo(clientfd);
-        Close(clientfd);
+    while ( 1 ){
+        FD_ZERO( &readfds );
+        FD_SET( servfd, &readfds );
+
+        select( servfd + 1, &readfds, NULL, NULL, NULL);
+
+        if ( FD_ISSET( servfd, &readfds ) ){
+            memset(&cliaddr, 0, sizeof(cliaddr));
+            clientfd = Accept( servfd, (struct sockaddr *) &cliaddr, &clientlen );
+            if ( clientfd >= 0 ){
+                echo(clientfd);
+            }
+        }
     }
 }

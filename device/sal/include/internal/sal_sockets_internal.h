@@ -19,9 +19,6 @@
 extern "C" {
 #endif
 
-#define SAL_SOCKET_MAX_PAYLOAD_SIZE  1512
-#define SAL_SOCKET_IP4_ANY_ADDR      "0.0.0.0"
-#define SAL_SOCKET_IP4_ADDR_LEN      16
 #define MEMP_NUM_NETCONN     5//(MAX_SOCKETS_TCP + MAX_LISTENING_SOCKETS_TCP + MAX_SOCKETS_UDP)
 
 #define SAL_TAG  "sal"
@@ -76,6 +73,12 @@ extern "C" {
 
 #define NETDB_ELEM_SIZE           (sizeof(struct addrinfo) + sizeof(struct sockaddr_storage) + DNS_MAX_NAME_LENGTH + 1)
 
+typedef struct sal_netbuf{
+    void      *payload;
+    u16_t     len;
+    ip_addr_t addr;
+    u16_t     port;
+}sal_netbuf_t;
 
 /** Description for a task waiting in select */
 struct sal_select_cb {
@@ -174,6 +177,10 @@ typedef struct sal_netconn {
     } pcb;
     /** the last error this netconn had */
     err_t last_err;
+
+    /** mbox where received packets are stored until they are fetched
+        by the neconn application thread. */
+    sal_mbox_t recvmbox;
     /** flags holding more netconn-internal state, see NETCONN_FLAG_* defines */
     u8_t flags;
 #if SAL_SNDTIMEO
@@ -181,11 +188,9 @@ typedef struct sal_netconn {
         in internal buffers) in milliseconds */
     s32_t send_timeout;
 #endif /* SAL_SNDTIMEO */
-#if SAL_RCVTIMEO
     /** timeout in milliseconds to wait for new data to be received
         (or connections to arrive for listening netconns) */
     int recv_timeout;
-#endif /* SAL_RCVTIMEO */
 #if SAL_RCVBUF
     /** maximum amount of bytes queued in recvmbox
         not used for TCP: adjust TCP_WND instead! */
