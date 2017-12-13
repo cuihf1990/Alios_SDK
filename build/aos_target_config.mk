@@ -229,7 +229,7 @@ endif
 
 # Process all the components + AOS
 
-COMPONENTS += platform/mcu/$(PLATFORM_MCU_BOARD) vcall vfs init
+COMPONENTS += platform/mcu/$(PLATFORM_MCU_BOARD) vcall init
 
 ifneq ($(ONLY_BUILD_LIBRARY), yes)
 COMPONENTS += auto_component
