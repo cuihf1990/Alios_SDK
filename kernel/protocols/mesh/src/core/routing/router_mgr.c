@@ -28,8 +28,7 @@ typedef struct router_mgmr_state_s {
 } router_mgmr_state_t;
 static router_mgmr_state_t g_rm_state;
 
-extern neighbor_t *get_neighbor_by_sid(hal_context_t *hal, uint16_t sid,
-                                       uint16_t meshnetid);
+extern neighbor_t *get_neighbor_by_sid(uint16_t meshnetid, uint16_t sid);
 extern void sid_router_register(void);
 #ifdef CONFIG_AOS_MESH_SUPER
 extern void vector_router_register(void);
@@ -46,8 +45,7 @@ uint16_t ur_router_get_next_hop(network_context_t *network, uint16_t dest_sid)
         return INVALID_SID;
     }
 
-    if (get_neighbor_by_sid(network->hal, dest_sid,
-                            umesh_mm_get_meshnetid(network)) != NULL) {
+    if (get_neighbor_by_sid(umesh_mm_get_meshnetid(network), dest_sid) != NULL) {
         return dest_sid;
     }
 
@@ -265,7 +263,7 @@ ur_error_t sid_allocator_free(network_context_t *network, ur_node_id_t *node)
         update_sid_mapping(network->sid_base, node, false);
 #ifdef CONFIG_AOS_MESH_SUPER
     } else {
-        network = get_network_context_by_meshnetid(node->meshnetid);
+        network = get_network_context_by_meshnetid(node->meshnetid, false);
         if (network == NULL) {
             return UR_ERROR_NONE;
         }

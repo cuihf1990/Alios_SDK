@@ -52,10 +52,7 @@ ur_error_t handle_address_query_response(message_t *message);
 ur_error_t handle_address_notification(message_t *message);
 ur_error_t handle_address_unreachable(message_t *message);
 
-ur_error_t send_address_notification(network_context_t *network,
-                                     ur_addr_t *dest);
-ur_error_t send_address_unreachable(network_context_t *network,
-                                    ur_addr_t *dest, ur_addr_t *target);
+ur_error_t send_address_unreachable(ur_addr_t *dest, ur_addr_t *target);
 
 ur_error_t update_address_cache(media_type_t type, ur_node_id_t *target,
                                 ur_node_id_t *attach);

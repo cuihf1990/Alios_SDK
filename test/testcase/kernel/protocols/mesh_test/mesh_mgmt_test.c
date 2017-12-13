@@ -46,7 +46,7 @@ void test_uradar_mesh_mgmt_case(void)
     memset(mac_addr.addr, 0x00, sizeof(mac_addr.addr));
     mac_addr.addr[0] = 0x03;
     YUNIT_ASSERT_PTR_NULL(get_neighbor_by_mac_addr((const uint8_t *)&mac_addr));
-    YUNIT_ASSERT_PTR_NULL(get_neighbor_by_sid(NULL, 0x1200, umesh_mm_get_meshnetid(NULL)));
+    YUNIT_ASSERT_PTR_NULL(get_neighbor_by_sid(umesh_mm_get_meshnetid(NULL), 0x1200));
     uint8_t ueid1[8] = {0};
     YUNIT_ASSERT_PTR_NULL(get_neighbor_by_mac_addr(ueid1));
     YUNIT_ASSERT(0 != umesh_mm_get_meshnetid(NULL));

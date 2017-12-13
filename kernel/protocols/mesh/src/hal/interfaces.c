@@ -137,15 +137,12 @@ static void set_network_configs(network_context_t *network)
     switch (network->hal->module->type) {
         case MEDIA_TYPE_WIFI:
             network->migrate_interval = WIFI_MIGRATE_WAIT_TIMEOUT;
-            network->notification_interval = WIFI_NOTIFICATION_TIMEOUT;
             break;
         case MEDIA_TYPE_BLE:
             network->migrate_interval = BLE_MIGRATE_WAIT_TIMEOUT;
-            network->notification_interval = BLE_NOTIFICATION_TIMEOUT;
             break;
         case MEDIA_TYPE_15_4:
             network->migrate_interval = IEEE154_MIGRATE_WAIT_TIMEOUT;
-            network->notification_interval = IEEE154_NOTIFICATION_TIMEOUT;
             break;
         default:
             break;
@@ -298,7 +295,7 @@ network_context_t *get_hal_default_network_context(hal_context_t *hal)
     return network;
 }
 
-network_context_t *get_network_context_by_meshnetid(uint16_t meshnetid)
+network_context_t *get_network_context_by_meshnetid(uint16_t meshnetid, bool def)
 {
     network_context_t *network = NULL;
 
@@ -306,6 +303,9 @@ network_context_t *get_network_context_by_meshnetid(uint16_t meshnetid)
         if (network->meshnetid == meshnetid) {
             break;
         }
+    }
+    if (network == NULL && def) {
+        network = get_default_network_context();
     }
     return network;
 }

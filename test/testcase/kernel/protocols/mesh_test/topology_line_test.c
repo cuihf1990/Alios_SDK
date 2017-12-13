@@ -100,7 +100,7 @@ static void topology_line_case(bool vector_router)
             continue;
 
         num --;
-        node = get_neighbor_by_sid(NULL, i, umesh_get_meshnetid());
+        node = get_neighbor_by_sid(umesh_get_meshnetid(), i);
         if (!node)
             continue;
 
