@@ -10,6 +10,8 @@
 #define RHINO_FALSE    0u
 #define RHINO_TRUE     1u
 
+typedef uint64_t    sys_time_t;
+
 #if (RHINO_CONFIG_INTRPT_STACK_OVF_CHECK > 0)
 #if (RHINO_CONFIG_CPU_STACK_DOWN > 0)
 extern cpu_stack_t *g_intrpt_stack_bottom;
