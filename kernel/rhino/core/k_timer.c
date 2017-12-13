@@ -263,13 +263,13 @@ static void timer_cb_proc(void)
     klist_t  *start;
     klist_t  *end;
     ktimer_t *timer;
-    int32_t   delta;
+    int64_t   delta;
 
     start = end = &g_timer_head;
 
     for (q = start->next; q != end; q = q->next) {
         timer = krhino_list_entry(q, ktimer_t, timer_list);
-        delta = (int32_t)timer->match - (int32_t)g_timer_count;
+        delta = (int64_t)timer->match - (int64_t)g_timer_count;
 
         if (delta <= 0) {
             timer->cb(timer, timer->timer_cb_arg);
@@ -465,9 +465,9 @@ static void timer_task(void *pa)
             timer = krhino_list_entry(g_timer_head.next, ktimer_t, timer_list);
             tick_start = krhino_sys_tick_get();
 
-            delta = (int32_t)timer->match - (int32_t)tick_start;
+            delta = (int64_t)timer->match - (int64_t)tick_start;
             if (delta > 0) {
-                err = krhino_queue_recv(&g_timer_queue, delta, &msg);
+                err = krhino_queue_recv(&g_timer_queue, (tick_t)delta, &msg);
 
                 tick_end = krhino_sys_tick_get();
                 if (err == RHINO_BLK_TIMEOUT) {

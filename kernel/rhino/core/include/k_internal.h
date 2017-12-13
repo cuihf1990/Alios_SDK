@@ -36,14 +36,13 @@ extern kobj_list_t g_kobj_list;
 
 #if (RHINO_CONFIG_TIMER > 0)
 extern klist_t          g_timer_head;
-extern tick_t           g_timer_count;
+extern sys_time_t       g_timer_count;
 extern ktask_t          g_timer_task;
 extern cpu_stack_t      g_timer_task_stack[RHINO_CONFIG_TIMER_TASK_STACK_SIZE];
 extern kqueue_t         g_timer_queue;
 extern void            *g_timer_msg[RHINO_CONFIG_TIMER_MSG_NUM];
 extern mblk_pool_t      g_timer_pool;
 extern k_timer_queue_cb timer_queue_cb[RHINO_CONFIG_TIMER_MSG_NUM];
-
 #endif
 
 #if (RHINO_CONFIG_DYNTICKLESS > 0)
