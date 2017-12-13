@@ -1,8 +1,14 @@
+/*
+ * Copyright (C) 2015-2017 Alibaba Group Holding Limited
+ */
+
 #include <stdio.h>
 #include <string.h>
 #include <assert.h>
 #include <aos/aos.h>
 #include <atparser.h>
+#include <sal_arch.h>
+#include <sal_ipaddr.h>
 #include <sal.h>
 
 #define TAG "sal_wifi"
@@ -10,58 +16,25 @@
 #define CMD_SUCCESS_RSP "OK"
 #define CMD_FAIL_RSP "ERROR"
 
-# if 0
-typedef enum {
-    TCP_SERVER,
-    TCP_CLIENT,
-    SSL_CLIENT,
-    UDP_BROADCAST,
-    UDP_UNICAST
-} CONN_TYPE;
-
-/*Fill necessary fileds according to the socket type.*/
-typedef struct {
-    int fd; // fd that are used in socket level
-    CONN_TYPE type;
-    char *addr; // remote ip or domain
-    int32_t r_port; // remote port (set to -1 if not used)
-    int32_t l_port; // local port (set to -1 if not used)
-    uint32_t tcp_keep_alive; // tcp keep alive setting (set to 0 if not used)
-} at_conn_t;
-#endif
-
 #define MAX_DOMAIN_LEN 256
 #define DATA_LEN_MAX 10
 #define LINK_ID_MAX 5
-//static int g_fd_map[LINK_ID_MAX] = {-1};
-
-typedef struct sk_data_s {
-    //struct sk_data_s *next;
-    slist_t next;
-    uint8_t id;
-    uint32_t len; // start from 0
-    uint32_t offset;
-    uint8_t data[0];
-} sk_data_t;
 
 /* Change to include data slink for each link id respectively. <TODO> */
 typedef struct link_s {
     int fd;
-    int data_total;
     aos_sem_t sem_start;
     aos_sem_t sem_close;
 } link_t;
 
-//static sk_data_t *g_data = NULL;
-static slist_t g_data;
-static aos_mutex_t g_data_mutex;
-static link_t g_link[LINK_ID_MAX];// = {{-1, {NULL}}};
+static link_t g_link[LINK_ID_MAX];
 static aos_mutex_t g_link_mutex;
 static netconn_evt_cb_t g_netconn_evt_cb;
+static netconn_data_input_cb_t g_netconn_data_input_cb;
 
 static void handle_tcp_udp_client_conn_state(uint8_t link_id)
 {
-    char s[32];
+    char s[32] = {0};
 
     at.read(s, 6);
     if (strstr(s, "CLOSED") != NULL) {
@@ -103,7 +76,7 @@ static void handle_socket_data()
     int link_id, i, j;
     uint32_t len;
     char reader[16];
-    sk_data_t *sk_data;
+    char *recvdata = NULL;
 
     /* Eat the "OCKET," */
     at.read(reader, 6);
@@ -145,38 +118,29 @@ static void handle_socket_data()
     }
 
     /* Prepare socket data */
-    sk_data = (sk_data_t *)aos_malloc(sizeof(sk_data_t) + len + 1);
-    if (!sk_data) {
+    recvdata = (char *)aos_malloc(len + 1);
+    if (!recvdata) {
         LOGE(TAG, "Error: %s %d out of memory.", __func__, __LINE__);
         assert(0);
     }
-    sk_data->id = link_id;
-    sk_data->len = len;
-    sk_data->offset = 0;
-    at.read((char *)sk_data->data, len);
-    sk_data->data[len] = '\0';
-    LOGD(TAG, "The socket data is %s", sk_data->data);
 
-    /* Socket data into the tail of slink list */
-    if (aos_mutex_lock(&g_data_mutex, AOS_WAIT_FOREVER) != 0) {
-        if (g_netconn_evt_cb && (g_link[link_id].fd >= 0)) {
-            g_netconn_evt_cb(g_link[link_id].fd, NETCONN_EVT_ERROR);
+    at.read(recvdata, len);
+    recvdata[len] = '\0';
+    LOGD(TAG, "The socket data is %s", recvdata);
+    
+    if (g_netconn_data_input_cb && (g_link[link_id].fd >= 0)){
+        /* TODO get recv data src ip and port*/
+        if (g_netconn_data_input_cb(g_link[link_id].fd, recvdata, len, NULL, 0)){
+            LOGE(TAG, " %s socket %d get data len %d fail to post to sal, drop it\n",
+                 __func__, g_link[link_id].fd, len);
         }
-        LOGE(TAG, "Failed to lock mutex.");
-        return;
     }
-    /* Early data in fron and late ones in the end. */
-    slist_add_tail(&sk_data->next, &g_data);
-    g_link[link_id].data_total += len;
-
-    LOGD(TAG, "%s socket data on link %d with length %d saved to slist",
+    
+    LOGD(TAG, "%s socket data on link %d with length %d posted to sal\n",
          __func__, link_id, len);
 
-    if (g_netconn_evt_cb && (g_link[link_id].fd >= 0)) {
-        g_netconn_evt_cb(g_link[link_id].fd, NETCONN_EVT_RCVPLUS);
-    }
+    aos_free(recvdata);
 
-    aos_mutex_unlock(&g_data_mutex);
 }
 
 /**
@@ -252,11 +216,6 @@ static int sal_wifi_init(void)
         return 0;
     }
 
-    if (0 != aos_mutex_new(&g_data_mutex)) {
-        LOGE(TAG, "Creating data mutex failed (%s %d).", __func__, __LINE__);
-        return -1;
-    }
-
     if (0 != aos_mutex_new(&g_link_mutex)) {
         LOGE(TAG, "Creating link mutex failed (%s %d).", __func__, __LINE__);
         return -1;
@@ -265,7 +224,6 @@ static int sal_wifi_init(void)
     memset(g_link, 0, sizeof(g_link));
     for (link = 0; link < LINK_ID_MAX; link++) {
         g_link[link].fd = -1;
-        g_link[link].data_total = 0;
     }
 
     at.oob(NET_OOB_PREFIX, net_event_handler, NULL);
@@ -277,7 +235,6 @@ static int sal_wifi_deinit(void)
 {
     if (!inited) return 0;
 
-    aos_mutex_free(&g_data_mutex);
     // at.exitoob(NET_OOB_PREFIX); // <TODO>
 
     aos_mutex_free(&g_link_mutex);
@@ -342,31 +299,27 @@ int sal_wifi_start(sal_conn_t *c)
         break;
     default:
         LOGE(TAG, "Invalid connection type.");
-        g_link[link_id].fd = -1;
-        return -1;
+        goto err;
     }
 
     LOGD(TAG, "%s %d - AT cmd to run: %s", __func__, __LINE__, cmd);
 
-    at.send_raw(cmd, out);
+    at.send_raw(cmd, out, sizeof(out));
     LOGD(TAG, "The AT response is: %s", out);
     if (strstr(out, CMD_FAIL_RSP) != NULL) {
         LOGE(TAG, "%s %d failed", __func__, __LINE__);
-        g_link[link_id].fd = -1;
-        return -1;
+        goto err;
     }
     
     if (aos_sem_new(&g_link[link_id].sem_start, 0) != 0) {
        LOGE(TAG, "failed to allocate semaphore %s", __func__);
-            g_link[link_id].fd = -1;
-       return -1;
+       goto err;
     } 
     
     if (aos_sem_is_valid(&g_link[link_id].sem_start)) {
         if (aos_sem_wait(&g_link[link_id].sem_start, AOS_WAIT_FOREVER) != 0) {
             LOGE(TAG, "%s sem_wait failed", __func__);
-            g_link[link_id].fd = -1;
-            return -1;
+            goto err;
         }
         aos_sem_free(&g_link[link_id].sem_start);
         g_link[link_id].sem_start.hdl = NULL;
@@ -374,6 +327,14 @@ int sal_wifi_start(sal_conn_t *c)
     }
 
     return 0;
+err:
+    if (aos_mutex_lock(&g_link_mutex, AOS_WAIT_FOREVER) != 0) {
+        LOGE(TAG, "Failed to lock mutex (%s).", __func__);
+        return -1;
+    }
+    g_link[link_id].fd = -1;
+    aos_mutex_unlock(&g_link_mutex);
+    return -1;
 }
 
 static int fd_to_linkid(int fd)
@@ -418,7 +379,7 @@ static int sal_wifi_send(int fd,
 
     LOGD(TAG, "%s %d - AT cmd to run: %s", __func__, __LINE__, cmd);
 
-    at.send_data_2stage((const char *)cmd, (const char *)data, len, out);
+    at.send_data_2stage((const char *)cmd, (const char *)data, len, out, sizeof(out));
     LOGD(TAG, "The AT response is: %s", out);
 
     if (g_netconn_evt_cb && (g_link[link_id].fd >= 0)) {
@@ -428,88 +389,6 @@ static int sal_wifi_send(int fd,
         LOGE(TAG, "%s %d failed", __func__, __LINE__);
         return -1;
     }
-
-    return 0;
-}
-
-/*
-typedef struct sk_data_s {
-    slist_t next;
-    uint8_t id;
-    uint32_t len;
-    uint32_t offset;
-    uint8_t data[0];
-} sk_data_t;
-*/
-
-#define MIN(x,y) ((x) < (y) ? (x) : (y))
-
-/**
- * This func operates on g_data list to obtain socket data for caller.
- * Make sure to consume from the front to end so to ensure data order.
- */
-static int sal_wifi_recv(int fd,
-                         uint8_t *buf,
-                         uint32_t *plen,
-                         char remote_ip[16],
-                         int32_t remote_port)
-{
-    int link_id, total_read = 0, to_read;
-    sk_data_t *node;
-    slist_t *tmp;
-
-    link_id = fd_to_linkid(fd);
-    if (link_id >= LINK_ID_MAX) {
-        LOGE(TAG, "No connection found for fd (%d) in %s", fd, __func__);
-        return -1;
-    }
-
-    if (g_link[link_id].data_total == 0) {
-        LOGD(TAG, "No data left for fd (%d) on link %d", fd, link_id);
-        *plen = 0;
-        return 0;
-    }
-
-    if (aos_mutex_lock(&g_data_mutex, AOS_WAIT_FOREVER) != 0) {
-        LOGE(TAG, "Failed to lock mutex (%s).", __func__);
-        if (g_netconn_evt_cb && (g_link[link_id].fd >= 0)) {
-            g_netconn_evt_cb(g_link[link_id].fd, NETCONN_EVT_ERROR);
-        }
-        return -1;
-    }
-
-    slist_for_each_entry_safe(&g_data, tmp, node, sk_data_t, next) {
-        if (node->id != link_id) continue;
-        to_read = MIN(*plen - total_read, node->len - node->offset);
-        memcpy(buf + total_read, node->data + node->offset, to_read);
-        /* Update total_read and offset */
-        total_read += to_read;
-        node->offset += to_read;
-        //if (g_netconn_evt_cb && (g_link[link_id].fd >= 0)) {
-        //    g_netconn_evt_cb(g_link[link_id].fd, NETCONN_EVT_RCVMINUS);
-        //}
-        /* Delete node if it's exhausted */
-        if (node->offset >= (node->len - 1)) {
-            slist_del(&node->next, &g_data);
-            aos_free((void *)node);
-        }
-        /* Reflect the left data on link */
-        g_link[link_id].data_total -= to_read;
-        /* Continue or stop here? */
-        if (total_read >= *plen) break;
-    }
-
-    if (g_link[link_id].data_total == 0) {
-        if (g_netconn_evt_cb && (g_link[link_id].fd >= 0)) {
-            g_netconn_evt_cb(g_link[link_id].fd, NETCONN_EVT_RCVMINUS);
-        }
-    }
-
-    /* Safe to unlock now */
-    aos_mutex_unlock(&g_data_mutex);
-
-    /* Reflect the real read length, caller to check this ret value */
-    *plen = total_read;
 
     return 0;
 }
@@ -526,7 +405,7 @@ static int sal_wifi_domain_to_ip(char *domain,
     snprintf(cmd, DOMAIN_CMD_LEN - 1, "%s=%s", DOMAIN_CMD, domain);
     LOGD(TAG, "%s %d - AT cmd to run: %s", __func__, __LINE__, cmd);
 
-    at.send_raw(cmd, out);
+    at.send_raw(cmd, out, sizeof(out));
     LOGD(TAG, "The AT response is: %s", out);
     if (strstr(out, CMD_FAIL_RSP) != NULL) {
         LOGE(TAG, "%s %d failed", __func__, __LINE__);
@@ -594,7 +473,7 @@ static int sal_wifi_close(int fd,
     snprintf(cmd, STOP_CMD_LEN - 1, "%s=%d", STOP_CMD, link_id);
     LOGD(TAG, "%s %d - AT cmd to run: %s", __func__, __LINE__, cmd);
 
-    at.send_raw(cmd, out);
+    at.send_raw(cmd, out, sizeof(out));
     LOGD(TAG, "The AT response is: %s", out);
     if (strstr(out, CMD_FAIL_RSP) != NULL) {
         LOGE(TAG, "%s %d failed", __func__, __LINE__);
@@ -626,15 +505,22 @@ static int sal_wifi_register_netconn_evt_cb(netconn_evt_cb_t cb)
     return 0;
 }
 
+static int mk3060_wifi_packet_input_cb_register(netconn_data_input_cb_t cb)
+{
+    if (cb)
+        g_netconn_data_input_cb = cb;
+    return 0;
+}
+
 sal_op_t sal_op = {
     .version = "1.0.0",
     .init = sal_wifi_init,
     .start = sal_wifi_start,
     .send = sal_wifi_send,
-    .recv = sal_wifi_recv,
     .domain_to_ip = sal_wifi_domain_to_ip,
     .close = sal_wifi_close,
     .deinit = sal_wifi_deinit,
+    .register_netconn_data_input_cb = mk3060_wifi_packet_input_cb_register,
     .register_netconn_evt_cb = sal_wifi_register_netconn_evt_cb
 };
 

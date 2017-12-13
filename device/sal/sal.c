@@ -1,11 +1,18 @@
+/*
+ * Copyright (C) 2015-2017 Alibaba Group Holding Limited
+ */
+
 #include <stdio.h>
 #include <string.h>
 #include <assert.h>
 #include <aos/aos.h>
+
+#include <sal_arch.h>
+#include <sal_ipaddr.h>
 #include <sal.h>
 
 #define TAG "sal_module"
- 
+
 sal_op_t *g_sal_module = NULL;
 
 int sal_module_register(sal_op_t *module)
@@ -147,34 +154,6 @@ int sal_module_send(int fd, uint8_t *data, uint32_t len,
     
     return err;
 }
-                
-int sal_module_recv(int fd, uint8_t *buf, uint32_t *len,
-                        char remote_ip[16], int32_t remote_port)
-{
-    int err = 0;
-    
-    if (NULL == g_sal_module){
-        LOGE(TAG, "sal module recv fail for there is no sal module registered yet \n");
-        return -1;
-    }
-
-    if (NULL == g_sal_module->recv){
-        LOGE(TAG, "recv function in sal module is null \n");
-        return -1;
-    }
-
-    if (NULL == buf){
-        LOGE(TAG, "invalid input\n");
-        return -1;
-    }
-
-    err = g_sal_module->recv(fd, buf, len, remote_ip, remote_port);
-    if (err){
-        LOGE(TAG, "module recv fail err=%d\n", err);
-    }
-    
-    return err;
-}
 
 int sal_module_domain_to_ip(char *domain, char ip[16])
 {
@@ -223,6 +202,28 @@ int sal_module_register_netconn_evt_cb (netconn_evt_cb_t cb)
     }
     
     return err; 
+}
+
+int sal_module_register_netconn_data_input_cb(netconn_data_input_cb_t cb)
+{
+    int err = 0;
+    
+    if (NULL == g_sal_module){
+        LOGE(TAG, "sal module recv fail for there is no sal module registered yet \n");
+        return -1;
+    }
+
+    if (NULL == g_sal_module->register_netconn_data_input_cb){
+        LOGE(TAG, "recv function in sal module is null \n");
+        return -1;
+    }
+
+    err = g_sal_module->register_netconn_data_input_cb(cb);
+    if (err){
+        LOGE(TAG, "module recv fail err=%d\n", err);
+    }
+    
+    return err;
 }
 
 

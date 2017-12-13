@@ -38,6 +38,7 @@ static lwip_adapter_state_t g_la_state = {.interface_name = "ur"};
 
 static void adapter_msg_input(void *arg)
 {
+    umesh_post_event(CODE_MESH_DATA_RECV, 0);
     g_la_state.adpif.input(arg, &g_la_state.adpif);
 }
 

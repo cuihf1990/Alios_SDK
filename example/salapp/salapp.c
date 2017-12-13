@@ -6,12 +6,13 @@
 #include <string.h>
 #include <stdlib.h>
 #include <aos/aos.h>
-#include <sal.h>
 #include <sal_arch.h>
 #include <sal_def.h>
 #include <sal_ipaddr.h>
 #include <sal_sockets.h>
 #include <sal_err.h>
+#include <sal.h>
+
 #include <hal/soc/atcmd.h>
 #include <atparser.h>
 #include <netmgr.h>
@@ -48,8 +49,9 @@ static void handle_sal(char *pwbuf, int blen, int argc, char **argv)
     if (strcmp(ptype, "tcp_c") == 0) {
         char *pip, *pport, *pdata;
         ssize_t siz;
-
+        int time = 0;
         struct sockaddr_in addr;
+        
         g_fd = socket(AF_INET,SOCK_STREAM,0);
 
         pip = argv[2];
@@ -66,16 +68,15 @@ static void handle_sal(char *pwbuf, int blen, int argc, char **argv)
             close(g_fd);
             return;
         }
-
-        // send-recv
-        if ((siz = send(g_fd, pdata, strlen(pdata), 0)) <= 0) {
-            LOGE(TAG, "send failed, errno = %d.", errno);
-            close(g_fd);
-            return;
-        }
-
-        aos_msleep(10000);
+        
         while(1){
+            // send-recv
+            if ((siz = send(g_fd, pdata, strlen(pdata), 0)) <= 0) {
+                LOGE(TAG, "send failed, errno = %d.", errno);
+                close(g_fd);
+                return;
+            }
+            
             readlen = read(g_fd, buf, SALAPP_BUFFER_MAX_SIZE - 1);
             if (readlen < 0){
                 LOGE(TAG, "recv failed, errno = %d.", errno);
@@ -84,12 +85,17 @@ static void handle_sal(char *pwbuf, int blen, int argc, char **argv)
             }
 
             if (readlen == 0){
-                continue;
+                LOGE(TAG, "recv buf len is %d \n", readlen);
+                break;
             }
             
             LOGD(TAG, "recv server reply len %d info %s \n", readlen, buf);
             if (strstr(buf, pdata)){
                 LOGI(TAG, "Goodbye! See you! (%d)\n", g_fd);
+                time++;
+            }
+            
+            if (time >= 100){
                 break;
             }
         }

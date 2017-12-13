@@ -147,11 +147,6 @@ static inline uint16_t mm_get_main_netid(network_context_t *network)
     return get_main_netid(umesh_mm_get_meshnetid(network));
 }
 
-static inline uint16_t mm_get_sub_netid(network_context_t *network)
-{
-    return get_sub_netid(umesh_mm_get_meshnetid(network));
-}
-
 static inline bool is_bcast_sid(ur_addr_t *addr)
 {
     if (addr->addr.len == SHORT_ADDR_SIZE && addr->addr.short_addr == BCAST_SID) {

@@ -1131,7 +1131,7 @@ static void send_datagram(void *args)
         offset = sizeof(mcast_header_t);
         message_set_payload_offset(message, offset);
         lowpan_payload = message_get_payload(message);
-        insert_mcast_header(info->network, lowpan_payload);
+        insert_mcast_header(lowpan_payload);
         info->flags &= (~INSERT_MCAST_FLAG);
     }
 
@@ -1155,7 +1155,6 @@ static void handle_datagram(void *args)
     uint8_t           *nexth;
     slist_t           *hals;
     hal_context_t     *hal;
-    network_context_t *network = NULL;
     uint8_t *payload;
 
     message = (message_t *)args;
@@ -1166,14 +1165,13 @@ static void handle_datagram(void *args)
     if (info->type == MESH_FRAME_TYPE_DATA) {
         nexth = message_get_payload(message);
         if (is_mcast_header(*nexth)) {
-            network = get_default_network_context();
             payload = ur_mem_alloc(sizeof(mcast_header_t));
             if (payload == NULL) {
                 message_free(message);
                 return;
             }
             message_copy_to(message, 0, payload, sizeof(mcast_header_t));
-            error = process_mcast_header(network, payload);
+            error = process_mcast_header(payload);
             ur_mem_free(payload, sizeof(mcast_header_t));
             if (error != UR_ERROR_NONE) {
                 message_free(message);

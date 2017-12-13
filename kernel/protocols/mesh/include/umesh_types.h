@@ -249,6 +249,7 @@ typedef struct whitelist_entry_s {
 #define  CODE_MESH_DETACHED       3
 #define  CODE_MESH_CONNECTED      4
 #define  CODE_MESH_DISCONNECTED   5
+#define  CODE_MESH_DATA_RECV      6
 
 #ifdef __cplusplus
 }
