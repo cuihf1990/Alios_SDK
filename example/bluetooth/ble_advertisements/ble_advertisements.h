@@ -67,8 +67,7 @@ extern "C" {
  *                             Type Definitions
  ******************************************************************************/
 
-typedef enum
-{
+typedef enum {
     HDLS_GENERIC_ATTRIBUTE = 0x1,
     HDLC_GENERIC_ATTRIBUTE_SERVICE_CHANGED,
     HDLC_GENERIC_ATTRIBUTE_SERVICE_CHANGED_VALUE,

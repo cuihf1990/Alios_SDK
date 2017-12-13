@@ -63,61 +63,60 @@ extern "C" {
 /* UUID value of the SPP Service */
 #define UUID_SPP_SERVICE                        0x5E, 0x67, 0x21, 0x8A, 0x3f, 0x4b, 0x4D, 0x32, 0x91, 0x36, 0x38, 0xE3, 0xD8, 0xED, 0x63, 0x71
 
- /* UUID value of the SPP Characteristic, Data In */
+/* UUID value of the SPP Characteristic, Data In */
 #define UUID_SPP_SERVICE_CHARACTERISTIC_IN      0x45, 0x39, 0x3E, 0x90, 0x24, 0x1D, 0x21, 0x78, 0x32, 0x70, 0x21, 0x35, 0xB4, 0xBA, 0xAE, 0xE2
 
- /* UUID value of the SPP Characteristic, Data OUT */
+/* UUID value of the SPP Characteristic, Data OUT */
 #define UUID_SPP_SERVICE_CHARACTERISTIC_OUT     0x32, 0x15, 0x1a, 0x5e, 0x82, 0x2e, 0x12, 0x2a, 0x91, 0x43, 0x27, 0x52, 0xba, 0x1d, 0xf3, 0x30
 
 /******************************************************************************
  *                         Type Definitions
  ******************************************************************************/
 
-typedef enum
-{
+typedef enum {
     HDLS_GENERIC_ATTRIBUTE = 0x1,
-        HDLC_GENERIC_ATTRIBUTE_SERVICE_CHANGED,
-        HDLC_GENERIC_ATTRIBUTE_SERVICE_CHANGED_VALUE,
+    HDLC_GENERIC_ATTRIBUTE_SERVICE_CHANGED,
+    HDLC_GENERIC_ATTRIBUTE_SERVICE_CHANGED_VALUE,
 
     HDLS_GENERIC_ACCESS = 0x14,
-        HDLC_GENERIC_ACCESS_DEVICE_NAME,
-        HDLC_GENERIC_ACCESS_DEVICE_NAME_VALUE,
+    HDLC_GENERIC_ACCESS_DEVICE_NAME,
+    HDLC_GENERIC_ACCESS_DEVICE_NAME_VALUE,
 
-        HDLC_GENERIC_ACCESS_APPEARANCE,
-        HDLC_GENERIC_ACCESS_APPEARANCE_VALUE,
+    HDLC_GENERIC_ACCESS_APPEARANCE,
+    HDLC_GENERIC_ACCESS_APPEARANCE_VALUE,
 
     HDLS_HELLO_SENSOR = 0x30,
-        HDLC_HELLO_SENSOR_NOTIFY,
-        HDLC_HELLO_SENSOR_NOTIFY_VALUE,
-        HDLC_HELLO_SENSOR_NOTIFY_CFG_DESC,
+    HDLC_HELLO_SENSOR_NOTIFY,
+    HDLC_HELLO_SENSOR_NOTIFY_VALUE,
+    HDLC_HELLO_SENSOR_NOTIFY_CFG_DESC,
 
-        HDLC_HELLO_SENSOR_COLOR,
-        HDLC_HELLO_SENSOR_COLOR_VALUE,
+    HDLC_HELLO_SENSOR_COLOR,
+    HDLC_HELLO_SENSOR_COLOR_VALUE,
 
-    HDLS_SPP= 0x40,
-        HDLC_SPP_IN,
-        HDLC_SPP_IN_VALUE,
-        HDLC_SPP_IN_DESCRIPTION,
+    HDLS_SPP = 0x40,
+    HDLC_SPP_IN,
+    HDLC_SPP_IN_VALUE,
+    HDLC_SPP_IN_DESCRIPTION,
 
-        HDLC_SPP_OUT,
-        HDLC_SPP_OUT_VALUE,
-        HDLC_SPP_OUT_DESCRIPTION,
+    HDLC_SPP_OUT,
+    HDLC_SPP_OUT_VALUE,
+    HDLC_SPP_OUT_DESCRIPTION,
 
     HDLS_DEV_INFO = 0x50,
-        HDLC_DEV_INFO_MFR_NAME,
-        HDLC_DEV_INFO_MFR_NAME_VALUE,
+    HDLC_DEV_INFO_MFR_NAME,
+    HDLC_DEV_INFO_MFR_NAME_VALUE,
 
-        HDLC_DEV_INFO_MODEL_NUM,
-        HDLC_DEV_INFO_MODEL_NUM_VALUE,
+    HDLC_DEV_INFO_MODEL_NUM,
+    HDLC_DEV_INFO_MODEL_NUM_VALUE,
 
-        HDLC_DEV_INFO_SYSTEM_ID,
-        HDLC_DEV_INFO_SYSTEM_ID_VALUE,
+    HDLC_DEV_INFO_SYSTEM_ID,
+    HDLC_DEV_INFO_SYSTEM_ID_VALUE,
 
     HDLS_BAT = 0x60,
-        HDLC_BAT_LEVEL,
-        HDLC_BAT_LEVEL_VALUE,
+    HDLC_BAT_LEVEL,
+    HDLC_BAT_LEVEL_VALUE,
 
-}hello_sensor_db_tags;
+} hello_sensor_db_tags;
 
 
 

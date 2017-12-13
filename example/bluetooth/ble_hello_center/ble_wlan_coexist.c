@@ -1,43 +1,11 @@
-/**
- ******************************************************************************
- * @file    ble_command_line.c
- * @author  William Xu
- * @version V1.0.0
- * @date    30-Apr-2016
- * @file    This file provide the commands to help diagnose the BLE run-time
- *          Status.
- *          "blesocket" shows current BLE connections.
- *          "blepaired" shows all paired BT device info and keys
- * ****************************************************************************
- *
- *  The MIT License
- *  Copyright (c) 2014 MXCHIP Inc.
- *
- *  Permission is hereby granted, free of charge, to any person obtaining a copy
- *  of this software and associated documentation files (the "Software"), to deal
- *  in the Software without restriction, including without limitation the rights
- *  to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
- *  copies of the Software, and to permit persons to whom the Software is furnished
- *  to do so, subject to the following conditions:
- *
- *  The above copyright notice and this permission notice shall be included in
- *  all copies or substantial portions of the Software.
- *
- *  THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
- *  IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
- *  FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
- *  AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY,
- *  WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR
- *  IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
- *
- ******************************************************************************
- **/
-
+/*
+ * Copyright (C) 2015-2017 Alibaba Group Holding Limited
+ */
 
 #include <string.h>
 #include <stdio.h>
-#include "mico.h"
 #include "lwip/sockets.h"
+#include "mico.h"
 
 //#define wlan_log(M, ...) custom_log("WLAN", M, ##__VA_ARGS__)
 #define wlan_log(M, ...)
@@ -69,7 +37,7 @@ re_connect:
     addr.sin_port = htons(tcp_remote_port);
 
     wlan_log("Connecting to server: ip = %s port = %d",
-                   tcp_remote_ip, tcp_remote_port);
+             tcp_remote_ip, tcp_remote_port);
     err = connect(tcp_fd, (struct sockaddr *)&addr, sizeof(addr));
     require_noerr_action(err, exit, err = kConnectionErr);
     wlan_log("Connect success");
@@ -98,14 +66,17 @@ re_connect:
     }
 
 exit:
-    if ( err == kConnectionErr )
-    {
+    if ( err == kConnectionErr ) {
         SocketClose(&tcp_fd);
-        mico_rtos_delay_milliseconds( 2*1000 );
+        mico_rtos_delay_milliseconds( 2 * 1000 );
         goto re_connect;
     }
-    if (err != kNoErr) wlan_log("TCP Client thread exit with err: %d", err);
-    if (buf != NULL) free(buf);
+    if (err != kNoErr) {
+        wlan_log("TCP Client thread exit with err: %d", err);
+    }
+    if (buf != NULL) {
+        free(buf);
+    }
     SocketClose(&tcp_fd);
     mico_rtos_delete_thread(NULL);
 }
