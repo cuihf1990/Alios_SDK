@@ -27,6 +27,11 @@ static ur_error_t dummy_interface_down(void)
 
 void test_uradar_mesh_mgmt_case(void)
 {
+    int32_t num;
+    const ur_mem_stats_t *mem_stats = ur_mem_get_stats();
+
+    num = mem_stats->num;
+
     interface_start();
     YUNIT_ASSERT(UR_ERROR_NONE == umesh_mm_start());
     YUNIT_ASSERT(UR_ERROR_NONE == umesh_mm_stop());
@@ -66,6 +71,9 @@ void test_uradar_mesh_mgmt_case(void)
     YUNIT_ASSERT(UR_ERROR_NONE == umesh_mm_start());
     YUNIT_ASSERT(UR_ERROR_NONE == umesh_mm_stop());
     interface_stop();
+
+    mem_stats = ur_mem_get_stats();
+    YUNIT_ASSERT(num == mem_stats->num);
 }
 
 

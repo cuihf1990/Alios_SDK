@@ -23,6 +23,11 @@ void test_diags_case(void)
     uint8_t *data_orig;
     uint16_t length;
 
+    int32_t num;
+    const ur_mem_stats_t *mem_stats = ur_mem_get_stats();
+
+    num = mem_stats->num;
+
     interface_start();
     network = get_default_network_context();
     dest.netid = 0x100;
@@ -70,4 +75,7 @@ void test_diags_case(void)
     message_free(message);
     ur_mem_free(data_orig, length);
     interface_stop();
+
+    mem_stats = ur_mem_get_stats();
+    YUNIT_ASSERT(num == mem_stats->num);
 }

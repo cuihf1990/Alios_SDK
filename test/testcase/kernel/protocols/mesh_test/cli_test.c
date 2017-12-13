@@ -17,6 +17,11 @@
 
 void test_uradar_cli_case(void)
 {
+    int32_t num;
+    const ur_mem_stats_t *mem_stats = ur_mem_get_stats();
+
+    num = mem_stats->num;
+
     cmd_to_agent("stop");
     cmd_to_agent("start");
     check_cond_wait(umesh_get_device_state() == DEVICE_STATE_LEADER, 10);
@@ -42,5 +47,8 @@ void test_uradar_cli_case(void)
     cmd_to_agent("networks");
     cmd_to_agent("stop");
     aos_msleep(1 * 1000);
+
+    mem_stats = ur_mem_get_stats();
+    YUNIT_ASSERT(num == mem_stats->num);
 }
 

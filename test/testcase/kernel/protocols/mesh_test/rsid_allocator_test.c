@@ -14,8 +14,12 @@ void test_uradar_rsid_allocator_case(void)
                             .sid = INVALID_SID,
                             .attach_sid = 0x0000};
     uint16_t index;
-    allocator_t hdl = rsid_allocator_init(SHORT_RANDOM_SID);
+    allocator_t hdl;
+    int32_t num;
+    const ur_mem_stats_t *mem_stats = ur_mem_get_stats();
 
+    num = mem_stats->num;
+    hdl = rsid_allocator_init(SHORT_RANDOM_SID);
     for(index = 1; index <= 11; index++) {
         node_id.ueid[0] += 1;
         node_id.sid = INVALID_SID;
@@ -49,4 +53,7 @@ void test_uradar_rsid_allocator_case(void)
     YUNIT_ASSERT(11 == rsid_get_allocated_number(hdl));
 
     rsid_allocator_deinit(hdl);
+
+    mem_stats = ur_mem_get_stats();
+    YUNIT_ASSERT(num == mem_stats->num);
 }

@@ -11,6 +11,10 @@
 void test_uradar_misc_case(void)
 {
     message_t *message;
+    int32_t num;
+    const ur_mem_stats_t *mem_stats = ur_mem_get_stats();
+
+    num = mem_stats->num;
     message = message_alloc(100, UT_MSG);
     YUNIT_ASSERT(UR_ERROR_FAIL == message_set_msglen(NULL, 100));
     YUNIT_ASSERT(UR_ERROR_NONE == message_set_msglen(message, 100));
@@ -50,6 +54,9 @@ void test_uradar_misc_case(void)
     YUNIT_ASSERT_PTR_NOT_NULL(entry);
     whitelist_clear_constant_rssi(entry);
     YUNIT_ASSERT(UR_ERROR_FAIL == whitelist_get_constant_rssi(entry, &rssi));
+
+    mem_stats = ur_mem_get_stats();
+    YUNIT_ASSERT(num == mem_stats->num);
 }
 
 

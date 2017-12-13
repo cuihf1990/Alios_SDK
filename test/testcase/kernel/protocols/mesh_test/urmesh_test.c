@@ -17,6 +17,9 @@
 void test_uradar_urmesh_case(void)
 {
     ur_ip6_addr_t ip6addr;
+    int32_t num;
+    const ur_mem_stats_t *mem_stats = ur_mem_get_stats();
+    num = mem_stats->num;
 
     YUNIT_ASSERT(INVALID_SID == umesh_get_sid());
     YUNIT_ASSERT(UR_ERROR_NONE == umesh_start());
@@ -42,4 +45,7 @@ void test_uradar_urmesh_case(void)
     YUNIT_ASSERT(NULL != ur_adapter_get_default_ipaddr());
     YUNIT_ASSERT(NULL != ur_adapter_get_mcast_ipaddr());
     YUNIT_ASSERT(UR_ERROR_NONE == umesh_stop());
+
+    mem_stats = ur_mem_get_stats();
+    YUNIT_ASSERT(num == mem_stats->num);
 }
