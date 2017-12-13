@@ -28,3 +28,7 @@ ifeq ($(DDA),1)
 GLOBAL_LDFLAGS += -lreadline -lncurses
 $(NAME)_COMPONENTS  += dda
 endif
+
+ifneq (,$(filter EMW3060,$(MODULE)))
+GLOBAL_DEFINES += MESHAPP_LIGHT_ENABLED
+endif
