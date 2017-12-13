@@ -13,8 +13,8 @@ extern void         *heap_start;
 extern void         *heap_end;
 extern void         *heap_len;
 
-extern void         *heap2_start;
-extern void         *heap2_len;
+//extern void         *heap2_start;
+//extern void         *heap2_len;
 #endif
 
 
@@ -23,7 +23,8 @@ extern void         *heap2_len;
 uint8_t g_heap_buf[HEAP_BUFFER_SIZE];
 k_mm_region_t g_mm_region[] = {{g_heap_buf, HEAP_BUFFER_SIZE}, {(uint8_t *)0x10000000, 0x8000}};
 #else
-k_mm_region_t g_mm_region[] = {{(uint8_t*)&heap_start,(size_t)&heap_len},{(uint8_t*)&heap2_start,(size_t)&heap2_len}};
+//k_mm_region_t g_mm_region[] = {{(uint8_t*)&heap_start,(size_t)&heap_len},{(uint8_t*)&heap2_start,(size_t)&heap2_len}};
+k_mm_region_t g_mm_region[] = {{(uint8_t*)&heap_start,(size_t)&heap_len}};
 #endif
 int           g_region_num  = sizeof(g_mm_region)/sizeof(k_mm_region_t);
 
