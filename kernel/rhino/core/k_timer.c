@@ -51,6 +51,14 @@ static kstat_t timer_create(ktimer_t *timer, const name_t *name, timer_cb_t cb,
         return RHINO_INV_PARAM;
     }
 
+    if (first >= (tick_t)-1) {
+        return RHINO_INV_PARAM;
+    }
+
+    if (round >= (tick_t)-1) {
+        return RHINO_INV_PARAM;
+    }
+
     RHINO_CRITICAL_ENTER();
     INTRPT_NESTED_LEVEL_CHK();
     RHINO_CRITICAL_EXIT();
@@ -213,6 +221,14 @@ kstat_t krhino_timer_change(ktimer_t *timer, sys_time_t first, sys_time_t round)
     kstat_t err;
 
     NULL_PARA_CHK(timer);
+
+    if (first >= (tick_t)-1) {
+        return RHINO_INV_PARAM;
+    }
+
+    if (round >= (tick_t)-1) {
+        return RHINO_INV_PARAM;
+    }
 
     err = krhino_mblk_alloc(&g_timer_pool, (void **)&cb);
     if (err != RHINO_SUCCESS) {
