@@ -14,7 +14,12 @@ endif
 
 GLOBAL_INCLUDES     += include
 
+ifeq ($(COMPILER),armcc)
+else ifeq ($(COMPILER),iar)
+else
 $(NAME)_CFLAGS      += -Wall -Werror -Os
+endif
+
 
 ifeq ($(DEBUG), yes)
 $(NAME)_DEFINES     += CONFIG_SSL_DEBUG

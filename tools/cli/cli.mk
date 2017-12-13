@@ -3,7 +3,12 @@ NAME := cli
 $(NAME)_TYPE := kernel
 
 $(NAME)_SOURCES := cli.c dumpsys.c
+
+ifeq ($(COMPILER),armcc)
+else ifeq ($(COMPILER),armcc)
+else
 $(NAME)_CFLAGS  += -Wall -Werror
+endif
 
 $(NAME)_COMPONENTS += hal
 
