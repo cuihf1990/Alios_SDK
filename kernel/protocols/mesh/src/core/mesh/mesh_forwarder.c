@@ -1137,8 +1137,7 @@ static void send_datagram(void *args)
 
     error = send_fragment(info->network, message);
     if (error == UR_ERROR_NONE) {
-        hal->sending_timer = ur_start_timer(SENDING_TIMEOUT,
-                                            handle_sending_timer, hal);
+        ur_start_timer(&hal->sending_timer, SENDING_TIMEOUT, handle_sending_timer, hal);
     } else {
         hal->last_sent = error;
         umesh_task_schedule_call(message_sent_task, hal);
