@@ -145,9 +145,8 @@ static void start_advertisement_timer(void *args)
 
     send_advertisement(network);
     if (umesh_mm_get_mode() & MODE_RX_ON) {
-        ur_stop_timer(&network->advertisement_timer, network);
-        network->advertisement_timer = ur_start_timer(network->hal->advertisement_interval,
-                                                      start_advertisement_timer, network);
+        ur_start_timer(&network->advertisement_timer, network->hal->advertisement_interval,
+                       start_advertisement_timer, network);
     }
 }
 
@@ -537,8 +536,8 @@ static void handle_attach_timer(void *args)
             if (network->retry_times < ATTACH_REQUEST_RETRY_TIMES) {
                 ++network->retry_times;
                 send_attach_request(network);
-                network->attach_timer = ur_start_timer(network->hal->attach_request_interval,
-                                                       handle_attach_timer, args);
+                ur_start_timer(&network->attach_timer, network->hal->attach_request_interval,
+                               handle_attach_timer, args);
             } else {
                 detached = true;
             }
@@ -547,8 +546,8 @@ static void handle_attach_timer(void *args)
             if (network->retry_times < ATTACH_SID_RETRY_TIMES) {
                 ++network->retry_times;
                 send_sid_request(network);
-                network->attach_timer = ur_start_timer(network->hal->sid_request_interval,
-                                                       handle_attach_timer, args);
+                ur_start_timer(&network->attach_timer, network->hal->sid_request_interval,
+                               handle_attach_timer, args);
             } else {
                 detached = true;
             }
@@ -919,8 +918,8 @@ static ur_error_t handle_attach_response(message_t *message)
         network->attach_state = ATTACH_SID_REQUEST;
         send_sid_request(network);
         network->retry_times = 1;
-        network->attach_timer = ur_start_timer(network->hal->sid_request_interval,
-                                               handle_attach_timer, network);
+        ur_start_timer(&network->attach_timer, network->hal->sid_request_interval,
+                       handle_attach_timer, network);
     }
 
 exit:
@@ -1291,9 +1290,8 @@ static ur_error_t attach_start(neighbor_t *nbr)
     update_channel(network->hal, nbr->channel);
     network->candidate_meshnetid = nbr->netid;
     send_attach_request(network);
-    ur_stop_timer(&network->attach_timer, network);
-    network->attach_timer = ur_start_timer(network->hal->attach_request_interval,
-                                           handle_attach_timer, network);
+    ur_start_timer(&network->attach_timer, network->hal->attach_request_interval,
+                   handle_attach_timer, network);
     network->retry_times = 1;
     ur_stop_timer(&network->advertisement_timer, network);
 
@@ -1335,8 +1333,8 @@ static bool update_migrate_times(network_context_t *network, neighbor_t *nbr)
     }
     if (network->migrate_wait_timer == NULL) {
         network->migrate_times = 0;
-        network->migrate_wait_timer = ur_start_timer(network->migrate_interval,
-                                                     handle_migrate_wait_timer, network);
+        ur_start_timer(&network->migrate_wait_timer, network->migrate_interval,
+                       handle_migrate_wait_timer, network);
         network->candidate_meshnetid = netid;
     } else if (netid == network->candidate_meshnetid) {
         network->migrate_times++;

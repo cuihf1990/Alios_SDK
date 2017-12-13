@@ -156,8 +156,7 @@ static void timer_handler(void *args)
     }
 
     if (continue_timer) {
-        g_ar_state.timer = ur_start_timer(ADDRESS_QUERY_STATE_UPDATE_PERIOD,
-                                          timer_handler, NULL);
+        ur_start_timer(&g_ar_state.timer, ADDRESS_QUERY_STATE_UPDATE_PERIOD, timer_handler, NULL);
     }
 }
 
@@ -317,11 +316,7 @@ static ur_error_t send_address_query(network_context_t *network,
         goto exit;
     }
 
-    if (g_ar_state.timer == NULL) {
-        g_ar_state.timer = ur_start_timer(ADDRESS_QUERY_STATE_UPDATE_PERIOD,
-                                          timer_handler, NULL);
-    }
-
+    ur_start_timer(&g_ar_state.timer, ADDRESS_QUERY_STATE_UPDATE_PERIOD, timer_handler, NULL);
     info = message->info;
     info->network = network;
     memcpy(&info->dest, dest, sizeof(info->dest));
@@ -766,8 +761,7 @@ static void handle_addr_cache_timer(void *args)
     }
 
     nd_set_meshnetsize(NULL, g_ac_state.cache_num + 1);
-    g_ac_state.timer = ur_start_timer(ADDR_CACHE_CHECK_INTERVAL,
-                                      handle_addr_cache_timer, NULL);
+    ur_start_timer(&g_ac_state.timer, ADDR_CACHE_CHECK_INTERVAL, handle_addr_cache_timer, NULL);
 }
 
 static void start_alive_timer(void *args)
@@ -776,9 +770,8 @@ static void start_alive_timer(void *args)
 
     if (umesh_get_device_state() != DEVICE_STATE_LEADER) {
         send_address_notification(network, NULL);
-        ur_stop_timer(&g_am_state.alive_timer, NULL);
-        g_am_state.alive_timer = ur_start_timer(network->notification_interval,
-                                                start_alive_timer, NULL);
+        ur_start_timer(&g_am_state.alive_timer, network->notification_interval,
+                       start_alive_timer, NULL);
     }
 }
 
@@ -801,9 +794,8 @@ static ur_error_t mesh_interface_up(void)
     memset(g_ar_state.cache, 0, sizeof(g_ar_state.cache));
     cleanup_addr_cache();
     if (umesh_get_mode() & MODE_RX_ON) {
-        ur_stop_timer(&g_ac_state.timer, NULL);
-        g_ac_state.timer = ur_start_timer(ADDR_CACHE_CHECK_INTERVAL,
-                                          handle_addr_cache_timer, NULL);
+        ur_start_timer(&g_ac_state.timer, ADDR_CACHE_CHECK_INTERVAL,
+                       handle_addr_cache_timer, NULL);
         start_alive_timer(NULL);
     }
     return UR_ERROR_NONE;

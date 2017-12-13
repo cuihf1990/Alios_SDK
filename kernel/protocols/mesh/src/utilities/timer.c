@@ -4,10 +4,13 @@
 
 #include "umesh_utils.h"
 
-ur_timer_t ur_start_timer(uint32_t dt, timer_handler_t handler, void *args)
+void ur_start_timer(ur_timer_t *timer, uint32_t dt, timer_handler_t handler, void *args)
 {
-    int ret = umesh_pal_post_delayed_action(dt, handler, args);
-    return ret == 0 ? handler : NULL;
+    int ret;
+
+    ur_stop_timer(timer, NULL);
+    ret = umesh_pal_post_delayed_action(dt, handler, args);
+    *timer = (ret == 0? handler: NULL);
 }
 
 void ur_stop_timer(ur_timer_t *timer, void *args)

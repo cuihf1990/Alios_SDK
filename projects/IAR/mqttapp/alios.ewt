@@ -2656,180 +2656,180 @@
         <group>
             <name>mcu</name>
             <group>
-                <name>b-l475e-iot01</name>
+                <name>stm32l475</name>
                 <file>
-                    <name>$PROJ_DIR$\..\..\..\platform\mcu\b-l475e-iot01\src\B-L475E-IOT01\runapp\aos.c</name>
+                    <name>$PROJ_DIR$\..\..\..\platform\mcu\stm32l475\src\B-L475E-IOT01\runapp\aos.c</name>
                 </file>
                 <file>
-                    <name>$PROJ_DIR$\..\..\..\platform\mcu\b-l475e-iot01\Drivers\BSP\Components\es_wifi\es_wifi.c</name>
+                    <name>$PROJ_DIR$\..\..\..\platform\mcu\stm32l475\Drivers\BSP\Components\es_wifi\es_wifi.c</name>
                 </file>
                 <file>
-                    <name>$PROJ_DIR$\..\..\..\platform\mcu\b-l475e-iot01\src\common\csp\wifi\src\es_wifi_io.c</name>
+                    <name>$PROJ_DIR$\..\..\..\platform\mcu\stm32l475\src\common\csp\wifi\src\es_wifi_io.c</name>
                 </file>
                 <file>
-                    <name>$PROJ_DIR$\..\..\..\platform\mcu\b-l475e-iot01\src\B-L475E-IOT01\hal\flash_l4.c</name>
+                    <name>$PROJ_DIR$\..\..\..\platform\mcu\stm32l475\src\B-L475E-IOT01\hal\flash_l4.c</name>
                 </file>
                 <file>
-                    <name>$PROJ_DIR$\..\..\..\platform\mcu\b-l475e-iot01\src\B-L475E-IOT01\hal\flash_port.c</name>
+                    <name>$PROJ_DIR$\..\..\..\platform\mcu\stm32l475\src\B-L475E-IOT01\hal\flash_port.c</name>
                 </file>
                 <file>
-                    <name>$PROJ_DIR$\..\..\..\platform\mcu\b-l475e-iot01\Drivers\BSP\Components\hts221\hts221.c</name>
+                    <name>$PROJ_DIR$\..\..\..\platform\mcu\stm32l475\Drivers\BSP\Components\hts221\hts221.c</name>
                 </file>
                 <file>
-                    <name>$PROJ_DIR$\..\..\..\platform\mcu\b-l475e-iot01\src\B-L475E-IOT01\hal\hw.c</name>
+                    <name>$PROJ_DIR$\..\..\..\platform\mcu\stm32l475\src\B-L475E-IOT01\hal\hw.c</name>
                 </file>
                 <file>
-                    <name>$PROJ_DIR$\..\..\..\platform\mcu\b-l475e-iot01\Drivers\BSP\Components\lis3mdl\lis3mdl.c</name>
+                    <name>$PROJ_DIR$\..\..\..\platform\mcu\stm32l475\Drivers\BSP\Components\lis3mdl\lis3mdl.c</name>
                 </file>
                 <file>
-                    <name>$PROJ_DIR$\..\..\..\platform\mcu\b-l475e-iot01\Drivers\BSP\Components\lps22hb\lps22hb.c</name>
+                    <name>$PROJ_DIR$\..\..\..\platform\mcu\stm32l475\Drivers\BSP\Components\lps22hb\lps22hb.c</name>
                 </file>
                 <file>
-                    <name>$PROJ_DIR$\..\..\..\platform\mcu\b-l475e-iot01\Drivers\BSP\Components\lsm6dsl\lsm6dsl.c</name>
+                    <name>$PROJ_DIR$\..\..\..\platform\mcu\stm32l475\Drivers\BSP\Components\lsm6dsl\lsm6dsl.c</name>
                 </file>
                 <file>
-                    <name>$PROJ_DIR$\..\..\..\platform\mcu\b-l475e-iot01\src\B-L475E-IOT01\hal\ota_port.c</name>
+                    <name>$PROJ_DIR$\..\..\..\platform\mcu\stm32l475\src\B-L475E-IOT01\hal\ota_port.c</name>
                 </file>
                 <file>
-                    <name>$PROJ_DIR$\..\..\..\platform\mcu\b-l475e-iot01\src\B-L475E-IOT01\sensor\sensors_data.c</name>
+                    <name>$PROJ_DIR$\..\..\..\platform\mcu\stm32l475\src\B-L475E-IOT01\sensor\sensors_data.c</name>
                 </file>
                 <file>
-                    <name>$PROJ_DIR$\..\..\..\platform\mcu\b-l475e-iot01\aos\soc_impl.c</name>
+                    <name>$PROJ_DIR$\..\..\..\platform\mcu\stm32l475\aos\soc_impl.c</name>
                 </file>
                 <file>
-                    <name>$PROJ_DIR$\..\..\..\platform\mcu\b-l475e-iot01\src\B-L475E-IOT01\runapp\soc_init.c</name>
+                    <name>$PROJ_DIR$\..\..\..\platform\mcu\stm32l475\src\B-L475E-IOT01\runapp\soc_init.c</name>
                 </file>
                 <file>
-                    <name>$PROJ_DIR$\..\..\..\platform\mcu\b-l475e-iot01\src\B-L475E-IOT01\runapp\startup_stm32l475xx_icc.s</name>
+                    <name>$PROJ_DIR$\..\..\..\platform\mcu\stm32l475\src\B-L475E-IOT01\runapp\startup_stm32l475xx_icc.s</name>
                 </file>
                 <file>
-                    <name>$PROJ_DIR$\..\..\..\platform\mcu\b-l475e-iot01\Drivers\BSP\B-L475E-IOT01\stm32l475e_iot01.c</name>
+                    <name>$PROJ_DIR$\..\..\..\platform\mcu\stm32l475\Drivers\BSP\B-L475E-IOT01\stm32l475e_iot01.c</name>
                 </file>
                 <file>
-                    <name>$PROJ_DIR$\..\..\..\platform\mcu\b-l475e-iot01\Drivers\BSP\B-L475E-IOT01\stm32l475e_iot01_accelero.c</name>
+                    <name>$PROJ_DIR$\..\..\..\platform\mcu\stm32l475\Drivers\BSP\B-L475E-IOT01\stm32l475e_iot01_accelero.c</name>
                 </file>
                 <file>
-                    <name>$PROJ_DIR$\..\..\..\platform\mcu\b-l475e-iot01\Drivers\BSP\B-L475E-IOT01\stm32l475e_iot01_gyro.c</name>
+                    <name>$PROJ_DIR$\..\..\..\platform\mcu\stm32l475\Drivers\BSP\B-L475E-IOT01\stm32l475e_iot01_gyro.c</name>
                 </file>
                 <file>
-                    <name>$PROJ_DIR$\..\..\..\platform\mcu\b-l475e-iot01\Drivers\BSP\B-L475E-IOT01\stm32l475e_iot01_hsensor.c</name>
+                    <name>$PROJ_DIR$\..\..\..\platform\mcu\stm32l475\Drivers\BSP\B-L475E-IOT01\stm32l475e_iot01_hsensor.c</name>
                 </file>
                 <file>
-                    <name>$PROJ_DIR$\..\..\..\platform\mcu\b-l475e-iot01\Drivers\BSP\B-L475E-IOT01\stm32l475e_iot01_magneto.c</name>
+                    <name>$PROJ_DIR$\..\..\..\platform\mcu\stm32l475\Drivers\BSP\B-L475E-IOT01\stm32l475e_iot01_magneto.c</name>
                 </file>
                 <file>
-                    <name>$PROJ_DIR$\..\..\..\platform\mcu\b-l475e-iot01\Drivers\BSP\B-L475E-IOT01\stm32l475e_iot01_psensor.c</name>
+                    <name>$PROJ_DIR$\..\..\..\platform\mcu\stm32l475\Drivers\BSP\B-L475E-IOT01\stm32l475e_iot01_psensor.c</name>
                 </file>
                 <file>
-                    <name>$PROJ_DIR$\..\..\..\platform\mcu\b-l475e-iot01\Drivers\BSP\B-L475E-IOT01\stm32l475e_iot01_qspi.c</name>
+                    <name>$PROJ_DIR$\..\..\..\platform\mcu\stm32l475\Drivers\BSP\B-L475E-IOT01\stm32l475e_iot01_qspi.c</name>
                 </file>
                 <file>
-                    <name>$PROJ_DIR$\..\..\..\platform\mcu\b-l475e-iot01\Drivers\BSP\B-L475E-IOT01\stm32l475e_iot01_tsensor.c</name>
+                    <name>$PROJ_DIR$\..\..\..\platform\mcu\stm32l475\Drivers\BSP\B-L475E-IOT01\stm32l475e_iot01_tsensor.c</name>
                 </file>
                 <file>
-                    <name>$PROJ_DIR$\..\..\..\platform\mcu\b-l475e-iot01\Drivers\STM32L4xx_HAL_Driver\Src\stm32l4xx_hal.c</name>
+                    <name>$PROJ_DIR$\..\..\..\platform\mcu\stm32l475\Drivers\STM32L4xx_HAL_Driver\Src\stm32l4xx_hal.c</name>
                 </file>
                 <file>
-                    <name>$PROJ_DIR$\..\..\..\platform\mcu\b-l475e-iot01\Drivers\STM32L4xx_HAL_Driver\Src\stm32l4xx_hal_cortex.c</name>
+                    <name>$PROJ_DIR$\..\..\..\platform\mcu\stm32l475\Drivers\STM32L4xx_HAL_Driver\Src\stm32l4xx_hal_cortex.c</name>
                 </file>
                 <file>
-                    <name>$PROJ_DIR$\..\..\..\platform\mcu\b-l475e-iot01\Drivers\STM32L4xx_HAL_Driver\Src\stm32l4xx_hal_dma.c</name>
+                    <name>$PROJ_DIR$\..\..\..\platform\mcu\stm32l475\Drivers\STM32L4xx_HAL_Driver\Src\stm32l4xx_hal_dma.c</name>
                 </file>
                 <file>
-                    <name>$PROJ_DIR$\..\..\..\platform\mcu\b-l475e-iot01\Drivers\STM32L4xx_HAL_Driver\Src\stm32l4xx_hal_flash.c</name>
+                    <name>$PROJ_DIR$\..\..\..\platform\mcu\stm32l475\Drivers\STM32L4xx_HAL_Driver\Src\stm32l4xx_hal_flash.c</name>
                 </file>
                 <file>
-                    <name>$PROJ_DIR$\..\..\..\platform\mcu\b-l475e-iot01\Drivers\STM32L4xx_HAL_Driver\Src\stm32l4xx_hal_flash_ex.c</name>
+                    <name>$PROJ_DIR$\..\..\..\platform\mcu\stm32l475\Drivers\STM32L4xx_HAL_Driver\Src\stm32l4xx_hal_flash_ex.c</name>
                 </file>
                 <file>
-                    <name>$PROJ_DIR$\..\..\..\platform\mcu\b-l475e-iot01\Drivers\STM32L4xx_HAL_Driver\Src\stm32l4xx_hal_gpio.c</name>
+                    <name>$PROJ_DIR$\..\..\..\platform\mcu\stm32l475\Drivers\STM32L4xx_HAL_Driver\Src\stm32l4xx_hal_gpio.c</name>
                 </file>
                 <file>
-                    <name>$PROJ_DIR$\..\..\..\platform\mcu\b-l475e-iot01\Drivers\STM32L4xx_HAL_Driver\Src\stm32l4xx_hal_i2c.c</name>
+                    <name>$PROJ_DIR$\..\..\..\platform\mcu\stm32l475\Drivers\STM32L4xx_HAL_Driver\Src\stm32l4xx_hal_i2c.c</name>
                 </file>
                 <file>
-                    <name>$PROJ_DIR$\..\..\..\platform\mcu\b-l475e-iot01\Drivers\STM32L4xx_HAL_Driver\Src\stm32l4xx_hal_i2c_ex.c</name>
+                    <name>$PROJ_DIR$\..\..\..\platform\mcu\stm32l475\Drivers\STM32L4xx_HAL_Driver\Src\stm32l4xx_hal_i2c_ex.c</name>
                 </file>
                 <file>
-                    <name>$PROJ_DIR$\..\..\..\platform\mcu\b-l475e-iot01\src\B-L475E-IOT01\runapp\stm32l4xx_hal_msp.c</name>
+                    <name>$PROJ_DIR$\..\..\..\platform\mcu\stm32l475\src\B-L475E-IOT01\runapp\stm32l4xx_hal_msp.c</name>
                 </file>
                 <file>
-                    <name>$PROJ_DIR$\..\..\..\platform\mcu\b-l475e-iot01\Drivers\STM32L4xx_HAL_Driver\Src\stm32l4xx_hal_msp_template.c</name>
+                    <name>$PROJ_DIR$\..\..\..\platform\mcu\stm32l475\Drivers\STM32L4xx_HAL_Driver\Src\stm32l4xx_hal_msp_template.c</name>
                 </file>
                 <file>
-                    <name>$PROJ_DIR$\..\..\..\platform\mcu\b-l475e-iot01\Drivers\STM32L4xx_HAL_Driver\Src\stm32l4xx_hal_pwr.c</name>
+                    <name>$PROJ_DIR$\..\..\..\platform\mcu\stm32l475\Drivers\STM32L4xx_HAL_Driver\Src\stm32l4xx_hal_pwr.c</name>
                 </file>
                 <file>
-                    <name>$PROJ_DIR$\..\..\..\platform\mcu\b-l475e-iot01\Drivers\STM32L4xx_HAL_Driver\Src\stm32l4xx_hal_pwr_ex.c</name>
+                    <name>$PROJ_DIR$\..\..\..\platform\mcu\stm32l475\Drivers\STM32L4xx_HAL_Driver\Src\stm32l4xx_hal_pwr_ex.c</name>
                 </file>
                 <file>
-                    <name>$PROJ_DIR$\..\..\..\platform\mcu\b-l475e-iot01\Drivers\STM32L4xx_HAL_Driver\Src\stm32l4xx_hal_qspi.c</name>
+                    <name>$PROJ_DIR$\..\..\..\platform\mcu\stm32l475\Drivers\STM32L4xx_HAL_Driver\Src\stm32l4xx_hal_qspi.c</name>
                 </file>
                 <file>
-                    <name>$PROJ_DIR$\..\..\..\platform\mcu\b-l475e-iot01\Drivers\STM32L4xx_HAL_Driver\Src\stm32l4xx_hal_rcc.c</name>
+                    <name>$PROJ_DIR$\..\..\..\platform\mcu\stm32l475\Drivers\STM32L4xx_HAL_Driver\Src\stm32l4xx_hal_rcc.c</name>
                 </file>
                 <file>
-                    <name>$PROJ_DIR$\..\..\..\platform\mcu\b-l475e-iot01\Drivers\STM32L4xx_HAL_Driver\Src\stm32l4xx_hal_rcc_ex.c</name>
+                    <name>$PROJ_DIR$\..\..\..\platform\mcu\stm32l475\Drivers\STM32L4xx_HAL_Driver\Src\stm32l4xx_hal_rcc_ex.c</name>
                 </file>
                 <file>
-                    <name>$PROJ_DIR$\..\..\..\platform\mcu\b-l475e-iot01\Drivers\STM32L4xx_HAL_Driver\Src\stm32l4xx_hal_rng.c</name>
+                    <name>$PROJ_DIR$\..\..\..\platform\mcu\stm32l475\Drivers\STM32L4xx_HAL_Driver\Src\stm32l4xx_hal_rng.c</name>
                 </file>
                 <file>
-                    <name>$PROJ_DIR$\..\..\..\platform\mcu\b-l475e-iot01\Drivers\STM32L4xx_HAL_Driver\Src\stm32l4xx_hal_rtc.c</name>
+                    <name>$PROJ_DIR$\..\..\..\platform\mcu\stm32l475\Drivers\STM32L4xx_HAL_Driver\Src\stm32l4xx_hal_rtc.c</name>
                 </file>
                 <file>
-                    <name>$PROJ_DIR$\..\..\..\platform\mcu\b-l475e-iot01\Drivers\STM32L4xx_HAL_Driver\Src\stm32l4xx_hal_rtc_ex.c</name>
+                    <name>$PROJ_DIR$\..\..\..\platform\mcu\stm32l475\Drivers\STM32L4xx_HAL_Driver\Src\stm32l4xx_hal_rtc_ex.c</name>
                 </file>
                 <file>
-                    <name>$PROJ_DIR$\..\..\..\platform\mcu\b-l475e-iot01\Drivers\STM32L4xx_HAL_Driver\Src\stm32l4xx_hal_spi.c</name>
+                    <name>$PROJ_DIR$\..\..\..\platform\mcu\stm32l475\Drivers\STM32L4xx_HAL_Driver\Src\stm32l4xx_hal_spi.c</name>
                 </file>
                 <file>
-                    <name>$PROJ_DIR$\..\..\..\platform\mcu\b-l475e-iot01\Drivers\STM32L4xx_HAL_Driver\Src\stm32l4xx_hal_spi_ex.c</name>
+                    <name>$PROJ_DIR$\..\..\..\platform\mcu\stm32l475\Drivers\STM32L4xx_HAL_Driver\Src\stm32l4xx_hal_spi_ex.c</name>
                 </file>
                 <file>
-                    <name>$PROJ_DIR$\..\..\..\platform\mcu\b-l475e-iot01\Drivers\STM32L4xx_HAL_Driver\Src\stm32l4xx_hal_uart.c</name>
+                    <name>$PROJ_DIR$\..\..\..\platform\mcu\stm32l475\Drivers\STM32L4xx_HAL_Driver\Src\stm32l4xx_hal_uart.c</name>
                 </file>
                 <file>
-                    <name>$PROJ_DIR$\..\..\..\platform\mcu\b-l475e-iot01\Drivers\STM32L4xx_HAL_Driver\Src\stm32l4xx_hal_uart_ex.c</name>
+                    <name>$PROJ_DIR$\..\..\..\platform\mcu\stm32l475\Drivers\STM32L4xx_HAL_Driver\Src\stm32l4xx_hal_uart_ex.c</name>
                 </file>
                 <file>
-                    <name>$PROJ_DIR$\..\..\..\platform\mcu\b-l475e-iot01\src\B-L475E-IOT01\runapp\stm32l4xx_it.c</name>
+                    <name>$PROJ_DIR$\..\..\..\platform\mcu\stm32l475\src\B-L475E-IOT01\runapp\stm32l4xx_it.c</name>
                 </file>
                 <file>
-                    <name>$PROJ_DIR$\..\..\..\platform\mcu\b-l475e-iot01\src\B-L475E-IOT01\runapp\system_stm32l4xx.c</name>
+                    <name>$PROJ_DIR$\..\..\..\platform\mcu\stm32l475\src\B-L475E-IOT01\runapp\system_stm32l4xx.c</name>
                 </file>
                 <file>
-                    <name>$PROJ_DIR$\..\..\..\platform\mcu\b-l475e-iot01\aos\trace_impl.c</name>
+                    <name>$PROJ_DIR$\..\..\..\platform\mcu\stm32l475\aos\trace_impl.c</name>
                 </file>
                 <file>
-                    <name>$PROJ_DIR$\..\..\..\platform\mcu\b-l475e-iot01\Drivers\BSP\Components\vl53l0x\vl53l0x_api.c</name>
+                    <name>$PROJ_DIR$\..\..\..\platform\mcu\stm32l475\Drivers\BSP\Components\vl53l0x\vl53l0x_api.c</name>
                 </file>
                 <file>
-                    <name>$PROJ_DIR$\..\..\..\platform\mcu\b-l475e-iot01\Drivers\BSP\Components\vl53l0x\vl53l0x_api_calibration.c</name>
+                    <name>$PROJ_DIR$\..\..\..\platform\mcu\stm32l475\Drivers\BSP\Components\vl53l0x\vl53l0x_api_calibration.c</name>
                 </file>
                 <file>
-                    <name>$PROJ_DIR$\..\..\..\platform\mcu\b-l475e-iot01\Drivers\BSP\Components\vl53l0x\vl53l0x_api_core.c</name>
+                    <name>$PROJ_DIR$\..\..\..\platform\mcu\stm32l475\Drivers\BSP\Components\vl53l0x\vl53l0x_api_core.c</name>
                 </file>
                 <file>
-                    <name>$PROJ_DIR$\..\..\..\platform\mcu\b-l475e-iot01\Drivers\BSP\Components\vl53l0x\vl53l0x_api_ranging.c</name>
+                    <name>$PROJ_DIR$\..\..\..\platform\mcu\stm32l475\Drivers\BSP\Components\vl53l0x\vl53l0x_api_ranging.c</name>
                 </file>
                 <file>
-                    <name>$PROJ_DIR$\..\..\..\platform\mcu\b-l475e-iot01\Drivers\BSP\Components\vl53l0x\vl53l0x_api_strings.c</name>
+                    <name>$PROJ_DIR$\..\..\..\platform\mcu\stm32l475\Drivers\BSP\Components\vl53l0x\vl53l0x_api_strings.c</name>
                 </file>
                 <file>
-                    <name>$PROJ_DIR$\..\..\..\platform\mcu\b-l475e-iot01\src\B-L475E-IOT01\sensor\vl53l0x_platform.c</name>
+                    <name>$PROJ_DIR$\..\..\..\platform\mcu\stm32l475\src\B-L475E-IOT01\sensor\vl53l0x_platform.c</name>
                 </file>
                 <file>
-                    <name>$PROJ_DIR$\..\..\..\platform\mcu\b-l475e-iot01\Drivers\BSP\Components\vl53l0x\vl53l0x_platform_log.c</name>
+                    <name>$PROJ_DIR$\..\..\..\platform\mcu\stm32l475\Drivers\BSP\Components\vl53l0x\vl53l0x_platform_log.c</name>
                 </file>
                 <file>
-                    <name>$PROJ_DIR$\..\..\..\platform\mcu\b-l475e-iot01\src\B-L475E-IOT01\sensor\vl53l0x_proximity.c</name>
+                    <name>$PROJ_DIR$\..\..\..\platform\mcu\stm32l475\src\B-L475E-IOT01\sensor\vl53l0x_proximity.c</name>
                 </file>
                 <file>
-                    <name>$PROJ_DIR$\..\..\..\platform\mcu\b-l475e-iot01\src\common\csp\wifi\src\wifi_iar.c</name>
+                    <name>$PROJ_DIR$\..\..\..\platform\mcu\stm32l475\src\common\csp\wifi\src\wifi_iar.c</name>
                 </file>
                 <file>
-                    <name>$PROJ_DIR$\..\..\..\platform\mcu\b-l475e-iot01\src\B-L475E-IOT01\hal\wifi_port.c</name>
+                    <name>$PROJ_DIR$\..\..\..\platform\mcu\stm32l475\src\B-L475E-IOT01\hal\wifi_port.c</name>
                 </file>
             </group>
         </group>
