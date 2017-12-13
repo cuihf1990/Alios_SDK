@@ -6,7 +6,12 @@ export MAKEFILES_PATH := $(SOURCE_ROOT)/build
 export SCRIPTS_PATH := $(SOURCE_ROOT)/build/scripts
 
 include $(SOURCE_ROOT)/build/aos_host_cmd.mk
+
+ifeq ($(COMPILER),armcc)
+include $(SOURCE_ROOT)/build/aos_toolchain_armcc.mk
+else
 include $(SOURCE_ROOT)/build/aos_toolchain_gcc.mk
+endif
 
 OLD_MAKECMDGOALS := $(MAKECMDGOALS)
 OLD_CURDIR := $(CURDIR)

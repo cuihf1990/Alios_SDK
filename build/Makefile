@@ -138,7 +138,11 @@ clean:
 ifneq ($(BUILD_STRING),)
 -include $(OUTPUT_DIR)/config.mk
 # Now we know the target architecture - include all toolchain makefiles and check one of them can handle the architecture
+ifeq ($(COMPILER),armcc)
+ include $(MAKEFILES_PATH)/aos_toolchain_armcc.mk
+else
  include $(MAKEFILES_PATH)/aos_toolchain_gcc.mk
+endif
 
 AUTO_COMPONENT = $(AUTO_COMPONENT_DIR)/auto_component.mk
 ifneq ($(test), )
@@ -153,7 +157,13 @@ $(AUTO_COMPONENT): $(TEST_COMPONENT_COLLECTION)
 $(TEST_COMPONENT_COLLECTION):
 	$(QUIET)$(PYTHON) $(MAKEFILES_PATH)/scripts/gen_test_collection.py $(AUTO_COMPONENT_DIR) $(TEST_COMPONENT_COLLECTION)
 
-$(OUTPUT_DIR)/config.mk: $(MAKEFILES_PATH)/aos_target_config.mk $(MAKEFILES_PATH)/aos_host_cmd.mk $(MAKEFILES_PATH)/aos_toolchain_gcc.mk $(AOS_SDK_MAKEFILES) $(AUTO_COMPONENT)
+ifeq ($(COMPILER),armcc)
+ TOOLCHAIN_MK = aos_toolchain_armcc.mk
+else
+ TOOLCHAIN_MK = aos_toolchain_gcc.mk
+endif
+
+$(OUTPUT_DIR)/config.mk: $(MAKEFILES_PATH)/aos_target_config.mk $(MAKEFILES_PATH)/aos_host_cmd.mk $(MAKEFILES_PATH)/$(TOOLCHAIN_MK) $(AOS_SDK_MAKEFILES) $(AUTO_COMPONENT)
 	$(QUIET)$(if $(PARSE_RESOURSE_TO_SYSCALL_FILE), $(call MKDIR, $(OUTPUT_DIR)/precompile))
 	$(QUIET)$(if $(PARSE_RESOURSE_TO_SYSCALL_FILE), $(call MKDIR, $(OUTPUT_DIR)/syscall/syscall_kapi))
 	$(QUIET)$(if $(PARSE_RESOURSE_TO_SYSCALL_FILE), $(call MKDIR, $(OUTPUT_DIR)/syscall/syscall_fapi))

@@ -217,7 +217,11 @@ MAIN_COMPONENT_PROCESSING :=1
 # Now we know the target architecture - include all toolchain makefiles and check one of them can handle the architecture
 CC :=
 
+ifeq ($(COMPILER),armcc)
+include $(MAKEFILES_PATH)/aos_toolchain_armcc.mk
+else
 include $(MAKEFILES_PATH)/aos_toolchain_gcc.mk
+endif
 
 ifndef CC
 $(error No matching toolchain found for architecture $(HOST_ARCH))
