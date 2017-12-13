@@ -78,8 +78,7 @@ endif
 
 GLOBAL_LDFLAGS += -T platform/mcu/b-l475e-iot01/STM32L475VGTx_FLASH.ld
 
-$(NAME)_SOURCES := src/B-L475E-IOT01/runapp/startup_stm32l475xx_gcc.s \
-                   src/B-L475E-IOT01/runapp/stm32l4xx_hal_msp.c      \
+$(NAME)_SOURCES := src/B-L475E-IOT01/runapp/stm32l4xx_hal_msp.c      \
                    src/B-L475E-IOT01/runapp/stm32l4xx_it.c           \
                    src/B-L475E-IOT01/runapp/soc_init.c          \
                    src/B-L475E-IOT01/runapp/system_stm32l4xx.c      \
@@ -139,3 +138,10 @@ $(NAME)_SOURCES := src/B-L475E-IOT01/runapp/startup_stm32l475xx_gcc.s \
                    src/B-L475E-IOT01/sensor/sensors.c \
                    src/B-L475E-IOT01/sensor/qspi.c
 
+ifeq ifeq ($(COMPILER),armcc)
+$(NAME)_SOURCES += src/B-L475E-IOT01/runapp/startup_stm32l475xx_armcc.s
+else ifeq ($(COMPILER),iar)
+$(NAME)_SOURCES += src/B-L475E-IOT01/runapp/startup_stm32l475xx_icc.s
+else
+$(NAME)_SOURCES += src/B-L475E-IOT01/runapp/startup_stm32l475xx_gcc.s
+endif
