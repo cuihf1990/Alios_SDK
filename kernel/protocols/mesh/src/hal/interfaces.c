@@ -31,8 +31,6 @@ static network_context_t *new_network_context(hal_context_t *hal, uint8_t index,
     network->hal = hal;
     network->sid = INVALID_SID;
 
-    network->mcast_sequence = 0;
-    memset(network->mcast_entry, 0, sizeof(network->mcast_entry));
     network->router = ur_get_router_by_id(router_id);
     network->router->network = network;
     if (index == 0) {
@@ -242,7 +240,6 @@ void reset_network_context(void)
         ur_stop_timer(&network->advertisement_timer, network);
         ur_stop_timer(&network->attach_timer, network);
         ur_stop_timer(&network->migrate_wait_timer, network);
-        ur_stop_timer(&network->mcast_timer, network);
         network->sid       = BCAST_SID;
         network->path_cost = INFINITY_PATH_COST;
         network->meshnetid = INVALID_NETID;
