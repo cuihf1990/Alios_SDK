@@ -81,10 +81,7 @@ ur_error_t process_mcast_header(network_context_t *network, uint8_t *message)
     entry->sid = header->sid;
     entry->sequence = header->sequence;
     entry->lifetime = MCAST_CACHE_ENTRY_LIFETIME;
-    if (network->mcast_timer == NULL) {
-        network->mcast_timer = ur_start_timer(MCAST_CACHE_LIFETIME_UNIT,
-                                              handle_mcast_timer, network);
-    }
+    ur_start_timer(&network->mcast_timer, MCAST_CACHE_LIFETIME_UNIT, handle_mcast_timer, network);
     return error;
 }
 
@@ -104,7 +101,7 @@ static void handle_mcast_timer(void *args)
     }
 
     if (start_timer) {
-        network->mcast_timer = ur_start_timer(MCAST_CACHE_LIFETIME_UNIT,
-                                              handle_mcast_timer, network);
+        ur_start_timer(&network->mcast_timer, MCAST_CACHE_LIFETIME_UNIT,
+                       handle_mcast_timer, network);
     }
 }

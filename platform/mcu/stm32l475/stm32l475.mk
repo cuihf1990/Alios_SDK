@@ -7,9 +7,9 @@
 #  permission of MXCHIP Corporation.
 #
 
-NAME := b-l475e-iot01
+NAME := stm32l475
 
-HOST_OPENOCD := b-l475e-iot01
+HOST_OPENOCD := stm32l475
 
 STM32_NONSTD_SOCKET := true
 
@@ -76,7 +76,7 @@ GLOBAL_LDFLAGS += -mcpu=cortex-m4  \
 endif
 
 
-GLOBAL_LDFLAGS += -T platform/mcu/b-l475e-iot01/STM32L475VGTx_FLASH.ld
+GLOBAL_LDFLAGS += -T platform/mcu/stm32l475/STM32L475VGTx_FLASH.ld
 
 $(NAME)_SOURCES := src/B-L475E-IOT01/runapp/stm32l4xx_hal_msp.c      \
                    src/B-L475E-IOT01/runapp/stm32l4xx_it.c           \

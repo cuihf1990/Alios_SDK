@@ -371,9 +371,8 @@ static void dijkstra(void)
 
 static void restart_topology_sync_timer()
 {
-    ur_stop_timer(&g_vr_state.sync_timer, NULL);
-    g_vr_state.sync_timer = ur_start_timer(TOPOLOGY_SYNC_TIMEOUT,
-                                           handle_topology_sync_timer, NULL);
+    ur_start_timer(&g_vr_state.sync_timer, TOPOLOGY_SYNC_TIMEOUT,
+                   handle_topology_sync_timer, NULL);
 }
 
 static ur_error_t resend_last_command()
@@ -382,8 +381,8 @@ static ur_error_t resend_last_command()
     if (g_vr_state.retry_times < MAX_RETRY_TIMES) {
         ur_router_send_message(&g_vr_state.router, g_vr_state.sync_state->cmd_dst,
                                g_vr_state.sync_state->cmd_data, g_vr_state.sync_state->cmd_len);
-        g_vr_state.sync_timer = ur_start_timer(TOPOLOGY_SYNC_TIMEOUT,
-                                               handle_topology_sync_timer, NULL);
+        ur_start_timer(&g_vr_state.sync_timer, TOPOLOGY_SYNC_TIMEOUT,
+                       handle_topology_sync_timer, NULL);
         MESH_LOG_DEBUG("vector router: timeout resend to %04x, len = %d",
                        g_vr_state.sync_state->cmd_dst, g_vr_state.sync_state->cmd_len);
         return UR_ERROR_NONE;
@@ -936,8 +935,7 @@ next_loop:
 
 static void handle_heartbeat_timer(void *args)
 {
-    g_vr_state.heartbeat_timer = ur_start_timer(HEARTBEAT_TIMEOUT,
-                                                handle_heartbeat_timer, NULL);
+    ur_start_timer(&g_vr_state.heartbeat_timer, HEARTBEAT_TIMEOUT, handle_heartbeat_timer, NULL);
 
     if (g_vr_state.status == STATUS_UP) {
         g_vr_state.heartbeat_count ++;
@@ -1141,10 +1139,9 @@ ur_error_t vector_router_event_triggered(uint8_t event, uint8_t *data,
                 g_vr_state.status = STATUS_SYNC_TOPOLOGY;
             }
             g_vr_state.sync_status = TOPOLOGY_SYNC_IDLE;
-            g_vr_state.heartbeat_timer = ur_start_timer(STARTUP_TIMEOUT,
-                                                        handle_heartbeat_timer, NULL);
+            ur_start_timer(&g_vr_state.heartbeat_timer, STARTUP_TIMEOUT,
+                           handle_heartbeat_timer, NULL);
         }
-
     }
     return UR_ERROR_NONE;
 }
