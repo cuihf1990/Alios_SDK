@@ -126,6 +126,14 @@ kstat_t krhino_timer_dyn_create(ktimer_t **timer, const name_t *name,
 
     NULL_PARA_CHK(timer);
 
+    if (first >= (tick_t)-1) {
+        return RHINO_INV_PARAM;
+    }
+
+    if (round >= (tick_t)-1) {
+        return RHINO_INV_PARAM;
+    }
+
     timer_obj = krhino_mm_alloc(sizeof(ktimer_t));
     if (timer_obj == NULL) {
         return RHINO_NO_MEM;
