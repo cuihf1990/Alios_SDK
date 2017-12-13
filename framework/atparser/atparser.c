@@ -634,7 +634,7 @@ check_buffer:
         // in case buffer is full
         if ((offset >= (RECV_BUFFER_SIZE - 2)) ||
             (strcmp(&buf[offset - at._recv_delim_size], at._recv_delimiter) == 0)) {
-            LOGI(MODULE_NAME, "buffer full or new line hit, offset: %d, buf: %s", offset, buf);
+            LOGD(MODULE_NAME, "buffer full or new line hit, offset: %d, buf: %s", offset, buf);
             memset(buf, 0, offset);
             offset = 0;
         }
