@@ -53,6 +53,7 @@ else
 GLOBAL_CFLAGS += -mcpu=cortex-m4 \
                  -march=armv7-m  \
                  -mlittle-endian \
+                 -mthumb \
                  -w
 endif
 
