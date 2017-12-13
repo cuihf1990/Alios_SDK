@@ -306,7 +306,7 @@ int sal_wifi_start(sal_conn_t *c)
         LOGE(TAG, "%s %d failed", __func__, __LINE__);
         goto err;
     }
-    /* TODO zheli caozuo g_link buxuyao glink mutex lock ma */
+    
     if (aos_sem_new(&g_link[link_id].sem_start, 0) != 0) {
        LOGE(TAG, "failed to allocate semaphore %s", __func__);
        goto err;

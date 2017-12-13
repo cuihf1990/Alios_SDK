@@ -31,7 +31,7 @@
 #define RECV_STATUS_OK "OK\r\n" // combination of rsp and delimiter
 #define RECV_STATUS_ERROR "ERROR\r\n"
 
-#define AT_REST_CMD "AT"
+#define AT_RESET_CMD "AT"
 
 typedef void (*oob_cb)(void *arg);
 

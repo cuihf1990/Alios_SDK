@@ -80,7 +80,7 @@ static int at_reset()
 {
     int ret = 0;
     char response[64] = {0};
-    char *commond = AT_REST_CMD;
+    char *commond = AT_RESET_CMD;
     
     if (at._mode != ASYN) {
         LOGE(MODULE_NAME, "Operation not supported in non asyn mode");
