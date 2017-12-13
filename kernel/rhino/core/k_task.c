@@ -458,6 +458,7 @@ kstat_t krhino_task_stack_cur_free(ktask_t *task, size_t *free)
 }
 #endif
 
+#if (RHINO_CONFIG_TASK_PRI_CHG > 0)
 kstat_t task_pri_change(ktask_t *task, uint8_t new_pri)
 {
     uint8_t  old_pri;
@@ -531,7 +532,6 @@ kstat_t task_pri_change(ktask_t *task, uint8_t new_pri)
     return RHINO_SUCCESS;
 }
 
-#if (RHINO_CONFIG_TASK_PRI_CHG > 0)
 kstat_t krhino_task_pri_change(ktask_t *task, uint8_t pri, uint8_t *old_pri)
 {
     CPSR_ALLOC();
