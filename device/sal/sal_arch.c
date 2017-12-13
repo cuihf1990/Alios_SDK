@@ -1,3 +1,7 @@
+/*
+ * Copyright (C) 2015-2017 Alibaba Group Holding Limited
+ */
+
 /* system includes */
 #include <aos/aos.h>
 #include "sal_err.h"

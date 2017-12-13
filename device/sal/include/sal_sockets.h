@@ -1,3 +1,7 @@
+/*
+ * Copyright (C) 2015-2017 Alibaba Group Holding Limited
+ */
+
 #ifndef _SAL_SOCKET_H_
 #define _SAL_SOCKET_H_
 
