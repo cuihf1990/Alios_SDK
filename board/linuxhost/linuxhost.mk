@@ -6,7 +6,6 @@ HOST_ARCH           := linux
 HOST_MCU_FAMILY     := linux
 SUPPORT_BINS        := no
 
-$(NAME)_COMPONENTS  :=  tfs
 
 # Change to use the correct deivce here if necessary.
 CONFIG_LIB_TFS := y
