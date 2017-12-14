@@ -244,12 +244,15 @@ typedef struct whitelist_entry_s {
 } whitelist_entry_t;
 
 /* mesh events code */
-#define  CODE_MESH_STARTED        1
-#define  CODE_MESH_ATTACHED       2
-#define  CODE_MESH_DETACHED       3
-#define  CODE_MESH_CONNECTED      4
-#define  CODE_MESH_DISCONNECTED   5
-#define  CODE_MESH_DATA_RECV      6
+#define CODE_MESH_STARTED        1
+#define CODE_MESH_ATTACHED       2
+#define CODE_MESH_DETACHED       3
+#define CODE_MESH_CONNECTED      4
+#define CODE_MESH_DISCONNECTED   5
+#define CODE_MESH_DATA_RECV      6
+#define CODE_MESH_PSCHED_UP      7
+#define CODE_MESH_ASCHED_UP      8
+#define CODE_MESH_SCHED_DOWN     9
 
 #ifdef __cplusplus
 }
