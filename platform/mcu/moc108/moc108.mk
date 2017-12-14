@@ -461,7 +461,4 @@ $(NAME)_SOURCES	 += hal/gpio.c \
 $(NAME)_SOURCES +=  hal/mesh_wifi_hal.c
 #endif
 
-$(NAME)_INCLUDES += ../../../kernel/protocols/net/include/lwip \
-                    ../../../kernel/protocols/net/include/netif \
-                    ../../../kernel/protocols/mesh/include
 
