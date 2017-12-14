@@ -43,7 +43,7 @@ static void two_nodes_case(void)
     }
 
     stop_node(12);
-    cmd_to_agent("stop");
+    umesh_stop();
 }
 
 static void three_nodes_case(void)
@@ -92,12 +92,19 @@ static void three_nodes_case(void)
 
     stop_node(12);
     stop_node(13);
-    cmd_to_agent("stop");
+    umesh_stop();
 }
 
 
 void test_uradar_asymmetric_link_case(void)
 {
+    int32_t num;
+    const ur_mem_stats_t *mem_stats = ur_mem_get_stats();
+    num = mem_stats->num;
+
     run_times(two_nodes_case(), 1);
     run_times(three_nodes_case(), 1);
+
+    mem_stats = ur_mem_get_stats();
+    YUNIT_ASSERT(num == mem_stats->num);
 }

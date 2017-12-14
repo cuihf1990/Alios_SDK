@@ -18,9 +18,13 @@ void topo_test_function(uint16_t first_node, uint16_t num, uint32_t timeout)
 {
     uint16_t index;
     char number[5];
+    int32_t mem_num;
+    const ur_mem_stats_t *mem_stats = ur_mem_get_stats();
 
     aos_msleep(2 * 1000);
     set_full_rssi(first_node, first_node + num - 1);
+
+    mem_num = mem_stats->num;
 
     for (index = 1; index < num; index++) {
         start_node_ext(index + first_node, MODE_RX_ON, -1, -1);
@@ -39,4 +43,7 @@ void topo_test_function(uint16_t first_node, uint16_t num, uint32_t timeout)
         stop_node(index + first_node);
     }
     umesh_stop();
+
+    mem_stats = ur_mem_get_stats();
+    YUNIT_ASSERT(mem_num == mem_stats->num);
 }

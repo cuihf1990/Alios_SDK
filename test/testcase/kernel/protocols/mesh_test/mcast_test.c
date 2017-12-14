@@ -17,8 +17,10 @@
 void test_uradar_mcast_case(void)
 {
     neighbor_t *attach_node;
-    set_line_rssi(11, 14);
+    int32_t num;
+    const ur_mem_stats_t *mem_stats = ur_mem_get_stats();
 
+    set_line_rssi(11, 14);
     cmd_to_agent("stop");
     start_node_ext(12, MODE_RX_ON, -1, -1);
     check_p2p_str_wait("leader", 12, "testcmd state", 10);
@@ -27,10 +29,10 @@ void test_uradar_mcast_case(void)
     start_node_ext(14, MODE_RX_ON | MODE_MOBILE, -1, -1);
     check_p2p_str_wait("leaf", 14, "testcmd state", 10);
 
+    num = mem_stats->num;
     cmd_to_agent("mode FIXED");
     cmd_to_agent("start");
     check_cond_wait(!!(attach_node = umesh_mm_get_attach_node()), 15);
-
     cmd_to_master("sendall status");
 
     char ping_cmd[64];
@@ -46,8 +48,11 @@ void test_uradar_mcast_case(void)
     cmd_to_master(ping_cmd);
     check_p2p_str_wait("1", 12, "testcmd autotest_acked", 10);
 
-    cmd_to_agent("stop");
+    umesh_stop();
     stop_node(14);
     stop_node(13);
     stop_node(12);
+
+    mem_stats = ur_mem_get_stats();
+    YUNIT_ASSERT(num == mem_stats->num);
 }

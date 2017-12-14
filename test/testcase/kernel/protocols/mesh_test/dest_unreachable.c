@@ -73,11 +73,17 @@ static void one_layer_case(void)
     stop_node(12);
     stop_node(13);
     stop_node(14);
-    cmd_to_agent("stop");
+    umesh_stop();
 }
-
 
 void test_uradar_dest_become_unreachable_case(void)
 {
+    int32_t num;
+    const ur_mem_stats_t *mem_stats = ur_mem_get_stats();
+    num = mem_stats->num;
+
     run_times(one_layer_case(), 1);
+
+    mem_stats = ur_mem_get_stats();
+    YUNIT_ASSERT(num == mem_stats->num);
 }
