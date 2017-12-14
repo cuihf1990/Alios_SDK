@@ -182,28 +182,6 @@ int sal_module_domain_to_ip(char *domain, char ip[16])
     return err;
 }
 
-int sal_module_register_netconn_evt_cb (netconn_evt_cb_t cb)
-{
-    int err = 0;
-    
-    if (NULL == g_sal_module){
-        LOGI(TAG, "sal module reg evt cb fail for there is no sal module registered yet \n");
-        return 0;
-    }
-
-    if (NULL == g_sal_module->register_netconn_evt_cb){
-        LOGE(TAG, "register_netconn_evt_cb function in sal module is null \n");
-        return -1;
-    }
-
-    err = g_sal_module->register_netconn_evt_cb(cb);
-    if (err){
-        LOGE(TAG, "module register_netconn_evt_cb fail err=%d\n", err);
-    }
-    
-    return err; 
-}
-
 int sal_module_register_netconn_data_input_cb(netconn_data_input_cb_t cb)
 {
     int err = 0;

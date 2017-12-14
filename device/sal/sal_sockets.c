@@ -833,12 +833,12 @@ static err_t salnetconn_recv_data(sal_netconn_t *conn, sal_netbuf_t **new_buf)
     }
 
     ret = sal_arch_mbox_fetch(&conn->recvmbox, &buf, conn->recv_timeout);
-    sal_deal_event(conn->socket, NETCONN_EVT_RCVMINUS);
     if (ret == SAL_ARCH_TIMEOUT){
         SAL_ERROR("sal recv data time out, socket %d conn %p timeout %d\n", conn->socket, conn, conn->recv_timeout);
         return ERR_TIMEOUT;
     }
-
+    
+    sal_deal_event(conn->socket, NETCONN_EVT_RCVMINUS);
     *new_buf = buf;
     return ERR_OK;
     
@@ -1281,7 +1281,7 @@ int sal_sendto(int s, const void *data, size_t size, int flags,
     if (NETCONNTYPE_GROUP(pstsalsock->conn->type) == NETCONN_TCP) {
         if (pstsalsock->conn->state == NETCONN_NONE) {
             SAL_ERROR("sal_sendto socket %d connect state is %d\n", s, pstsalsock->conn->state);
-            //UNLOCK_SAL_CORE;
+            UNLOCK_SAL_CORE;
             return ERR_VAL;
         }
     }
@@ -1309,11 +1309,14 @@ int sal_sendto(int s, const void *data, size_t size, int flags,
         }
     }
 
-    err = sal_module_send(pstsalsock->conn->socket,
-                        (uint8_t *)data, size, NULL, -1);
+    err = sal_module_send(s, (uint8_t *)data, size, NULL, -1);
     UNLOCK_SAL_CORE;
-
-    return (err == ERR_OK ? size : -1);
+    
+    if (err != ERR_OK){
+        return -1;
+    }
+    sal_deal_event(s, NETCONN_EVT_SENDPLUS);
+    return size;
 }
 
 int sal_send(int s, const void *data, size_t size, int flags)
@@ -1616,13 +1619,6 @@ int sal_init()
         sal_mutex_arch_free();
         return -1;
     }
-
-    if (sal_module_register_netconn_evt_cb(&sal_deal_event) != ERR_OK) {
-        SAL_ERROR("failed to reg sal evnet cb\n");
-        sal_mutex_arch_free();
-        sal_mutex_free(&lock_sal_core);
-        return -1;
-    }
     
     if (sal_module_register_netconn_data_input_cb(&sal_packet_input) != ERR_OK) {
         SAL_ERROR("failed to reg sal packet input cb\n");
@@ -1806,7 +1802,6 @@ int sal_close(int s)
         return -1;
     }
 
-    LOCK_SAL_CORE;
     if (sock->conn->state == NETCONN_CONNECT) {
         if (sal_module_close(s, -1) != 0) {
             SAL_ERROR("sal_module_close failed.");
@@ -1815,7 +1810,11 @@ int sal_close(int s)
             return -1;
         }
     }
-
+    
+    sal_deal_event(s, NETCONN_EVT_SENDPLUS);
+    sal_deal_event(s, NETCONN_EVT_RCVPLUS);
+    sal_deal_event(s, NETCONN_EVT_ERROR);
+    LOCK_SAL_CORE;
     err = salnetconn_delete(sock->conn);
     UNLOCK_SAL_CORE;
     if (err != ERR_OK) {
