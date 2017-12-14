@@ -59,6 +59,20 @@ static uint8_t get_next_slot_num(const uint8_t *mac, uint8_t slot_num)
 static void radio_events_handler(schedule_type_t type, bool is_up)
 {
     lowpower_events_handler_t *callback;
+    uint8_t event_type = 0;
+
+    if (is_up == false) {
+        event_type = CODE_MESH_SCHED_DOWN;
+    } else if (type == LOWPOWER_PARENT_SCHEDULE) {
+        event_type = CODE_MESH_PSCHED_UP;
+    } else if (type == LOWPOWER_ATTACHED_SCHEDULE) {
+        event_type = CODE_MESH_ASCHED_UP;
+    }
+    umesh_post_event(event_type, 0);
+
+    if (umesh_get_mode() & MODE_RX_ON) {
+        return;
+    }
 
     slist_for_each_entry(&g_lowpower_state.lowpower_callback, callback,
                          lowpower_events_handler_t, next) {
@@ -142,12 +156,13 @@ static void sleep_timer_handler(schedule_type_t type)
         set_child_state_sleep();
     }
     update_schedule_timer(type);
-    if ((umesh_get_mode() & MODE_RX_ON) == 0 &&
-        type != LOWPOWER_ATTACHING_SCHEDULE && g_lowpower_state.sleep_timer == NULL &&
-        g_lowpower_state.parent_sleep_timer == NULL) {
+    if (type != LOWPOWER_ATTACHING_SCHEDULE &&
+        g_lowpower_state.sleep_timer == NULL && g_lowpower_state.parent_sleep_timer == NULL) {
         radio_events_handler(type, false);
-        MESH_LOG_DEBUG("radio goto sleep at %d, type %d", umesh_now_ms(), type);
-        radio_sleep();
+        if ((umesh_get_mode() & MODE_RX_ON) == 0) {
+            radio_sleep();
+            MESH_LOG_DEBUG("radio goto sleep at %d, type %d", umesh_now_ms(), type);
+        }
     }
 }
 
@@ -165,10 +180,10 @@ static void handle_sleep_timer(void *args)
 
 static void wakeup_timer_handler(schedule_type_t type, uint32_t wakeup_interval)
 {
+    radio_events_handler(type, true);
     if ((umesh_get_mode() & MODE_RX_ON) == 0) {
         MESH_LOG_DEBUG("radio wakeup at %d", umesh_now_ms());
         radio_wakeup();
-        radio_events_handler(type, true);
     }
 
     if (type == LOWPOWER_ATTACHED_SCHEDULE) {
