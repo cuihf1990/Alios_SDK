@@ -61,10 +61,8 @@ ifeq ($(COMPILER),armcc)
 GLOBAL_LDFLAGS += -L --cpu=Cortex-M4.fp   \
                   -L --library_type=microlib \
 		  -L --strict \
-		  -L --map \
 		  -L --xref -L --callgraph -L --symbols \
-                  -L --info=sizes -L --info=totals -L --info=unused -L --info=veneers -L --info=summarysizes \
-		  -L --list=platform/mcu/stm32l475/B-L475E-IOT01.map 
+                  -L --info=sizes -L --info=totals -L --info=unused -L --info=veneers -L --info=summarysizes
 else
 GLOBAL_LDFLAGS += -mcpu=cortex-m4  \
                   -mlittle-endian  \
