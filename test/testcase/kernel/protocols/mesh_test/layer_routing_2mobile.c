@@ -54,7 +54,7 @@ static void topology_line_case(void)
     stop_node(12);
     stop_node(13);
     stop_node(14);
-    cmd_to_agent("stop");
+    umesh_stop();
 }
 
 static void dual_if_topology_line_case(void)
@@ -98,11 +98,18 @@ static void dual_if_topology_line_case(void)
     stop_node(152);
     stop_node(153);
     stop_node(154);
-    cmd_to_agent("stop");
+    umesh_stop();
 }
 
 void test_uradar_layer_routing_2mobile_case(void)
 {
+    int32_t num;
+    const ur_mem_stats_t *mem_stats = ur_mem_get_stats();
+    num = mem_stats->num;
+
     run_times(topology_line_case(), 1);
     run_times(dual_if_topology_line_case(), 1);
+
+    mem_stats = ur_mem_get_stats();
+    YUNIT_ASSERT(num == mem_stats->num);
 }

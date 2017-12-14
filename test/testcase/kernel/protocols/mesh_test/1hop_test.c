@@ -60,7 +60,7 @@ static void me_as_router(bool vector_router)
     check_cond_wait(umesh_get_device_state() == DEVICE_STATE_ROUTER ||
                     umesh_get_device_state() == DEVICE_STATE_SUPER_ROUTER, 10);
 
-    cmd_to_agent("stop");
+    umesh_stop();
     stop_node(12);
     aos_msleep(2 * 1000);
 }
@@ -145,6 +145,10 @@ static void me_as_leader_lowpower(void)
 
 void test_uradar_1hop_case(void)
 {
+    int32_t num;
+    const ur_mem_stats_t *mem_stats = ur_mem_get_stats();
+    num = mem_stats->num;
+
     set_full_rssi(11, 12);
     run_times(me_as_leader(false), 2);
     run_times(me_as_router(false), 2);
@@ -154,4 +158,7 @@ void test_uradar_1hop_case(void)
     aos_register_event_filter(EV_MESH, subscribed_event_cb, NULL);
     run_times(me_as_router_lowpower(), 1);
     run_times(me_as_leader_lowpower(), 1);
+
+    mem_stats = ur_mem_get_stats();
+    YUNIT_ASSERT(num == mem_stats->num);
 }

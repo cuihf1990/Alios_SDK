@@ -169,7 +169,7 @@ static void subnet_is_wifi_case(void)
     for (index = 1; index < 11; index++) {
         stop_node(index);
     }
-    cmd_to_agent("stop");
+    umesh_stop();
     aos_msleep(1 * 1000);
 }
 
@@ -250,6 +250,13 @@ static void subnet_is_ble_case(void)
 
 void test_umesh_4super_7nodes_case(void)
 {
+    int32_t num;
+    const ur_mem_stats_t *mem_stats = ur_mem_get_stats();
+    num = mem_stats->num;
+
     run_times(subnet_is_wifi_case(), 1);
     run_times(subnet_is_ble_case(), 1);
+
+    mem_stats = ur_mem_get_stats();
+    YUNIT_ASSERT(num == mem_stats->num);
 }

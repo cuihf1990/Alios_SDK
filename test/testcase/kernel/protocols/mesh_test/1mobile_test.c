@@ -77,9 +77,15 @@ static void run_in_hop2(void)
     aos_msleep(2 * 1000);
 }
 
-
 void test_uradar_1mobile_case(void)
 {
+    int32_t num;
+    const ur_mem_stats_t *mem_stats = ur_mem_get_stats();
+    num = mem_stats->num;
+
     run_times(run_in_hop1(), 2);
     run_times(run_in_hop2(), 2);
+
+    mem_stats = ur_mem_get_stats();
+    YUNIT_ASSERT(num == mem_stats->num);
 }

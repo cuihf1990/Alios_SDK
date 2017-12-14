@@ -102,6 +102,14 @@ static void dual_if_topology_line_case(void)
 
 void test_uradar_layer_routing_line_topology_case(void)
 {
-    //run_times(topology_line_case(), 1);
+    int32_t num;
+    const ur_mem_stats_t *mem_stats = ur_mem_get_stats();
+    num = mem_stats->num;
+
+    run_times(topology_line_case(), 1);
     run_times(dual_if_topology_line_case(), 1);
+
+    aos_msleep(500);
+    mem_stats = ur_mem_get_stats();
+    YUNIT_ASSERT(num == mem_stats->num);
 }
