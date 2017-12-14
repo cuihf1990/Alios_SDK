@@ -17,6 +17,9 @@ endif
 
 TOOLCHAIN_PREFIX  := arm-none-eabi-
 TOOLCHAIN_VERSION := 5_4-2016q3-20160926
+ifneq (,$(wildcard $(TOOLS_ROOT)/compiler/arm-none-eabi-$(TOOLCHAIN_VERSION)/$(HOST_OS)/bin))
+TOOLCHAIN_PATH := $(TOOLS_ROOT)/compiler/arm-none-eabi-$(TOOLCHAIN_VERSION)/$(HOST_OS)/bin/
+endif
 
 BINS ?=
 
@@ -44,7 +47,6 @@ ifneq (,$(filter $(HOST_OS),Linux32 Linux64))
 # Linux 32/64-bit settings
 ################
 
-export PATH       := $(TOOLS_ROOT)/compiler/arm-none-eabi-$(TOOLCHAIN_VERSION)/$(HOST_OS)/bin:$(PATH)
 TOOLCHAIN_PATH    ?=
 GDB_KILL_OPENOCD   = 'shell killall openocd'
 GDBINIT_STRING     = 'shell $(COMMON_TOOLS_PATH)dash -c "trap \\"\\" 2;$(OPENOCD_FULL_NAME) -f $(OPENOCD_CFG_PATH)interface/$(JTAG).cfg -f $(OPENOCD_CFG_PATH)$(HOST_OPENOCD)/$(HOST_OPENOCD).cfg -f $(OPENOCD_CFG_PATH)$(HOST_OPENOCD)/$(HOST_OPENOCD)_gdb_jtag.cfg -l $(OPENOCD_LOG_FILE) &"'
@@ -56,7 +58,6 @@ ifeq ($(HOST_OS),OSX)
 # OSX settings
 ################
 
-export PATH       := $(TOOLS_ROOT)/compiler/arm-none-eabi-$(TOOLCHAIN_VERSION)/$(HOST_OS)/bin:$(PATH)
 TOOLCHAIN_PATH    ?=
 GDB_KILL_OPENOCD   = 'shell killall openocd_run'
 GDBINIT_STRING     = 'shell $(COMMON_TOOLS_PATH)dash -c "trap \\"\\" 2;$(OPENOCD_FULL_NAME) -f $(OPENOCD_CFG_PATH)interface/$(JTAG).cfg -f $(OPENOCD_CFG_PATH)$(HOST_OPENOCD)/$(HOST_OPENOCD).cfg -f $(OPENOCD_CFG_PATH)$(HOST_OPENOCD)/$(HOST_OPENOCD)_gdb_jtag.cfg -l $(OPENOCD_LOG_FILE) &"'
@@ -67,7 +68,6 @@ $(error incorrect 'make' used ($(MAKE)) - please use:  (Windows) .\make.exe <tar
 endif # OSX
 endif # Linux32 Linux64 OSX
 endif # Win32
-
 
 # Notes on C++ options:
 # The next two CXXFLAGS reduce the size of C++ code by removing unneeded
