@@ -1,5 +1,9 @@
 ifneq ($(filter $(HOST_ARCH), xtensa),)
 
+ifneq (,$(wildcard $(TOOLS_ROOT)/compiler/gcc-xtensa-esp32/$(HOST_OS)/bin))
+TOOLCHAIN_PATH := $(TOOLS_ROOT)/compiler/gcc-xtensa-esp32/$(HOST_OS)/bin/
+endif
+
 TOOLCHAIN_PATH ?=
 TOOLCHAIN_PREFIX := xtensa-esp32-elf-
 CC      := $(TOOLCHAIN_PATH)$(TOOLCHAIN_PREFIX)gcc
@@ -10,7 +14,6 @@ LD      := $(TOOLCHAIN_PATH)$(TOOLCHAIN_PREFIX)ld
 CPP     := $(TOOLCHAIN_PATH)$(TOOLCHAIN_PREFIX)cpp
 OPTIONS_IN_FILE_OPTION    := @
 
-export PATH := $(TOOLS_ROOT)/compiler/gcc-xtensa-esp32/$(HOST_OS)/bin:$(PATH)
 ADD_COMPILER_SPECIFIC_STANDARD_CFLAGS   = $(1) $(if $(filter yes,$(MXCHIP_INTERNAL) $(TESTER)),-Werror)
 ADD_COMPILER_SPECIFIC_STANDARD_CXXFLAGS = $(1) $(if $(filter yes,$(MXCHIP_INTERNAL) $(TESTER)),-Werror)
 ADD_COMPILER_SPECIFIC_STANDARD_ADMFLAGS = $(1)
