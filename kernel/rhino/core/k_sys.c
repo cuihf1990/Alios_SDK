@@ -199,7 +199,7 @@ size_t krhino_global_space_get(void)
     mem = sizeof(g_sys_stat) + sizeof(g_idle_task_spawned) + sizeof(g_ready_queue)
           + sizeof(g_sched_lock) + sizeof(g_intrpt_nested_level) + sizeof(g_preferred_ready_task)
           + sizeof(g_active_task) + sizeof(g_idle_task) + sizeof(g_idle_task_stack)
-          + sizeof(g_tick_head) + sizeof(g_idle_count) + sizeof(g_sys_time_tick);
+          + sizeof(g_tick_head) + sizeof(g_tick_count) + sizeof(g_idle_count) + sizeof(g_sys_time_tick);
 
 #if (RHINO_CONFIG_TIMER > 0)
     mem += sizeof(g_timer_head) + sizeof(g_timer_count)
@@ -211,6 +211,8 @@ size_t krhino_global_space_get(void)
 #if (RHINO_CONFIG_SYSTEM_STATS > 0)
     mem += sizeof(g_kobj_list);
 #endif
+
+    mem += sizeof(g_sys_lock);
 
     return mem;
 }
