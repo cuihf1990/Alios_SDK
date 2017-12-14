@@ -27,6 +27,11 @@ extern uint16_t vector_router_get_next_hop_shortid(uint16_t dest);
 
 void test_uradar_vector_router_case(void)
 {
+    int32_t num;
+    const ur_mem_stats_t *mem_stats = ur_mem_get_stats();
+
+    num = mem_stats->num;
+
     /* routing algorithm related test */
     YUNIT_ASSERT(UR_ERROR_NONE == vector_router_init());
     YUNIT_ASSERT(UR_ERROR_NONE == vector_router_add_vertex(2));
@@ -269,6 +274,9 @@ void test_uradar_vector_router_case(void)
     len += sizeof(none_tv_t);
     YUNIT_ASSERT(UR_ERROR_NONE == vector_router_message_received(data, len));
     YUNIT_ASSERT(UR_ERROR_NONE == vector_router_deinit());
+
+    mem_stats = ur_mem_get_stats();
+    YUNIT_ASSERT(num == mem_stats->num);
 }
 
 

@@ -39,6 +39,10 @@ void test_uradar_6lowpan_case(void)
     ur_error_t error;
     ur_addr_t src;
     ur_addr_t dest;
+    int32_t num;
+    const ur_mem_stats_t *mem_stats = ur_mem_get_stats();
+
+    num = mem_stats->num;
 
     get_addr_prefix(&prefix);
 
@@ -316,6 +320,7 @@ void test_uradar_6lowpan_case(void)
     info->src.addr.short_addr = 0x2000;
     YUNIT_ASSERT(UR_ERROR_NONE == frags_reassemble(message, &reass_pkt));
     YUNIT_ASSERT_PTR_NOT_NULL(reass_pkt);
+    message_free(reass_pkt);
 
     offset += length;
     message = message_alloc(length + sizeof(frag_header_t), UT_MSG);
@@ -357,6 +362,7 @@ void test_uradar_6lowpan_case(void)
     info->src.addr.short_addr = 0x2000;
     YUNIT_ASSERT(UR_ERROR_FAIL == frags_reassemble(message, &reass_pkt));
     message_free(message);
+    message_free(reass_pkt);
 
     message = message_alloc(length + sizeof(frag_header_t) - 1, UT_MSG);
     info = message->info;
@@ -369,6 +375,7 @@ void test_uradar_6lowpan_case(void)
     info->src.addr.short_addr = 0x3000;
     YUNIT_ASSERT(UR_ERROR_NONE == frags_reassemble(message, &reass_pkt));
     YUNIT_ASSERT_PTR_NULL(reass_pkt);
+    message_free(reass_pkt);
 
     message = message_alloc(length + sizeof(frag_header_t) - 1, UT_MSG);
     info = message->info;
@@ -397,4 +404,7 @@ void test_uradar_6lowpan_case(void)
     message_free(reass_pkt);
     extern void frags_cleanup(bool force);
     frags_cleanup(true);
+
+    mem_stats = ur_mem_get_stats();
+    YUNIT_ASSERT(num == mem_stats->num);
 }

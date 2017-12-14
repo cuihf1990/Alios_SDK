@@ -142,6 +142,7 @@ static ur_error_t delete_vertex_by_ueid(uint8_t *ueid)
             }
         }
     }
+    vertex_free(vertex);
     return UR_ERROR_NONE;
 }
 

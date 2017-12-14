@@ -25,9 +25,16 @@ extern void interface_stop(void);
 
 void test_uradar_lwip_adapter_case(void)
 {
+    int32_t num;
+    const ur_mem_stats_t *mem_stats = ur_mem_get_stats();
+
+    num = mem_stats->num;
+
     YUNIT_ASSERT(UR_ERROR_NONE == ur_adapter_interface_update());
     interface_start();
     YUNIT_ASSERT(UR_ERROR_NONE == ur_adapter_interface_up());
+
+    mem_stats = ur_mem_get_stats();
 
 #if LWIP_IPV6
     YUNIT_ASSERT(NULL != ur_adapter_ip6_route(NULL, NULL));
@@ -37,6 +44,8 @@ void test_uradar_lwip_adapter_case(void)
     ip6addr.addr[0] = 0x00110011;
     YUNIT_ASSERT(false == ur_adapter_is_mcast_subscribed(&ip6addr));
 #endif
+
+    mem_stats = ur_mem_get_stats();
 
     message_t *message;
     message = message_alloc(60, UT_MSG);
@@ -48,6 +57,7 @@ void test_uradar_lwip_adapter_case(void)
     ip6_header->next_header = 17;
     ip6_header->hop_lim = 255;
     YUNIT_ASSERT(UR_ERROR_NONE == ur_adapter_input(message->data));
+    message_free(message);
 
     int socket;
     ur_udp_header_t *header;
@@ -67,6 +77,9 @@ void test_uradar_lwip_adapter_case(void)
 
     interface_stop();
     YUNIT_ASSERT(UR_ERROR_NONE == ur_adapter_interface_down());
+
+    mem_stats = ur_mem_get_stats();
+    YUNIT_ASSERT(num == mem_stats->num);
 }
 
 

@@ -15,8 +15,12 @@ void test_uradar_sid_allocator_case(void)
                             .sid = INVALID_SID,
                             .attach_sid = 0x0000};
     uint16_t index;
-    allocator_t hdl = allocator_init(0x0000, STRUCTURED_SID);
+    allocator_t hdl;
+    int32_t num;
+    const ur_mem_stats_t *mem_stats = ur_mem_get_stats();
 
+    num = mem_stats->num;
+    hdl = allocator_init(0x0000, STRUCTURED_SID);
     for(index = 1; index <= 11; index++) {
         node_id.ueid[0] += 1;
         YUNIT_ASSERT(UR_ERROR_NONE == allocate_sid(hdl, &node_id));
@@ -57,4 +61,7 @@ void test_uradar_sid_allocator_case(void)
     YUNIT_ASSERT(2 == get_allocated_pf_number(hdl));
 
     allocator_deinit(hdl);
+
+    mem_stats = ur_mem_get_stats();
+    YUNIT_ASSERT(num == mem_stats->num);
 }

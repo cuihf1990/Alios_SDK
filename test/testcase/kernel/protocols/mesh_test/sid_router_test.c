@@ -12,11 +12,16 @@
 
 void test_uradar_sid_router_case(void)
 {
+    int32_t num;
+    const ur_mem_stats_t *mem_stats = ur_mem_get_stats();
+
     network_context_t network = {
         .meshnetid = 0x100,
         .attach_state = ATTACH_DONE
     };
     netids_t netids;
+
+    num = mem_stats->num;
 
     YUNIT_ASSERT(UR_ERROR_NONE == ur_router_set_default_router(SID_ROUTER));
     network.router = ur_get_router_by_id(SID_ROUTER);
@@ -31,6 +36,8 @@ void test_uradar_sid_router_case(void)
     YUNIT_ASSERT(0x1100 == ur_router_get_next_hop(&network, 0x1100));
     YUNIT_ASSERT(0x1100 == ur_router_get_next_hop(&network, 0x1110));
     YUNIT_ASSERT(0x1100 == ur_router_get_next_hop(&network, 0x1120));
+
+    mem_stats = ur_mem_get_stats();
+    YUNIT_ASSERT(num == mem_stats->num);
+
 }
-
-
