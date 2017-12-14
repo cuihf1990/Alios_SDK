@@ -41,8 +41,7 @@ typedef enum netconn_evt {
     NETCONN_EVT_ERROR
 } netconn_evt_t;
 
-typedef void (*netconn_evt_cb_t)(int s, enum netconn_evt evt);
-typedef int (*netconn_data_input_cb_t)(int s, void *data, size_t len, ip_addr_t *addr, u16_t port);
+typedef int (*netconn_data_input_cb_t)(int fd, void *data, size_t len, ip_addr_t *addr, u16_t port);
 
 typedef struct sal_op_s {
     char *version; /* Reserved for furture use. */
@@ -71,7 +70,7 @@ typedef struct sal_op_s {
      * @param[in]  fd - the file descripter to operate on.
      * @param[in]  data - pointer to data to send.
      * @param[in]  len - length of the data.
-     * @param[in]  remote_ip - remote port number (optional).
+     * @param[in]  remote_ip - remote ip address (optional).
      * @param[in]  remote_port - remote port number (optional).
      *
      * @return  0 - success, -1 - failure
@@ -124,25 +123,6 @@ typedef struct sal_op_s {
      * @return  0 - success, -1 - failure
      */
     int (*register_netconn_data_input_cb)(netconn_data_input_cb_t cb);
-
-    /**
-     * Register network connection event callback function.
-     * This callback should be called by following below rules:
-     *
-     *   1. When there is socket data available for a specific fd, call as:
-     *      g_netconn_evt_cb(fd, NETCONN_EVT_RCVPLUS);
-     *   2. When there is no more socket data for a specific fd, call as:
-     *      g_netconn_evt_cb(fd, NETCONN_EVT_RCVMINUS);
-     *   3. When a send action is finished for a specific fd, call as:
-     *      g_netconn_evt_cb(fd, NETCONN_EVT_SENDPLUS);
-     *   4. When there is an fatal error occured, call as:
-     *      g_netconn_evt_cb(fd, NETCONN_EVT_ERROR);
-     *   5. Whenever a socket is going to be closed, call as:
-     *      g_netconn_evt_cb(fd, NETCONN_EVT_RCVPLUS);
-     *      g_netconn_evt_cb(fd, NETCONN_EVT_SENDPLUS);
-     *      g_netconn_evt_cb(fd, NETCONN_EVT_ERROR);
-     */
-    int (*register_netconn_evt_cb)(netconn_evt_cb_t cb);
 } sal_op_t;
 
 
@@ -230,26 +210,6 @@ int sal_module_deinit(void);
  * @return  0 - success, -1 - failure
  */
 int sal_module_register_netconn_data_input_cb(netconn_data_input_cb_t cb);
-
-/**
- * Register network connection event callback function.
- * This callback should be called by following below rules:
- *
- *   1. When there is socket data available for a specific fd, call as:
- *      g_netconn_evt_cb(fd, NETCONN_EVT_RCVPLUS);
- *   2. When there is no more socket data for a specific fd, call as:
- *      g_netconn_evt_cb(fd, NETCONN_EVT_RCVMINUS);
- *   3. When a send action is finished for a specific fd, call as:
- *      g_netconn_evt_cb(fd, NETCONN_EVT_SENDPLUS);
- *   4. When there is an fatal error occured, call as:
- *      g_netconn_evt_cb(fd, NETCONN_EVT_ERROR);
- *   5. Whenever a socket is going to be closed, call as:
- *      g_netconn_evt_cb(fd, NETCONN_EVT_RCVPLUS);
- *      g_netconn_evt_cb(fd, NETCONN_EVT_SENDPLUS);
- *      g_netconn_evt_cb(fd, NETCONN_EVT_ERROR);
- */
-int sal_module_register_netconn_evt_cb(netconn_evt_cb_t cb);
-
 
 
 

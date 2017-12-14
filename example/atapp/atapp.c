@@ -191,117 +191,6 @@ static void handle_test_at_enet(char *pwbuf, int len, int argc, char **argv)
 }
 #endif
 
-#ifdef WITH_SAL
-#include <sal.h>
-struct socket_arg {
-    sal_conn_t *c;
-    uint8_t *data;
-};
-
-#define SOCKET_MAX 7
-static sal_conn_t c[SOCKET_MAX];
-static struct socket_arg arg[SOCKET_MAX];
-static void do_tcp_socket(void *in);
-static void handle_sal_wifi_api(char *pwbuf, int len, int argc, char **argv) 
-{
-    int i;
-    char *type;
-    void *tsk;
-
-    LOGD("atapp", "%s entry.", __func__);
-
-    if (argc < 2) return;
-    type = argv[1];
-
-    sal_module_init();
-
-    if (strcmp(type, "tcp_c") == 0) {
-        if (argc < 5) {
-            LOGE("atapp", "Invalid argument %s %d", __func__, __LINE__);
-            return;
-        }
-
-        for(i = 0; i < SOCKET_MAX; i++) {
-            c[i].type = TCP_CLIENT;
-            c[i].fd = i;
-            c[i].addr = argv[2];
-            c[i].r_port = atoi(argv[3]) + i;
-            c[i].l_port = -1;
-            c[i].tcp_keep_alive = 0;
-
-            arg[i].c = &c[i];
-            arg[i].data = (uint8_t *)argv[4];
-
-            tsk = aos_loop_schedule_work(0, do_tcp_socket, &arg[i], NULL, NULL);
-            if (!tsk) {
-                LOGE("atapp", "Failed to created task in %s, i: %d", __func__, i);
-            }
-        }
-    }
-    else {
-        return; /* TODO */
-    }
-}
-
-static void do_tcp_socket(void *in)
-{
-    uint32_t read_len = 0, tmp_read = 0;
-    sal_conn_t *c;
-    char buf[128] = {0}, tmp[10] = {0};
-    uint8_t *data;
-    struct socket_arg *arg = in;
-
-    if (!arg || !arg->c || !arg->data) return;
-    data = arg->data;
-    c = arg->c;
-
-    LOGD("atapp", "%s entry (%d).", __func__, c->fd);
-
-    if (sal_module_start(c) != 0) {
-        LOGE("atapp", "sal_module_start failed (%d).", c->fd);
-        return;
-    }
-
-    LOGD("atapp", "%s to send on fd %d.", __func__, c->fd);
-    if (sal_module_send(c->fd, data, strlen((const char *)data), NULL, -1) != 0) {
-        LOGE("atapp", "sal_module_send failed (%d).", c->fd);
-        goto end;
-    }
-
-    while (1) {
-        tmp_read = sizeof(tmp) - 1;
-        if(sal_module_recv(c->fd, (uint8_t *)tmp, &tmp_read, NULL, -1) < 0) {
-            LOGE("atapp", "sal_module_recv failed (%d).", c->fd);
-            break;
-        }
-        if (strstr(buf, "Goodbye") != NULL) {
-            LOGI("atapp", "Goodbye! See you! (%d)", c->fd);
-            break;
-        }
-        if (tmp_read == 0) {aos_msleep(1000); continue;}
-        else {
-            LOGI("atapp", "Receive %d bytes of data (%s) from server (%d).",
-              tmp_read, tmp, c->fd);
-            if (tmp_read >= (sizeof(buf) - read_len)) {
-                LOGD("atapp", "Read buffer full, let's stop here (%d).", c->fd);
-                break;
-            }
-            memcpy(buf + read_len, tmp, tmp_read);
-            read_len += tmp_read;
-        }
-    }
-
-end:
-    if (sal_module_close(c->fd, c->r_port) != 0) {
-        LOGE("atapp", "sal_module_stop failed (%d).", c->fd);
-        return;
-    }
-
-    sal_module_deinit();
-
-    LOGD("atapp", "%s exit (%d).", __func__, c->fd);
-}
-#endif
 
 static struct cli_command atcmds[] = {
     {
@@ -314,13 +203,6 @@ static struct cli_command atcmds[] = {
         .name = "test_at_enet",
         .help = "test_at_enet [tcp|udp] [ip] [data_string_to_send]",
         .function = handle_test_at_enet
-    },
-#endif
-#ifdef WITH_SAL
-    {
-        .name = "test_sal_wifi_api",
-        .help = "test_sal_wifi_api type [ip|domain rp|lp data]",
-        .function = handle_sal_wifi_api
     },
 #endif
 };

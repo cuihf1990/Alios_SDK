@@ -29,7 +29,6 @@ typedef struct link_s {
 
 static link_t g_link[LINK_ID_MAX];
 static aos_mutex_t g_link_mutex;
-static netconn_evt_cb_t g_netconn_evt_cb;
 static netconn_data_input_cb_t g_netconn_data_input_cb;
 
 static void handle_tcp_udp_client_conn_state(uint8_t link_id)
@@ -382,9 +381,6 @@ static int sal_wifi_send(int fd,
     at.send_data_2stage((const char *)cmd, (const char *)data, len, out, sizeof(out));
     LOGD(TAG, "The AT response is: %s", out);
 
-    if (g_netconn_evt_cb && (g_link[link_id].fd >= 0)) {
-        g_netconn_evt_cb(g_link[link_id].fd, NETCONN_EVT_SENDPLUS);
-    }
     if (strstr(out, CMD_FAIL_RSP) != NULL) {
         LOGE(TAG, "%s %d failed", __func__, __LINE__);
         return -1;
@@ -490,18 +486,6 @@ static int sal_wifi_close(int fd,
         LOGD(TAG, "%s sem_wait succeed.", __func__);
     }
 
-    if (g_netconn_evt_cb && (g_link[link_id].fd >= 0)) {
-        g_netconn_evt_cb(g_link[link_id].fd, NETCONN_EVT_RCVPLUS);
-        g_netconn_evt_cb(g_link[link_id].fd, NETCONN_EVT_SENDPLUS);
-        g_netconn_evt_cb(g_link[link_id].fd, NETCONN_EVT_ERROR);
-    }
-
-    return 0;
-}
-
-static int sal_wifi_register_netconn_evt_cb(netconn_evt_cb_t cb)
-{
-    if (cb) g_netconn_evt_cb = cb;
     return 0;
 }
 
@@ -521,7 +505,6 @@ sal_op_t sal_op = {
     .close = sal_wifi_close,
     .deinit = sal_wifi_deinit,
     .register_netconn_data_input_cb = mk3060_wifi_packet_input_cb_register,
-    .register_netconn_evt_cb = sal_wifi_register_netconn_evt_cb
 };
 
 int mk3060_sal_init(void)
