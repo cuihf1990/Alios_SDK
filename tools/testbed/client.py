@@ -1,4 +1,4 @@
-import os, sys, time, platform, json, traceback, random
+import os, sys, time, platform, json, traceback, random, re
 import socket, thread, threading, subprocess, signal, Queue
 import TBframe
 
@@ -24,6 +24,12 @@ def signal_handler(sig, frame):
     print "received SIGINT"
     raise KeyboardInterrupt
 
+def queue_safeput(queue, item):
+    try:
+        queue.put(item, False)
+    except:
+        pass
+
 class ConnectionLost(Exception):
     pass
 
@@ -41,6 +47,14 @@ class Client:
         self.poll_str += 'm'
         self.poll_interval = 60
         self.uuid = ''
+        self.mesh_changed = [re.compile('become leader'),
+                             re.compile('become detached'),
+                             re.compile('allocate sid 0x[0-9a-f]{4}, become [0-9] in net [0-9a-f]{4}')]
+        self.neighbor_changed = [re.compile('sid [0-9a-f]{4} mac [0-9a-f]{16} is replaced'),
+                                 re.compile('[0-9a-f]{1,4} neighbor [0-9a-f]{16} become inactive')]
+        self.uuid_changed = ["ACCS: connected",
+                             "ACCS: disconnected",
+                             'GATEWAY: connect to server succeed']
 
     def send_device_list(self):
         device_list = []
@@ -57,13 +71,13 @@ class Client:
     def run_poll_command(self, port, command, lines_expect, timeout):
         filter = {}
         response = []
-        while self.devices[port]['fqueue'].empty() == False:
-            self.devices[port]['fqueue'].get()
+        while self.devices[port]['plog_queue'].empty() == False:
+            self.devices[port]['plog_queue'].get()
         self.devices[port]['serial'].write(self.poll_str + command + '\r')
         start = time.time()
         while True:
             try:
-                log = self.devices[port]['fqueue'].get(False)
+                log = self.devices[port]['plog_queue'].get(False)
             except:
                 log = None
             if time.time() - start >= timeout:
@@ -88,7 +102,7 @@ class Client:
 
     def device_cmd_process(self, port, exit_condition):
         poll_fail_num = 0
-        poll_queue = Queue.Queue(12)
+        pcmd_queue = self.devices[port]['pcmd_queue']
         if self.devices[port]['attributes'] != {}:
             content = port + ':' + json.dumps(self.devices[port]['attributes'], sort_keys=True)
             data = TBframe.construct(TBframe.DEVICE_STATUS, content)
@@ -98,22 +112,22 @@ class Client:
             try:
                 if time.time() >= poll_timeout:
                     poll_timeout += self.poll_interval
-                    poll_queue.put(['devname', 1, 0.2])
-                    poll_queue.put(['mac', 1, 0.2])
-                    poll_queue.put(['version', 2, 0.2])
-                    poll_queue.put(['uuid', 1, 0.2])
-                    poll_queue.put(['umesh status', 11, 0.2])
-                    poll_queue.put(['umesh extnetid', 1, 0.2])
-                    poll_queue.put(['umesh nbrs', 33, 0.3])
+                    queue_safeput(pcmd_queue, ['devname', 1, 0.2])
+                    queue_safeput(pcmd_queue, ['mac', 1, 0.2])
+                    queue_safeput(pcmd_queue, ['version', 2, 0.2])
+                    queue_safeput(pcmd_queue, ['uuid', 1, 0.2])
+                    queue_safeput(pcmd_queue, ['umesh status', 11, 0.2])
+                    queue_safeput(pcmd_queue, ['umesh extnetid', 1, 0.2])
+                    queue_safeput(pcmd_queue, ['umesh nbrs', 33, 0.3])
 
                 block=True
                 timeout=0
                 try:
                     args = None
-                    if self.devices[port]['queue'].empty() == True and poll_queue.empty() == True:
-                        args = self.devices[port]['queue'].get(block=True, timeout=0.1)
-                    elif self.devices[port]['queue'].empty() == False:
-                        args = self.devices[port]['queue'].get()
+                    if self.devices[port]['ucmd_queue'].empty() == True and pcmd_queue.empty() == True:
+                        args = self.devices[port]['ucmd_queue'].get(block=True, timeout=0.1)
+                    elif self.devices[port]['ucmd_queue'].empty() == False:
+                        args = self.devices[port]['ucmd_queue'].get()
                 except Queue.Empty:
                     args = None
                     continue
@@ -136,16 +150,18 @@ class Client:
                     elif type == TBframe.DEVICE_CMD:
                         cmd = args[2]
                         self.device_run_cmd(port, cmd, term)
+                        if re.search('umesh extnetid [0-9A-Fa-f]{12}', cmd) != None:
+                            queue_safeput(pcmd_queue, ['umesh extnetid', 1, 0.2])
                     else:
                         print "error: unknown operation tyep {0}".format(repr(type))
                     args = None
                     time.sleep(0.05)
                     continue
 
-                if poll_queue.empty() == True:
+                if pcmd_queue.empty() == True:
                     continue
 
-                [cmd, lines, timeout] = poll_queue.get()
+                [cmd, lines, timeout] = pcmd_queue.get()
                 response = self.run_poll_command(port, cmd, lines, timeout)
 
                 if cmd == 'devname': #poll device model
@@ -243,7 +259,7 @@ class Client:
                         print "device {0} become active".format(port)
                     self.devices[port]['attributes']['status'] = 'active'
 
-                if poll_queue.empty() == False:
+                if pcmd_queue.empty() == False:
                     continue
                 content = port + ':' + json.dumps(self.devices[port]['attributes'], sort_keys=True)
                 data = TBframe.construct(TBframe.DEVICE_STATUS, content)
@@ -262,6 +278,33 @@ class Client:
                 self.devices[port]['serial'].close()
                 self.devices[port]['serial'].open()
         print 'devie command process thread for {0} exited'.format(port)
+
+    def device_log_filter(self, port, log):
+        pcmd_queue = self.devices[port]['pcmd_queue']
+        if pcmd_queue.full() == True:
+            return
+        for flog in self.mesh_changed:
+            if flog.search(log) == None:
+                continue
+            #print log
+            #print "device {0} mesh status changed".format(port)
+            queue_safeput(pcmd_queue, ['umesh status', 11, 0.2])
+            queue_safeput(pcmd_queue, ['umesh nbrs', 33, 0.3])
+            return
+        for flog in self.neighbor_changed:
+            if flog.search(log) == None:
+                continue
+            #print log
+            #print "device {0} neighbors changed".format(port)
+            queue_safeput(pcmd_queue, ['umesh nbrs', 33, 0.3])
+            return
+        for flog in self.uuid_changed:
+            if flog not in log:
+                continue
+            #print log
+            #print "device {0} uuid changed".format(port)
+            queue_safeput(pcmd_queue, ['uuid', 1, 0.2])
+            return
 
     def device_log_poll(self, port, exit_condition):
         log_time = time.time()
@@ -294,8 +337,10 @@ class Client:
                     break
 
             if newline == True and log != '':
-                if self.poll_str in log and self.devices[port]['fqueue'].full() == False:
-                    self.devices[port]['fqueue'].put(log, False)
+                if self.poll_str in log:
+                    queue_safeput(self.devices[port]['plog_queue'], log)
+                else:
+                    self.device_log_filter(port, log)
                 if LOCALLOG:
                     flog.write('{0:.3f}:'.format(log_time) + log)
                 log = port + ':{0:.3f}:'.format(log_time) + log
@@ -349,10 +394,12 @@ class Client:
                         continue
                     if self.devices[port]['slock'].locked():
                         self.devices[port]['slock'].release()
-                    while self.devices[port]['queue'].empty() == False:
-                        self.devices[port]['queue'].get()
-                    while self.devices[port]['fqueue'].empty() == False:
-                        self.devices[port]['fqueue'].get()
+                    while self.devices[port]['ucmd_queue'].empty() == False:
+                        self.devices[port]['ucmd_queue'].get()
+                    while self.devices[port]['pcmd_queue'].empty() == False:
+                        self.devices[port]['pcmd_queue'].get()
+                    while self.devices[port]['plog_queue'].empty() == False:
+                        self.devices[port]['plog_queue'].get()
                     self.devices[port]['valid'] = True
                 else:
                     if 'mxchip' in port:
@@ -370,9 +417,10 @@ class Client:
                     self.devices[port] = {'valid':True, \
                                           'serial':ser, \
                                           'slock':threading.Lock(), \
-                                          'queue':Queue.Queue(12), \
                                           'attributes':{}, \
-                                          'fqueue':Queue.Queue(64)}
+                                          'ucmd_queue':Queue.Queue(12), \
+                                          'pcmd_queue':Queue.Queue(64), \
+                                          'plog_queue':Queue.Queue(64)}
                 try:
                     if 'mxchip' in port:
                         self.devices[port]['attributes']['model'] = 'MK3060'
@@ -773,8 +821,8 @@ class Client:
                         term = args[0:2]
                         port = args[2]
                         if os.path.exists(port) and port in self.devices:
-                            if self.devices[port]['queue'].full() == False:
-                                self.devices[port]['queue'].put([type, term])
+                            if self.devices[port]['ucmd_queue'].full() == False:
+                                self.devices[port]['ucmd_queue'].put([type, term])
                                 continue
                             else:
                                 result = 'busy'
@@ -798,8 +846,8 @@ class Client:
                             continue
                         filename = file_received[hash]
                         if os.path.exists(port) and port in self.devices:
-                            if self.devices[port]['queue'].full() == False:
-                                self.devices[port]['queue'].put([type, term, address, filename])
+                            if self.devices[port]['ucmd_queue'].full() == False:
+                                self.devices[port]['ucmd_queue'].put([type, term, address, filename])
                                 continue
                             else:
                                 result = 'busy'
@@ -817,8 +865,8 @@ class Client:
                         term = args[0:2]
                         port = args[2]
                         if os.path.exists(port) and port in self.devices:
-                            if self.devices[port]['queue'].full() == False:
-                                self.devices[port]['queue'].put([type, term])
+                            if self.devices[port]['ucmd_queue'].full() == False:
+                                self.devices[port]['ucmd_queue'].put([type, term])
                                 continue
                             else:
                                 result = 'busy'
@@ -838,8 +886,8 @@ class Client:
                         cmd = ' '.join(cmd)
                         if os.path.exists(port) and port in self.devices and \
                             self.devices[port]['valid'] == True:
-                            if self.devices[port]['queue'].full() == False:
-                                self.devices[port]['queue'].put([type, term, cmd])
+                            if self.devices[port]['ucmd_queue'].full() == False:
+                                self.devices[port]['ucmd_queue'].put([type, term, cmd])
                                 continue
                             else:
                                 result = 'busy'

@@ -114,7 +114,7 @@ class Autotest:
 if __name__ == '__main__':
     server_ip = '10.125.52.132'
     for arg in sys.argv[1:]:
-        if arg.startswith("--sever="):
+        if arg.startswith("--server="):
             args = arg.split('=')
             if len(args) != 2:
                 print 'wrong argument {0} input, example: --server=192.168.0.8'.format(arg)
