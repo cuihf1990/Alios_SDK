@@ -46,6 +46,15 @@
 #include <aos/kernel.h>
 /* USER CODE END Includes */
 
+
+
+#define DEMO_TASK_STACKSIZE    256 
+#define DEMO_TASK_PRIORITY     20
+
+static ktask_t demo_task_obj;
+cpu_stack_t demo_task_buf[DEMO_TASK_STACKSIZE];
+
+
 /* Private variables ---------------------------------------------------------*/
 UART_HandleTypeDef huart4;
 
@@ -96,7 +105,10 @@ int main(void)
 
   /* USER CODE BEGIN 2 */
   aos_init();
-  krhino_task_dyn_create(&g_aos_init, "aos app", 0, AOS_DEFAULT_APP_PRI, 0, 512, (task_entry_t)application_start, 1);
+
+  krhino_task_create(&demo_task_obj, "aos app", 0,DEMO_TASK_PRIORITY, 
+        50, demo_task_buf, DEMO_TASK_STACKSIZE, application_start, 1);
+    
   aos_start();
   /* USER CODE END 2 */
 
