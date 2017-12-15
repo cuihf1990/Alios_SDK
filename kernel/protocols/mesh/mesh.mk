@@ -52,7 +52,7 @@ $(NAME)_SOURCES += src/core/routing/rsid_allocator.c
 GLOBAL_DEFINES += CONFIG_AOS_MESH_SUPER
 endif
 
-MESHLOWPOWER ?= 1
+MESHLOWPOWER ?= 0
 ifeq ($(MESHLOWPOWER), 1)
 $(NAME)_SOURCES += src/core/mesh/lowpower_mgmt.c
 GLOBAL_DEFINES += CONFIG_AOS_MESH_LOWPOWER
