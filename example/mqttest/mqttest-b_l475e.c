@@ -20,6 +20,7 @@
 #include <aos/cloud.h>
 #include "soc_init.h"
 #include "k_types.h"
+#include "lite-log.h"
 #if defined(MQTT_ID2_AUTH) && defined(TEST_ID2_DAILY)
 
 #else
@@ -36,7 +37,7 @@
 #define TOPIC_DATA              "/"PRODUCT_KEY"/"DEVICE_NAME"/data"
 
 
-#define MSG_LEN_MAX             (1024)
+#define MSG_LEN_MAX             (2048)
 
 #define EXAMPLE_TRACE(fmt, args...)  \
     do { \
@@ -287,6 +288,8 @@ int application_start(int argc, char *argv[])
 
     netmgr_init();
     netmgr_start(false);
+    LITE_openlog("mqttest");
+    LITE_set_loglevel(LOG_WARNING_LEVEL);
 
 #ifdef CSP_LINUXHOST
     int ret = aos_task_new("mqtttask", mqtt_main, 0, 1024*10);

@@ -19,6 +19,7 @@
 #include <aos/cli.h>
 #include <aos/cloud.h>
 #include "soc_init.h"
+#include "lite-log.h"
 #if defined(MQTT_ID2_AUTH) && defined(TEST_ID2_DAILY)
 
 #else
@@ -405,6 +406,8 @@ int application_start(int argc, char *argv[])
 
     netmgr_init();
     netmgr_start(false);
+    LITE_openlog("mqttapp");
+    LITE_set_loglevel(LOG_WARNING_LEVEL);
 
 #ifdef CSP_LINUXHOST
     int ret = aos_task_new("mqtttask", mqtt_main, 0, 1024*10);
