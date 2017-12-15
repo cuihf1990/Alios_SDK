@@ -185,7 +185,7 @@ static err_t ur_adapter_if_init(struct netif *netif)
     netif->output_ip6 = ur_adapter_ipv6_output;
 #endif
     netif->output = ur_adapter_ipv4_output;
-    netif->mtu = 127;
+    netif->mtu = 1280;
     netif->flags = NETIF_FLAG_LINK_UP | NETIF_FLAG_UP | NETIF_FLAG_BROADCAST ;
     return ERR_OK;
 }
