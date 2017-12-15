@@ -58,16 +58,11 @@ GLOBAL_CFLAGS += -mcpu=cortex-m4 \
 endif
 
 ifeq ($(COMPILER),armcc)
-GLOBAL_LDFLAGS += --cpu Cortex-M4.fp   \
-                  --littleend  \
-		  --branchpatch=sdcomp-29491-629360 \
-		   *.o \
-                  --library_type=microlib \
-		  --strict \
-		  --scatter "platform\mcu\stm32l4xx\B-L475E-IOT01.sct" \
-                  --summary_stderr \
-		  --info summarysizes --xref --callgraph --symbols \
-                  --info sizes --info totals --info unused --info veneers
+GLOBAL_LDFLAGS += -L --cpu=Cortex-M4.fp   \
+                  -L --library_type=microlib \
+		  -L --strict \
+		  -L --xref -L --callgraph -L --symbols \
+                  -L --info=sizes -L --info=totals -L --info=unused -L --info=veneers -L --info=summarysizes
 else
 GLOBAL_LDFLAGS += -mcpu=cortex-m4  \
                   -mlittle-endian  \
@@ -76,8 +71,12 @@ GLOBAL_LDFLAGS += -mcpu=cortex-m4  \
                   $(CLIB_LDFLAGS_NANO_FLOAT)
 endif
 
-
+ifeq ($(COMPILER),armcc)
+GLOBAL_LDFLAGS += -L --scatter=platform/mcu/stm32l475/B-L475E-IOT01.sct
+else ifeq ($(COMPILER),iar)
+else
 GLOBAL_LDFLAGS += -T platform/mcu/stm32l475/STM32L475VGTx_FLASH.ld
+endif
 
 $(NAME)_SOURCES := src/B-L475E-IOT01/runapp/stm32l4xx_hal_msp.c      \
                    src/B-L475E-IOT01/runapp/stm32l4xx_it.c           \
