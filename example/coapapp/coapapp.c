@@ -69,7 +69,9 @@ static void iotx_response_handler(void * arg, void * p_response)
     IOT_CoAP_GetMessageCode(p_response, &resp_code);
     IOT_CoAP_GetMessagePayload(p_response, &p_payload, &len);
     LOG("[APPL]: Message response code: %d\r\n", resp_code);
-    LOG("[APPL]: Len: %d, Payload: %s, \r\n", len, p_payload);
+    if(p_payload){
+        LOG("[APPL]: Len: %d, Payload: %s, \r\n", len, p_payload);
+    }
 }
 
 static void iotx_post_data_to_server(void *param)
