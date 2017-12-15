@@ -285,27 +285,13 @@ int32_t HAL_TCP_Read(uintptr_t fd, char *buf, uint32_t len, uint32_t timeout_ms)
     if (len > WIFI_PAYLOAD_SIZE) {
         len = WIFI_PAYLOAD_SIZE;
     }
-    int err_count = 0;
-    do {
-        ret = WIFI_ReceiveData(0,
-                                (uint8_t *)buf, (uint16_t)len,
-                                &recv_size, WIFI_READ_TIMEOUT);
-        if (ret != WIFI_STATUS_OK) {
-            PLATFORM_RHINOSOCK_LOG("HAL_TCP_Read: receive data fail - %d\n", ret);
-            return -1;
-        }
-
-        //TODO, how to identify the connection is shutdown?
-        if (recv_size == 0) {
-            if (err_count == WIFI_READ_RETRY_TIME) {
-                PLATFORM_RHINOSOCK_LOG("retry WIFI_ReceiveData %d times failed\n", err_count);
-                return -1;
-            } else {
-                err_count++;
-                PLATFORM_RHINOSOCK_LOG("retry WIFI_ReceiveData time %d\n", err_count);
-            }
-        }
-    } while (ret == WIFI_STATUS_OK && recv_size == 0);
+    ret = WIFI_ReceiveData(0,
+                            (uint8_t *)buf, (uint16_t)len,
+                            &recv_size, WIFI_READ_TIMEOUT);
+    if (ret != WIFI_STATUS_OK) {
+        PLATFORM_RHINOSOCK_LOG("HAL_TCP_Read: receive data fail - %d\n", ret);
+        return -1;
+    }
     return recv_size;
 }
 #endif

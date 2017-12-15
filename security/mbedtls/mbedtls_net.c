@@ -102,27 +102,13 @@ int mbedtls_net_recv(void *ctx, unsigned char *buf, size_t len)
     if (len > WIFI_PAYLOAD_SIZE) {
         len = WIFI_PAYLOAD_SIZE;
     }
-    int err_count = 0;
-    do {
-        ret = WIFI_ReceiveData((uint8_t)fd,
-                                buf, (uint16_t)len,
-                                &recv_size, WIFI_READ_TIMEOUT);
-        if (ret != WIFI_STATUS_OK) {
-            MBEDTLS_NET_PRINT("net_recv: receive data fail - %d\n", ret);
-            return MBEDTLS_ERR_NET_RECV_FAILED;
-        }
-
-        //TODO, how to identify the connection is shutdown?
-        if (recv_size == 0) {
-            if (err_count == WIFI_READ_RETRY_TIME) {
-                MBEDTLS_NET_PRINT("retry WIFI_ReceiveData %d times failed\n", err_count);
-                return MBEDTLS_ERR_SSL_WANT_READ;
-            } else {
-                err_count++;
-                MBEDTLS_NET_PRINT("retry WIFI_ReceiveData time %d\n", err_count);
-            }
-        }
-    } while (ret == WIFI_STATUS_OK && recv_size == 0);
+    ret = WIFI_ReceiveData((uint8_t)fd,
+                            buf, (uint16_t)len,
+                            &recv_size, WIFI_READ_TIMEOUT);
+    if (ret != WIFI_STATUS_OK) {
+        MBEDTLS_NET_PRINT("net_recv: receive data fail - %d\n", ret);
+        return MBEDTLS_ERR_NET_RECV_FAILED;
+    }
 
     return recv_size;
 }
@@ -144,27 +130,13 @@ int mbedtls_net_recv_timeout(void *ctx, unsigned char *buf, size_t len,
     }
 
     // TODO: STM32 WiFi module can't set mqtt default timeout 60000, will return error, need to check with WiFi module, ignore param "timeout"
-    int err_count = 0;
-    do {
-        ret = WIFI_ReceiveData((uint8_t)fd,
-                                buf, (uint16_t)len,
-                                &recv_size, WIFI_READ_TIMEOUT);
-        if (ret != WIFI_STATUS_OK) {
-            MBEDTLS_NET_PRINT("net_recv_timeout: receive data fail - %d\n", ret);
-            return MBEDTLS_ERR_NET_RECV_FAILED;
-        }
-
-        //TODO, how to identify the connection is shutdown?
-        if (recv_size == 0) {
-            if (err_count == WIFI_READ_RETRY_TIME) {
-                MBEDTLS_NET_PRINT("retry WIFI_ReceiveData %d times failed\n", err_count);
-                return MBEDTLS_ERR_SSL_WANT_READ;
-            } else {
-                err_count++;
-                MBEDTLS_NET_PRINT("retry WIFI_ReceiveData time %d\n", err_count);
-            }
-        }
-    } while (ret == WIFI_STATUS_OK && recv_size == 0);
+    ret = WIFI_ReceiveData((uint8_t)fd,
+                            buf, (uint16_t)len,
+                            &recv_size, WIFI_READ_TIMEOUT);
+    if (ret != WIFI_STATUS_OK) {
+        MBEDTLS_NET_PRINT("net_recv_timeout: receive data fail - %d\n", ret);
+        return MBEDTLS_ERR_NET_RECV_FAILED;
+    }
 
     return recv_size;
 }
