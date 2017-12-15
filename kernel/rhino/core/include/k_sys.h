@@ -10,7 +10,15 @@
 #define RHINO_FALSE    0u
 #define RHINO_TRUE     1u
 
-typedef uint64_t    sys_time_t;
+#if (RHINO_CONFIG_COMPILER_64_BIT > 0)
+typedef uint64_t        sys_time_t;
+typedef int64_t         sys_time_i_t;
+#define MAX_TIMER_TICKS ((tick_t)-1)
+#else
+typedef uint32_t        sys_time_t;
+typedef int32_t         sys_time_i_t;
+#define MAX_TIMER_TICKS ((tick_t)-1 >> 1)
+#endif
 
 #if (RHINO_CONFIG_INTRPT_STACK_OVF_CHECK > 0)
 #if (RHINO_CONFIG_CPU_STACK_DOWN > 0)
