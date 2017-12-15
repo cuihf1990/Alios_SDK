@@ -247,7 +247,7 @@ static void handle_update_nbr_timer(void *args)
             continue;
         }
 
-        MESH_LOG_INFO("%x neighbor " EXT_ADDR_FMT " become inactive",
+        MESH_LOG_INFO("%04x neighbor " EXT_ADDR_FMT " become inactive",
                       sid, EXT_ADDR_DATA(node->mac));
         network = get_network_context_by_meshnetid(node->netid);
         if (network && network->router->sid_type == STRUCTURED_SID &&

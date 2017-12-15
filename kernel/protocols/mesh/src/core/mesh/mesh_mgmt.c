@@ -1221,7 +1221,7 @@ void become_detached(interface_state_t reason)
 
     if (g_mm_state.device.state != DEVICE_STATE_DETACHED) {
         reset_network_context();
-        MESH_LOG_INFO("become detached,reason %d", reason);
+        MESH_LOG_INFO("become detached, reason %d", reason);
         g_mm_state.device.state = DEVICE_STATE_DETACHED;
     }
 
