@@ -169,17 +169,7 @@ $(NAME)_INCLUDES := mx108/mx378/ip/common \
 $(NAME)_SOURCES :=  aos/aos_main.c
 $(NAME)_INCLUDES += aos
                     
-$(NAME)_SOURCES +=  mx108/mx378/app/app.c \
-                    mx108/mx378/app/config/param_config.c \
-                    mx108/mx378/app/ftp/ftpd.c \
-                    mx108/mx378/app/ftp/vfs.c \
-                    mx108/mx378/app/led/app_led.c \
-                    mx108/mx378/app/net_work/app_lwip_tcp.c \
-                    mx108/mx378/app/net_work/app_lwip_udp.c \
-                    mx108/mx378/app/standalone-ap/sa_ap.c \
-                    mx108/mx378/app/standalone-station/sa_station.c \
-                    mx108/mx378/demo/ieee802_11_demo.c \
-                    mx108/mx378/driver/common/dd.c \
+$(NAME)_SOURCES +=  mx108/mx378/driver/common/dd.c \
                     mx108/mx378/driver/common/drv_model.c \
                     mx108/mx378/driver/dma/dma.c \
                     mx108/mx378/driver/driver.c \
