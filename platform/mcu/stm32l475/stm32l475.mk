@@ -53,7 +53,7 @@ else
 GLOBAL_CFLAGS += -mcpu=cortex-m4 \
                  -march=armv7-m  \
                  -mlittle-endian \
-                 -mthumb \
+                 -mthumb -mthumb-interwork \
                  -w
 endif
 
@@ -66,6 +66,7 @@ GLOBAL_LDFLAGS += -L --cpu=Cortex-M4.fp   \
 else
 GLOBAL_LDFLAGS += -mcpu=cortex-m4  \
                   -mlittle-endian  \
+                  -mthumb -mthumb-interwork \
                   -nostartfiles    \
                   --specs=nosys.specs \
                   $(CLIB_LDFLAGS_NANO_FLOAT)
