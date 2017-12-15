@@ -51,11 +51,11 @@ static kstat_t timer_create(ktimer_t *timer, const name_t *name, timer_cb_t cb,
         return RHINO_INV_PARAM;
     }
 
-    if (first >= (tick_t)-1) {
+    if (first >= MAX_TIMER_TICKS) {
         return RHINO_INV_PARAM;
     }
 
-    if (round >= (tick_t)-1) {
+    if (round >= MAX_TIMER_TICKS) {
         return RHINO_INV_PARAM;
     }
 
@@ -126,11 +126,11 @@ kstat_t krhino_timer_dyn_create(ktimer_t **timer, const name_t *name,
 
     NULL_PARA_CHK(timer);
 
-    if (first >= (tick_t)-1) {
+    if (first >= MAX_TIMER_TICKS) {
         return RHINO_INV_PARAM;
     }
 
-    if (round >= (tick_t)-1) {
+    if (round >= MAX_TIMER_TICKS) {
         return RHINO_INV_PARAM;
     }
 
@@ -283,17 +283,17 @@ kstat_t krhino_timer_arg_change(ktimer_t *timer, void *arg)
 
 static void timer_cb_proc(void)
 {
-    klist_t  *q;
-    klist_t  *start;
-    klist_t  *end;
-    ktimer_t *timer;
-    int64_t   delta;
+    klist_t     *q;
+    klist_t     *start;
+    klist_t     *end;
+    ktimer_t    *timer;
+    sys_time_i_t delta;
 
     start = end = &g_timer_head;
 
     for (q = start->next; q != end; q = q->next) {
         timer = krhino_list_entry(q, ktimer_t, timer_list);
-        delta = (int64_t)timer->match - (int64_t)g_timer_count;
+        delta = (sys_time_i_t)timer->match - (sys_time_i_t)g_timer_count;
 
         if (delta <= 0) {
             timer->cb(timer, timer->timer_cb_arg);
@@ -461,7 +461,7 @@ static void timer_task(void *pa)
     kstat_t           err;
     sys_time_t        tick_start;
     sys_time_t        tick_end;
-    int64_t           delta;
+    sys_time_i_t      delta;
 
     (void)pa;
 
@@ -489,7 +489,7 @@ static void timer_task(void *pa)
             timer = krhino_list_entry(g_timer_head.next, ktimer_t, timer_list);
             tick_start = krhino_sys_tick_get();
 
-            delta = (int64_t)timer->match - (int64_t)tick_start;
+            delta = (sys_time_i_t)timer->match - (sys_time_i_t)tick_start;
             if (delta > 0) {
                 err = krhino_queue_recv(&g_timer_queue, (tick_t)delta, &msg);
 

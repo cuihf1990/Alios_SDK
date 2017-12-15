@@ -5,6 +5,10 @@
 #ifndef K_DEFAULT_CONFIG_H
 #define K_DEFAULT_CONFIG_H
 
+#ifndef RHINO_CONFIG_COMPILER_64_BIT
+#define RHINO_CONFIG_COMPILER_64_BIT         1
+#endif
+
 /* chip level conf */
 #ifndef RHINO_CONFIG_LITTLE_ENDIAN
 #define RHINO_CONFIG_LITTLE_ENDIAN           1
