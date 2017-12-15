@@ -216,7 +216,7 @@ static void update_interface_ipaddr(void)
             ip6_addr.m32[3] = \
                 htonl((get_sub_netid(umesh_get_meshnetid()) << 16) | umesh_mm_get_local_sid());
         } else if (index == 1) {
-            memcpy(&ip6_addr.m8[8], umesh_mm_get_local_ueid(), 8);
+            memcpy(&ip6_addr.m8[8], umesh_mm_get_local_uuid(), 8);
         } else {  // mcast addr
             ip6_addr.m8[0] = 0xff;
             ip6_addr.m8[1] = 0x08;

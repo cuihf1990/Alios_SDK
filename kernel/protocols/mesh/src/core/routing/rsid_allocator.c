@@ -58,8 +58,8 @@ ur_error_t rsid_allocate_sid(allocator_t hdl, ur_node_id_t *node_id)
 
     allocator = (rsid_allocator_t *)hdl;
     slist_for_each_entry(&allocator->base.node_list, node, sid_node_t, next) {
-        if (memcmp(node->node_id.ueid, node_id->ueid,
-                   sizeof(node->node_id.ueid)) == 0) {
+        if (memcmp(node->node_id.uuid, node_id->uuid,
+                   sizeof(node->node_id.uuid)) == 0) {
             new_node = node;
             break;
         }
@@ -103,7 +103,7 @@ ur_error_t rsid_allocate_sid(allocator_t hdl, ur_node_id_t *node_id)
         node_id->type = ROUTER_NODE;
         new_node->node_id.type = node_id->type;
         new_node->node_id.attach_sid = INVALID_SID;
-        memcpy(new_node->node_id.ueid, node_id->ueid, sizeof(new_node->node_id.ueid));
+        memcpy(new_node->node_id.uuid, node_id->uuid, sizeof(new_node->node_id.uuid));
     } else {
         ur_mem_free(new_node, sizeof(sid_node_t));
         allocator->base.node_num--;
@@ -118,8 +118,8 @@ ur_error_t rsid_free_sid(allocator_t hdl, ur_node_id_t *node_id)
     rsid_allocator_t *allocator = (rsid_allocator_t *)hdl;
 
     slist_for_each_entry(&allocator->base.node_list, node, sid_node_t, next) {
-        if (memcmp(node->node_id.ueid, node_id->ueid,
-                   sizeof(node->node_id.ueid)) == 0) {
+        if (memcmp(node->node_id.uuid, node_id->uuid,
+                   sizeof(node->node_id.uuid)) == 0) {
             break;
         }
     }

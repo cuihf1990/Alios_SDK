@@ -11,7 +11,7 @@
 
 void test_uradar_sid_allocator_case(void)
 {
-    ur_node_id_t node_id = {.ueid = {0x00, 0x02, 0x03,0x04, 0x05, 0x06, 0x07, 0x08},
+    ur_node_id_t node_id = {.uuid = {0x00, 0x02, 0x03,0x04, 0x05, 0x06, 0x07, 0x08},
                             .sid = INVALID_SID,
                             .attach_sid = 0x0000};
     uint16_t index;
@@ -22,7 +22,7 @@ void test_uradar_sid_allocator_case(void)
     num = mem_stats->num;
     hdl = allocator_init(0x0000, STRUCTURED_SID);
     for(index = 1; index <= 11; index++) {
-        node_id.ueid[0] += 1;
+        node_id.uuid[0] += 1;
         YUNIT_ASSERT(UR_ERROR_NONE == allocate_sid(hdl, &node_id));
         YUNIT_ASSERT((index << 12) == node_id.sid);
     }
@@ -37,13 +37,13 @@ void test_uradar_sid_allocator_case(void)
     YUNIT_ASSERT(0x1100 == node_id.sid);
     YUNIT_ASSERT(1 == get_allocated_number(hdl));
 
-    node_id.ueid[0] += 1;
+    node_id.uuid[0] += 1;
     YUNIT_ASSERT(UR_ERROR_NONE == allocate_sid(hdl, &node_id));
 
     allocator_deinit(hdl);
 
     hdl = allocator_init(0x0000, STRUCTURED_SID);
-    node_id.ueid[0] += 1;
+    node_id.uuid[0] += 1;
     node_id.mode = MODE_MOBILE;
     YUNIT_ASSERT(UR_ERROR_NONE == allocate_sid(hdl, &node_id));
     YUNIT_ASSERT(0xc001 == node_id.sid);
@@ -53,7 +53,7 @@ void test_uradar_sid_allocator_case(void)
     YUNIT_ASSERT(0xc001 == node_id.sid);
     YUNIT_ASSERT(true == is_partial_function_sid(node_id.sid));
     YUNIT_ASSERT(1 == get_allocated_pf_number(hdl));
-    node_id.ueid[0] += 1;
+    node_id.uuid[0] += 1;
     node_id.mode = MODE_MOBILE;
     YUNIT_ASSERT(UR_ERROR_NONE == allocate_sid(hdl, &node_id));
     YUNIT_ASSERT(0xc002 == node_id.sid);

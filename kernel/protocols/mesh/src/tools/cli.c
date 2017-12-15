@@ -410,7 +410,7 @@ void process_sids(int argc, char *argv[])
         }
         slist_for_each_entry(nodes_list, node, sid_node_t, next) {
             response_append(EXT_ADDR_FMT ", %04x\r\n",
-                            EXT_ADDR_DATA(node->node_id.ueid), node->node_id.sid);
+                            EXT_ADDR_DATA(node->node_id.uuid), node->node_id.sid);
         }
     }
 }

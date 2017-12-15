@@ -88,7 +88,7 @@ static inline bool is_local_ucast_address(message_info_t *info)
             }
             break;
         case EXT_ADDR_SIZE:
-            if (memcmp(addr->addr, umesh_mm_get_local_ueid(), sizeof(addr->addr)) == 0) {
+            if (memcmp(addr->addr, umesh_mm_get_local_uuid(), sizeof(addr->addr)) == 0) {
                 matched = true;
             }
             break;
