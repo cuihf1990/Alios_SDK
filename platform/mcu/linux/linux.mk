@@ -1,12 +1,11 @@
 HOST_OPENOCD := linux
 
 NAME := linuximpl
-ARCH_LINUX := ../../arch/linux/
+
 no_with_lwip ?= 1
 
-GLOBAL_INCLUDES += . $(ARCH_LINUX)
 
-$(NAME)_COMPONENTS  := log
+$(NAME)_COMPONENTS  := log arch.linux
 
 ifeq ($(openssl),1)
 GLOBAL_LDFLAGS += -lssl -lcrypto
@@ -48,16 +47,13 @@ GLOBAL_DEFINES      += CONFIG_AOS_FATFS_SUPPORT_MMC
 GLOBAL_DEFINES      += CONFIG_AOS_FOTA_BREAKPOINT
 
 $(NAME)_SOURCES     :=
-# arch linux
+
 ifneq ($(vcall),posix)
-$(NAME)_SOURCES     += $(ARCH_LINUX)/cpu_impl.c
-ifeq ($(PLATFORM),linuxhost)
-$(NAME)_SOURCES     += $(ARCH_LINUX)/swap.S
-endif
 $(NAME)_SOURCES     += soc/soc_impl.c
 $(NAME)_SOURCES     += soc/hook_impl.c
 $(NAME)_SOURCES     += soc/trace_impl.c
 endif
+
 $(NAME)_SOURCES     += soc/uart.c
 
 # mcu

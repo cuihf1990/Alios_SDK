@@ -1,7 +1,7 @@
 #include "include.h"
 
 #if CFG_USE_LWIP_NETSTACK
-#include "udp.h"
+#include "lwip/udp.h"
 #include "app_lwip_udp.h"
 #include "uart_pub.h"
 #include "mem_pub.h"

@@ -17,11 +17,10 @@ endif
 $(NAME)_TYPE := kernel
 
 $(NAME)_COMPONENTS += platform/arch/arm/armv5
-$(NAME)_COMPONENTS += libc rhino hal netmgr framework.common alicrypto cjson cli digest_algorithm
+$(NAME)_COMPONENTS += libc rhino yloop modules.fs.kv alicrypto digest_algorithm
 $(NAME)_COMPONENTS += platform/mcu/moc108/hal_init
 $(NAME)_COMPONENTS += platform/mcu/moc108/mx108/mx378/driver/entry
-$(NAME)_COMPONENTS += platform/mcu/moc108/aos/framework_runtime
-$(NAME)_COMPONENTS += platform/mcu/moc108/aos/app_runtime
+
 
 GLOBAL_DEFINES += CONFIG_MX108
 GLOBAL_DEFINES += CONFIG_AOS_KV_MULTIPTN_MODE
@@ -461,7 +460,5 @@ $(NAME)_SOURCES	 += hal/gpio.c \
 $(NAME)_SOURCES +=  hal/mesh_wifi_hal.c
 #endif
 
-$(NAME)_INCLUDES += ../../../kernel/protocols/net/include/lwip \
-                    ../../../kernel/protocols/net/include/netif \
-                    ../../../kernel/protocols/mesh/include
+
 

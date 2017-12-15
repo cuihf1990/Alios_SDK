@@ -15,7 +15,7 @@
 #include "vif_mgmt.h"
 #include "str_pub.h"
 #include "mac_frame.h"
-#include "def.h"
+#include "lwip/def.h"
 #include "scanu_task.h"
 #include "wlan_ui_pub.h"
 
