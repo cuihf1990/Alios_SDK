@@ -1112,13 +1112,9 @@ static ur_error_t handle_sid_request(message_t *message)
     if (error == UR_ERROR_NONE) {
         ur_addr_t dest;
         ur_addr_t dest2;
-        set_mesh_short_addr(&dest, attach_node_id->meshnetid,
-                            attach_node_id->sid);
+        set_mesh_short_addr(&dest, attach_node_id->meshnetid, attach_node_id->sid);
         set_mesh_ext_addr(&dest2, BCAST_NETID, ueid->ueid);
-        network = get_network_context_by_meshnetid(dest.netid);
-        if (network == NULL) {
-            network = get_default_network_context();
-        }
+        network = get_network_context_by_meshnetid(dest.netid, true);
         error = send_sid_response(network, &dest, &dest2, &node_id);
     }
     ur_mem_free(tlvs, tlvs_length);

@@ -44,10 +44,7 @@ static ur_error_t handle_trace_route_request(message_t *message)
 
     timestamp = (mm_timestamp_tv_t *)umesh_mm_get_tv(tlvs, tlvs_length,
                                                      TYPE_TIMESTAMP);
-    network = get_network_context_by_meshnetid(info->src.netid);
-    if (network == NULL) {
-        network = get_default_network_context();
-    }
+    network = get_network_context_by_meshnetid(info->src.netid, true);
     error = send_trace_route_response(network, &info->src, timestamp->timestamp);
     ur_mem_free(tlvs, tlvs_length);
     return error;

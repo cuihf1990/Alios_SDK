@@ -72,7 +72,7 @@ ur_error_t remove_neighbor(hal_context_t *hal, neighbor_t *neighbor)
         return UR_ERROR_NONE;
     }
 
-    network = get_network_context_by_meshnetid(neighbor->netid);
+    network = get_network_context_by_meshnetid(neighbor->netid, false);
     if (network && network->router->sid_type == STRUCTURED_SID &&
         is_allocated_child(network->sid_base, neighbor)) {
         node_id.sid = neighbor->sid;
@@ -93,10 +93,61 @@ ur_error_t remove_neighbor(hal_context_t *hal, neighbor_t *neighbor)
     return UR_ERROR_NONE;
 }
 
+static ur_error_t send_link_request(ur_addr_t *dest, uint8_t *tlvs, uint8_t tlvs_length)
+{
+    ur_error_t error = UR_ERROR_MEM;
+    mm_tlv_request_tlv_t *request_tlvs;
+    message_t *message;
+    uint8_t *data;
+    uint8_t *data_orig;
+    uint16_t length;
+    message_info_t *info;
+    neighbor_t *nbr;
+
+    nbr = get_neighbor_by_sid(dest->netid, dest->addr.short_addr);
+    if (nbr == NULL) {
+        return UR_ERROR_FAIL;
+    }
+
+    length = sizeof(mm_header_t);
+    if (tlvs_length) {
+        length += (tlvs_length + sizeof(mm_tlv_request_tlv_t));
+    }
+
+    data = ur_mem_alloc(length);
+    if (data == NULL) {
+        return UR_ERROR_MEM;
+    }
+    data_orig = data;
+    data += sizeof(mm_header_t);
+
+    if (tlvs_length) {
+        request_tlvs = (mm_tlv_request_tlv_t *)data;
+        umesh_mm_init_tlv_base((mm_tlv_t *)request_tlvs, TYPE_TLV_REQUEST, tlvs_length);
+        data += sizeof(mm_tlv_request_tlv_t);
+        memcpy(data, tlvs, tlvs_length);
+        data += tlvs_length;
+    }
+
+    message = mf_build_message(MESH_FRAME_TYPE_CMD, COMMAND_LINK_REQUEST,
+                               data_orig, length, LINK_MGMT_1);
+    if (message) {
+        info = message->info;
+        memcpy(&info->dest, dest, sizeof(info->dest));
+        error = mf_send_message(message);
+    }
+    ur_mem_free(data_orig, length);
+
+    nbr->stats.link_request++;
+
+    MESH_LOG_DEBUG("send link request, len %d", length);
+    return error;
+}
+
+
 static void build_and_send_link_request(bool send)
 {
     neighbor_t *nbr = umesh_mm_get_attach_node();
-    network_context_t *network = get_default_network_context();
     ur_addr_t addr;
 
     if (nbr == NULL || (send == false && (nbr->flags & NBR_LINK_ESTIMATED))) {
@@ -111,7 +162,7 @@ static void build_and_send_link_request(bool send)
     uint8_t tlv_length = sizeof(tlv_types);
 #endif
     set_mesh_short_addr(&addr, nbr->netid, nbr->sid);
-    send_link_request(network, &addr, tlv_types, tlv_length);
+    send_link_request(&addr, tlv_types, tlv_length);
 }
 
 static void update_neighbors_link_cost(hal_context_t *hal)
@@ -249,7 +300,7 @@ static void handle_update_nbr_timer(void *args)
 
         MESH_LOG_INFO("%04x neighbor " EXT_ADDR_FMT " become inactive",
                       sid, EXT_ADDR_DATA(node->mac));
-        network = get_network_context_by_meshnetid(node->netid);
+        network = get_network_context_by_meshnetid(node->netid, false);
         if (network && network->router->sid_type == STRUCTURED_SID &&
             node->state == STATE_CHILD) {
             node_id.sid = node->sid;
@@ -412,7 +463,7 @@ neighbor_t *update_neighbor(const message_info_t *info,
             }
         }
 
-        network = get_network_context_by_meshnetid(info->src.netid);
+        network = get_network_context_by_meshnetid(info->src.netid, false);
         if (network && is_direct_child(network->sid_base, info->src.addr.short_addr) &&
             is_allocated_child(network->sid_base, nbr)) {
             nbr->state = STATE_CHILD;
@@ -447,8 +498,7 @@ neighbor_t *get_neighbor_by_mac_addr(const uint8_t *addr)
     hals = get_hal_contexts();
     slist_for_each_entry(hals, hal, hal_context_t, next) {
         slist_for_each_entry(&hal->neighbors_list, nbr, neighbor_t, next) {
-            if (memcmp(addr, nbr->mac, sizeof(nbr->mac)) == 0 &&
-                nbr->state > STATE_INVALID) {
+            if (memcmp(addr, nbr->mac, sizeof(nbr->mac)) == 0 &&  nbr->state > STATE_INVALID) {
                 return nbr;
             }
         }
@@ -456,101 +506,42 @@ neighbor_t *get_neighbor_by_mac_addr(const uint8_t *addr)
     return nbr;
 }
 
-neighbor_t *get_neighbor_by_sid(hal_context_t *hal, uint16_t sid,
-                                uint16_t meshnetid)
+neighbor_t *get_neighbor_by_sid(uint16_t meshnetid, uint16_t sid)
 {
+    neighbor_t *node = NULL;
     slist_t *hals;
-    neighbor_t *node;
+    hal_context_t *hal;
 
-    if (hal == NULL) {
-        hals = get_hal_contexts();
-        hal = slist_first_entry(hals, hal_context_t, next);
-    }
-    if (hal == NULL || sid == INVALID_SID || sid == BCAST_SID) {
+    if (meshnetid == BCAST_NETID || sid == BCAST_SID) {
         return NULL;
     }
-
-    slist_for_each_entry(&hal->neighbors_list, node, neighbor_t, next) {
-        if (node->sid == sid && node->netid == meshnetid &&
-            node->state > STATE_INVALID) {
-            return node;
+    hals = get_hal_contexts();
+    slist_for_each_entry(hals, hal, hal_context_t, next) {
+        slist_for_each_entry(&hal->neighbors_list, node, neighbor_t, next) {
+            if (node->sid == sid && node->netid == meshnetid && node->state > STATE_INVALID) {
+                return node;
+            }
         }
     }
     return NULL;
 }
 
-ur_error_t send_link_request(network_context_t *network, ur_addr_t *dest,
-                             uint8_t *tlvs, uint8_t tlvs_length)
+static ur_error_t send_link_accept_and_request(ur_addr_t *dest, uint8_t *tlvs, uint8_t tlvs_length)
 {
     ur_error_t error = UR_ERROR_MEM;
-    mm_tlv_request_tlv_t *request_tlvs;
-    message_t            *message;
-    uint8_t              *data;
+    message_t *message;
+    uint8_t *data;
     uint8_t *data_orig;
-    uint16_t             length;
+    int16_t length;
+    neighbor_t *node;
     message_info_t *info;
-    neighbor_t *nbr;
-
-    nbr = get_neighbor_by_sid(network->hal, dest->addr.short_addr,
-                              dest->netid);
-    if (nbr == NULL) {
-        return UR_ERROR_FAIL;
-    }
-
-    length = sizeof(mm_header_t);
-    if (tlvs_length) {
-        length += (tlvs_length + sizeof(mm_tlv_request_tlv_t));
-    }
-
-    data = ur_mem_alloc(length);
-    if (data == NULL) {
-        return UR_ERROR_MEM;
-    }
-    data_orig = data;
-    data += sizeof(mm_header_t);
-
-    if (tlvs_length) {
-        request_tlvs = (mm_tlv_request_tlv_t *)data;
-        umesh_mm_init_tlv_base((mm_tlv_t *)request_tlvs, TYPE_TLV_REQUEST, tlvs_length);
-        data += sizeof(mm_tlv_request_tlv_t);
-        memcpy(data, tlvs, tlvs_length);
-        data += tlvs_length;
-    }
-
-    message = mf_build_message(MESH_FRAME_TYPE_CMD, COMMAND_LINK_REQUEST,
-                               data_orig, length, LINK_MGMT_1);
-    if (message) {
-        info = message->info;
-        info->network = network;
-        memcpy(&info->dest, dest, sizeof(info->dest));
-        error = mf_send_message(message);
-    }
-    ur_mem_free(data_orig, length);
-
-    nbr->stats.link_request++;
-
-    MESH_LOG_DEBUG("send link request, len %d", length);
-    return error;
-}
-
-static ur_error_t send_link_accept_and_request(network_context_t *network,
-                                               ur_addr_t *dest,
-                                               uint8_t *tlvs,
-                                               uint8_t tlvs_length)
-{
-    ur_error_t error = UR_ERROR_MEM;
-    message_t   *message;
-    uint8_t     *data;
-    uint8_t *data_orig;
-    int16_t     length;
-    neighbor_t  *node;
-    message_info_t *info;
+    network_context_t *network;
 
     node = get_neighbor_by_mac_addr(dest->addr.addr);
     if (node == NULL) {
         return UR_ERROR_FAIL;
     }
-
+    network = get_network_context_by_meshnetid(dest->netid, true);
     length = tlvs_calc_length(tlvs, tlvs_length);
     if (length < 0) {
         return UR_ERROR_FAIL;
@@ -569,7 +560,6 @@ static ur_error_t send_link_accept_and_request(network_context_t *network,
                                data_orig, length, LINK_MGMT_2);
     if (message) {
         info = message->info;
-        info->network = network;
         memcpy(&info->dest, dest, sizeof(info->dest));
         error = mf_send_message(message);
     }
@@ -580,22 +570,22 @@ static ur_error_t send_link_accept_and_request(network_context_t *network,
     return error;
 }
 
-static ur_error_t send_link_accept(network_context_t *network,
-                                   ur_addr_t *dest,
-                                   uint8_t *tlvs, uint8_t tlvs_length)
+static ur_error_t send_link_accept(ur_addr_t *dest, uint8_t *tlvs, uint8_t tlvs_length)
 {
     ur_error_t error = UR_ERROR_MEM;
-    message_t   *message;
-    uint8_t     *data;
+    message_t *message;
+    uint8_t *data;
     uint8_t *data_orig;
-    int16_t     length;
-    neighbor_t  *node;
+    int16_t length;
+    neighbor_t *node;
     message_info_t *info;
+    network_context_t *network;
 
     node = get_neighbor_by_mac_addr(dest->addr.addr);
     if (node == NULL) {
         return UR_ERROR_FAIL;
     }
+    network = get_network_context_by_meshnetid(dest->netid, true);
 
     length = tlvs_calc_length(tlvs, tlvs_length);
     if (length < 0) {
@@ -615,7 +605,6 @@ static ur_error_t send_link_accept(network_context_t *network,
                                data_orig, length, LINK_MGMT_3);
     if (message) {
         info = message->info;
-        info->network = network;
         memcpy(&info->dest, dest, sizeof(info->dest));
         error = mf_send_message(message);
     }
@@ -625,8 +614,8 @@ static ur_error_t send_link_accept(network_context_t *network,
     return error;
 }
 
-uint8_t insert_mesh_header_ies(network_context_t *network,
-                               message_info_t *info, int16_t hdr_ies_limit)
+uint8_t insert_mesh_header_ies(network_context_t *network, message_info_t *info,
+                               int16_t hdr_ies_limit)
 {
     hal_context_t *hal;
     mesh_header_control_t *control;
@@ -648,8 +637,7 @@ uint8_t insert_mesh_header_ies(network_context_t *network,
         goto exit;
     }
 
-    nbr = get_neighbor_by_sid(hal, info->dest.addr.short_addr,
-                              info->dest.netid);
+    nbr = get_neighbor_by_sid(info->dest.netid, info->dest.addr.short_addr);
     if (nbr) {
         rssi = (mm_rssi_tv_t *)(hal->frame.data + info->header_ies_offset + offset);
         umesh_mm_init_tv_base((mm_tv_t *)rssi, TYPE_REVERSE_RSSI);
@@ -693,7 +681,7 @@ ur_error_t handle_mesh_header_ies(message_t *message)
             case TYPE_REVERSE_RSSI:
                 message_copy_to(message, offset, (uint8_t *)&rssi, sizeof(rssi));
                 if (rssi.rssi == 127) {
-                    send_link_accept(info->network, &info->src_mac, tlv_types, sizeof(tlv_types));
+                    send_link_accept(&info->src_mac, tlv_types, sizeof(tlv_types));
                 }
                 info->forward_rssi = rssi.rssi;
                 len = sizeof(mm_rssi_tv_t);
@@ -726,14 +714,12 @@ ur_error_t handle_link_request(message_t *message)
     uint8_t *tlvs;
     uint16_t tlvs_length;
     message_info_t *info = message->info;
-    network_context_t *network;
     uint8_t *data;
     uint16_t length;
     neighbor_t *nbr;
 
     MESH_LOG_DEBUG("handle link request");
 
-    network = info->network;
     tlvs_length = message_get_msglen(message) - sizeof(mm_header_t);
     data = ur_mem_alloc(tlvs_length);
     length = tlvs_length;
@@ -759,7 +745,7 @@ ur_error_t handle_link_request(message_t *message)
         tlvs = NULL;
         tlvs_length = 0;
     }
-    send_link_accept_and_request(network, &info->src_mac, tlvs, tlvs_length);
+    send_link_accept_and_request(&info->src_mac, tlvs, tlvs_length);
 
 exit:
     ur_mem_free(data, length);
@@ -815,7 +801,7 @@ ur_error_t handle_link_accept_and_request(message_t *message)
         tlvs = NULL;
         tlvs_length = 0;
     }
-    send_link_accept(network, &info->src_mac, tlvs, tlvs_length);
+    send_link_accept(&info->src_mac, tlvs, tlvs_length);
     ur_mem_free(data, length);
     return UR_ERROR_NONE;
 }

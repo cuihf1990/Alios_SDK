@@ -143,7 +143,6 @@ typedef struct network_context_s {
     ur_timer_t        advertisement_timer;
     ur_timer_t        migrate_wait_timer;
     uint32_t          migrate_interval;
-    uint32_t          notification_interval;
     uint16_t          prev_netid;
     uint16_t          prev_path_cost;
 

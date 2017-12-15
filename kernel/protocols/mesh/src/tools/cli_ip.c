@@ -493,10 +493,7 @@ void process_traceroute(int argc, char *argv[])
         return;
     }
 
-    network = get_network_context_by_meshnetid(dest_addr.netid);
-    if (network == NULL) {
-        network = get_default_network_context();
-    }
+    network = get_network_context_by_meshnetid(dest_addr.netid, true);
     send_trace_route_request(network, &dest_addr);
 #endif
 }

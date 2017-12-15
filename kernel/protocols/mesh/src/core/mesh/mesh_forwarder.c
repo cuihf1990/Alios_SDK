@@ -79,7 +79,7 @@ static inline bool is_local_ucast_address(message_info_t *info)
     addr = &info->dest.addr;
     switch (addr->len) {
         case SHORT_ADDR_SIZE:
-            network = get_network_context_by_meshnetid(info->dest.netid);
+            network = get_network_context_by_meshnetid(info->dest.netid, false);
             if (network == NULL) {
                 return matched;
             }
@@ -199,9 +199,8 @@ static ur_error_t resolve_message_info(received_frame_t *frame,
     info->src_channel = frame->frame_info.channel;
     info->reverse_rssi = frame->frame_info.rssi;
     info->forward_rssi = 127;
-    memcpy(&info->src_mac.addr, &frame->frame_info.peer,
-           sizeof(info->src_mac.addr));
     info->src_mac.netid = BCAST_NETID;
+    memcpy(&info->src_mac.addr, &frame->frame_info.peer, sizeof(info->src_mac.addr));
 
     offset = sizeof(mesh_header_control_t);
     netid = (mesh_netid_t *)(buf + offset);
@@ -443,7 +442,7 @@ static ur_error_t send_fragment(network_context_t *network, message_t *message)
     uint16_t frag_length;
     uint16_t msg_length;
     uint8_t header_ies_length;
-    frag_header_t  frag_header;
+    frag_header_t frag_header;
     uint16_t mtu;
     message_info_t *info;
     uint8_t header_length = 0;
@@ -468,7 +467,7 @@ static ur_error_t send_fragment(network_context_t *network, message_t *message)
         info->dest.addr.short_addr != BCAST_SID) {
         next_node = get_next_node(info);
         if (next_node == NULL) {
-            send_address_unreachable(network, &info->src, &info->dest);
+            send_address_unreachable(&info->src, &info->dest);
             return UR_ERROR_DROP;
         }
     }
@@ -596,8 +595,7 @@ static neighbor_t *get_next_node(message_info_t *info)
 
     if (info->dest.addr.len == SHORT_ADDR_SIZE &&
         is_partial_function_sid(info->dest.addr.short_addr)) {
-        next = get_neighbor_by_sid(network->hal, info->dest.addr.short_addr,
-                                   info->dest.netid);
+        next = get_neighbor_by_sid(info->dest.netid, info->dest.addr.short_addr);
         return next;
     }
 
@@ -624,13 +622,12 @@ static neighbor_t *get_next_node(message_info_t *info)
             if (next_hop == LEADER_SID) {
                 next_hop = get_leader_sid(info->dest.netid);
             }
-            next = get_neighbor_by_sid(network->hal, next_hop, info->dest.netid);
+            next = get_neighbor_by_sid(info->dest.netid, next_hop);
         } else if (is_subnet(network->meshnetid)) {
             next = umesh_mm_get_attach_node();
         } else {
             next_hop = ur_router_get_next_hop(network, get_leader_sid(info->dest.netid));
-            next = get_neighbor_by_sid(network->hal, next_hop,
-                                       get_main_netid(info->dest.netid));
+            next = get_neighbor_by_sid(get_main_netid(info->dest.netid), next_hop);
         }
     } else {
         next = umesh_mm_get_attach_candidate();
@@ -641,14 +638,8 @@ static neighbor_t *get_next_node(message_info_t *info)
 
 static void set_src_info(message_info_t *info)
 {
-    network_context_t *network;
-
     if (info->network == NULL) {
-        network = get_network_context_by_meshnetid(info->dest.netid);
-        if (network == NULL) {
-            network = get_default_network_context();
-        }
-        info->network = network;
+        info->network = get_network_context_by_meshnetid(info->dest.netid, true);
     }
     info->src.netid = umesh_mm_get_meshnetid(info->network);
     info->src.addr.len = SHORT_ADDR_SIZE;
@@ -683,27 +674,6 @@ static void set_dest_encrypt_flag(message_info_t *info)
             info->key_index = GROUP_KEY1_INDEX;
         }
     }
-}
-
-neighbor_t *mf_get_neighbor(uint16_t meshnetid, mac_address_t *addr)
-{
-    network_context_t *network;
-    neighbor_t *nbr = NULL;
-
-    if (addr->len == SHORT_ADDR_SIZE) {
-        if (addr->short_addr == BCAST_NETID) {
-            return NULL;
-        }
-        network = get_network_context_by_meshnetid(meshnetid);
-        if (network == NULL) {
-            network = get_default_network_context();
-        }
-        nbr = get_neighbor_by_sid(network->hal, addr->short_addr, meshnetid);
-    } else if (addr->len == EXT_ADDR_SIZE) {
-        nbr = get_neighbor_by_mac_addr(addr->addr);
-    }
-
-    return nbr;
 }
 
 ur_error_t mf_send_message(message_t *message)
@@ -804,7 +774,7 @@ static bool proxy_check(message_t *message)
             return false;
         }
 
-        network = get_network_context_by_meshnetid(info->dest.netid);
+        network = get_network_context_by_meshnetid(info->dest.netid, false);
         if (is_unique_netid(info->dest.netid) &&
             (network == NULL || info->dest.addr.short_addr != umesh_mm_get_local_sid())) {
             return false;
@@ -863,13 +833,12 @@ static void message_handler(void *args)
         goto exit;
     }
 
-    if (memcmp(&info->dest.addr, umesh_mm_get_mac_address(),
-               sizeof(info->dest.addr)) == 0) {
+    if (memcmp(&info->dest.addr, umesh_mm_get_mac_address(), sizeof(info->dest.addr)) == 0) {
         recv = true;
     } else if (info->dest.addr.len == SHORT_ADDR_SIZE) {
         if (is_unique_netid(info->dest.netid) &&
             is_same_mainnet(info->dest.netid, mm_get_main_netid(network))) {
-            network = get_network_context_by_meshnetid(info->dest.netid);
+            network = get_network_context_by_meshnetid(info->dest.netid, false);
             if (info->dest.addr.short_addr == BCAST_SID ||
                 (network && info->dest.addr.short_addr == umesh_mm_get_local_sid())) {
                 recv = true;
@@ -908,7 +877,7 @@ static void message_handler(void *args)
     }
 
     if (is_unique_netid(info->dest.netid)) {
-        info->network = get_network_context_by_meshnetid(info->dest.netid);
+        info->network = get_network_context_by_meshnetid(info->dest.netid, false);
         if (info->network == NULL) {
             if (is_subnet(info->dest.netid)) {
                 info->network = get_sub_network_context(hal);
@@ -917,7 +886,7 @@ static void message_handler(void *args)
             }
         }
     } else if (is_unique_netid(info->src.netid)) {
-        info->network = get_network_context_by_meshnetid(info->src.netid);
+        info->network = get_network_context_by_meshnetid(info->src.netid, false);
         is_check_level = true;
     }
 
@@ -958,10 +927,7 @@ static void message_handler(void *args)
 #endif
 
     if (forward == true) {
-        info->network = get_network_context_by_meshnetid(info->dest.netid);
-        if (info->network == NULL) {
-            info->network = get_default_network_context();
-        }
+        info->network = get_network_context_by_meshnetid(info->dest.netid, true);
         network = info->network;
         hal = network->hal;
 

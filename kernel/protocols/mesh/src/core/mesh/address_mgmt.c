@@ -31,6 +31,7 @@ typedef struct address_cache_state_s {
 } address_cache_state_t;
 
 typedef struct address_mgmt_s {
+    uint32_t notification_interval;
     ur_timer_t alive_timer;
     mm_cb_t interface_callback;
 #ifdef CONFIG_AOS_MESH_LOWPOWER
@@ -42,12 +43,8 @@ static address_resolver_state_t g_ar_state;
 static address_cache_state_t g_ac_state;
 static address_mgmt_t g_am_state;
 
-static ur_error_t send_address_query(network_context_t *network,
-                                     ur_addr_t *dest,
-                                     uint8_t query_type, ur_node_id_t *target);
-static ur_error_t send_address_query_response(network_context_t *network,
-                                              ur_addr_t *dest,
-                                              ur_node_id_t *attach_node,
+static ur_error_t send_address_query(ur_addr_t *dest, uint8_t query_type, ur_node_id_t *target);
+static ur_error_t send_address_query_response(ur_addr_t *dest, ur_node_id_t *attach_node,
                                               ur_node_id_t *target_node);
 
 static ur_error_t get_target_by_ueid(ur_node_id_t *node_id, uint8_t *ueid)
@@ -165,7 +162,6 @@ ur_error_t address_resolve(message_t *message)
     ur_error_t error = UR_ERROR_NONE;
     uint8_t index = 0;
     address_cache_t *cache = NULL;
-    network_context_t *network;
     ur_addr_t dest;
     neighbor_t *nbr = NULL;
     uint8_t query_type;
@@ -174,15 +170,19 @@ ur_error_t address_resolve(message_t *message)
     hal_context_t *hal;
 
     info = message->info;
-    if (info->dest.addr.len == SHORT_ADDR_SIZE &&
-        info->dest.addr.short_addr == BCAST_SID) {
+    if (is_bcast_sid(&info->dest)) {
         if (info->type == MESH_FRAME_TYPE_DATA) {
             info->flags |= INSERT_MCAST_FLAG;
         }
         return UR_ERROR_NONE;
     }
 
-    nbr = mf_get_neighbor(info->dest.netid, &info->dest.addr);
+    if (info->dest.addr.len == SHORT_ADDR_SIZE) {
+        nbr = get_neighbor_by_sid(info->dest.netid, info->dest.addr.short_addr);
+    } else if (info->dest.addr.len == EXT_ADDR_SIZE) {
+        nbr = get_neighbor_by_mac_addr(info->dest.addr.addr);
+    }
+
     if (nbr) {
         set_mesh_ext_addr(&info->dest, nbr->netid, nbr->mac);
         return UR_ERROR_NONE;
@@ -222,7 +222,6 @@ ur_error_t address_resolve(message_t *message)
         return UR_ERROR_DROP;
     }
 
-    network = get_default_network_context();
     get_leader_addr(&dest);
     switch (cache->state) {
         case AQ_STATE_INVALID:
@@ -234,7 +233,7 @@ ur_error_t address_resolve(message_t *message)
             cache->timeout = ADDRESS_QUERY_TIMEOUT;
             cache->retry_timeout = ADDRESS_QUERY_RETRY_TIMEOUT;
             cache->state = AQ_STATE_QUERY;
-            send_address_query(network, &dest, query_type, &target);
+            send_address_query(&dest, query_type, &target);
             error = UR_ERROR_ADDRESS_QUERY;
             break;
         case AQ_STATE_QUERY:
@@ -242,7 +241,7 @@ ur_error_t address_resolve(message_t *message)
                 error = UR_ERROR_ADDRESS_QUERY;
             } else if (cache->timeout == 0 && cache->retry_timeout == 0) {
                 cache->timeout = ADDRESS_QUERY_TIMEOUT;
-                send_address_query(network, &dest, query_type, &target);
+                send_address_query(&dest, query_type, &target);
                 error = UR_ERROR_ADDRESS_QUERY;
             } else {
                 error = UR_ERROR_DROP;
@@ -265,9 +264,7 @@ ur_error_t address_resolve(message_t *message)
     return error;
 }
 
-static ur_error_t send_address_query(network_context_t *network,
-                                     ur_addr_t *dest,
-                                     uint8_t query_type, ur_node_id_t *target)
+static ur_error_t send_address_query(ur_addr_t *dest, uint8_t query_type, ur_node_id_t *target)
 {
     ur_error_t error = UR_ERROR_FAIL;
     mm_addr_query_tv_t *addr_query;
@@ -318,7 +315,6 @@ static ur_error_t send_address_query(network_context_t *network,
 
     ur_start_timer(&g_ar_state.timer, ADDRESS_QUERY_STATE_UPDATE_PERIOD, timer_handler, NULL);
     info = message->info;
-    info->network = network;
     memcpy(&info->dest, dest, sizeof(info->dest));
     error = mf_send_message(message);
     MESH_LOG_DEBUG("send address query, len %d", length);
@@ -338,7 +334,6 @@ ur_error_t handle_address_query(message_t *message)
     mm_node_id_tv_t *target_id;
     mm_ueid_tv_t *ueid;
     uint16_t tlvs_length;
-    network_context_t *network;
     message_info_t *info;
 
     if (umesh_mm_get_device_state() < DEVICE_STATE_LEADER) {
@@ -346,7 +341,6 @@ ur_error_t handle_address_query(message_t *message)
     }
 
     info = message->info;
-    network = info->network;
     tlvs_length = message_get_msglen(message) - sizeof(mm_header_t);
     tlvs = ur_mem_alloc(tlvs_length);
     if (tlvs == NULL) {
@@ -386,12 +380,7 @@ ur_error_t handle_address_query(message_t *message)
     }
 
     if (error == UR_ERROR_NONE) {
-        network = get_network_context_by_meshnetid(info->src.netid);
-        if (network == NULL) {
-            network = get_default_network_context();
-        }
-        send_address_query_response(network, &info->src, &attach_node,
-                                    &target_node);
+        send_address_query_response(&info->src, &attach_node, &target_node);
     }
 
 exit:
@@ -400,16 +389,14 @@ exit:
     return error;
 }
 
-static ur_error_t send_address_query_response(network_context_t *network,
-                                              ur_addr_t *dest,
-                                              ur_node_id_t *attach_node,
+static ur_error_t send_address_query_response(ur_addr_t *dest, ur_node_id_t *attach_node,
                                               ur_node_id_t *target_node)
 {
     ur_error_t error = UR_ERROR_MEM;
-    message_t   *message;
-    uint8_t     *data;
+    message_t *message;
+    uint8_t *data;
     uint8_t *data_orig;
-    uint16_t    length;
+    uint16_t length;
     message_info_t *info;
 
     length = sizeof(mm_header_t) + sizeof(mm_node_id_tv_t) +
@@ -435,7 +422,6 @@ static ur_error_t send_address_query_response(network_context_t *network,
                                data_orig, length, ADDRESS_MGMT_2);
     if (message) {
         info = message->info;
-        info->network = network;
         memcpy(&info->dest, dest, sizeof(info->dest));
         error = address_resolve(message);
         if (error == UR_ERROR_NONE) {
@@ -456,9 +442,9 @@ ur_error_t handle_address_query_response(message_t *message)
     mm_node_id_tv_t *target_id;
     mm_node_id_tv_t *attach_id;
     mm_ueid_tv_t *target_ueid;
-    uint8_t     *tlvs;
-    uint16_t    tlvs_length;
-    uint8_t     index;
+    uint8_t *tlvs;
+    uint16_t tlvs_length;
+    uint8_t index;
     network_context_t *network;
     message_info_t *info;
 
@@ -527,22 +513,22 @@ exit:
     return UR_ERROR_NONE;
 }
 
-ur_error_t send_address_notification(network_context_t *network,
-                                     ur_addr_t *dest)
+static ur_error_t send_address_notification(void)
 {
     ur_error_t error = UR_ERROR_MEM;
     mm_hal_type_tv_t *hal_type;
-    message_t       *message;
-    uint8_t         *data;
+    message_t *message;
+    uint8_t *data;
     uint8_t *data_orig;
-    uint16_t        length;
+    uint16_t length;
     message_info_t *info;
-    hal_context_t   *hal;
+    hal_context_t *hal;
     ur_node_id_t node_id;
+    neighbor_t *attach_node = umesh_mm_get_attach_node();
 
     length = sizeof(mm_header_t) + sizeof(mm_ueid_tv_t) +
              sizeof(mm_node_id_tv_t) + sizeof(mm_hal_type_tv_t);
-    if (network->attach_node) {
+    if (attach_node) {
         length += sizeof(mm_node_id_tv_t);
     }
 
@@ -555,7 +541,7 @@ ur_error_t send_address_notification(network_context_t *network,
     data += set_mm_ueid_tv(data, TYPE_TARGET_UEID, umesh_mm_get_local_ueid());
 
     node_id.sid = umesh_mm_get_local_sid();
-    node_id.meshnetid = umesh_mm_get_meshnetid(network);
+    node_id.meshnetid = umesh_get_meshnetid();
     data += set_mm_node_id_tv(data, TYPE_NODE_ID, &node_id);
 
     hal_type = (mm_hal_type_tv_t *)data;
@@ -564,9 +550,9 @@ ur_error_t send_address_notification(network_context_t *network,
     hal_type->type = hal->module->type;
     data += sizeof(mm_hal_type_tv_t);
 
-    if (network->attach_node) {
-        node_id.sid = network->attach_node->sid;
-        node_id.meshnetid = network->attach_node->netid;
+    if (attach_node) {
+        node_id.sid = attach_node->sid;
+        node_id.meshnetid = attach_node->netid;
         data += set_mm_node_id_tv(data, TYPE_ATTACH_NODE_ID, &node_id);
     }
 
@@ -574,12 +560,7 @@ ur_error_t send_address_notification(network_context_t *network,
                                data_orig, length, ADDRESS_MGMT_3);
     if (message) {
         info = message->info;
-        info->network = network;
-        if (dest == NULL) {
-            get_leader_addr(&info->dest);
-        } else {
-            memcpy(&info->dest, dest, sizeof(info->dest));
-        }
+        get_leader_addr(&info->dest);
         error = mf_send_message(message);
     }
     ur_mem_free(data_orig, length);
@@ -588,8 +569,7 @@ ur_error_t send_address_notification(network_context_t *network,
     return error;
 }
 
-ur_error_t send_address_unreachable(network_context_t *network,
-                                    ur_addr_t *dest, ur_addr_t *target)
+ur_error_t send_address_unreachable(ur_addr_t *dest, ur_addr_t *target)
 {
     ur_error_t error = UR_ERROR_MEM;
     message_t *message;
@@ -619,7 +599,6 @@ ur_error_t send_address_unreachable(network_context_t *network,
                                data_orig, length, ADDRESS_MGMT_4);
     if (message) {
         info = message->info;
-        info->network = network;
         memcpy(&info->dest, dest, sizeof(info->dest));
         error = mf_send_message(message);
     }
@@ -766,11 +745,9 @@ static void handle_addr_cache_timer(void *args)
 
 static void start_alive_timer(void *args)
 {
-    network_context_t *network = get_default_network_context();
-
     if (umesh_get_device_state() != DEVICE_STATE_LEADER) {
-        send_address_notification(network, NULL);
-        ur_start_timer(&g_am_state.alive_timer, network->notification_interval,
+        send_address_notification();
+        ur_start_timer(&g_am_state.alive_timer, g_am_state.notification_interval,
                        start_alive_timer, NULL);
     }
 }
@@ -818,19 +795,27 @@ static void lowpower_radio_down_handler(schedule_type_t type)
 
 static void lowpower_radio_up_handler(schedule_type_t type)
 {
-    network_context_t *network = get_default_network_context();
-
     if (umesh_get_mode() & MODE_RX_ON) {
         return;
     }
     if (type == LOWPOWER_PARENT_SCHEDULE) {
-        send_address_notification(network, NULL);
+        send_address_notification();
     }
 }
 #endif
 
 void address_mgmt_init(void)
 {
+    hal_context_t *hal = get_default_hal_context();
+
+    if (hal->module->type == MEDIA_TYPE_BLE) {
+        g_am_state.notification_interval = BLE_NOTIFICATION_TIMEOUT;
+    } else if (hal->module->type == MEDIA_TYPE_15_4) {
+        g_am_state.notification_interval = IEEE154_NOTIFICATION_TIMEOUT;
+    } else {
+        g_am_state.notification_interval = WIFI_NOTIFICATION_TIMEOUT;
+    }
+
 #ifdef CONFIG_AOS_MESH_LOWPOWER
     g_am_state.lowpower_callback.radio_down = lowpower_radio_down_handler;
     g_am_state.lowpower_callback.radio_up = lowpower_radio_up_handler;

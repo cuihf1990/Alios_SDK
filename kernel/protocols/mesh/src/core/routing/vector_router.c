@@ -6,11 +6,12 @@
 #include <stdio.h>
 #include <string.h>
 
+#include "umesh.h"
+#include "umesh_utils.h"
 #include "core/router_mgr.h"
 #include "core/link_mgmt.h"
 #include "core/mesh_mgmt.h"
 #include "core/vector_router.h"
-#include "umesh_utils.h"
 
 enum {
     MAX_CMD_LEN = 512,
@@ -260,7 +261,7 @@ static uint16_t scan_new_edges()
 
     newedges = 0;
     for_each_vertex(vertex) {
-        neighbor = get_neighbor_by_sid(NULL, vertex->sid, umesh_mm_get_meshnetid(NULL));
+        neighbor = get_neighbor_by_sid(umesh_get_meshnetid(), vertex->sid);
         if (neighbor != NULL) {
             uint16_t src, dst;
             uint8_t  cost;
