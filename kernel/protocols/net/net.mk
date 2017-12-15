@@ -2,7 +2,7 @@ NAME := net
 
 $(NAME)_TYPE := kernel
 include kernel/protocols/net/Filelists.mk
-GLOBAL_INCLUDES += include port/include include/lwip include/netif
+GLOBAL_INCLUDES += include port/include
 
 ifneq ($(no_with_lwip),1)
 GLOBAL_DEFINES += WITH_LWIP
