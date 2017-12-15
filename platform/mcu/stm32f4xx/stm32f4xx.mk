@@ -94,9 +94,7 @@ $(NAME)_SOURCES := platform_init.c          \
                    aos/soc_impl.c                \
                    aos/trace_impl.c             \
                    aos/aos.c                    \
-                   hal/hw.c hal/uart.c hal/flash.c  \
-                   ../../arch/arm/armv7m/gcc/m4/port_c.c \
-                   ../../arch/arm/armv7m/gcc/m4/port_s.S
+                   hal/hw.c hal/uart.c hal/flash.c  
 
 
 ###      wifi/src/wifi.c hal/hw.c hal/wifi_port.c  hal/flash_port.c hal/ota_port.c   
