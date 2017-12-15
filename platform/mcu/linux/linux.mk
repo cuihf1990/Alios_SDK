@@ -9,8 +9,6 @@ $(NAME)_COMPONENTS  := log arch.linux
 
 ifeq ($(openssl),1)
 GLOBAL_LDFLAGS += -lssl -lcrypto
-else
-$(NAME)_COMPONENTS += mbedtls
 endif
 
 ifeq ($(gcov),1)

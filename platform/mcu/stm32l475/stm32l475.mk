@@ -16,7 +16,7 @@ STM32_NONSTD_SOCKET := true
 $(NAME)_TYPE := kernel
 
 $(NAME)_COMPONENTS += platform/arch/arm/armv7m
-$(NAME)_COMPONENTS += libc rhino hal netmgr framework.common mbedtls cjson cli digest_algorithm
+$(NAME)_COMPONENTS += libc rhino hal modules.fs.kv vfs digest_algorithm
 
 GLOBAL_DEFINES += STM32_USE_SPI_WIFI
 

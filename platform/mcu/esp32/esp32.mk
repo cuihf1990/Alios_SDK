@@ -4,7 +4,7 @@ NAME := esp32
 
 $(NAME)_TYPE := kernel 
 
-$(NAME)_COMPONENTS := framework.common modules.fs.kv cli
+$(NAME)_COMPONENTS := hal modules.fs.kv
 $(NAME)_COMPONENTS += protocols.net alicrypto
 
 ESP_INC_PATH    := bsp/include
