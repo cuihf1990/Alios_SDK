@@ -8,7 +8,7 @@
 #include "errno_mapping.h"
 
 #if (RHINO_CONFIG_KOBJ_DYN_ALLOC == 0)
-#error "RHINO_CONFIG_KOBJ_DYN_ALLOC must be configured!"
+#warning "RHINO_CONFIG_KOBJ_DYN_ALLOC is disabled!"
 #endif
 
 #define MS2TICK(ms) krhino_ms_to_ticks(ms)
