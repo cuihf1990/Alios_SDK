@@ -1,7 +1,7 @@
 #include "include.h"
 
 #if CFG_USE_LWIP_NETSTACK
-#include "tcp.h"
+#include "lwip/tcp.h"
 #include "app_lwip_tcp.h"
 #include "uart_pub.h"
 #include "mem_pub.h"
