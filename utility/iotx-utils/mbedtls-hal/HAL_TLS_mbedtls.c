@@ -481,6 +481,7 @@ uintptr_t HAL_SSL_Establish(const char *host,
             mbedtls_free(pTlsData->ssl.hostname);
             pTlsData->ssl.hostname = NULL;
         }
+        utils_network_ssl_disconnect(pTlsData);
         free(pTlsData);
         return 0;
     }
