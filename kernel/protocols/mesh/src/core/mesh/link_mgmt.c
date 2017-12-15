@@ -826,9 +826,6 @@ ur_error_t handle_link_accept(message_t *message)
     uint16_t tlvs_length;
     neighbor_t *node;
     message_info_t *info;
-#ifdef CONFIG_AOS_MESH_LOWPOWER
-    hal_context_t *hal;
-#endif
 
     MESH_LOG_DEBUG("handle link accept");
     info = message->info;
@@ -851,13 +848,7 @@ ur_error_t handle_link_accept(message_t *message)
     node->flags |= NBR_WAKEUP;
     while ((message = message_queue_get_head(&node->buffer_queue))) {
         message_queue_dequeue(message);
-        info = message->info;
-        hal = get_hal_context(info->hal_type);
-        if (info->type == MESH_FRAME_TYPE_CMD) {
-            message_queue_enqueue(&hal->send_queue[CMD_QUEUE], message);
-        } else {
-            message_queue_enqueue(&hal->send_queue[DATA_QUEUE], message);
-        }
+        mf_send_message(message);
     }
 #endif
 
