@@ -5,10 +5,13 @@
 #ifndef K_SYS_H
 #define K_SYS_H
 
-#define RHINO_VERSION  10000
-#define RHINO_IDLE_PRI (RHINO_CONFIG_PRI_MAX - 1)
-#define RHINO_FALSE    0u
-#define RHINO_TRUE     1u
+#define RHINO_VERSION      10000
+#define RHINO_IDLE_PRI     (RHINO_CONFIG_PRI_MAX - 1)
+#define RHINO_FALSE        0u
+#define RHINO_TRUE         1u
+
+#define RHINO_NO_WAIT      0u
+#define RHINO_WAIT_FOREVER 0xffffffffu
 
 typedef uint32_t        tick_t;
 
