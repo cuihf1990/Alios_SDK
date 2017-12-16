@@ -24,13 +24,13 @@ typedef enum {
 } cache_state_t;
 
 typedef struct address_cache_s {
-    uint8_t       ueid[EXT_ADDR_SIZE];
-    uint16_t      meshnetid;
-    uint16_t      sid;
-    uint16_t      attach_sid;
-    uint16_t      attach_netid;
-    uint8_t       timeout;
-    uint8_t       retry_timeout;
+    uint8_t ueid[EXT_ADDR_SIZE];
+    uint16_t meshnetid;
+    uint16_t sid;
+    uint16_t attach_sid;
+    uint16_t attach_netid;
+    uint8_t timeout;
+    uint8_t retry_timeout;
     cache_state_t state;
 } address_cache_t;
 

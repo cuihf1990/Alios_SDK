@@ -21,27 +21,27 @@ enum {
 
 typedef struct sync_state_s {
     uint16_t peer_sid;
-    uint8_t  peer_seq;
+    uint8_t peer_seq;
     vertex_t *cur_vertex;
-    edge_t   *cur_edge;
+    edge_t *cur_edge;
     uint16_t cmd_len;
     uint16_t cmd_dst;
-    uint8_t  cmd_data[MAX_CMD_LEN];
+    uint8_t cmd_data[MAX_CMD_LEN];
 } sync_state_t;
 
 typedef struct vector_router_state_s {
-    uint8_t      status;
-    uint8_t      heartbeat_count;
-    uint8_t      heartbeat_message_interval;
-    uint8_t      vertex_num;
-    slist_t      vertex_list;
-    uint16_t     meshnetid;
-    uint8_t      retry_times;
-    uint8_t      sync_status;
+    uint8_t status;
+    uint8_t heartbeat_count;
+    uint8_t heartbeat_message_interval;
+    uint8_t vertex_num;
+    slist_t vertex_list;
+    uint16_t meshnetid;
+    uint8_t retry_times;
+    uint8_t sync_status;
     sync_state_t *sync_state;
-    ur_timer_t   sync_timer;
-    ur_timer_t   heartbeat_timer;
-    router_t     router;
+    ur_timer_t sync_timer;
+    ur_timer_t heartbeat_timer;
+    router_t router;
 } vector_router_state_t;
 
 static vector_router_state_t g_vr_state;
@@ -191,7 +191,7 @@ static ur_error_t update_vertex(uint8_t cmd, uint8_t *ueid, uint16_t sid)
 static ur_error_t update_edge(uint16_t src_sid, uint16_t dst_sid, uint8_t cost)
 {
     vertex_t *src, *dst;
-    edge_t   *edge, *prev_edge;
+    edge_t *edge, *prev_edge;
 
     if (src_sid == dst_sid) {
         return UR_ERROR_FAIL;
@@ -430,11 +430,11 @@ static void send_topology_sync_select()
 
 static void send_topology_sync_data()
 {
-    uint8_t  *data;
+    uint8_t *data;
     router_command_t *cmd;
     uint16_t len;
     vertex_t *vertex;
-    edge_t   *edge;
+    edge_t *edge;
 
     data = g_vr_state.sync_state->cmd_data;
     cmd = (router_command_t *)data;
@@ -522,7 +522,7 @@ static void send_vertex_update(uint8_t *ueid, uint16_t sid, uint16_t to)
 {
     uint8_t *data, len;
     router_command_t *cmd;
-    vertex_tv_t      *tv;
+    vertex_tv_t *tv;
 
     len = sizeof(router_command_t) + sizeof(vertex_tv_t);
     data = (uint8_t *)ur_mem_alloc(len);
@@ -545,7 +545,7 @@ static void send_edge_update(uint16_t src, uint16_t dst, uint16_t cost,
 {
     uint8_t *data, len;
     router_command_t *cmd;
-    edge_tv_t        *tv;
+    edge_tv_t *tv;
 
     len = sizeof(router_command_t) + sizeof(edge_tv_t);
     data = (uint8_t *)ur_mem_alloc(len);
@@ -566,12 +566,12 @@ static void send_edge_update(uint16_t src, uint16_t dst, uint16_t cost,
 
 static void send_heartbeat_message()
 {
-    const uint8_t  *data;
+    const uint8_t *data;
     uint16_t len;
-    edge_t   *edge;
+    edge_t *edge;
     router_command_t *cmd;
-    vertex_tv_t      *vertex_tv;
-    edge_tuple_t    *edge_tuple;
+    vertex_tv_t *vertex_tv;
+    edge_tuple_t *edge_tuple;
 
     len = sizeof(router_command_t) + sizeof(vertex_tv_t);
     edge = vertex_me->edges;
@@ -673,7 +673,7 @@ static ur_error_t handle_topology_sync_data(const uint8_t *data,
                                             uint16_t length)
 {
     router_command_t *cmd;
-    uint16_t         len;
+    uint16_t len;
 
     cmd = (router_command_t *)data;
     MESH_LOG_DEBUG("vector router: received topology sync data from %04x, len = %d", cmd->sid,
@@ -754,9 +754,9 @@ static ur_error_t handle_vertex_update(const uint8_t *data, uint16_t length)
 {
     ur_error_t error;
     router_command_t *cmd;
-    vertex_tv_t      *tv;
-    vertex_t         *vertex;
-    int8_t           diff;
+    vertex_tv_t *tv;
+    vertex_t *vertex;
+    int8_t diff;
 
     cmd = (router_command_t *)data;
     tv  = (vertex_tv_t *)(data + sizeof(router_command_t));
@@ -796,12 +796,12 @@ static ur_error_t handle_heartbeat_message(const uint8_t *data, uint16_t length,
                                            uint8_t *newinfo)
 {
     uint16_t len = 0;
-    int8_t  diff;
+    int8_t diff;
     router_command_t *cmd;
-    vertex_t         *vertex;
-    vertex_tv_t      *vertex_tv;
-    edge_t           *edge, *prev_edge;
-    edge_tuple_t     *edge_tuple;
+    vertex_t *vertex;
+    vertex_tv_t *vertex_tv;
+    edge_t *edge, *prev_edge;
+    edge_tuple_t *edge_tuple;
 
     *newinfo = 0;
     if (g_vr_state.status != STATUS_UP) {
@@ -907,7 +907,7 @@ static void handle_topology_sync_timer(void *args)
 static void vertex_timeout_check()
 {
     vertex_t *vertex;
-    uint8_t  newinfo = 0;
+    uint8_t newinfo = 0;
     for_each_vertex(vertex) {
         if (vertex == vertex_me) {
             continue;
@@ -1034,8 +1034,8 @@ ur_error_t vector_router_deinit(void)
 
 ur_error_t vector_router_neighbor_updated(neighbor_t *neighbor)
 {
-    uint16_t  src, dst;
-    uint8_t   cost;
+    uint16_t src, dst;
+    uint8_t cost;
 
     if (get_vertex_by_ueid(neighbor->mac) == NULL) {
         return UR_ERROR_FAIL;
@@ -1063,7 +1063,7 @@ ur_error_t vector_router_neighbor_updated(neighbor_t *neighbor)
 
 ur_error_t vector_router_message_received(const uint8_t *data, uint16_t length)
 {
-    uint8_t  newinfo = 0;
+    uint8_t newinfo = 0;
     ur_error_t error;
     uint8_t cmd = data[0];
 

@@ -36,7 +36,7 @@ extern void vector_router_register(void);
 
 uint16_t ur_router_get_next_hop(network_context_t *network, uint16_t dest_sid)
 {
-    uint16_t  next_hop = INVALID_SID;
+    uint16_t next_hop = INVALID_SID;
 
     if (network == NULL) {
         network = g_rm_state.default_router->network;
@@ -114,8 +114,8 @@ ur_error_t ur_router_send_message(router_t *router, uint16_t dst,
                                   uint8_t *payload, uint16_t length)
 {
     ur_error_t error = UR_ERROR_MEM;
-    message_t   *message;
-    uint8_t     *data;
+    message_t *message;
+    uint8_t *data;
     uint8_t *data_orig;
     message_info_t *info;
     uint16_t msg_length;

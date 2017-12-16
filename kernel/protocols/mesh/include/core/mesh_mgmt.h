@@ -48,23 +48,23 @@ typedef enum mm_command_s {
 } mm_command_t;
 
 enum {
-    ATTACH_REQUEST_RETRY_TIMES   = 2,
-    ATTACH_SID_RETRY_TIMES       = 2,
-    BECOME_LEADER_TIMEOUT        = 3,
-    MIGRATE_TIMEOUT              = 2,
-    DETACHED_MIGRATE_TIMEOUT     = 1,
+    ATTACH_REQUEST_RETRY_TIMES      = 2,
+    ATTACH_SID_RETRY_TIMES          = 2,
+    BECOME_LEADER_TIMEOUT           = 3,
+    MIGRATE_TIMEOUT                 = 2,
+    DETACHED_MIGRATE_TIMEOUT        = 1,
 
 #ifndef CONFIG_AOS_DDA
-    ATTACH_CANDIDATE_TIMEOUT     = 30,     /* 30 * ADVERTISEMENT_TIMEOUT */
+    ATTACH_CANDIDATE_TIMEOUT        = 30, /* 30 * ADVERTISEMENT_TIMEOUT */
 #else
-    ATTACH_CANDIDATE_TIMEOUT     = 0,
+    ATTACH_CANDIDATE_TIMEOUT        = 0,
 #endif
 };
 
 enum {
-    PATH_COST_WEIGHT       = 256,
-    SIZE_WEIGHT            = 1,
-    PATH_COST_SWITCH_HYST = 384,
+    PATH_COST_WEIGHT                = 256,
+    SIZE_WEIGHT                     = 1,
+    PATH_COST_SWITCH_HYST           = 384,
 };
 
 typedef struct mesh_mgmt_header_s {
@@ -72,12 +72,12 @@ typedef struct mesh_mgmt_header_s {
 } mm_header_t;
 
 typedef struct mesh_network_info_s {
-    uint8_t       stable_version;
-    uint8_t       temp_version;
-    uint16_t      netid;
-    uint16_t      size;
+    uint8_t stable_version;
+    uint8_t temp_version;
+    uint16_t netid;
+    uint16_t size;
     ur_ip6_addr_t mcast;
-    uint16_t      timeout;
+    uint16_t timeout;
 } mesh_network_info_t;
 
 enum {
@@ -102,22 +102,22 @@ bool umesh_mm_migration_check(network_context_t *network, neighbor_t *nbr,
 uint8_t umesh_mm_get_prev_channel(void);
 void umesh_mm_set_prev_channel(void);
 
-uint16_t            umesh_mm_get_local_sid(void);
-neighbor_t          *umesh_mm_get_attach_node(void);
-neighbor_t          *umesh_mm_get_attach_candidate(void);
-uint8_t             *umesh_mm_get_local_ueid(void);
-node_state_t        umesh_mm_get_device_state(void);
-attach_state_t      umesh_mm_get_attach_state(void);
-uint16_t            umesh_mm_get_meshnetid(network_context_t *network);
-uint16_t            umesh_mm_get_meshnetsize(void);
+uint16_t umesh_mm_get_local_sid(void);
+neighbor_t *umesh_mm_get_attach_node(void);
+neighbor_t *umesh_mm_get_attach_candidate(void);
+uint8_t *umesh_mm_get_local_ueid(void);
+node_state_t umesh_mm_get_device_state(void);
+attach_state_t umesh_mm_get_attach_state(void);
+uint16_t umesh_mm_get_meshnetid(network_context_t *network);
+uint16_t umesh_mm_get_meshnetsize(void);
 const mac_address_t *umesh_mm_get_mac_address(void);
-node_mode_t         umesh_mm_get_mode(void);
-int8_t              umesh_mm_compare_mode(node_mode_t local, node_mode_t other);
-ur_error_t          umesh_mm_set_mode(node_mode_t mode);
+node_mode_t umesh_mm_get_mode(void);
+int8_t umesh_mm_compare_mode(node_mode_t local, node_mode_t other);
+ur_error_t umesh_mm_set_mode(node_mode_t mode);
 uint16_t umesh_mm_get_channel(hal_context_t *hal);
 void umesh_mm_set_channel(hal_context_t *hal, uint16_t channel);
-ur_error_t          umesh_mm_set_seclevel(int8_t level);
-int8_t              umesh_mm_get_seclevel(void);
+ur_error_t umesh_mm_set_seclevel(int8_t level);
+int8_t umesh_mm_get_seclevel(void);
 
 void umesh_mm_get_extnetid(umesh_extnetid_t *extnetid);
 ur_error_t umesh_mm_set_extnetid(const umesh_extnetid_t *extnetid);
@@ -127,10 +127,10 @@ void umesh_mm_register_callback(mm_cb_t *callback);
 uint8_t umesh_mm_get_leader_mode(void);
 uint8_t umesh_mm_get_reboot_flag(void);
 
-void       umesh_mm_init_tlv_base(mm_tlv_t *tlv, uint8_t type, uint8_t length);
-void       umesh_mm_init_tv_base(mm_tv_t *tlv, uint8_t type);
-mm_tv_t    *umesh_mm_get_tv(const uint8_t *data, const uint16_t length,
-                            uint8_t type);
+void umesh_mm_init_tlv_base(mm_tlv_t *tlv, uint8_t type, uint8_t length);
+void umesh_mm_init_tv_base(mm_tv_t *tlv, uint8_t type);
+mm_tv_t *umesh_mm_get_tv(const uint8_t *data, const uint16_t length,
+                         uint8_t type);
 ur_error_t umesh_mm_handle_frame_received(message_t *message);
 
 uint16_t tlvs_set_value(network_context_t *network,

@@ -383,11 +383,11 @@ void link_mgmt_init(void)
 neighbor_t *update_neighbor(const message_info_t *info,
                             uint8_t *tlvs, uint16_t length, bool is_attach)
 {
-    neighbor_t        *nbr = NULL;
-    mm_cost_tv_t      *path_cost = NULL;
+    neighbor_t *nbr = NULL;
+    mm_cost_tv_t *path_cost = NULL;
     mm_ssid_info_tv_t *ssid_info = NULL;
-    mm_channel_tv_t   *channel;
-    hal_context_t     *hal;
+    mm_channel_tv_t *channel;
+    hal_context_t *hal;
     network_context_t *network;
     ur_node_id_t node_id;
 

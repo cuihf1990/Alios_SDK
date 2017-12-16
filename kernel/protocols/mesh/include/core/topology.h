@@ -13,9 +13,9 @@ enum {
 };
 
 enum {
-    BCAST_NETID   = 0xffff,
-    BCAST_SUB_NETID = 0xff,
-    INVALID_NETID = 0xfffe,
+    BCAST_NETID       = 0xffff,
+    BCAST_SUB_NETID   = 0xff,
+    INVALID_NETID     = 0xfffe,
 };
 
 #define is_bcast_netid(nid) ((nid) == BCAST_NETID)
@@ -24,16 +24,15 @@ enum {
 
 enum {
     INFINITY_PATH_COST = 0xffff,
-
-    RSSI_THRESHOLD = -75,  // dBm
+    RSSI_THRESHOLD     = -75,  // dBm
 };
 
 typedef struct link_nbr_stats_s {
     uint16_t link_request;
     uint16_t link_accept;
     uint16_t link_cost;
-    int8_t   forward_rssi;
-    int8_t   reverse_rssi;
+    int8_t forward_rssi;
+    int8_t reverse_rssi;
 } link_nbr_stats_t;
 
 typedef enum neighbor_state_s {
@@ -59,18 +58,18 @@ typedef enum node_type_s {
 } sid_node_type_t;
 
 typedef struct ur_node_id_s {
-    uint8_t         ueid[EXT_ADDR_SIZE];
-    node_mode_t     mode;
-    uint16_t        meshnetid;
-    uint16_t        sid;
-    uint16_t        attach_sid;
+    uint8_t ueid[EXT_ADDR_SIZE];
+    node_mode_t mode;
+    uint16_t meshnetid;
+    uint16_t sid;
+    uint16_t attach_sid;
     sid_node_type_t type;
-    uint8_t         timeout;
+    uint8_t timeout;
 } ur_node_id_t;
 
 typedef struct ssid_info_s {
     uint16_t child_num;
-    uint8_t  free_slots;
+    uint8_t free_slots;
 } ssid_info_t;
 
 typedef struct neighbor_s {

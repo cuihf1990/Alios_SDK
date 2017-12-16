@@ -30,10 +30,10 @@ enum {
 };
 
 typedef struct ur_ip6_header_s {
-    uint32_t      v_tc_fl;
-    uint16_t      len;
-    uint8_t       next_header;
-    uint8_t       hop_lim;
+    uint32_t v_tc_fl;
+    uint16_t len;
+    uint8_t next_header;
+    uint8_t hop_lim;
     ur_ip6_addr_t src;
     ur_ip6_addr_t dest;
 } __attribute__((packed)) ur_ip6_header_t;
@@ -52,8 +52,8 @@ typedef struct ur_ip4_header_s {
 } __attribute__((packed)) ur_ip4_header_t;
 
 typedef struct ur_icmp6_header_s {
-    uint8_t  type;
-    uint8_t  code;
+    uint8_t type;
+    uint8_t code;
     uint16_t chksum;
     uint32_t data;
 } __attribute__((packed)) ur_icmp6_header_t;

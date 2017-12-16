@@ -17,8 +17,8 @@ static ur_message_stats_t g_message_stats;
 message_t *message_alloc(uint16_t length, uint16_t debug_info)
 {
     message_t *message;
-    uint16_t  offset = 0;
-    data_t    *data;
+    uint16_t offset = 0;
+    data_t *data;
 
     if (g_message_stats.num >= MESSAGE_BUF_SIZE) {
         g_message_stats.queue_fulls++;

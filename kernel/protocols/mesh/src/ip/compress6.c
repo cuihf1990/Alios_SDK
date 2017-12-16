@@ -154,8 +154,8 @@ static uint8_t mcast_addr_decompress(uint8_t mode, const uint8_t *iphc_buffer,
 static uint8_t ipv6_header_compress(ur_ip6_header_t *ip6_header,
                                     uint8_t *buffer)
 {
-    uint8_t         iphc_len = 0;
-    iphc_header_t   *iphc_header;
+    uint8_t iphc_len = 0;
+    iphc_header_t *iphc_header;
 
     iphc_len = 2;
 

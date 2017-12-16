@@ -218,14 +218,14 @@ ur_error_t handle_discovery_request(message_t *message)
 
 ur_error_t handle_discovery_response(message_t *message)
 {
-    uint8_t           *tlvs;
-    uint16_t          tlvs_length;
-    neighbor_t        *nbr;
+    uint8_t *tlvs;
+    uint16_t tlvs_length;
+    neighbor_t *nbr;
     discover_result_t *res;
     network_context_t *network;
-    message_info_t    *info;
-    mm_netinfo_tv_t   *netinfo;
-    mm_channel_tv_t   *channel;
+    message_info_t *info;
+    mm_netinfo_tv_t *netinfo;
+    mm_channel_tv_t *channel;
 
     if (umesh_mm_get_device_state() != DEVICE_STATE_DETACHED && g_nm_state.started == false) {
         return UR_ERROR_NONE;
