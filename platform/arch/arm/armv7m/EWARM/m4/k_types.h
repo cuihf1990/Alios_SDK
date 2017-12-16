@@ -5,12 +5,11 @@
 #ifndef TYPES_H
 #define TYPES_H
 
-#define RHINO_NO_WAIT                0u
-#define RHINO_WAIT_FOREVER           0xffffffffu     /* 32 bit value, if tick type is 64 bit, you need change it to 64 bit */
 #define RHINO_TASK_STACK_OVF_MAGIC   0xdeadbeafu     /* 32 bit or 64 bit stack overflow magic value */
 #define RHINO_INTRPT_STACK_OVF_MAGIC 0xdeaddeadu     /* 32 bit or 64 bit stack overflow magic value */
 #define RHINO_MM_CORRUPT_DYE         0xFEFEFEFE
 #define RHINO_MM_FREE_DYE            0xABABABAB
+
 #ifdef __ICCARM__
 #define RHINO_INLINE                 static inline
 #else
