@@ -10,13 +10,17 @@
 #define RHINO_FALSE    0u
 #define RHINO_TRUE     1u
 
+typedef uint32_t        tick_t;
+
 #if (RHINO_CONFIG_COMPILER_64_BIT > 0)
 typedef uint64_t        sys_time_t;
 typedef int64_t         sys_time_i_t;
+typedef uint64_t        idle_count_t;
 #define MAX_TIMER_TICKS ((tick_t)-1)
 #else
 typedef uint32_t        sys_time_t;
 typedef int32_t         sys_time_i_t;
+typedef uint32_t        idle_count_t;
 #define MAX_TIMER_TICKS ((tick_t)-1 >> 1)
 #endif
 
