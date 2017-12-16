@@ -9,15 +9,15 @@
 
 enum {
     SUPER_ROUTER_SID = 0,
-    LEADER_SID  = 0,
-    BCAST_SID   = 0xffff,
-    INVALID_SID = 0xfffe,
+    LEADER_SID       = 0,
+    BCAST_SID        = 0xffff,
+    INVALID_SID      = 0xfffe,
 };
 
 enum {
-    STRUCTURED_SID = 0,
+    STRUCTURED_SID   = 0,
     SHORT_RANDOM_SID = 1,
-    RANDOM_SID = 2,
+    RANDOM_SID       = 2,
 };
 
 enum {
@@ -38,11 +38,11 @@ enum {
 
 enum {
     PF_NODE_NUM = 128,
-    RSID_NUM = 2048,
+    RSID_NUM    = 2048,
 };
 
 typedef struct sid_node_s {
-    slist_t      next;
+    slist_t next;
     ur_node_id_t node_id;
     media_type_t type;
 } sid_node_t;
@@ -76,14 +76,14 @@ ur_error_t allocate_sid(allocator_t hdl, ur_node_id_t *node_id);
 void free_sid(allocator_t, uint16_t sid);
 ur_error_t update_sid_mapping(allocator_t, ur_node_id_t *node_id, bool to_add);
 
-uint16_t   get_allocated_number(allocator_t);
-uint32_t   get_allocated_bitmap(allocator_t);
-uint16_t   get_allocated_pf_number(allocator_t);
-uint16_t   get_free_number(allocator_t);
-slist_t    *get_ssid_nodes_list(allocator_t);
-bool       is_direct_child(allocator_t, uint16_t sid);
-bool       is_allocated_child(allocator_t, neighbor_t *nbr);
-bool       is_partial_function_sid(uint16_t sid);
+uint16_t get_allocated_number(allocator_t);
+uint32_t get_allocated_bitmap(allocator_t);
+uint16_t get_allocated_pf_number(allocator_t);
+uint16_t get_free_number(allocator_t);
+slist_t *get_ssid_nodes_list(allocator_t);
+bool is_direct_child(allocator_t, uint16_t sid);
+bool is_allocated_child(allocator_t, neighbor_t *nbr);
+bool is_partial_function_sid(uint16_t sid);
 
 // random sid
 allocator_t rsid_allocator_init(int sid_type);

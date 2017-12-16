@@ -23,9 +23,9 @@ enum {
 };
 
 enum {
-    STATUS_DOWN = 0x00,
+    STATUS_DOWN          = 0x00,
     STATUS_SYNC_TOPOLOGY = 0x01,
-    STATUS_UP   = 0x02,
+    STATUS_UP            = 0x02,
 };
 
 enum {
@@ -54,8 +54,8 @@ enum {
 };
 
 typedef struct router_command_s {
-    uint8_t  cmd;
-    uint8_t  seq;
+    uint8_t cmd;
+    uint8_t seq;
     uint16_t sid;
 } __attribute__((packed)) router_command_t;
 
@@ -64,29 +64,29 @@ typedef struct none_tv_s {
 } __attribute__((packed)) none_tv_t;
 
 typedef struct vertex_tv_s {
-    uint8_t  type;
+    uint8_t type;
     uint16_t sid;
-    uint8_t  ueid[8];
+    uint8_t ueid[8];
 } __attribute__((packed)) vertex_tv_t;
 
 typedef struct edge_tv_s {
-    uint8_t  type;
-    uint8_t  cost;
+    uint8_t type;
+    uint8_t cost;
     uint16_t src;
     uint16_t dst;
 } __attribute__((packed)) edge_tv_t;
 
 typedef struct edge_tuple_s {
     uint16_t dst;
-    uint8_t  cost;
+    uint8_t cost;
 } __attribute__((packed)) edge_tuple_t;
 
 struct vertex_s;
 
 typedef struct edge_s {
-    uint8_t         cost;
+    uint8_t cost;
     struct vertex_s *dst;
-    struct edge_s   *next;
+    struct edge_s *next;
 } edge_t;
 
 typedef struct vertex_flag_s {
@@ -95,14 +95,14 @@ typedef struct vertex_flag_s {
 } vertex_flag_t;
 
 typedef struct vertex_s {
-    slist_t  next;
+    slist_t next;
     uint16_t sid;
-    uint8_t  seq;
+    uint8_t seq;
     vertex_flag_t flag; /* vertex flags */
-    uint8_t  ueid[8];
+    uint8_t ueid[8];
     uint16_t dist;      /* minimum distance from source to this vertex */
     uint16_t nexthop;   /* next hop to send to for reaching this node */
-    edge_t   *edges;    /* outgoing edges from this vertex */
+    edge_t *edges;    /* outgoing edges from this vertex */
     struct vertex_s *prevhop; /* previous hop in optimal path from source */
 } vertex_t;
 

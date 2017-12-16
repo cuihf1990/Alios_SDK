@@ -120,7 +120,7 @@ typedef struct mesh_header_frame_counter_s {
 } __attribute__((packed)) mesh_header_frame_counter_t;
 
 enum {
-    HEADER_IES_FLAG = 1 << 0,
+    HEADER_IES_FLAG      = 1 << 0,
     INSERT_MCAST_FLAG    = 1 << 7,
     ENCRYPT_ENABLE_FLAG  = 1 << 9,
 

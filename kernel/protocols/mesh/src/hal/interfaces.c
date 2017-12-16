@@ -227,7 +227,7 @@ void interface_stop(void)
 
 void reset_network_context(void)
 {
-    slist_t           *networks;
+    slist_t *networks;
     network_context_t *network;
 
     networks = get_network_contexts();

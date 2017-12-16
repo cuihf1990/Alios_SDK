@@ -74,7 +74,7 @@ bool is_direct_child(allocator_t hdl, uint16_t sid)
 {
     ssid_allocator_t *allocator;
     uint16_t sidmask = 0;
-    uint8_t  index;
+    uint8_t index;
 
     if (sid == LEADER_SID || sid == INVALID_SID) {
         return false;
@@ -104,7 +104,7 @@ bool is_direct_child(allocator_t hdl, uint16_t sid)
 bool is_allocated_child(allocator_t hdl, neighbor_t *nbr)
 {
     ssid_allocator_t *allocator;
-    sid_node_t       *node;
+    sid_node_t *node;
 
     allocator = (ssid_allocator_t *)hdl;
     if (allocator == NULL) {
@@ -195,8 +195,8 @@ static ur_error_t allocate_expected_sid(allocator_t hdl,
                                         ur_node_id_t *node_id)
 {
     ssid_allocator_t *allocator;
-    uint8_t          index;
-    uint8_t          len;
+    uint8_t index;
+    uint8_t len;
 
     allocator = (ssid_allocator_t *)hdl;
     if (is_direct_child(hdl, node_id->sid)) {
@@ -261,8 +261,8 @@ sid_node_t *get_sid_mapping(allocator_t hdl, ur_node_id_t *node_id)
 ur_error_t allocate_sid(allocator_t hdl, ur_node_id_t *node_id)
 {
     ssid_allocator_t *allocator;
-    sid_node_t       *sid_node = NULL;
-    int               newsid = -1;
+    sid_node_t *sid_node = NULL;
+    int newsid = -1;
 
     allocator = (ssid_allocator_t *)hdl;
     sid_node = get_sid_mapping(hdl, node_id);

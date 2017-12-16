@@ -396,9 +396,9 @@ void process_state(int argc, char *argv[])
 
 void process_sids(int argc, char *argv[])
 {
-    sid_node_t    *node;
-    slist_t       *nodes_list;
-    slist_t       *networks;
+    sid_node_t *node;
+    slist_t *nodes_list;
+    slist_t *networks;
     network_context_t *network;
 
     response_append("me=%04x\r\n", umesh_get_sid());
@@ -417,10 +417,10 @@ void process_sids(int argc, char *argv[])
 
 void process_whitelist(int argc, char *argv[])
 {
-    uint8_t       arg_index = 0;
-    int           length;
+    uint8_t arg_index = 0;
+    int length;
     mac_address_t addr;
-    int8_t        rssi;
+    int8_t rssi;
     whitelist_entry_t *entry;
 
     if (arg_index >= argc) {
@@ -611,11 +611,11 @@ void process_start(int argc, char *argv[])
 
 void process_stats(int argc, char *argv[])
 {
-    slist_t                  *hals;
-    hal_context_t            *hal;
+    slist_t *hals;
+    hal_context_t *hal;
     const ur_message_stats_t *message_stats;
-    const frame_stats_t      *hal_stats;
-    const ur_mem_stats_t     *mem_stats;
+    const frame_stats_t *hal_stats;
+    const ur_mem_stats_t *mem_stats;
 
     hals = get_hal_contexts();
     slist_for_each_entry(hals, hal, hal_context_t, next) {
@@ -716,11 +716,11 @@ void process_stop(int argc, char *argv[])
 static void do_cli(void *arg)
 {
     input_cli_t *buf = arg;
-    char        *argv[MAX_ARGS_NUM];
-    char        *cmd;
-    int         argc;
-    char        *last;
-    uint16_t    index;
+    char *argv[MAX_ARGS_NUM];
+    char *cmd;
+    int argc;
+    char *last;
+    uint16_t index;
 
     g_cur_cmd_cb = buf->cb;
     g_cur_cmd_priv = buf->priv;

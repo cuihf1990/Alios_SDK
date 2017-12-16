@@ -8,7 +8,7 @@
 #include "umesh_utils.h"
 
 typedef struct mac_whitelist_state_s {
-    bool              enabled;
+    bool enabled;
     whitelist_entry_t entries[WHITELIST_ENTRY_NUM];
 } mac_whitelist_state_t;
 
@@ -42,7 +42,7 @@ const whitelist_entry_t *whitelist_get_entries(void)
 whitelist_entry_t *whitelist_add(const mac_address_t *address)
 {
     whitelist_entry_t *entry = NULL;
-    uint8_t           index;
+    uint8_t index;
 
     entry = whitelist_find(address);
     if (entry) {
@@ -76,7 +76,7 @@ void whitelist_remove(const mac_address_t *address)
 whitelist_entry_t *whitelist_find(const mac_address_t *address)
 {
     whitelist_entry_t *entry = NULL;
-    uint8_t           index;
+    uint8_t index;
 
     for (index = 0; index < WHITELIST_ENTRY_NUM; index++) {
         if (g_mw_state.entries[index].valid == false) {
@@ -123,5 +123,3 @@ void whitelist_set_constant_rssi(whitelist_entry_t *entry, int8_t rssi)
     entry->constant_rssi = true;
     entry->rssi = rssi;
 }
-
-

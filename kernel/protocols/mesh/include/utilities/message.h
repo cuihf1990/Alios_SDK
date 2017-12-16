@@ -17,8 +17,7 @@
 
 enum {
     MESSAGE_BUF_SIZE = 16,
-
-    MESSAGE_RETRIES = 3,
+    MESSAGE_RETRIES  = 3,
 };
 
 typedef struct pbuf data_t;
@@ -49,10 +48,10 @@ typedef struct message_info_s {
 } message_info_t;
 
 typedef struct message_s {
-    dlist_t        next;
-    data_t         *data;
+    dlist_t next;
+    data_t *data;
     message_info_t *info;
-    uint16_t       frag_offset;
+    uint16_t frag_offset;
     uint16_t tot_len;
     uint8_t retries;
 
@@ -61,7 +60,7 @@ typedef struct message_s {
 
 typedef dlist_t message_queue_t;
 
-message_t  *message_alloc(uint16_t length, uint16_t debug_info);
+message_t *message_alloc(uint16_t length, uint16_t debug_info);
 ur_error_t message_free(message_t *message);
 ur_error_t message_copy_to(const message_t *src, uint16_t src_offset,
                            uint8_t *dest, uint16_t dest_length);
@@ -69,10 +68,10 @@ ur_error_t message_copy_from(const message_t *dest,
                              uint8_t *src, uint16_t src_length);
 ur_error_t message_copy(message_t *dest, const message_t *src);
 ur_error_t message_set_payload_offset(const message_t *message, int16_t offset);
-uint8_t    *message_get_payload(const message_t *message);
-uint16_t   message_get_msglen(const message_t *message);
+uint8_t *message_get_payload(const message_t *message);
+uint16_t message_get_msglen(const message_t *message);
 ur_error_t message_set_msglen(const message_t *message, uint16_t length);
-uint16_t   message_get_buflen(const message_t *message);
+uint16_t message_get_buflen(const message_t *message);
 ur_error_t message_set_buflen(const message_t *message, uint16_t length);
 ur_error_t message_concatenate(message_t *dest, message_t *message,
                                bool reference);

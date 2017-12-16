@@ -33,9 +33,9 @@ enum {
 };
 
 typedef struct cli_state_s {
-    uint16_t      icmp_seq;
-    uint16_t      icmp_acked;
-    int           icmp_socket;
+    uint16_t icmp_seq;
+    uint16_t icmp_acked;
+    int icmp_socket;
 } cli_state_t;
 static cli_state_t g_cl_state;
 
@@ -139,19 +139,19 @@ int ip_sendto(int socket, const uint8_t *payload, uint16_t length,
 
 #ifdef CONFIG_AOS_MESH_DEBUG
 typedef struct cli_autotest_s {
-    int           udp_socket;
-    ur_timer_t    timer;
-    ur_timer_t    print_timer;
-    uint16_t      times;
-    uint16_t      seq;
-    uint16_t      acked;
-    uint16_t      length;
+    int udp_socket;
+    ur_timer_t timer;
+    ur_timer_t print_timer;
+    uint16_t times;
+    uint16_t seq;
+    uint16_t acked;
+    uint16_t length;
 #if LWIP_IPV6
     ur_ip6_addr_t target;
 #else
     ur_ip4_addr_t target;
 #endif
-    slist_t       acked_list;
+    slist_t acked_list;
 } cli_autotest_t;
 cli_autotest_t g_cli_autotest;
 
@@ -161,7 +161,7 @@ enum {
 };
 
 typedef struct autotest_acked_s {
-    slist_t  next;
+    slist_t next;
     uint16_t subnetid;
     uint16_t sid;
     uint16_t acked;
@@ -186,7 +186,7 @@ typedef struct autotest_cmd_s {
 static void handle_autotest_print_timer(void *args)
 {
     autotest_acked_t *acked;
-    uint8_t          num = 0;
+    uint8_t num = 0;
 
     g_cli_autotest.print_timer = NULL;
     while (!slist_empty(&g_cli_autotest.acked_list)) {
@@ -256,8 +256,8 @@ static void handle_autotest_timer(void *args)
 
 void process_autotest(int argc, char *argv[])
 {
-    char                         *end;
-    autotest_acked_t             *acked = NULL;
+    char *end;
+    autotest_acked_t *acked = NULL;
 
     if (argc == 0) {
         for_each_acked(acked) {
@@ -310,7 +310,7 @@ void process_autotest(int argc, char *argv[])
 static bool update_autotest_acked_info(uint16_t subnetid, uint16_t sid,
                                        uint16_t seq)
 {
-    bool             exist = false;
+    bool exist = false;
     autotest_acked_t *acked = NULL;
 
     for_each_acked(acked) {
@@ -343,11 +343,11 @@ static bool update_autotest_acked_info(uint16_t subnetid, uint16_t sid,
 static void handle_udp_autotest(const uint8_t *payload, uint16_t length)
 {
 #if LWIP_IPV6
-    autotest_cmd_t               *cmd;
-    uint8_t                      *data;
-    ur_ip6_addr_t                dest;
+    autotest_cmd_t *cmd;
+    uint8_t *data;
+    ur_ip6_addr_t dest;
     const ip6_addr_t *src;
-    uint16_t                     seq;
+    uint16_t seq;
 
     if (length == 0) {
         return;
@@ -538,13 +538,13 @@ void process_ping(int argc, char *argv[])
 {
     ur_icmp6_header_t *header;
 #if LWIP_IPV6
-    ur_ip6_addr_t     target;
+    ur_ip6_addr_t target;
 #else
     ur_ip4_addr_t target;
 #endif
-    uint8_t           *payload;
-    uint16_t          length;
-    char              *end;
+    uint8_t *payload;
+    uint16_t length;
+    char *end;
 
     if (argc == 0) {
         return;
@@ -588,7 +588,7 @@ void cli_handle_echo_response(const uint8_t *payload, uint16_t length)
 {
     ur_icmp6_header_t *icmp6_header;
 #if LWIP_IPV6
-    ur_ip6_header_t   *ip6_header;
+    ur_ip6_header_t *ip6_header;
 
     if (length) {
         ip6_header = (ur_ip6_header_t *)payload;
@@ -636,7 +636,7 @@ static void do_read_cb(void *priv)
 
 static void ur_read_sock(int fd, data_handler_t handler)
 {
-    int     length = 0;
+    int length = 0;
     uint8_t *buffer;
 
     buffer = ur_mem_alloc(UR_IP6_MTU + UR_IP6_HLEN);

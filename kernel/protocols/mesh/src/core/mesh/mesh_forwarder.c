@@ -580,11 +580,11 @@ static ur_error_t send_fragment(network_context_t *network, message_t *message)
 
 static neighbor_t *get_next_node(message_info_t *info)
 {
-    uint16_t   local_sid;
-    uint16_t   next_hop;
+    uint16_t local_sid;
+    uint16_t next_hop;
     neighbor_t *next = NULL;
-    bool       same_subnet = false;
-    bool       same_net = true;
+    bool same_subnet = false;
+    bool same_net = true;
     network_context_t *network = info->network;
 
     local_sid = umesh_mm_get_local_sid();
@@ -761,7 +761,7 @@ message_t *mf_build_message(uint8_t type, uint8_t cmd_type, uint8_t *data,
 static bool proxy_check(message_t *message)
 {
     network_context_t *network;
-    message_info_t    *info;
+    message_info_t *info;
 
     info = message->info;
     network = get_default_network_context();
@@ -974,7 +974,7 @@ exit:
 
 static void enqueue_msg(void *arg)
 {
-    received_frame_t  *rx_frame = (received_frame_t *)arg;
+    received_frame_t *rx_frame = (received_frame_t *)arg;
     hal_context_t *hal = rx_frame->hal;
 
     message_queue_enqueue(&hal->recv_queue, rx_frame->message);
@@ -987,8 +987,8 @@ static void handle_received_frame(void *context, frame_t *frame,
                                   frame_info_t *frame_info,
                                   int error)
 {
-    message_t         *message;
-    received_frame_t  *rx_frame = NULL;
+    message_t *message;
+    received_frame_t *rx_frame = NULL;
     hal_context_t *hal = (hal_context_t *)context;
     message_info_t info;
     ur_error_t uerror = UR_ERROR_NONE;
@@ -1113,14 +1113,14 @@ static void send_datagram(void *args)
 extern ur_error_t umesh_input(message_t *message);
 static void handle_datagram(void *args)
 {
-    ur_error_t        error = UR_ERROR_NONE;
-    int16_t           offset;
-    message_info_t    *info;
-    message_t         *message;
-    message_t         *relay_message;
-    uint8_t           *nexth;
-    slist_t           *hals;
-    hal_context_t     *hal;
+    ur_error_t error = UR_ERROR_NONE;
+    int16_t offset;
+    message_info_t *info;
+    message_t *message;
+    message_t *relay_message;
+    uint8_t *nexth;
+    slist_t *hals;
+    hal_context_t *hal;
     uint8_t *payload;
 
     message = (message_t *)args;

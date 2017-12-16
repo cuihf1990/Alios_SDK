@@ -10,9 +10,9 @@
 #include "hal/interfaces.h"
 
 typedef struct network_data_state_s {
-    network_data_t        network_data;
+    network_data_t network_data;
     stable_network_data_t stable_network_data;
-    slist_t               updater_list;
+    slist_t updater_list;
 } network_data_state_t;
 
 static network_data_state_t g_nd_state;
@@ -57,8 +57,8 @@ ur_error_t nd_init(void)
 
 ur_error_t nd_stable_set(stable_network_data_t *network_data)
 {
-    ur_error_t   error = UR_ERROR_FAIL;
-    int8_t       diff;
+    ur_error_t error = UR_ERROR_FAIL;
+    int8_t diff;
 
     diff = network_data->minor_version -
            g_nd_state.stable_network_data.minor_version;
@@ -101,7 +101,7 @@ uint16_t nd_get_stable_meshnetid(void)
 
 ur_error_t nd_set_stable_meshnetid(uint16_t meshnetid)
 {
-    ur_error_t     error = UR_ERROR_NONE;
+    ur_error_t error = UR_ERROR_NONE;
     stable_network_data_t network_data;
 
     if (umesh_mm_get_device_state() != DEVICE_STATE_LEADER) {
@@ -132,8 +132,8 @@ bool nd_is_subscribed_mcast(const ur_ip6_addr_t *addr)
 
 ur_error_t nd_set(network_context_t *network, network_data_t *network_data)
 {
-    ur_error_t   error = UR_ERROR_FAIL;
-    int8_t       diff;
+    ur_error_t error = UR_ERROR_FAIL;
+    int8_t diff;
     network_data_t *local_network_data;
 
     local_network_data = network? &network->network_data: &g_nd_state.network_data;
@@ -163,7 +163,7 @@ uint16_t nd_get_meshnetsize(network_context_t *network)
 
 ur_error_t nd_set_meshnetsize(network_context_t *network, uint32_t size)
 {
-    ur_error_t     error = UR_ERROR_NONE;
+    ur_error_t error = UR_ERROR_NONE;
     network_data_t network_data;
     network_data_t *local_network_data;
 

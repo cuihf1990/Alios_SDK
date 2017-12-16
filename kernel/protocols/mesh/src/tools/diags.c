@@ -88,13 +88,13 @@ static ur_error_t handle_trace_route_response(message_t *message)
 ur_error_t send_trace_route_request(network_context_t *network,
                                     ur_addr_t *dest)
 {
-    ur_error_t        error = UR_ERROR_NONE;
-    message_t         *message;
+    ur_error_t error = UR_ERROR_NONE;
+    message_t *message;
     mm_timestamp_tv_t *timestamp;
-    message_info_t    *info;
-    uint8_t           *data;
+    message_info_t *info;
+    uint8_t *data;
     uint8_t *data_orig;
-    uint16_t          length;
+    uint16_t length;
 
     length = sizeof(mm_header_t) + sizeof(mm_timestamp_tv_t);
     data = ur_mem_alloc(length);
@@ -136,13 +136,13 @@ static ur_error_t send_trace_route_response(network_context_t *network,
                                             ur_addr_t *dest,
                                             uint32_t src_timestamp)
 {
-    ur_error_t        error = UR_ERROR_NONE;
-    message_t         *message;
+    ur_error_t error = UR_ERROR_NONE;
+    message_t *message;
     mm_timestamp_tv_t *timestamp;
     message_info_t *info;
-    uint8_t           *data;
+    uint8_t *data;
     uint8_t *data_orig;
-    uint16_t          length;
+    uint16_t length;
 
     length = sizeof(mm_header_t) + sizeof(mm_timestamp_tv_t);
     data = ur_mem_alloc(length);
@@ -182,7 +182,7 @@ static ur_error_t send_trace_route_response(network_context_t *network,
 
 ur_error_t handle_diags_command(message_t *message, bool dest_reached)
 {
-    ur_error_t  error = UR_ERROR_NONE;
+    ur_error_t error = UR_ERROR_NONE;
     mm_header_t *mm_header;
     message_info_t *info;
     uint8_t *data;

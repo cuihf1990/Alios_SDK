@@ -28,10 +28,10 @@
 typedef struct mm_device_s {
     node_state_t state;
     node_mode_t  mode;
-    uint8_t      ueid[8];
-    bool         reboot_flag;
-    uint8_t      seclevel;
-    int8_t       prev_channel;
+    uint8_t ueid[8];
+    bool reboot_flag;
+    uint8_t seclevel;
+    int8_t prev_channel;
 } mm_device_t;
 
 typedef struct mesh_mgmt_state_s {
@@ -307,8 +307,8 @@ static ur_error_t sid_allocated_handler(message_info_t *info,
 
 void become_leader(void)
 {
-    ur_configs_t      configs;
-    slist_t           *networks;
+    ur_configs_t configs;
+    slist_t *networks;
     network_context_t *network;
     uint8_t channel;
 
@@ -497,7 +497,7 @@ mm_tv_t *umesh_mm_get_tv(const uint8_t *data, const uint16_t length,
                          uint8_t type)
 {
     uint16_t offset = 0;
-    mm_tv_t  *tv = NULL;
+    mm_tv_t *tv = NULL;
 
     while (offset < length) {
         tv = (mm_tv_t *)(data + offset);
@@ -929,11 +929,11 @@ exit:
 
 static ur_error_t send_sid_request(network_context_t *network)
 {
-    ur_error_t   error = UR_ERROR_NONE;
-    message_t    *message;
-    uint8_t      *data;
+    ur_error_t error = UR_ERROR_NONE;
+    message_t *message;
+    uint8_t *data;
     uint8_t *data_orig;
-    uint16_t     length;
+    uint16_t length;
     message_info_t *info;
     ur_node_id_t node_id;
     uint16_t netid;
@@ -1047,13 +1047,13 @@ static ur_error_t send_sid_response(network_context_t *network,
 
 static ur_error_t handle_sid_request(message_t *message)
 {
-    ur_error_t   error = UR_ERROR_NONE;
-    mm_node_id_tv_t  *attach_node_id;
-    mm_sid_tv_t  *src_sid;
+    ur_error_t error = UR_ERROR_NONE;
+    mm_node_id_tv_t *attach_node_id;
+    mm_sid_tv_t *src_sid;
     mm_ueid_tv_t *ueid;
     mm_mode_tv_t *mode;
-    uint8_t      *tlvs;
-    uint16_t     tlvs_length;
+    uint8_t *tlvs;
+    uint16_t tlvs_length;
     network_context_t *network;
     message_info_t *info;
     ur_node_id_t node_id;
@@ -1123,9 +1123,9 @@ static ur_error_t handle_sid_request(message_t *message)
 
 static ur_error_t handle_sid_response(message_t *message)
 {
-    ur_error_t        error = UR_ERROR_NONE;
-    uint8_t           *tlvs;
-    uint16_t          tlvs_length;
+    ur_error_t error = UR_ERROR_NONE;
+    uint8_t *tlvs;
+    uint16_t tlvs_length;
     network_context_t *network;
     message_info_t *info;
 
@@ -1159,10 +1159,10 @@ static void mesh_interface_state_callback(interface_state_t state)
 ur_error_t send_address_error(network_context_t *network, ur_addr_t *dest)
 {
     ur_error_t error = UR_ERROR_MEM;
-    message_t   *message;
-    uint8_t     *data;
+    message_t *message;
+    uint8_t *data;
     uint8_t *data_orig;
-    uint16_t    length;
+    uint16_t length;
     message_info_t *info;
 
     length = sizeof(mm_header_t);
@@ -1359,7 +1359,7 @@ static bool update_migrate_times(network_context_t *network, neighbor_t *nbr)
 static void update_network_data(network_context_t *network,
                                 mm_netinfo_tv_t *netinfo)
 {
-    int8_t         diff;
+    int8_t diff;
     network_data_t network_data;
 
     if (g_mm_state.device.state == DEVICE_STATE_LEADER) {
@@ -1378,13 +1378,13 @@ static void update_network_data(network_context_t *network,
 
 static ur_error_t handle_advertisement(message_t *message)
 {
-    uint8_t           *tlvs;
-    uint16_t          tlvs_length;
-    neighbor_t        *nbr;
-    mm_netinfo_tv_t   *netinfo;
-    mm_cost_tv_t      *path_cost;
+    uint8_t *tlvs;
+    uint16_t tlvs_length;
+    neighbor_t *nbr;
+    mm_netinfo_tv_t *netinfo;
+    mm_cost_tv_t *path_cost;
     network_context_t *network;
-    message_info_t    *info;
+    message_info_t *info;
     ur_addr_t dest;
 
     if (g_mm_state.device.state < DEVICE_STATE_DETACHED) {
@@ -1498,7 +1498,6 @@ ur_error_t umesh_mm_handle_frame_received(message_t *message)
 #ifdef CONFIG_AOS_MESH_LOWPOWER
 static void lowpower_radio_down_handler(schedule_type_t type)
 {
-
 }
 
 static void lowpower_radio_up_handler(schedule_type_t type)
@@ -1616,7 +1615,7 @@ uint8_t *umesh_mm_get_local_ueid(void)
 
 ur_error_t umesh_mm_set_mode(node_mode_t mode)
 {
-    uint8_t       num;
+    uint8_t num;
     hal_context_t *wifi_hal;
 
     num = get_hal_contexts_num();

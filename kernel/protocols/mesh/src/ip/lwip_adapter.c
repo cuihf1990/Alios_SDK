@@ -29,9 +29,9 @@ static struct igmp_group g_group;
 #endif
 
 typedef struct lwip_adapter_state_s {
-    struct netif          adpif;
+    struct netif adpif;
     ur_adapter_callback_t adapter_cb;
-    const char            interface_name[3];
+    const char interface_name[3];
 } lwip_adapter_state_t;
 
 static lwip_adapter_state_t g_la_state = {.interface_name = "ur"};
@@ -263,7 +263,7 @@ static void update_interface_ipaddr(void)
 ur_error_t ur_adapter_interface_up(void)
 {
     const mac_address_t *mac_addr;
-    struct netif        *interface;
+    struct netif *interface;
 
     interface = netif_find(g_la_state.interface_name);
 

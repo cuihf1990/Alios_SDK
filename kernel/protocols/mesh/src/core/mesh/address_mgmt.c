@@ -131,7 +131,7 @@ static void address_resolved_handler(network_context_t *network,
 static void timer_handler(void *args)
 {
     uint8_t index;
-    bool    continue_timer = false;
+    bool continue_timer = false;
     network_context_t *network;
 
     g_ar_state.timer = NULL;
@@ -615,8 +615,8 @@ ur_error_t handle_address_notification(message_t *message)
     mm_node_id_tv_t *target_node;
     mm_node_id_tv_t *attach_node;
     mm_hal_type_tv_t *hal_type;
-    uint8_t      *tlvs;
-    uint16_t     tlvs_length;
+    uint8_t *tlvs;
+    uint16_t tlvs_length;
     ur_node_id_t target;
     ur_node_id_t attach;
 
@@ -709,10 +709,10 @@ exit:
 
 static void handle_addr_cache_timer(void *args)
 {
-    sid_node_t        *node;
-    uint8_t           timeout;
+    sid_node_t *node;
+    uint8_t timeout;
+    slist_t *tmp;
     network_context_t *network = NULL;
-    slist_t           *tmp;
 
     slist_for_each_entry_safe(&g_ac_state.cache_list, tmp, node, sid_node_t, next) {
         switch (node->type) {
