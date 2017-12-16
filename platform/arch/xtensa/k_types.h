@@ -16,15 +16,10 @@
 typedef char     name_t;
 typedef uint32_t sem_count_t;
 typedef uint32_t cpu_stack_t;
-
 typedef uint32_t hr_timer_t;
 typedef uint32_t lr_timer_t;
-
-typedef uint32_t tick_t;
-typedef uint64_t idle_count_t;
 typedef uint32_t mutex_nested_t;
 typedef uint8_t  suspend_nested_t;
-
 typedef uint64_t ctx_switch_t;
 #endif /* TYPES_H */
 
