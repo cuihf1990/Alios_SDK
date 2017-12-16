@@ -19,9 +19,9 @@ kstat_t ringbuf_init(k_ringbuf_t *p_ringbuf, void *buf, size_t len, size_t type,
 }
 static size_t ringbuf_headlen_compress(size_t head_len, uint8_t *cmp_buf)
 {
-    size_t len_bytes = 0;
+    size_t   len_bytes = 0;
     uint8_t *p_len   = NULL;
-    size_t   be_len  = 0;
+    uint32_t be_len  = 0;
 
     be_len = krhino_ntohl(head_len);
     p_len = (uint8_t *)&be_len;
