@@ -240,6 +240,9 @@ else
 BINS_DOWNLOAD_ADDR = 0x13200
 endif # BINS
 
+OBJCOPY_BIN_FLAGS  := -O binary -R .eh_frame -R .init -R .fini -R .comment -R .ARM.attributes 
+OBJCOPY_HEX_FLAGS  := -O ihex -R .eh_frame -R .init -R .fini -R .comment -R .ARM.attributes
+
 LINK_OUTPUT_SUFFIX :=.elf
 BIN_OUTPUT_SUFFIX  :=.bin
 HEX_OUTPUT_SUFFIX  :=.hex

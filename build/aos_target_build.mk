@@ -282,11 +282,12 @@ $(STRIPPED_LINK_OUTPUT_FILE): $(LINK_OUTPUT_FILE)
 # Bin file target - uses objcopy to convert the stripped elf into a binary file
 $(BIN_OUTPUT_FILE): $(STRIPPED_LINK_OUTPUT_FILE)
 	$(QUIET)$(ECHO) Making $(notdir $@)
-	$(QUIET)$(OBJCOPY) -O binary -R .eh_frame -R .init -R .fini -R .comment -R .ARM.attributes $< $@
+	$(QUIET)$(OBJCOPY) $(OBJCOPY_BIN_FLAGS) $< $@
 	
 $(HEX_OUTPUT_FILE): $(STRIPPED_LINK_OUTPUT_FILE)
 	$(QUIET)$(ECHO) Making $(notdir $@)
-	$(QUIET)$(OBJCOPY) -O ihex -R .eh_frame -R .init -R .fini -R .comment -R .ARM.attributes $< $@
+	$(QUIET)$(OBJCOPY) $(OBJCOPY_HEX_FLAGS) $< $@
+
 # Linker output target - This links all component & resource libraries and objects into an output executable
 # CXX is used for compatibility with C++
 #$(AOS_SDK_CONVERTER_OUTPUT_FILE): $(LINK_OUTPUT_FILE)
