@@ -515,7 +515,7 @@
 
   <Group>
     <GroupName>platform\mcu\stm32l4xx\src\STM32L496G-Discovery</GroupName>
-    <tvExp>0</tvExp>
+    <tvExp>1</tvExp>
     <tvExpOptDlg>0</tvExpOptDlg>
     <cbSel>0</cbSel>
     <RteFlg>0</RteFlg>
@@ -971,7 +971,7 @@
 
   <Group>
     <GroupName>platform\arch\arm\armv7m\armcc\m4</GroupName>
-    <tvExp>0</tvExp>
+    <tvExp>1</tvExp>
     <tvExpOptDlg>0</tvExpOptDlg>
     <cbSel>0</cbSel>
     <RteFlg>0</RteFlg>
@@ -994,8 +994,8 @@
       <tvExp>0</tvExp>
       <tvExpOptDlg>0</tvExpOptDlg>
       <bDave2>0</bDave2>
-      <PathWithFileName>..\..\..\..\platform\arch\arm\armv7m\armcc\m4\port_c.s</PathWithFileName>
-      <FilenameWithoutPath>port_c.s</FilenameWithoutPath>
+      <PathWithFileName>..\..\..\..\platform\arch\arm\armv7m\armcc\m4\port_s.s</PathWithFileName>
+      <FilenameWithoutPath>port_s.s</FilenameWithoutPath>
       <RteFlg>0</RteFlg>
       <bShared>0</bShared>
     </File>
