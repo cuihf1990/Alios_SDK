@@ -451,6 +451,7 @@ $(NAME)_SOURCES	 += hal/gpio.c \
                     hal/hw.c \
                     hal/flash.c \
 					hal/uart.c \
+					hal/i2c.c \
 					hal/ringbuf.c \
                     hal/StringUtils.c \
 					hal/wifi_port.c \
