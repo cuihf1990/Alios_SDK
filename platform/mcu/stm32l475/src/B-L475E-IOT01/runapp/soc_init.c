@@ -314,7 +314,6 @@ GETCHAR_PROTOTYPE
 
 int32_t hal_uart_send(uart_dev_t *uart, const void *data, uint32_t size, uint32_t timeout) {
     HAL_UART_StateTypeDef state = HAL_UART_STATE_BUSY_TX;
-    int ret;
     if(uart==NULL||data==NULL) {
       return -EINVAL;
     }
