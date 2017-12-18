@@ -35,6 +35,11 @@ else
 $(NAME)_DEFINES     += LWIP_ENABLED
 endif
 
+ifeq ($(COMPILER),armcc)
+$(NAME)_PREBUILT_LIBRARY := lib/$(HOST_ARCH)/KEIL/libmbedtls.lib
+else ifeq  ($(COMPILER),iar)
+$(NAME)_PREBUILT_LIBRARY := lib/$(HOST_ARCH)/IAR/libmbedtls.lib
+else
 ifeq ($(HOST_ARCH), linux)
 $(NAME)_PREBUILT_LIBRARY := lib/$(HOST_ARCH)/libmbedtls.a
 ifeq (1,$(with_lwip))
@@ -52,6 +57,7 @@ $(NAME)_PREBUILT_LIBRARY := lib/$(HOST_ARCH)/libmbedtls.a
 ifeq ($(DEBUG), yes)
 $(info using libmbedtls debug version)
 $(NAME)_PREBUILT_LIBRARY := lib/$(HOST_ARCH)/libmbedtls.a.dbg
+endif
 endif
 endif
 
