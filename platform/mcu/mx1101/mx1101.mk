@@ -47,5 +47,6 @@ $(NAME)_CFLAGS  += -Wno-return-type -Wno-unused-function -Wno-unused-but-set-var
 $(NAME)_CFLAGS  += -Wno-unused-value -Wno-strict-aliasing
 
 $(NAME)_SOURCES := aos/soc_impl.c
+$(NAME)_SOURCES := hal/i2c.c
 
 $(NAME)_COMPONENTS += platform/mcu/mx1101/sdk

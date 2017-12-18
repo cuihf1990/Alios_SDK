@@ -94,6 +94,7 @@ $(NAME)_SOURCES := platform_init.c          \
                    aos/soc_impl.c                \
                    aos/trace_impl.c             \
                    aos/aos.c                    \
+                   hal/i2c.c                    \
                    hal/hw.c hal/uart.c hal/flash.c  
 
 
