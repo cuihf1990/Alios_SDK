@@ -30,10 +30,10 @@ GLOBAL_INCLUDES += ../../arch/arm/armv7m/gcc/m4
 
 GLOBAL_INCLUDES += \
                    src/common/csp/wifi/inc     \
-		   src/B-L475E-IOT01/include   \
+                   src/B-L475E-IOT01/include   \
                    src/B-L475E-IOT01/runapp    \
                    Drivers/STM32L4xx_HAL_Driver/Inc \
-		   Drivers/STM32L4xx_HAL_Driver/Inc/Legacy \
+                   Drivers/STM32L4xx_HAL_Driver/Inc/Legacy \
                    Drivers/BSP/B-L475E-IOT01 \
                    Drivers/BSP/Components/es_wifi \
                    Drivers/BSP/Components/hts221 \
@@ -42,13 +42,12 @@ GLOBAL_INCLUDES += \
                    Drivers/BSP/Components/lsm6dsl \
                    Drivers/BSP/Components/vl53l0x \
                    Drivers/CMSIS/Include \
-		   ../../../include/hal
-
+                   ../../../include/hal
 
 GLOBAL_CFLAGS += -DSTM32L475xx
 
 ifeq ($(COMPILER),armcc)
-GLOBAL_CFLAGS   += --c99 --cpu=Cortex-M4.fp -D__MICROLIB -g --apcs=interwork --split_sections
+GLOBAL_CFLAGS   += --c99 --cpu=7E-M -D__MICROLIB -g --apcs=interwork --split_sections
 else
 GLOBAL_CFLAGS += -mcpu=cortex-m4 \
                  -march=armv7-m  \
@@ -58,15 +57,15 @@ GLOBAL_CFLAGS += -mcpu=cortex-m4 \
 endif
 
 ifeq ($(COMPILER),armcc)
-GLOBAL_ASMFLAGS += --cpu=Cortex-M4.fp -g --apcs=interwork --pd "__MICROLIB SETA 1" --pd "STM32L475xx SETA 1"
+GLOBAL_ASMFLAGS += --cpu=7E-M -g --apcs=interwork --pd "__MICROLIB SETA 1" --pd "STM32L475xx SETA 1"
 else ifeq ($(COMPILER),iar)
 else
 endif
 
 ifeq ($(COMPILER),armcc)
-GLOBAL_LDFLAGS += -L --cpu=Cortex-M4.fp   \
-		  -L --strict \
-		  -L --xref -L --callgraph -L --symbols \
+GLOBAL_LDFLAGS += -L --cpu=7E-M   \
+                  -L --strict \
+                  -L --xref -L --callgraph -L --symbols \
                   -L --info=sizes -L --info=totals -L --info=unused -L --info=veneers -L --info=summarysizes
 else
 GLOBAL_LDFLAGS += -mcpu=cortex-m4  \
