@@ -48,7 +48,7 @@ GLOBAL_INCLUDES += \
 GLOBAL_CFLAGS += -DSTM32L475xx
 
 ifeq ($(COMPILER),armcc)
-GLOBAL_CFLAGS += --c99 -c --cpu Cortex-M4.fp -D__MICROLIB -g --apcs=interwork --split_sections
+GLOBAL_CFLAGS   += --c99 --cpu=Cortex-M4.fp -D__MICROLIB -g --apcs=interwork --split_sections
 else
 GLOBAL_CFLAGS += -mcpu=cortex-m4 \
                  -march=armv7-m  \
@@ -58,8 +58,13 @@ GLOBAL_CFLAGS += -mcpu=cortex-m4 \
 endif
 
 ifeq ($(COMPILER),armcc)
+GLOBAL_ASMFLAGS += --cpu=Cortex-M4.fp -g --apcs=interwork --pd "__MICROLIB SETA 1" --pd "STM32L475xx SETA 1"
+else ifeq ($(COMPILER),iar)
+else
+endif
+
+ifeq ($(COMPILER),armcc)
 GLOBAL_LDFLAGS += -L --cpu=Cortex-M4.fp   \
-                  -L --library_type=microlib \
 		  -L --strict \
 		  -L --xref -L --callgraph -L --symbols \
                   -L --info=sizes -L --info=totals -L --info=unused -L --info=veneers -L --info=summarysizes
@@ -141,8 +146,10 @@ $(NAME)_SOURCES := src/B-L475E-IOT01/runapp/stm32l4xx_hal_msp.c      \
 
 ifeq ($(COMPILER),armcc)
 $(NAME)_SOURCES += src/B-L475E-IOT01/runapp/startup_stm32l475xx_armcc.s
+$(NAME)_LINK_FILES += src/B-L475E-IOT01/runapp/startup_stm32l475xx_armcc.o
 else ifeq ($(COMPILER),iar)
 $(NAME)_SOURCES += src/B-L475E-IOT01/runapp/startup_stm32l475xx_icc.s
 else
 $(NAME)_SOURCES += src/B-L475E-IOT01/runapp/startup_stm32l475xx_gcc.s
 endif
+

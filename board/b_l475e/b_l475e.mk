@@ -25,7 +25,11 @@ GLOBAL_CFLAGS += -DSYSINFO_OS_VERSION=\"$(CONFIG_SYSINFO_OS_VERSION)\"
 GLOBAL_CFLAGS += -DSYSINFO_PRODUCT_MODEL=\"$(CONFIG_SYSINFO_PRODUCT_MODEL)\"
 GLOBAL_CFLAGS += -DSYSINFO_DEVICE_NAME=\"$(CONFIG_SYSINFO_DEVICE_NAME)\"
 
+ifeq ($(COMPILER),armcc)
+else ifeq ($(COMPILER),iar)
+else
 GLOBAL_LDFLAGS  += -L $(SOURCE_ROOT)/board/b_l475e
+endif
 
 # Global defines
 # HSE_VALUE = STM32 crystal frequency = 26MHz (needed to make UART work correctly)
