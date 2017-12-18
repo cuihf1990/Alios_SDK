@@ -49,7 +49,7 @@
 #include "soc_init.h"
 #include "hal/soc/uart.h"
 #include "aos/kernel.h"
-#include "k_types.h"
+#include "k_api.h"
 #include "errno.h"
 
 #if defined(__ICCARM__)
