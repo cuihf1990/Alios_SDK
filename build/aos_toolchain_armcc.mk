@@ -71,18 +71,21 @@ CPU_LDFLAGS    :=
 #MAPFILE_PARSER            :=$(MAKEFILES_PATH)/scripts/map_parse_armcc.py
 
 # $(1) is map file, $(2) is CSV output file
-COMPILER_SPECIFIC_MAPFILE_DISPLAY_SUMMARY = $(PYTHON) $(MAPFILE_PARSER) $(1)
+#COMPILER_SPECIFIC_MAPFILE_DISPLAY_SUMMARY = $(PYTHON) $(MAPFILE_PARSER) $(1)
+#TODO treat mapfile
 
-OBJDUMP := "$(TOOLCHAIN_PATH)$(TOOLCHAIN_PREFIX)fromelf$(EXECUTABLE_SUFFIX)"
-OBJCOPY := "$(TOOLCHAIN_PATH)$(TOOLCHAIN_PREFIX)fromelf$(EXECUTABLE_SUFFIX)"
+OBJDUMP := "$(TOOLCHAIN_PATH)fromelf$(EXECUTABLE_SUFFIX)"
+OBJCOPY := "$(TOOLCHAIN_PATH)fromelf$(EXECUTABLE_SUFFIX)"
 
 #no need to strip in arm fromelf
-#STRIP   := "$(TOOLCHAIN_PATH)$(TOOLCHAIN_PREFIX)fromelf$(EXECUTABLE_SUFFIX)"
+STRIP   := "$(TOOLCHAIN_PATH)fromelf$(EXECUTABLE_SUFFIX)"
 
-OBJCOPY_BIN_FLAGS  := --bin --strip=all 
-OBJCOPY_HEX_FLAGS  := --ihex --strip=all
+STRIP_OUTPUT_PREFIX     := --output=
+STRIPFLAGS              := --strip=debug,symbols --elf 
+OBJCOPY_BIN_FLAGS       := --bin 
+OBJCOPY_OUTPUT_PREFIX   := --output=
+OBJCOPY_HEX_FLAGS       := --i32
 
 LINK_OUTPUT_SUFFIX  :=.axf
 BIN_OUTPUT_SUFFIX   :=.bin
 HEX_OUTPUT_SUFFIX   :=.hex
-

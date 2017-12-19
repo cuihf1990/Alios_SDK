@@ -277,16 +277,16 @@ $(LINK_OUTPUT_FILE): $(LINK_LIBS) $(AOS_SDK_LINK_SCRIPT) $(LINK_OPTS_FILE) $(LIN
 
 # Stripped elf file target - Strips the full elf file and outputs to a new .stripped.elf file
 $(STRIPPED_LINK_OUTPUT_FILE): $(LINK_OUTPUT_FILE)
-	$(QUIET)$(STRIP) -o $@ $(STRIPFLAGS) $<
+	$(QUIET)$(STRIP) $(STRIP_OUTPUT_PREFIX)$@ $(STRIPFLAGS) $<
 	
 # Bin file target - uses objcopy to convert the stripped elf into a binary file
 $(BIN_OUTPUT_FILE): $(STRIPPED_LINK_OUTPUT_FILE)
 	$(QUIET)$(ECHO) Making $(notdir $@)
-	$(QUIET)$(OBJCOPY) $(OBJCOPY_BIN_FLAGS) $< $@
+	$(QUIET)$(OBJCOPY) $(OBJCOPY_BIN_FLAGS) $< $(OBJCOPY_OUTPUT_PREFIX)$@ 
 	
 $(HEX_OUTPUT_FILE): $(STRIPPED_LINK_OUTPUT_FILE)
 	$(QUIET)$(ECHO) Making $(notdir $@)
-	$(QUIET)$(OBJCOPY) $(OBJCOPY_HEX_FLAGS) $< $@
+	$(QUIET)$(OBJCOPY) $(OBJCOPY_HEX_FLAGS) $< $(OBJCOPY_OUTPUT_PREFIX)$@
 
 # Linker output target - This links all component & resource libraries and objects into an output executable
 # CXX is used for compatibility with C++
