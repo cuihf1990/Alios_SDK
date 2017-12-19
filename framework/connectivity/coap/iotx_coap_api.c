@@ -25,6 +25,7 @@
 
 #define IOTX_COAP_ONLINE_DTLS_SERVER_URL "coaps://%s.iot-as-coap.cn-shanghai.aliyuncs.com:5684"
 
+#define NULL_STR  "NULL"
 
 typedef struct {
     char                *p_auth_token;
@@ -100,7 +101,7 @@ static void iotx_device_name_auth_callback(void *user, void *p_message)
     }
     COAP_DEBUG("Receive response message:\r\n");
     COAP_DEBUG("* Response Code : 0x%x\r\n", message->header.code);
-    COAP_DEBUG("* Payload: %s\r\n", message->payload);
+    COAP_DEBUG("* Payload: %s\r\n", message->payload==NULL?(const char*)message->payload:NULL_STR);
 
     switch (message->header.code) {
         case COAP_MSG_CODE_205_CONTENT: {
@@ -161,7 +162,7 @@ void iotx_event_notifyer(unsigned int code, CoAPMessage *message)
         return ;
     }
 
-    COAP_DEBUG("Error code: 0x%x, payload: %s\r\n", code, message->payload);
+    COAP_DEBUG("Error code: 0x%x, payload: %s\r\n", code, message->payload?(const char *)message->payload:NULL_STR);
     switch (code) {
         case COAP_MSG_CODE_402_BAD_OPTION:
         case COAP_MSG_CODE_401_UNAUTHORIZED: {
@@ -190,7 +191,7 @@ static void iotx_get_well_known_handler(void *arg, void *p_response)
     IOT_CoAP_GetMessageCode(p_response, &resp_code);
     IOT_CoAP_GetMessagePayload(p_response, &p_payload, &len);
     COAP_INFO("[APPL]: Message response code: %d\r\n", resp_code);
-    COAP_INFO("[APPL]: Len: %d, Payload: %s, \r\n", len, p_payload);
+    COAP_INFO("[APPL]: Len: %d, Payload: %s, \r\n", len, p_payload?(const char *)p_payload:NULL_STR);
 }
 
 
