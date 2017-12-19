@@ -53,8 +53,10 @@ static void coap_service_event(input_event_t *event, void *priv_data) {
     if (event->code != CODE_SYS_ON_COAP_AUTHED) {
         return;
     }
-        user_code_start();
-        ota_init();
+
+    ota_init();
+    user_code_start();
+    
 }
 
 int iotx_set_devinfo(iotx_deviceinfo_t *p_devinfo)
@@ -146,8 +148,8 @@ static void coap_client_example() {
     config.p_devinfo = &deviceinfo;
 
     p_ctx = IOT_CoAP_Init(&config);
-    aos_register_event_filter(EV_SYS,  coap_service_event, NULL);
     if(NULL != p_ctx){
+        aos_register_event_filter(EV_SYS,  coap_service_event, NULL);
         IOT_CoAP_DeviceNameAuth(p_ctx);
     }
     else{
