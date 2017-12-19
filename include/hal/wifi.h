@@ -174,13 +174,23 @@ struct hal_wifi_module_s {
     int  (*suspend_station)(hal_wifi_module_t *m);
     int  (*suspend_soft_ap)(hal_wifi_module_t *m);
     int  (*set_channel)(hal_wifi_module_t *m, int ch);
+    int  (*get_channel)(hal_wifi_module_t *m);
+    int  (*get_channel_list)(hal_wifi_module_t *m, const uint8_t **chnlist);
     void (*start_monitor)(hal_wifi_module_t *m);
     void (*stop_monitor)(hal_wifi_module_t *m);
     void (*register_monitor_cb)(hal_wifi_module_t *m, monitor_data_cb_t fn);
     void (*register_wlan_mgnt_monitor_cb)(hal_wifi_module_t *m, monitor_data_cb_t fn);
     int  (*wlan_send_80211_raw_frame)(hal_wifi_module_t *m, uint8_t *buf, int len);
+
+    /* debug related */
     void (*start_debug_mode)(hal_wifi_module_t *m);
     void (*stop_debug_mode)(hal_wifi_module_t *m);
+
+    /* mesh related */
+    void (*mesh_register_cb)(hal_wifi_module_t *m, monitor_data_cb_t fn);
+    void (*mesh_set_bssid)(hal_wifi_module_t *m, const uint8_t *mac);
+    int  (*mesh_radio_sleep)(hal_wifi_module_t *m);
+    int  (*mesh_radio_wakeup)(hal_wifi_module_t *m);
 };
 
 /**
@@ -340,6 +350,25 @@ int hal_wifi_suspend_soft_ap(hal_wifi_module_t *m);
 int hal_wifi_set_channel(hal_wifi_module_t *m, int ch);
 
 /**
+ * Get the channel of the wifi instance.
+ *
+ * @param[in]  m  the wifi instance, NULL if default.
+ *
+ * @return     -1 on failure, otherwise current channel number.
+ */
+int hal_wifi_get_channel(hal_wifi_module_t *m);
+
+/**
+ * Get the channel list of the wifi instance.
+ *
+ * @param[in]  m  the wifi instance, NULL if default.
+ * @param[out]  chnlist  channel list in array
+ *
+ * @return     -1 on failure, otherwise number of available channels.
+ */
+int hal_wifi_get_channel_list(hal_wifi_module_t *m, const uint8_t **chnlist);
+
+/**
  * Start the monitor mode of the wifi instance.
  *
  * @param[in]  m  the wifi instance, NULL if default.
@@ -360,6 +389,23 @@ void hal_wifi_stop_wifi_monitor(hal_wifi_module_t *m);
  * @param[in]  fn  the callback function.
  */
 void hal_wifi_register_monitor_cb(hal_wifi_module_t *m, monitor_data_cb_t fn);
+
+/**
+ * Register management frame montior callback on the wifi instance.
+ *
+ * @param[in]  m   the wifi instance, NULL if default.
+ * @param[in]  fn  the callback function.
+ */
+void hal_wlan_register_mgnt_monitor_cb(hal_wifi_module_t *m, monitor_data_cb_t fn);
+
+/**
+ * Send 802.11 raw frame
+ *
+ * @param[in]  m   the wifi instance, NULL if default.
+ * @param[in]  buf frame buffer.
+ * @param[in]  len length of frame buffer.
+ */
+int hal_wlan_send_80211_raw_frame(hal_wifi_module_t *m, uint8_t *buf, int len);
 
 /**
  * Start debug mode of the wifi instance.
