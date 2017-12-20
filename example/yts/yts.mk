@@ -10,5 +10,7 @@ $(NAME)_COMPONENTS += protocols.net protocols.mesh dda netmgr modules.fs.fatfs f
 
 GLOBAL_LDFLAGS += -lreadline -lncurses
 GLOBAL_DEFINES += CONFIG_AOS_MESHYTS DEBUG YTS_LINUX
+else
+$(NAME)_COMPONENTS += cli
 endif
 
