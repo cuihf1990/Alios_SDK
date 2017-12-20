@@ -398,7 +398,7 @@ int32_t hal_uart_send(uart_dev_t *uart, const void *data, uint32_t size, uint32_
 
     aos_mutex_unlock(&stm32_uart[uart->port].uart_tx_mutex);
 
-    return size;
+    return 0;
 }
 
 int32_t hal_uart_recv(uart_dev_t *uart, void *data, uint32_t expect_size, uint32_t *recv_size, uint32_t timeout) {
