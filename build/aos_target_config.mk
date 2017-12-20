@@ -219,6 +219,8 @@ CC :=
 
 ifeq ($(COMPILER),armcc)
 include $(MAKEFILES_PATH)/aos_toolchain_armcc.mk
+else ifeq ($(COMPILER),iar)
+include $(MAKEFILES_PATH)/aos_toolchain_iar.mk
 else
 include $(MAKEFILES_PATH)/aos_toolchain_gcc.mk
 endif

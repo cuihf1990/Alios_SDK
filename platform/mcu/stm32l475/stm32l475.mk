@@ -48,6 +48,10 @@ GLOBAL_CFLAGS += -DSTM32L475xx
 
 ifeq ($(COMPILER),armcc)
 GLOBAL_CFLAGS   += --c99 --cpu=7E-M -D__MICROLIB -g --apcs=interwork --split_sections
+else ifeq ($(COMPILER),iar)
+GLOBAL_CFLAGS += --cpu=Cortex-M4 \
+                 --cpu_mode=thumb \
+                 --endian=little
 else
 GLOBAL_CFLAGS += -mcpu=cortex-m4 \
                  -march=armv7-m  \
@@ -67,6 +71,10 @@ GLOBAL_LDFLAGS += -L --cpu=7E-M   \
                   -L --strict \
                   -L --xref -L --callgraph -L --symbols \
                   -L --info=sizes -L --info=totals -L --info=unused -L --info=veneers -L --info=summarysizes
+else ifeq ($(COMPILER),iar)
+GLOBAL_LDFLAGS += --cpu=Cortex-M4 \
+                  --entry main
+
 else
 GLOBAL_LDFLAGS += -mcpu=cortex-m4  \
                   -mlittle-endian  \
@@ -79,6 +87,7 @@ endif
 ifeq ($(COMPILER),armcc)
 GLOBAL_LDFLAGS += -L --scatter=platform/mcu/stm32l475/B-L475E-IOT01.sct
 else ifeq ($(COMPILER),iar)
+GLOBAL_LDFLAGS += --config platform/mcu/stm32l475/STM32L475.icf
 else
 GLOBAL_LDFLAGS += -T platform/mcu/stm32l475/STM32L475VGTx_FLASH.ld
 endif

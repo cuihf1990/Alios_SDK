@@ -78,4 +78,10 @@ void __assert_func(const char * a, int b, const char * c, const char *d)
     while (1);
 }
 
+/*TO DO*/
+void __write()
+{
+
+}
+
  #endif
