@@ -680,9 +680,9 @@
               <FilePath>..\..\..\..\platform\arch\arm\armv7m\armcc\m4\port_c.c</FilePath>
             </File>
             <File>
-              <FileName>port_c.s</FileName>
+              <FileName>port_s.s</FileName>
               <FileType>2</FileType>
-              <FilePath>..\..\..\..\platform\arch\arm\armv7m\armcc\m4\port_c.s</FilePath>
+              <FilePath>..\..\..\..\platform\arch\arm\armv7m\armcc\m4\port_s.s</FilePath>
             </File>
           </Files>
         </Group>
