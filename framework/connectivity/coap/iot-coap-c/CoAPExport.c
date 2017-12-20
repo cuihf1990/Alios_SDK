@@ -16,6 +16,7 @@
 
 #define COAP_DEFAULT_SCHEME      "coap" /* the default scheme for CoAP URIs */
 #define COAP_DEFAULT_HOST_LEN    128
+#define NULL_STR                 "NULL"
 
 unsigned int CoAPUri_parse(char *p_uri, coap_address_t *p_addr,
                            coap_endpoint_type *p_endpoint_type, char host[COAP_DEFAULT_HOST_LEN])
@@ -76,12 +77,12 @@ unsigned int CoAPUri_parse(char *p_uri, coap_address_t *p_addr,
         memset(host, 0x00, COAP_DEFAULT_HOST_LEN);
         strncpy(host , p, q - p);
     }
-    COAP_DEBUG("The host name is: %s\r\n", host);
+    COAP_DEBUG("The host name is: %s\r\n", host?host:NULL_STR);
     ret = HAL_UDP_resolveAddress(host, p_addr->addr);
     if (0 != ret) {
         return COAP_ERROR_DNS_FAILED;
     }
-    COAP_DEBUG("The address is: %s\r\n", p_addr->addr);
+    COAP_DEBUG("The address is: %s\r\n", p_addr->addr?p_addr->addr:NULL_STR);
 
     if (len && *q == ':') {
         p = ++q;

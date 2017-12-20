@@ -82,8 +82,12 @@ OBJCOPY := "$(TOOLCHAIN_PATH)$(TOOLCHAIN_PREFIX)csky-abiv2-elf-objcopy$(EXECUTAB
 STRIP   := "$(TOOLCHAIN_PATH)$(TOOLCHAIN_PREFIX)csky-abiv2-elf-strip$(EXECUTABLE_SUFFIX)"
 NM      := "$(TOOLCHAIN_PATH)$(TOOLCHAIN_PREFIX)csky-abiv2-elf-nm$(EXECUTABLE_SUFFIX)"
 
+STRIP_OUTPUT_PREFIX := -o
+OBJCOPY_BIN_FLAGS   := -O binary -R .eh_frame -R .init -R .fini -R .comment -R .ARM.attributes
+OBJCOPY_HEX_FLAGS   := -O ihex -R .eh_frame -R .init -R .fini -R .comment -R .ARM.attributes
+
 LINK_OUTPUT_SUFFIX  :=.elf
-BIN_OUTPUT_SUFFIX :=.bin
-HEX_OUTPUT_SUFFIX :=.hex
+BIN_OUTPUT_SUFFIX   :=.bin
+HEX_OUTPUT_SUFFIX   :=.hex
 
 endif
