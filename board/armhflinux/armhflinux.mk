@@ -11,7 +11,6 @@ GLOBAL_CFLAGS += -I$(SOURCE_ROOT)/board/armhflinux/include
 GLOBAL_LDFLAGS += -L$(SOURCE_ROOT)/board/armhflinux/lib
 GLOBAL_DEFINES += LINUX_WIFI_MESH_IF_NAME=\"mon0\" RHINO_CONFIG_CPU_NUM=1 RHINO_CONFIG_TASK_STACK_CUR_CHECK=1
 
-CURRENT_TIME = $(shell /bin/date +%Y%m%d.%H%M)
 define get-os-version
 "AOS-R"-$(CURRENT_TIME)
 endef
