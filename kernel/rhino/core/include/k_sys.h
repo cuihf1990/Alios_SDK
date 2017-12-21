@@ -11,20 +11,23 @@
 #define RHINO_TRUE         1u
 
 #define RHINO_NO_WAIT      0u
-#define RHINO_WAIT_FOREVER 0xffffffffu
 
-typedef uint32_t        tick_t;
+#define MAX_TIMER_TICKS ((tick_t)-1 >> 1)
 
 #if (RHINO_CONFIG_COMPILER_64_BIT > 0)
+#define RHINO_WAIT_FOREVER ((uint64_t)-1)
 typedef uint64_t        sys_time_t;
 typedef int64_t         sys_time_i_t;
 typedef uint64_t        idle_count_t;
-#define MAX_TIMER_TICKS ((tick_t)-1)
+typedef uint64_t        tick_t;
+typedef int64_t         tick_i_t;
 #else
+#define RHINO_WAIT_FOREVER ((uint32_t)-1)
 typedef uint32_t        sys_time_t;
 typedef int32_t         sys_time_i_t;
 typedef uint32_t        idle_count_t;
-#define MAX_TIMER_TICKS ((tick_t)-1 >> 1)
+typedef uint32_t        tick_t;
+typedef int32_t         tick_i_t;
 #endif
 
 #if (RHINO_CONFIG_INTRPT_STACK_OVF_CHECK > 0)
