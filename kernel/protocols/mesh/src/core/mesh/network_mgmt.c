@@ -313,13 +313,17 @@ void umesh_network_mgmt_register_callback(discovered_handler_t handler)
 
 static void handle_start_discover_timer(void *args)
 {
-    start_discover();
+    if ((umesh_get_mode() & MODE_LEADER) == 0) {
+        start_discover();
+    }
 }
 
 static void start_discover_timer(void)
 {
-    ur_start_timer(&g_nm_state.discover_start_timer, ACTIVE_DISCOVER_INTERVAL,
-                   handle_start_discover_timer, NULL);
+    if ((umesh_get_mode() & MODE_LEADER) == 0) {
+        ur_start_timer(&g_nm_state.discover_start_timer, ACTIVE_DISCOVER_INTERVAL,
+                       handle_start_discover_timer, NULL);
+    }
 }
 
 static ur_error_t mesh_interface_up(void)
@@ -327,8 +331,7 @@ static ur_error_t mesh_interface_up(void)
     MESH_LOG_DEBUG("network mgmt mesh interface up handler");
 
     ur_stop_timer(&g_nm_state.discover_start_timer, NULL);
-    if (umesh_get_device_state() == DEVICE_STATE_LEADER &&
-        (umesh_get_mode() & MODE_LEADER) == 0) {
+    if (umesh_get_device_state() == DEVICE_STATE_LEADER) {
         start_discover_timer();
     }
     return UR_ERROR_NONE;
