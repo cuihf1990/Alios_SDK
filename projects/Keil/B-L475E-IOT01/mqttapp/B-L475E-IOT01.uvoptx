@@ -839,8 +839,8 @@
       <tvExp>0</tvExp>
       <tvExpOptDlg>0</tvExpOptDlg>
       <bDave2>0</bDave2>
-      <PathWithFileName>..\..\..\..\platform\arch\arm\armv7m\armcc\m4\port_c.s</PathWithFileName>
-      <FilenameWithoutPath>port_c.s</FilenameWithoutPath>
+      <PathWithFileName>..\..\..\..\platform\arch\arm\armv7m\armcc\m4\port_s.s</PathWithFileName>
+      <FilenameWithoutPath>port_s.s</FilenameWithoutPath>
       <RteFlg>0</RteFlg>
       <bShared>0</bShared>
     </File>

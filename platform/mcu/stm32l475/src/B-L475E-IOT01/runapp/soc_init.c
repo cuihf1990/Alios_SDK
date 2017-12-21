@@ -46,6 +46,7 @@
   */
 
 /* Includes ------------------------------------------------------------------*/
+#include "board.h"
 #include "soc_init.h"
 #include "hal/soc/uart.h"
 #include "aos/kernel.h"
@@ -68,15 +69,18 @@ static volatile uint8_t button_flags = 0;
 
 stm32_uart_t stm32_uart[COMn];
 
+uart_dev_t   uart_0;
+
 static uart_dev_t console_uart={
-  .port=COM1,
+  .port=STDIO_UART,
 };
 /* Private function prototypes -----------------------------------------------*/
 static void SystemClock_Config(void);
 //static void Console_UART_Init(void);
-static int UART_Init(COM_TypeDef com);
+static int UART_Init(uart_dev_t *uart);
 static void RTC_Init(void);
 static void Button_ISR(void);
+static int default_UART_Init();
 
 /* Private functions ---------------------------------------------------------*/
 
@@ -107,9 +111,8 @@ void stm32_soc_init(void)
   /* RTC init */
   RTC_Init();
   /* UART console init */
-  //Console_UART_Init(); 
-  UART_Init(COM1); 
-  UART_Init(COM4); 
+  default_UART_Init(); 
+
 }
 
 /**
@@ -240,34 +243,91 @@ uint8_t Button_WaitForPush(uint32_t delay)
 }
 
 
-static int UART_Init(COM_TypeDef com)
+static int UART_Init(uart_dev_t *uart)
 {
-  switch(com){
-    case COM1:
-      stm32_uart[com].handle.Instance = USART1;
-      break;
-    case COM4:
-      stm32_uart[com].handle.Instance = UART4;
-      break;
-    default:
-      return -1;
-  }  
-  stm32_uart[com].handle.Init.BaudRate = 115200;
-  stm32_uart[com].handle.Init.WordLength = UART_WORDLENGTH_8B;
-  stm32_uart[com].handle.Init.StopBits = UART_STOPBITS_1;
-  stm32_uart[com].handle.Init.Parity = UART_PARITY_NONE;
-  stm32_uart[com].handle.Init.Mode = UART_MODE_TX_RX;
-  stm32_uart[com].handle.Init.HwFlowCtl = UART_HWCONTROL_NONE;
-  stm32_uart[com].handle.Init.OverSampling = UART_OVERSAMPLING_16;
-  stm32_uart[com].handle.Init.OneBitSampling = UART_ONE_BIT_SAMPLE_DISABLE;
-  stm32_uart[com].handle.AdvancedInit.AdvFeatureInit = UART_ADVFEATURE_NO_INIT;
-  BSP_COM_Init(com,&stm32_uart[com].handle);
-  aos_mutex_new(&stm32_uart[com].uart_tx_mutex);
-  aos_mutex_new(&stm32_uart[com].uart_rx_mutex);
-  aos_sem_new(&stm32_uart[com].uart_tx_sem, 0);
-  aos_sem_new(&stm32_uart[com].uart_rx_sem, 0);
-  return 0;
+
+    switch(uart->port){
+        case COM1:
+          stm32_uart[uart->port].handle.Instance = USART1;
+          break;
+        case COM4:
+          stm32_uart[uart->port].handle.Instance = UART4;
+          break;
+        default:
+          return -1;
+    }  
+    
+    switch(uart->config.data_width){
+        case DATA_WIDTH_7BIT:
+            stm32_uart[uart->port].handle.Init.WordLength = UART_WORDLENGTH_7B;
+            break;
+        case DATA_WIDTH_8BIT:
+            stm32_uart[uart->port].handle.Init.WordLength = UART_WORDLENGTH_8B;
+            break;
+        case DATA_WIDTH_9BIT:
+            stm32_uart[uart->port].handle.Init.WordLength = UART_WORDLENGTH_9B;
+            break;
+        case DATA_WIDTH_5BIT:
+        case DATA_WIDTH_6BIT:
+        default:
+            return -1;
+    }
+
+    switch(uart->config.stop_bits){
+        case STOP_BITS_1:
+            stm32_uart[uart->port].handle.Init.StopBits = UART_STOPBITS_1;
+            break;
+        case STOP_BITS_2:
+            stm32_uart[uart->port].handle.Init.StopBits = UART_STOPBITS_2;
+            break;
+        default:
+            return -1;
+    }
+
+    switch(uart->config.parity){
+        case NO_PARITY:
+            stm32_uart[uart->port].handle.Init.Parity = UART_PARITY_NONE;
+            break;
+        case ODD_PARITY:
+            stm32_uart[uart->port].handle.Init.Parity = UART_PARITY_ODD;
+            break;
+        case EVEN_PARITY:
+            stm32_uart[uart->port].handle.Init.Parity = UART_PARITY_EVEN;
+            break;
+        default:
+            return -1;
+    }
+    
+    switch(uart->config.flow_control){
+        case FLOW_CONTROL_DISABLED:
+            stm32_uart[uart->port].handle.Init.HwFlowCtl = UART_HWCONTROL_NONE;
+            break;
+        case FLOW_CONTROL_CTS:
+            stm32_uart[uart->port].handle.Init.HwFlowCtl = UART_HWCONTROL_CTS;
+            break;
+        case FLOW_CONTROL_RTS:
+            stm32_uart[uart->port].handle.Init.HwFlowCtl = UART_HWCONTROL_RTS;
+            break;
+        case FLOW_CONTROL_CTS_RTS:
+            stm32_uart[uart->port].handle.Init.HwFlowCtl = UART_HWCONTROL_RTS_CTS;
+            break;
+        default:
+            return -1;
+    }
+    
+    stm32_uart[uart->port].handle.Init.BaudRate = uart->config.baud_rate;
+    stm32_uart[uart->port].handle.Init.Mode = UART_MODE_TX_RX;
+    stm32_uart[uart->port].handle.Init.OverSampling = UART_OVERSAMPLING_16;
+    stm32_uart[uart->port].handle.Init.OneBitSampling = UART_ONE_BIT_SAMPLE_DISABLE;
+    stm32_uart[uart->port].handle.AdvancedInit.AdvFeatureInit = UART_ADVFEATURE_NO_INIT;
+    BSP_COM_Init(uart->port,&stm32_uart[uart->port].handle);
+    aos_mutex_new(&stm32_uart[uart->port].uart_tx_mutex);
+    aos_mutex_new(&stm32_uart[uart->port].uart_rx_mutex);
+    aos_sem_new(&stm32_uart[uart->port].uart_tx_sem, 0);
+    aos_sem_new(&stm32_uart[uart->port].uart_rx_sem, 0);
+    return 0;
 }
+
 
 
 #if defined (__CC_ARM) && defined(__MICROLIB)
@@ -487,16 +547,32 @@ void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart)
   }
 }
 
+static int default_UART_Init()
+{
+    uart_0.port                = STDIO_UART;
+    uart_0.config.baud_rate    = STDIO_UART_BUADRATE;
+    uart_0.config.data_width   = DATA_WIDTH_8BIT;
+    uart_0.config.parity       = NO_PARITY;
+    uart_0.config.stop_bits    = STOP_BITS_1;
+    uart_0.config.flow_control = FLOW_CONTROL_DISABLED;
+
+    return hal_uart_init(&uart_0);
+}
+
+
+
 
 int32_t hal_uart_init(uart_dev_t *uart)
 {
-    if(uart==NULL) {
+    if(uart == NULL) {
         return -EINVAL;
     }  
-    if(uart->port==COM1||uart->port==COM4){
-        return  0;
+    
+    if(uart->port != COM1 && uart->port != COM4){
+        return -EINVAL;
     }   
-    return -EINVAL;
+    
+    return UART_Init(uart);
 }
 
 int32_t hal_uart_finalize(uart_dev_t *uart)
