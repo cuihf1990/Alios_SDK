@@ -2376,12 +2376,14 @@ static int iotx_mc_handle_reconnect(iotx_mc_client_t *pClient)
 // disconnect
 static int iotx_mc_disconnect(iotx_mc_client_t *pClient)
 {
+    int             rc = -1;
     if (NULL == pClient) {
         return NULL_VALUE_ERROR;
     }
 
-    if (!iotx_mc_check_state_normal(pClient)) {
-        return SUCCESS_RETURN;
+    if (iotx_mc_check_state_normal(pClient)) {
+        rc = MQTTDisconnect(pClient);
+        log_debug("rc = MQTTDisconnect() = %d", rc);
     }
 #ifndef STM32_USE_SPI_WIFI
     if (is_connected) {
@@ -2389,7 +2391,6 @@ static int iotx_mc_disconnect(iotx_mc_client_t *pClient)
         is_connected = 0;
     }
 #endif
-    (void)MQTTDisconnect(pClient);
 
     /*close tcp/ip socket or free tls resources*/
     pClient->ipstack->disconnect(pClient->ipstack);
@@ -2584,6 +2585,10 @@ int IOT_MQTT_Yield(void *handle, int timeout_ms)
 
             // check list of wait subscribe(or unsubscribe) ACK to remove node that is ACKED or timeout
             MQTTSubInfoProc(pClient);
+#ifdef STM32_USE_SPI_WIFI
+        } else {
+            return rc;
+#endif
         }
 
         // Keep MQTT alive or reconnect if connection abort.
