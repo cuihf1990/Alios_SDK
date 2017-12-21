@@ -1,5 +1,5 @@
 import os, sys, time, platform, json, traceback, random, re
-import socket, thread, threading, subprocess, signal, Queue
+import socket, thread, threading, subprocess, signal, Queue, importlib
 import TBframe
 
 DEBUG = True
@@ -47,6 +47,7 @@ class Client:
         self.poll_str += 'm'
         self.poll_interval = 60
         self.uuid = ''
+        self.model_interface = {}
         self.mesh_changed = [re.compile('become leader'),
                              re.compile('become detached'),
                              re.compile('allocate sid 0x[0-9a-f]{4}, become [0-9] in net [0-9a-f]{4}')]
@@ -444,26 +445,19 @@ class Client:
         print 'device monitor thread exited'
         self.keep_running = False
 
-    def esp32_erase(self, port):
-        retry = 3
-        baudrate = 230400
-        error = 'fail'
-        while retry > 0:
-            script = ['python', 'esptool.py']
-            script += ['--chip']
-            script += ['esp32']
-            script += ['--port']
-            script += [port]
-            script += ['--baud']
-            script += [str(baudrate)]
-            script += ['erase_flash']
-            ret = subprocess.call(script)
-            if ret == 0:
-                error = 'success'
-                break
-            retry -= 1
-            baudrate = baudrate / 2
-        return error
+    def get_interface_by_model(self, model):
+        if model not in self.model_interface:
+            if os.path.exists('board/'+model) == False or \
+               os.path.exists('board/{0}/{0}.py'.format(model)) == False:
+                return None
+            if 'board/'+model not in sys.path:
+                sys.path.append('board/'+model)
+            try:
+                self.model_interface[model] =  importlib.import_module(model)
+            except:
+                if DEBUG: traceback.print_exc()
+                return None
+        return self.model_interface[model]
 
     def device_erase(self, port, term):
         model = 'unknown'
@@ -471,16 +465,17 @@ class Client:
             model = self.devices[port]['attributes']['model']
         model = model.lower()
 
-        if model != 'esp32':
+        interface = self.get_interface_by_model(model)
+        if interface == None:
             print "error: erasing dose not support model '{0}'".format(model)
-            content = ','.join(term) + ',' + 'unknow model'
+            content = ','.join(term) + ',' + 'unsupported model'
             self.send_packet(TBframe.DEVICE_ERASE, content)
             return
 
         self.devices[port]['slock'].acquire()
         try:
             self.devices[port]['serial'].close()
-            ret = self.esp32_erase(port)
+            ret = interface.erase(port)
         except:
             if DEBUG: traceback.print_exc()
             ret = 'fail'
@@ -493,58 +488,6 @@ class Client:
         content = ','.join(term) + ',' + ret
         self.send_packet(TBframe.DEVICE_ERASE, content)
 
-    def esp32_program(self, port, address, file):
-        retry = 3
-        baudrate = 230400
-        error = 'fail'
-        while retry > 0:
-            script = ['python']
-            script += [os.environ['ESPTOOL_PATH'] + '/esptool.py']
-            script += ['--chip']
-            script += ['esp32']
-            script += ['--port']
-            script += [port]
-            script += ['--baud']
-            script += [str(baudrate)]
-            script += ['--before']
-            script += ['default_reset']
-            script += ['--after']
-            script += ['hard_reset']
-            script += ['write_flash']
-            script += ['-z']
-            script += ['--flash_mode']
-            script += ['dio']
-            script += ['--flash_freq']
-            script += ['40m']
-            script += ['--flash_size']
-            script += ['4MB']
-            script += [address]
-            script += [file]
-            ret = subprocess.call(script)
-            if ret == 0:
-                error =  'success'
-                break
-            retry -= 1
-            baudrate = baudrate / 2
-        return error
-
-    def mxchip_program(self, port, address, file):
-        retry = 3
-        error = 'fail'
-        while retry > 0:
-            script = ['python', 'aos_firmware_update.py']
-            script += [port]
-            script += [address]
-            script += [file]
-            script += ['--hardreset']
-            ret = subprocess.call(script)
-            if ret == 0:
-                error =  'success'
-                break
-            retry -= 1
-            time.sleep(4)
-        return error
-
     def device_program(self, port, address, file, term):
         if os.path.exists(port) == False or port not in self.devices:
             print "error: progamming nonexist port {0}".format(port)
@@ -556,20 +499,17 @@ class Client:
         if 'model' in self.devices[port]['attributes']:
             model = self.devices[port]['attributes']['model']
         model = model.lower()
-        if model not in self.models:
-            print "error: programing dose not support model '{0}'".format(model)
-            content = ','.join(term) + ',' + 'unknown model'
+        interface = self.get_interface_by_model(model)
+        if interface == None:
+            print "error: programming dose not support model '{0}'".format(model)
+            content = ','.join(term) + ',' + 'unsupported model'
             self.send_packet(TBframe.DEVICE_PROGRAM, content)
             return
 
         self.devices[port]['slock'].acquire()
         try:
             self.devices[port]['serial'].close()
-            if model == 'esp32':
-                ret = self.esp32_program(port, address, file)
-            elif model == 'mk3060':
-                ret = self.mxchip_program(port, address, file)
-            self.devices[port]['serial'].open()
+            ret = interface.program(port, address, file)
         except:
             if DEBUG: traceback.print_exc()
             ret = 'fail'
@@ -581,40 +521,6 @@ class Client:
         print 'programming', file, 'to', port, '@', address, '...', ret
         content = ','.join(term) + ',' + ret
         self.send_packet(TBframe.DEVICE_PROGRAM, content)
-
-    def esp32_control(self, port, operation):
-        try:
-            if operation == TBframe.DEVICE_RESET:
-                self.devices[port]['serial'].setDTR(False)
-                time.sleep(0.1)
-                self.devices[port]['serial'].setDTR(True)
-                return 'success'
-            elif operation == TBframe.DEVICE_STOP:
-                self.devices[port]['serial'].setDTR(False)
-                return 'success'
-            elif operation == TBframe.DEVICE_START:
-                self.devices[port]['serial'].setDTR(True)
-                return 'success'
-        except:
-            pass
-        return 'fail'
-
-    def mxchip_control(self, port, operation):
-        try:
-            if operation == TBframe.DEVICE_RESET:
-                self.devices[port]['serial'].setRTS(True)
-                time.sleep(0.1)
-                self.devices[port]['serial'].setRTS(False)
-                return 'success'
-            elif operation == TBframe.DEVICE_STOP:
-                self.devices[port]['serial'].setRTS(True)
-                return 'success'
-            elif operation == TBframe.DEVICE_START:
-                self.devices[port]['serial'].setRTS(False)
-                return 'success'
-        except:
-            pass
-        return 'fail'
 
     def device_control(self, port, type, term):
         operations= {TBframe.DEVICE_RESET:'reset', TBframe.DEVICE_STOP:'stop', TBframe.DEVICE_START:'start'}
@@ -628,17 +534,15 @@ class Client:
         if 'model' in self.devices[port]['attributes']:
             model = self.devices[port]['attributes']['model']
         model = model.lower()
-        if model not in self.models:
-            print "error: controlling unsupported model '{0}'".format(model)
-            content = ','.join(term) + ',' + 'unknown model'
+        interface = self.get_interface_by_model(model)
+        if interface == None:
+            print "error: controlling dose not support model '{0}'".format(model)
+            content = ','.join(term) + ',' + 'unsupported model'
             self.send_packet(type, content)
             return
 
         try:
-            if model == 'esp32':
-                ret = self.esp32_control(port, type)
-            elif model == 'mk3060':
-                ret = self.mxchip_control(port, type)
+            ret = interface.control(port, operations[type])
         except:
             if DEBUG: traceback.print_exc()
             ret = 'fail'
