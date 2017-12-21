@@ -51,6 +51,7 @@ void *pclient;
 static uint32_t    send_cnt = 0;
 static uint32_t    recv_cnt = 0;
 static char msg_pub[MSG_LEN_MAX];
+static int running;
 
 
 int mqtt_client_example(void);
@@ -152,6 +153,7 @@ static void publish_topic(iotx_mqtt_topic_info_t *topic_msg)
 
     ret = IOT_MQTT_Publish(pclient, TOPIC_UPDATE, topic_msg);
     if (ret < 0) {
+        running = 0;
         EXAMPLE_TRACE("Publish failed\n");
     } else {
         send_cnt++;
@@ -234,7 +236,7 @@ int mqtt_client_example(void)
         goto do_exit;
     }
 
-
+    running = 1;
     /* Subscribe the specific topic */
     rc = IOT_MQTT_Subscribe(pclient, TOPIC_GET, IOTX_MQTT_QOS1, _demo_message_arrive, NULL);
     if (rc < 0) {
@@ -246,9 +248,9 @@ int mqtt_client_example(void)
 
     HAL_SleepMs(1000);
 
-    while (1) {
+    while (running) {
         /* handle the MQTT packet received from TCP or SSL connection */
-        if (0 < IOT_MQTT_Yield(pclient, 2000)) {
+        if (0 != IOT_MQTT_Yield(pclient, 200)) {
             EXAMPLE_TRACE("IOT_MQTT_Yield failed!");
             break;
         }
@@ -270,6 +272,11 @@ do_exit:
     }
     is_demo_started = 0;
     EXAMPLE_TRACE("mqtt example loop end!");
+
+    HAL_SleepMs(500);
+    SPI_WIFI_DeInit();
+    SPI_WIFI_Init();
+    aos_post_event(EV_WIFI, CODE_WIFI_CMD_RECONNECT, 0);
 
     return rc;
 }
