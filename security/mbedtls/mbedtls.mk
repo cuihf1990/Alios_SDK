@@ -38,7 +38,7 @@ endif
 ifeq ($(COMPILER),armcc)
 $(NAME)_PREBUILT_LIBRARY := lib/$(HOST_ARCH)/KEIL/libmbedtls.lib
 else ifeq  ($(COMPILER),iar)
-$(NAME)_PREBUILT_LIBRARY := lib/$(HOST_ARCH)/IAR/libmbedtls.lib
+$(NAME)_PREBUILT_LIBRARY := lib/$(HOST_ARCH)/IAR/libmbedtls.a
 else
 ifeq ($(HOST_ARCH), linux)
 $(NAME)_PREBUILT_LIBRARY := lib/$(HOST_ARCH)/libmbedtls.a

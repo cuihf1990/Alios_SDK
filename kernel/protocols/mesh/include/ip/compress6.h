@@ -25,63 +25,63 @@ enum {
 };
 
 enum {
-    IPHC_DISPATCH    = 0b011,
-    NHC_UDP_DISPATCH = 0b11110,
+    IPHC_DISPATCH    = 0x3,
+    NHC_UDP_DISPATCH = 0x1e,
 };
 
 enum {
-    TC_FL_BOTH_APEENDED         = 0b00,
-    DCSP_ELEDED_ECN_FL_APPENDED = 0b01,
-    TC_APENDED_FL_ELIDED        = 0b10,
-    TC_FL_BOTH_ELIDED           = 0b11,
+    TC_FL_BOTH_APEENDED         = 0x0,
+    DCSP_ELEDED_ECN_FL_APPENDED = 0x1,
+    TC_APENDED_FL_ELIDED        = 0x2,
+    TC_FL_BOTH_ELIDED           = 0x3,
 };
 
 enum {
-    NEXT_HEADER_APPENDED = 0b0,
-    NEXT_HEADER_ELIDED   = 0b1,
+    NEXT_HEADER_APPENDED = 0x0,
+    NEXT_HEADER_ELIDED   = 0x1,
 };
 
 enum {
-    HOP_LIM_APPENDED = 0b00,
-    HOP_LIM_1        = 0b01,
-    HOP_LIM_64       = 0b10,
-    HOP_LIM_255      = 0b11,
+    HOP_LIM_APPENDED = 0x0,
+    HOP_LIM_1        = 0x1,
+    HOP_LIM_64       = 0x2,
+    HOP_LIM_255      = 0x3,
 };
 
 enum {
-    STATELESS_COMPRESS = 0b0,
-    STATEFULL_COMPRESS = 0b1,
+    STATELESS_COMPRESS = 0x0,
+    STATEFULL_COMPRESS = 0x1,
 };
 
 enum {
-    UNICAST_DESTINATION   = 0b0,
-    MULTICAST_DESTINATION = 0b1,
+    UNICAST_DESTINATION   = 0x0,
+    MULTICAST_DESTINATION = 0x1,
 };
 
 enum {
-    UCAST_ADDR_128BIT = 0b00,
-    UCAST_ADDR_64BIT  = 0b01,
-    UCAST_ADDR_16BIT  = 0b10,
-    UCAST_ADDR_ELIDED = 0b11,
+    UCAST_ADDR_128BIT = 0x0,
+    UCAST_ADDR_64BIT  = 0x1,
+    UCAST_ADDR_16BIT  = 0x2,
+    UCAST_ADDR_ELIDED = 0x3,
 };
 
 enum {
-    MCAST_ADDR_128BIT = 0b00,
-    MCAST_ADDR_48BIT  = 0b01,
-    MCAST_ADDR_32BIT  = 0b10,
-    MCAST_ADDR_8BIT   = 0b11,
+    MCAST_ADDR_128BIT = 0x0,
+    MCAST_ADDR_48BIT  = 0x1,
+    MCAST_ADDR_32BIT  = 0x2,
+    MCAST_ADDR_8BIT   = 0x3,
 };
 
 enum {
-    CHKSUM_APPENDED = 0b0,
-    CHKSUM_ELIDED   = 0b1,
+    CHKSUM_APPENDED = 0x0,
+    CHKSUM_ELIDED   = 0x1,
 };
 
 enum {
-    NO_PORT_COMPRESSED   = 0b00,
-    DST_PORT_COMPRESSED  = 0b01,
-    SRC_PORT_COMPRESSED  = 0b10,
-    BOTH_PORT_COMPRESSED = 0b11,
+    NO_PORT_COMPRESSED   = 0x0,
+    DST_PORT_COMPRESSED  = 0x1,
+    SRC_PORT_COMPRESSED  = 0x2,
+    BOTH_PORT_COMPRESSED = 0x3,
 };
 
 enum {
