@@ -23,12 +23,9 @@ class Server:
         self.special_purpose_set['mk3060-alink'] += ['DN02X2ZO', 'DN02X2ZS', 'DN02X2ZX', 'DN02X2ZZ']
         self.special_purpose_set['mk3060-alink'] += ['DN02X303', 'DN02X304', 'DN02X30B', 'DN02X30H']
         #esp32
-        self.special_purpose_set['esp32-alink'] += ['espif-1.1', 'espif-1.3', 'espif-1.4']
-        self.special_purpose_set['esp32-alink'] += ['espif-2.1', 'espif-2.3', 'espif-2.4']
-        self.special_purpose_set['esp32-alink'] += ['espif-9.1', 'espif-9.3', 'espif-9.4']
-        self.special_purpose_set['esp32-alink'] += ['espif-1.2.2', 'espif-1.2.3']
-        self.special_purpose_set['esp32-alink'] += ['espif-2.2.1','espif-2.2.2', 'espif-2.2.3']
-        self.special_purpose_set['esp32-alink'] += ['espif-9.2.1','espif-9.2.2', 'espif-9.2.3']
+        self.special_purpose_set['esp32-alink'] += ['espif-3.1.1', 'espif-3.1.2', 'espif-3.1.3', 'espif-3.1.4']
+        self.special_purpose_set['esp32-alink'] += ['espif-3.2.1', 'espif-3.2.2', 'espif-3.2.3', 'espif-3.2.4']
+        self.special_purpose_set['esp32-alink'] += ['espif-3.3.1', 'espif-3.3.2', 'espif-3.3.3', 'espif-3.3.4']
 
     def construct_dev_list(self):
         l = []
