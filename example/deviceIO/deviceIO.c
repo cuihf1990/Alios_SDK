@@ -20,6 +20,7 @@ cpu_stack_t demo_task_buf[DEMO_TASK_STACKSIZE];
 
 extern uart_dev_t uart_dev_com1;
 extern gpio_dev_t gpio_dev_GPIOB_PIN13;
+char readbuf[UART_DATA_BYTES] = {0};
 
 void demo_task(void *arg)
 {   
@@ -46,16 +47,15 @@ int main(void)
 
 void hal_uart_test(void)
 {
-    char readbuf[UART_DATA_BYTES] = {0};
     uint32_t recBytes = 0;
     int ret = -1;
 
-    /* receive a message of 10 bytes and sent out through the uart */
+    /* receive a message and sent out through the uart */
     ret = hal_uart_recv(&uart_dev_com1, readbuf, UART_DATA_BYTES, &recBytes, 10);
 
-    if((ret == 0) && (recBytes == UART_DATA_BYTES))
+    if((ret == 0) && (recBytes > 0))
     {
-        hal_uart_send(&uart_dev_com1, readbuf, UART_DATA_BYTES, 10);
+        hal_uart_send(&uart_dev_com1, readbuf, recBytes, 10);
     }
 }
 

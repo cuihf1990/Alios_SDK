@@ -53,6 +53,9 @@
 #define UART1_RX_ALTERNATE             GPIO_AF7_USART2
 #define UART1_RX_GPIO_PORT             GPIOD
 
+
+#define MAX_BUF_UART_BYTES  1000
+
 #ifdef __cplusplus
 }
 #endif

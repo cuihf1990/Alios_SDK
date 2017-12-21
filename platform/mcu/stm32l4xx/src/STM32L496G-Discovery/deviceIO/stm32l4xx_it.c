@@ -34,7 +34,9 @@
 #include "stm32l4xx_hal.h"
 #include "stm32l4xx.h"
 #include "stm32l4xx_it.h"
+#include "hal.h"
 #include "k_api.h"
+
 /* USER CODE BEGIN 0 */
 
 /* USER CODE END 0 */
@@ -109,7 +111,7 @@ void DebugMon_Handler(void)
 
 }
 
-extern void hal_uart_test(void);
+extern UART_HandleTypeDef uart1_handle;
 
 /**
 * @brief This function handles System tick timer.
@@ -130,6 +132,12 @@ void SysTick_Handler(void)
 /******************************************************************************/
 
 /* USER CODE BEGIN 1 */
+void USART2_IRQHandler(void)
+{
+   krhino_intrpt_enter();
+   HAL_UART_IRQHandler(&uart1_handle);
+   krhino_intrpt_exit();
+}	
 
 /* USER CODE END 1 */
 /************************ (C) COPYRIGHT STMicroelectronics *****END OF FILE****/
