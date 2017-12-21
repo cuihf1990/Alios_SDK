@@ -241,7 +241,7 @@ uint8_t udp_header_compress(ur_udp_header_t *udp_header, uint8_t *buffer)
     nhc_header->DP = NHC_UDP_DISPATCH;
 
     /* TODO: support optional checksum compression */
-    nhc_header->C = 0b0;
+    nhc_header->C = 0x0;
 
     uint16_t src_port = ntohs(udp_header->src_port);
     uint16_t dst_port = ntohs(udp_header->dst_port);

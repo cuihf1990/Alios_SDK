@@ -29,6 +29,7 @@ GLOBAL_DEFINES += CONFIG_AOS_KV_BUFFER_SIZE=8192
 GLOBAL_INCLUDES += ../../arch/arm/armv7m/gcc/m4
 
 GLOBAL_INCLUDES += \
+                   src/common/csp/lwip/include \
                    src/common/csp/wifi/inc     \
                    src/B-L475E-IOT01/include   \
                    src/B-L475E-IOT01/runapp    \
@@ -72,8 +73,7 @@ GLOBAL_LDFLAGS += -L --cpu=7E-M   \
                   -L --xref -L --callgraph -L --symbols \
                   -L --info=sizes -L --info=totals -L --info=unused -L --info=veneers -L --info=summarysizes
 else ifeq ($(COMPILER),iar)
-GLOBAL_LDFLAGS += --cpu=Cortex-M4 \
-                  --entry main
+GLOBAL_LDFLAGS += --cpu=Cortex-M4
 
 else
 GLOBAL_LDFLAGS += -mcpu=cortex-m4  \

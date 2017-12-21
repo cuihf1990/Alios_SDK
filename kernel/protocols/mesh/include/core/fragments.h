@@ -12,8 +12,8 @@ extern "C" {
 #endif
 
 enum {
-    FRAG_1_DISPATCH = 0b11000,
-    FRAG_N_DISPATCH = 0b11100,
+    FRAG_1_DISPATCH = 0x18,
+    FRAG_N_DISPATCH = 0x1c,
 };
 
 enum {
