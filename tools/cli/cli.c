@@ -144,8 +144,7 @@ static int handle_input(char *inbuf)
     int cmdnum = 0;
     int * pargc = &argcall[0];
     int i = 0;
-    int ret;
-    const char *p;
+    int ret = 0;
 
     memset((void *)&argvall, 0, sizeof(argvall));
     memset((void *)&argcall, 0, sizeof(argcall));
