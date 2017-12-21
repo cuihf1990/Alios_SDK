@@ -547,7 +547,6 @@ hal_wifi_module_t sim_aos_wifi_eps32 = {
     .mesh_disable        =  mesh_disable,
 };
 
-void hal_umesh_register_wifi(hal_wifi_module_t *m);
 void esp32_wifi_mesh_register(void)
 {
     hal_umesh_register_wifi(&sim_aos_wifi_eps32);

@@ -434,5 +434,12 @@ void hal_wifi_stop_debug_mode(hal_wifi_module_t *m);
  */
 void hal_wifi_install_event(hal_wifi_module_t *m, const hal_wifi_event_cb_t *cb);
 
+/**
+ * Regster a wifi instance to the uMesh
+ *
+ * @param[in]  m  the wifi instance.
+ */
+void hal_umesh_register_wifi(hal_wifi_module_t *m);
+
 #endif /* HAL_WIFI_H */
 

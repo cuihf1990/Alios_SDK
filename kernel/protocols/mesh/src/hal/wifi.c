@@ -114,6 +114,9 @@ static void mesh_wifi_data_cb(uint8_t *data, int len, hal_wifi_link_info_t *info
         return;
     }
 
+    memset(&frm, 0, sizeof(frm));
+    memset(&fino, 0, sizeof(fino));
+
     frm.len = len - WIFI_MESH_OFFSET - WIFI_FCS_SIZE;
     frm.data = aos_malloc(frm.len);
     if (frm.data == NULL) {
@@ -123,10 +126,13 @@ static void mesh_wifi_data_cb(uint8_t *data, int len, hal_wifi_link_info_t *info
 
     memcpy(fino.peer.addr, data + WIFI_SRC_OFFSET, WIFI_MAC_ADDR_SIZE);
     fino.peer.len = 8;
-    fino.rssi = info->rssi;
+    fino.rssi = info ? info->rssi : 0;
     fino.channel = hal_wifi_get_channel(m_wifi);
 
+    priv->stats.in_frames++;
     priv->rxcb(priv->rxcb_priv, &frm, &fino, 0);
+
+    aos_free(frm.data);
 }
 
 static int mesh_wifi_set_rxcb(umesh_hal_module_t *module,
@@ -135,7 +141,7 @@ static int mesh_wifi_set_rxcb(umesh_hal_module_t *module,
     mesh_hal_priv_t *priv = mesh_wifi_module.base.priv_dev;
     priv->rxcb = received;
     priv->rxcb_priv = context;
-    hal_wifi_register_monitor_cb(m_wifi, mesh_wifi_data_cb);
+    m_wifi->mesh_register_cb(m_wifi, mesh_wifi_data_cb);
     return 0;
 }
 
