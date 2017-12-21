@@ -47,18 +47,18 @@ static ur_error_t send_address_query(ur_addr_t *dest, uint8_t query_type, ur_nod
 static ur_error_t send_address_query_response(ur_addr_t *dest, ur_node_id_t *attach_node,
                                               ur_node_id_t *target_node);
 
-static ur_error_t get_target_by_ueid(ur_node_id_t *node_id, uint8_t *ueid)
+static ur_error_t get_target_by_uuid(ur_node_id_t *node_id, uint8_t *uuid)
 {
     sid_node_t *node;
 
-    if (memcmp(ueid, umesh_mm_get_local_ueid(), 8) == 0) {
+    if (memcmp(uuid, umesh_mm_get_local_uuid(), 8) == 0) {
         node_id->sid = umesh_mm_get_local_sid();
         node_id->meshnetid = umesh_mm_get_meshnetid(NULL);
         return UR_ERROR_NONE;
     }
 
     slist_for_each_entry(&g_ac_state.cache_list, node, sid_node_t, next) {
-        if (memcmp(node->node_id.ueid, ueid, sizeof(node_id->ueid)) == 0) {
+        if (memcmp(node->node_id.uuid, uuid, sizeof(node_id->uuid)) == 0) {
             node_id->sid = node->node_id.sid;
             node_id->meshnetid = node->node_id.meshnetid;
             return UR_ERROR_NONE;
@@ -110,7 +110,7 @@ static void address_resolved_handler(network_context_t *network,
                 matched = true;
             }
         } else if (info->dest.addr.len == EXT_ADDR_SIZE) {
-            if (memcmp(target->ueid, info->dest.addr.addr, sizeof(target->ueid)) == 0) {
+            if (memcmp(target->uuid, info->dest.addr.addr, sizeof(target->uuid)) == 0) {
                 matched = true;
             }
         }
@@ -197,7 +197,7 @@ ur_error_t address_resolve(message_t *message)
         target.meshnetid = info->dest.netid;
     } else {
         query_type = TARGET_QUERY;
-        memcpy(target.ueid, info->dest.addr.addr, sizeof(target.ueid));
+        memcpy(target.uuid, info->dest.addr.addr, sizeof(target.uuid));
     }
 
     for (index = 0; index < UR_MESH_ADDRESS_CACHE_SIZE; index++) {
@@ -208,8 +208,8 @@ ur_error_t address_resolve(message_t *message)
                 cache = &g_ar_state.cache[index];
                 break;
             } else if (query_type == TARGET_QUERY &&
-                       memcmp(target.ueid, g_ar_state.cache[index].ueid,
-                              sizeof(g_ar_state.cache[index].ueid)) == 0) {
+                       memcmp(target.uuid, g_ar_state.cache[index].uuid,
+                              sizeof(g_ar_state.cache[index].uuid)) == 0) {
                 cache = &g_ar_state.cache[index];
                 break;
             }
@@ -225,7 +225,7 @@ ur_error_t address_resolve(message_t *message)
     get_leader_addr(&dest);
     switch (cache->state) {
         case AQ_STATE_INVALID:
-            memcpy(cache->ueid, target.ueid, sizeof(cache->ueid));
+            memcpy(cache->uuid, target.uuid, sizeof(cache->uuid));
             cache->sid = target.sid;
             cache->meshnetid = target.meshnetid;
             cache->attach_sid = BCAST_SID;
@@ -278,7 +278,7 @@ static ur_error_t send_address_query(ur_addr_t *dest, uint8_t query_type, ur_nod
     if (query_type == ATTACH_QUERY) {
         length += sizeof(mm_node_id_tv_t);
     } else if (query_type == TARGET_QUERY) {
-        length += sizeof(mm_ueid_tv_t);
+        length += sizeof(mm_uuid_tv_t);
     } else {
         return UR_ERROR_FAIL;
     }
@@ -300,7 +300,7 @@ static ur_error_t send_address_query(ur_addr_t *dest, uint8_t query_type, ur_nod
             data += set_mm_node_id_tv(data, TYPE_NODE_ID, target);
             break;
         case TARGET_QUERY:
-            data += set_mm_ueid_tv(data, TYPE_TARGET_UEID, target->ueid);
+            data += set_mm_uuid_tv(data, TYPE_TARGET_UEID, target->uuid);
             break;
         default:
             assert(0);
@@ -332,7 +332,7 @@ ur_error_t handle_address_query(message_t *message)
     ur_node_id_t target_node;
     ur_node_id_t attach_node;
     mm_node_id_tv_t *target_id;
-    mm_ueid_tv_t *ueid;
+    mm_uuid_tv_t *uuid;
     uint16_t tlvs_length;
     message_info_t *info;
 
@@ -367,9 +367,9 @@ ur_error_t handle_address_query(message_t *message)
             }
             break;
         case TARGET_QUERY:
-            ueid = (mm_ueid_tv_t *)umesh_mm_get_tv(tlvs, tlvs_length, TYPE_TARGET_UEID);
-            if (ueid) {
-                error = get_target_by_ueid(&target_node, ueid->ueid);
+            uuid = (mm_uuid_tv_t *)umesh_mm_get_tv(tlvs, tlvs_length, TYPE_TARGET_UEID);
+            if (uuid) {
+                error = get_target_by_uuid(&target_node, uuid->uuid);
                 if (error == UR_ERROR_NONE && is_partial_function_sid(target_node.sid) == true) {
                     error = get_attach_by_sid(&attach_node, target_node.meshnetid, target_node.sid);
                 }
@@ -400,7 +400,7 @@ static ur_error_t send_address_query_response(ur_addr_t *dest, ur_node_id_t *att
     message_info_t *info;
 
     length = sizeof(mm_header_t) + sizeof(mm_node_id_tv_t) +
-             sizeof(mm_ueid_tv_t);
+             sizeof(mm_uuid_tv_t);
     if (attach_node->sid != INVALID_SID && is_unique_netid(attach_node->meshnetid)) {
         length += sizeof(mm_node_id_tv_t);
     }
@@ -412,7 +412,7 @@ static ur_error_t send_address_query_response(ur_addr_t *dest, ur_node_id_t *att
     data_orig = data;
     data += sizeof(mm_header_t);
     data += set_mm_node_id_tv(data, TYPE_NODE_ID, target_node);
-    data += set_mm_ueid_tv(data, TYPE_TARGET_UEID, target_node->ueid);
+    data += set_mm_uuid_tv(data, TYPE_TARGET_UEID, target_node->uuid);
 
     if (attach_node->sid != INVALID_SID && is_unique_netid(attach_node->meshnetid)) {
         data += set_mm_node_id_tv(data, TYPE_ATTACH_NODE_ID, attach_node);
@@ -441,7 +441,7 @@ ur_error_t handle_address_query_response(message_t *message)
     ur_error_t error = UR_ERROR_NONE;
     mm_node_id_tv_t *target_id;
     mm_node_id_tv_t *attach_id;
-    mm_ueid_tv_t *target_ueid;
+    mm_uuid_tv_t *target_uuid;
     uint8_t *tlvs;
     uint16_t tlvs_length;
     uint8_t index;
@@ -460,10 +460,10 @@ ur_error_t handle_address_query_response(message_t *message)
     attach_id = (mm_node_id_tv_t *)umesh_mm_get_tv(tlvs, tlvs_length,
                                                    TYPE_ATTACH_NODE_ID);
     target_id = (mm_node_id_tv_t *)umesh_mm_get_tv(tlvs, tlvs_length, TYPE_NODE_ID);
-    target_ueid = (mm_ueid_tv_t *)umesh_mm_get_tv(tlvs, tlvs_length,
+    target_uuid = (mm_uuid_tv_t *)umesh_mm_get_tv(tlvs, tlvs_length,
                                                   TYPE_TARGET_UEID);
 
-    if (target_id == NULL || target_ueid == NULL) {
+    if (target_id == NULL || target_uuid == NULL) {
         error = UR_ERROR_FAIL;
         goto exit;
     }
@@ -481,14 +481,14 @@ ur_error_t handle_address_query_response(message_t *message)
                 g_ar_state.cache[index].attach_sid = attach_id->sid;
                 g_ar_state.cache[index].attach_netid = attach_id->meshnetid;
                 g_ar_state.cache[index].timeout = 0;
-                memcpy(g_ar_state.cache[index].ueid, target_ueid->ueid,
-                       sizeof(g_ar_state.cache[index].ueid));
+                memcpy(g_ar_state.cache[index].uuid, target_uuid->uuid,
+                       sizeof(g_ar_state.cache[index].uuid));
                 address_resolved_handler(network, &g_ar_state.cache[index], error);
             }
             break;
-        } else if (target_ueid &&
-                   memcmp(target_ueid->ueid, g_ar_state.cache[index].ueid,
-                          sizeof(target_ueid->ueid)) == 0) {
+        } else if (target_uuid &&
+                   memcmp(target_uuid->uuid, g_ar_state.cache[index].uuid,
+                          sizeof(target_uuid->uuid)) == 0) {
             if (g_ar_state.cache[index].state != AQ_STATE_CACHED) {
                 g_ar_state.cache[index].state = AQ_STATE_CACHED;
                 g_ar_state.cache[index].sid = target_id->sid;
@@ -526,7 +526,7 @@ static ur_error_t send_address_notification(void)
     ur_node_id_t node_id;
     neighbor_t *attach_node = umesh_mm_get_attach_node();
 
-    length = sizeof(mm_header_t) + sizeof(mm_ueid_tv_t) +
+    length = sizeof(mm_header_t) + sizeof(mm_uuid_tv_t) +
              sizeof(mm_node_id_tv_t) + sizeof(mm_hal_type_tv_t);
     if (attach_node) {
         length += sizeof(mm_node_id_tv_t);
@@ -538,7 +538,7 @@ static ur_error_t send_address_notification(void)
     }
     data_orig = data;
     data += sizeof(mm_header_t);
-    data += set_mm_ueid_tv(data, TYPE_TARGET_UEID, umesh_mm_get_local_ueid());
+    data += set_mm_uuid_tv(data, TYPE_TARGET_UEID, umesh_mm_get_local_uuid());
 
     node_id.sid = umesh_mm_get_local_sid();
     node_id.meshnetid = umesh_get_meshnetid();
@@ -611,7 +611,7 @@ ur_error_t send_address_unreachable(ur_addr_t *dest, ur_addr_t *target)
 ur_error_t handle_address_notification(message_t *message)
 {
     ur_error_t error = UR_ERROR_FAIL;
-    mm_ueid_tv_t *target_ueid;
+    mm_uuid_tv_t *target_uuid;
     mm_node_id_tv_t *target_node;
     mm_node_id_tv_t *attach_node;
     mm_hal_type_tv_t *hal_type;
@@ -636,12 +636,12 @@ ur_error_t handle_address_notification(message_t *message)
                                                      TYPE_ATTACH_NODE_ID);
     target_node = (mm_node_id_tv_t *)umesh_mm_get_tv(tlvs, tlvs_length,
                                                      TYPE_NODE_ID);
-    target_ueid = (mm_ueid_tv_t *)umesh_mm_get_tv(tlvs, tlvs_length,
+    target_uuid = (mm_uuid_tv_t *)umesh_mm_get_tv(tlvs, tlvs_length,
                                                   TYPE_TARGET_UEID);
     hal_type = (mm_hal_type_tv_t *)umesh_mm_get_tv(tlvs, tlvs_length,
                                                    TYPE_DEF_HAL_TYPE);
 
-    if (target_node == NULL || target_ueid == NULL || hal_type == NULL) {
+    if (target_node == NULL || target_uuid == NULL || hal_type == NULL) {
         goto exit;
     }
 
@@ -654,7 +654,7 @@ ur_error_t handle_address_notification(message_t *message)
         attach.sid = INVALID_SID;
         attach.meshnetid = INVALID_NETID;
     }
-    memcpy(&target.ueid, target_ueid->ueid, sizeof(target.ueid));
+    memcpy(&target.uuid, target_uuid->uuid, sizeof(target.uuid));
     error = update_address_cache(hal_type->type, &target, &attach);
 
 exit:
@@ -832,7 +832,7 @@ ur_error_t update_address_cache(media_type_t type, ur_node_id_t *target,
     sid_node_t *node = NULL;
 
     slist_for_each_entry(&g_ac_state.cache_list, node, sid_node_t, next) {
-        if (memcmp(node->node_id.ueid, target->ueid, sizeof(node->node_id.ueid)) == 0) {
+        if (memcmp(node->node_id.uuid, target->uuid, sizeof(node->node_id.uuid)) == 0) {
             break;
         }
     }
@@ -845,7 +845,7 @@ ur_error_t update_address_cache(media_type_t type, ur_node_id_t *target,
         slist_add(&node->next, &g_ac_state.cache_list);
         g_ac_state.cache_num++;
         nd_set_meshnetsize(NULL, g_ac_state.cache_num + 1);
-        memcpy(node->node_id.ueid, target->ueid, sizeof(node->node_id.ueid));
+        memcpy(node->node_id.uuid, target->uuid, sizeof(node->node_id.uuid));
     }
 
     node->node_id.sid = target->sid;
@@ -854,8 +854,8 @@ ur_error_t update_address_cache(media_type_t type, ur_node_id_t *target,
     node->node_id.timeout = 0;
     node->type = type;
 
-    MESH_LOG_DEBUG("update_address_cache, ueid %x, sid %x, netid %x, attach_sid %x",
-                   node->node_id.ueid[0], node->node_id.sid, node->node_id.meshnetid,
+    MESH_LOG_DEBUG("update_address_cache, uuid %x, sid %x, netid %x, attach_sid %x",
+                   node->node_id.uuid[0], node->node_id.sid, node->node_id.meshnetid,
                    node->node_id.attach_sid);
     return UR_ERROR_NONE;
 }

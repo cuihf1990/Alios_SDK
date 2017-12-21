@@ -28,7 +28,7 @@
 typedef struct mm_device_s {
     node_state_t state;
     node_mode_t  mode;
-    uint8_t ueid[8];
+    uint8_t uuid[8];
     bool reboot_flag;
     uint8_t seclevel;
     int8_t prev_channel;
@@ -438,7 +438,7 @@ static uint8_t get_tv_value(network_context_t *network,
             length += set_mm_mcast_tv(data);
             break;
         case TYPE_TARGET_UEID:
-            length += set_mm_ueid_tv(data, type, umesh_mm_get_local_ueid());
+            length += set_mm_uuid_tv(data, type, umesh_mm_get_local_uuid());
             break;
         case TYPE_UCAST_CHANNEL:
         case TYPE_BCAST_CHANNEL:
@@ -664,14 +664,14 @@ static ur_error_t send_attach_request(network_context_t *network)
         return UR_ERROR_FAIL;
     }
 
-    length = sizeof(mm_header_t) + sizeof(mm_ueid_tv_t) + sizeof(mm_timestamp_tv_t);
+    length = sizeof(mm_header_t) + sizeof(mm_uuid_tv_t) + sizeof(mm_timestamp_tv_t);
     data = ur_mem_alloc(length);
     if (data == NULL) {
         return UR_ERROR_MEM;
     }
     data_orig = data;
     data += sizeof(mm_header_t);
-    data += set_mm_ueid_tv(data, TYPE_SRC_UEID, g_mm_state.device.ueid);
+    data += set_mm_uuid_tv(data, TYPE_SRC_UEID, g_mm_state.device.uuid);
     data += set_mm_timestamp_tv(data, umesh_get_timestamp());
     message = mf_build_message(MESH_FRAME_TYPE_CMD, COMMAND_ATTACH_REQUEST,
                                data_orig, length, MESH_MGMT_2);
@@ -707,7 +707,7 @@ static ur_error_t send_attach_response(network_context_t *network,
     message_info_t *info;
 
     length = sizeof(mm_header_t) + sizeof(mm_cost_tv_t) +
-             sizeof(mm_ueid_tv_t) + sizeof(mm_timestamp_tv_t);
+             sizeof(mm_uuid_tv_t) + sizeof(mm_timestamp_tv_t);
 
     if (umesh_mm_get_seclevel() > SEC_LEVEL_0) {
         length += sizeof(mm_symmetric_key_tv_t);
@@ -731,7 +731,7 @@ static ur_error_t send_attach_response(network_context_t *network,
     }
     data_orig = data;
     data += sizeof(mm_header_t);
-    data += set_mm_ueid_tv(data, TYPE_SRC_UEID, g_mm_state.device.ueid);
+    data += set_mm_uuid_tv(data, TYPE_SRC_UEID, g_mm_state.device.uuid);
     data += set_mm_path_cost_tv(network, data);
     data += set_mm_timestamp_tv(data, umesh_get_timestamp());
 #ifdef CONFIG_AOS_MESH_LOWPOWER
@@ -772,7 +772,7 @@ static ur_error_t send_attach_response(network_context_t *network,
 static ur_error_t handle_attach_request(message_t *message)
 {
     ur_error_t error = UR_ERROR_NONE;
-    mm_ueid_tv_t *ueid;
+    mm_uuid_tv_t *uuid;
     mm_timestamp_tv_t *timestamp;
     uint8_t *tlvs;
     uint16_t tlvs_length;
@@ -795,14 +795,14 @@ static ur_error_t handle_attach_request(message_t *message)
     }
     message_copy_to(message, sizeof(mm_header_t), tlvs, tlvs_length);
 
-    ueid = (mm_ueid_tv_t *)umesh_mm_get_tv(tlvs, tlvs_length,
+    uuid = (mm_uuid_tv_t *)umesh_mm_get_tv(tlvs, tlvs_length,
                                            TYPE_SRC_UEID);
-    if (ueid == NULL) {
+    if (uuid == NULL) {
         error = UR_ERROR_FAIL;
         goto exit;
     }
 
-    node = get_neighbor_by_mac_addr(ueid->ueid);
+    node = get_neighbor_by_mac_addr(uuid->uuid);
     if (node && node == network->attach_node) {
         MESH_LOG_INFO("ignore attach point's attach request");
         error = UR_ERROR_FAIL;
@@ -826,7 +826,7 @@ static ur_error_t handle_attach_request(message_t *message)
     if (error == UR_ERROR_NONE) {
         ur_node_id_t node_id;
         node_id.sid = INVALID_SID;
-        memcpy(node_id.ueid, ueid->ueid, sizeof(node_id.ueid));
+        memcpy(node_id.uuid, uuid->uuid, sizeof(node_id.uuid));
         if (umesh_mm_get_mode() & MODE_SUPER) {
             node_id.attach_sid = SUPER_ROUTER_SID;
         } else {
@@ -943,7 +943,7 @@ static ur_error_t send_sid_request(network_context_t *network)
         return UR_ERROR_FAIL;
     }
 
-    length = sizeof(mm_header_t) + sizeof(mm_node_id_tv_t) + sizeof(mm_ueid_tv_t) +
+    length = sizeof(mm_header_t) + sizeof(mm_node_id_tv_t) + sizeof(mm_uuid_tv_t) +
              sizeof(mm_mode_tv_t);
     if (network->sid != INVALID_SID &&
         network->attach_candidate->netid == network->meshnetid) {
@@ -960,7 +960,7 @@ static ur_error_t send_sid_request(network_context_t *network)
     node_id.mode = g_mm_state.device.mode;
     node_id.meshnetid = network->attach_candidate->netid;
     data += set_mm_node_id_tv(data, TYPE_ATTACH_NODE_ID, &node_id);
-    data += set_mm_ueid_tv(data, TYPE_SRC_UEID, g_mm_state.device.ueid);
+    data += set_mm_uuid_tv(data, TYPE_SRC_UEID, g_mm_state.device.uuid);
     data += set_mm_mode_tv(data);
 
     if (network->sid != INVALID_SID &&
@@ -1050,7 +1050,7 @@ static ur_error_t handle_sid_request(message_t *message)
     ur_error_t error = UR_ERROR_NONE;
     mm_node_id_tv_t *attach_node_id;
     mm_sid_tv_t *src_sid;
-    mm_ueid_tv_t *ueid;
+    mm_uuid_tv_t *uuid;
     mm_mode_tv_t *mode;
     uint8_t *tlvs;
     uint16_t tlvs_length;
@@ -1076,9 +1076,9 @@ static ur_error_t handle_sid_request(message_t *message)
                                                         TYPE_ATTACH_NODE_ID);
     src_sid = (mm_sid_tv_t *)umesh_mm_get_tv(tlvs, tlvs_length, TYPE_SRC_SID);
 
-    ueid = (mm_ueid_tv_t *)umesh_mm_get_tv(tlvs, tlvs_length, TYPE_SRC_UEID);
+    uuid = (mm_uuid_tv_t *)umesh_mm_get_tv(tlvs, tlvs_length, TYPE_SRC_UEID);
     mode = (mm_mode_tv_t *)umesh_mm_get_tv(tlvs, tlvs_length, TYPE_MODE);
-    if (ueid == NULL || mode == NULL) {
+    if (uuid == NULL || mode == NULL) {
         ur_mem_free(tlvs, tlvs_length);
         return UR_ERROR_FAIL;
     }
@@ -1094,9 +1094,9 @@ static ur_error_t handle_sid_request(message_t *message)
     if (mode->mode & MODE_MOBILE) {
         network = get_sub_network_context(network->hal);
     }
-    memcpy(node_id.ueid, ueid->ueid, sizeof(node_id.ueid));
+    memcpy(node_id.uuid, uuid->uuid, sizeof(node_id.uuid));
 
-    neighbor_t *node = get_neighbor_by_mac_addr(node_id.ueid);
+    neighbor_t *node = get_neighbor_by_mac_addr(node_id.uuid);
     if (node == NULL) {
         node_id.sid = INVALID_SID;
     }
@@ -1113,7 +1113,7 @@ static ur_error_t handle_sid_request(message_t *message)
         ur_addr_t dest;
         ur_addr_t dest2;
         set_mesh_short_addr(&dest, attach_node_id->meshnetid, attach_node_id->sid);
-        set_mesh_ext_addr(&dest2, BCAST_NETID, ueid->ueid);
+        set_mesh_ext_addr(&dest2, BCAST_NETID, uuid->uuid);
         network = get_network_context_by_meshnetid(dest.netid, true);
         error = send_sid_response(network, &dest, &dest2, &node_id);
     }
@@ -1515,9 +1515,9 @@ ur_error_t umesh_mm_init(node_mode_t mode, mm_cb_t *mm_cb)
 
     // init device
     g_mm_state.device.state = DEVICE_STATE_DISABLED;
-    // ueid is default mac address
-    memcpy(g_mm_state.device.ueid, hal_umesh_get_mac_address(NULL),
-           sizeof(g_mm_state.device.ueid));
+    // uuid is default mac address
+    memcpy(g_mm_state.device.uuid, hal_umesh_get_mac_address(NULL),
+           sizeof(g_mm_state.device.uuid));
     g_mm_state.device.seclevel = SEC_LEVEL_1;
     g_mm_state.device.prev_channel = hal->def_channel;
     register_neighbor_updater(neighbor_updated_handler);
@@ -1608,9 +1608,9 @@ uint16_t umesh_mm_get_local_sid(void)
     return sid;
 }
 
-uint8_t *umesh_mm_get_local_ueid(void)
+uint8_t *umesh_mm_get_local_uuid(void)
 {
-    return g_mm_state.device.ueid;
+    return g_mm_state.device.uuid;
 }
 
 ur_error_t umesh_mm_set_mode(node_mode_t mode)
@@ -1920,14 +1920,14 @@ uint8_t set_mm_channel_tv(network_context_t *network, uint8_t *data)
     return sizeof(mm_channel_tv_t);
 }
 
-uint8_t set_mm_ueid_tv(uint8_t *data, uint8_t type, uint8_t *ueid)
+uint8_t set_mm_uuid_tv(uint8_t *data, uint8_t type, uint8_t *uuid)
 {
-    mm_ueid_tv_t *target_ueid;
+    mm_uuid_tv_t *target_uuid;
 
-    target_ueid = (mm_ueid_tv_t *)data;
-    umesh_mm_init_tv_base((mm_tv_t *)target_ueid, type);
-    memcpy(target_ueid->ueid, ueid, sizeof(target_ueid->ueid));
-    return sizeof(mm_ueid_tv_t);
+    target_uuid = (mm_uuid_tv_t *)data;
+    umesh_mm_init_tv_base((mm_tv_t *)target_uuid, type);
+    memcpy(target_uuid->uuid, uuid, sizeof(target_uuid->uuid));
+    return sizeof(mm_uuid_tv_t);
 }
 
 uint8_t set_mm_path_cost_tv(network_context_t *network, uint8_t *data)

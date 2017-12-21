@@ -66,7 +66,7 @@ typedef struct none_tv_s {
 typedef struct vertex_tv_s {
     uint8_t type;
     uint16_t sid;
-    uint8_t ueid[8];
+    uint8_t uuid[8];
 } __attribute__((packed)) vertex_tv_t;
 
 typedef struct edge_tv_s {
@@ -99,7 +99,7 @@ typedef struct vertex_s {
     uint16_t sid;
     uint8_t seq;
     vertex_flag_t flag; /* vertex flags */
-    uint8_t ueid[8];
+    uint8_t uuid[8];
     uint16_t dist;      /* minimum distance from source to this vertex */
     uint16_t nexthop;   /* next hop to send to for reaching this node */
     edge_t *edges;    /* outgoing edges from this vertex */

@@ -76,7 +76,7 @@ ur_error_t remove_neighbor(hal_context_t *hal, neighbor_t *neighbor)
     if (network && network->router->sid_type == STRUCTURED_SID &&
         is_allocated_child(network->sid_base, neighbor)) {
         node_id.sid = neighbor->sid;
-        memcpy(node_id.ueid, neighbor->mac, sizeof(node_id.ueid));
+        memcpy(node_id.uuid, neighbor->mac, sizeof(node_id.uuid));
         update_sid_mapping(network->sid_base, &node_id, false);
     }
 
@@ -304,7 +304,7 @@ static void handle_update_nbr_timer(void *args)
         if (network && network->router->sid_type == STRUCTURED_SID &&
             node->state == STATE_CHILD) {
             node_id.sid = node->sid;
-            memcpy(node_id.ueid, node->mac, sizeof(node_id.ueid));
+            memcpy(node_id.uuid, node->mac, sizeof(node_id.uuid));
             update_sid_mapping(network->sid_base, &node_id, false);
         }
         node->state = STATE_INVALID;
@@ -457,7 +457,7 @@ neighbor_t *update_neighbor(const message_info_t *info,
                  is_allocated_child(network->sid_base, nbr) &&
                  is_partial_function_sid(info->src.addr.short_addr) == false)) {
                 node_id.sid = nbr->sid;
-                memcpy(node_id.ueid, nbr->mac, sizeof(node_id.ueid));
+                memcpy(node_id.uuid, nbr->mac, sizeof(node_id.uuid));
                 update_sid_mapping(network->sid_base, &node_id, false);
                 nbr->state = STATE_NEIGHBOR;
             }

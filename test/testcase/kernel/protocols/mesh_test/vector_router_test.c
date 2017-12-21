@@ -130,8 +130,8 @@ void test_uradar_vector_router_case(void)
     cmd->seq = 1;
     cmd->sid = 0x1000;
     vertex_tv->type = TYPE_VERTEX;
-    memset(vertex_tv->ueid, 0x00, sizeof(vertex_tv->ueid));
-    vertex_tv->ueid[0] = 0x02;
+    memset(vertex_tv->uuid, 0x00, sizeof(vertex_tv->uuid));
+    vertex_tv->uuid[0] = 0x02;
     vertex_tv->sid = 0x1000;
     YUNIT_ASSERT(UR_ERROR_NONE == vector_router_message_received(data, len));
     YUNIT_ASSERT(UR_ERROR_NONE == vector_router_message_received(data, len));
@@ -143,7 +143,7 @@ void test_uradar_vector_router_case(void)
     YUNIT_ASSERT(UR_ERROR_NONE == vector_router_message_received(data, len));
     YUNIT_ASSERT(UR_ERROR_NONE == vector_router_message_received(data, len));
     cmd->seq = 1;
-    vertex_tv->ueid[0] = 0x04;
+    vertex_tv->uuid[0] = 0x04;
     vertex_tv->sid = 0x4000;
     edge_tuple->dst = 0x1000;
     edge_tuple->cost = 16;
@@ -153,14 +153,14 @@ void test_uradar_vector_router_case(void)
     cmd->seq = 3;
     cmd->sid = 0x1000;
     vertex_tv->sid = 0x1000;
-    vertex_tv->ueid[0] = 0x02;
+    vertex_tv->uuid[0] = 0x02;
     len = sizeof(router_command_t) + sizeof(vertex_tv_t);
     YUNIT_ASSERT(UR_ERROR_NONE == vector_router_message_received(data, len));
     YUNIT_ASSERT(UR_ERROR_NONE == vector_router_message_received(data, len));
 
     cmd->cmd = COMMAND_VERTEX_DELETE;
     cmd->seq = 2;
-    vertex_tv->ueid[0] = 0x04;
+    vertex_tv->uuid[0] = 0x04;
     vertex_tv->sid     = 0x4000;
     YUNIT_ASSERT(UR_ERROR_NONE == vector_router_message_received(data, len));
     /* edge update message */
@@ -217,20 +217,20 @@ void test_uradar_vector_router_case(void)
     len = sizeof(router_command_t);
     vertex_tv = (vertex_tv_t *)(data + len);
     vertex_tv->type = TYPE_VERTEX;
-    memset(vertex_tv->ueid, 0x00, sizeof(vertex_tv->ueid));
-    vertex_tv->ueid[0] = 0x11;
+    memset(vertex_tv->uuid, 0x00, sizeof(vertex_tv->uuid));
+    vertex_tv->uuid[0] = 0x11;
     vertex_tv->sid = 0x0000;
     len += sizeof(vertex_tv_t);
     vertex_tv = (vertex_tv_t *)(data + len);
     vertex_tv->type = TYPE_VERTEX;
-    memset(vertex_tv->ueid, 0x00, sizeof(vertex_tv->ueid));
-    vertex_tv->ueid[0] = 0x12;
+    memset(vertex_tv->uuid, 0x00, sizeof(vertex_tv->uuid));
+    vertex_tv->uuid[0] = 0x12;
     vertex_tv->sid = 0x2000;
     len += sizeof(vertex_tv_t);
     vertex_tv = (vertex_tv_t *)(data + len);
     vertex_tv->type = TYPE_VERTEX;
-    memset(vertex_tv->ueid, 0x00, sizeof(vertex_tv->ueid));
-    vertex_tv->ueid[0] = 0x13;
+    memset(vertex_tv->uuid, 0x00, sizeof(vertex_tv->uuid));
+    vertex_tv->uuid[0] = 0x13;
     vertex_tv->sid = 0x3000;
     len += sizeof(vertex_tv_t);
     edge_tv = (edge_tv_t *)(data + len);

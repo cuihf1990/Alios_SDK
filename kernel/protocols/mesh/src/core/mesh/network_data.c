@@ -20,18 +20,18 @@ static network_data_state_t g_nd_state;
 static uint16_t generate_meshnetid(void)
 {
     uint16_t meshnetid = 0x0000;
-    uint8_t *ueid;
+    uint8_t *uuid;
 
     /* TODO: replace XOR with hash function */
-    ueid = umesh_mm_get_local_ueid();
-    meshnetid ^= ((uint16_t)ueid[0]) << 8;
-    meshnetid ^= ((uint16_t)ueid[1]) << 8;
-    meshnetid ^= ((uint16_t)ueid[2]) << 8;
-    meshnetid ^= ((uint16_t)ueid[3]) << 8;
-    meshnetid ^= ((uint16_t)ueid[4]) << 8;
-    meshnetid ^= ((uint16_t)ueid[5]) << 8;
-    meshnetid ^= ((uint16_t)ueid[6]) << 8;
-    meshnetid ^= ((uint16_t)ueid[7]) << 8;
+    uuid = umesh_mm_get_local_uuid();
+    meshnetid ^= ((uint16_t)uuid[0]) << 8;
+    meshnetid ^= ((uint16_t)uuid[1]) << 8;
+    meshnetid ^= ((uint16_t)uuid[2]) << 8;
+    meshnetid ^= ((uint16_t)uuid[3]) << 8;
+    meshnetid ^= ((uint16_t)uuid[4]) << 8;
+    meshnetid ^= ((uint16_t)uuid[5]) << 8;
+    meshnetid ^= ((uint16_t)uuid[6]) << 8;
+    meshnetid ^= ((uint16_t)uuid[7]) << 8;
     return meshnetid;
 }
 

@@ -111,7 +111,7 @@ bool is_allocated_child(allocator_t hdl, neighbor_t *nbr)
         return false;
     }
     slist_for_each_entry(&allocator->base.node_list, node, sid_node_t, next) {
-        if (memcmp(node->node_id.ueid, nbr->mac, sizeof(nbr->mac)) == 0) {
+        if (memcmp(node->node_id.uuid, nbr->mac, sizeof(nbr->mac)) == 0) {
             return true;
         }
     }
@@ -128,8 +128,8 @@ ur_error_t update_sid_mapping(allocator_t hdl,
 
     allocator = (ssid_allocator_t *)hdl;
     slist_for_each_entry(&allocator->base.node_list, node, sid_node_t, next) {
-        if (memcmp(node->node_id.ueid, node_id->ueid,
-                   sizeof(node->node_id.ueid)) == 0) {
+        if (memcmp(node->node_id.uuid, node_id->uuid,
+                   sizeof(node->node_id.uuid)) == 0) {
             new_node = node;
             break;
         }
@@ -156,7 +156,7 @@ ur_error_t update_sid_mapping(allocator_t hdl,
         slist_add(&new_node->next, &allocator->base.node_list);
     }
 
-    memcpy(new_node->node_id.ueid, node_id->ueid, sizeof(new_node->node_id.ueid));
+    memcpy(new_node->node_id.uuid, node_id->uuid, sizeof(new_node->node_id.uuid));
     new_node->node_id.sid = node_id->sid;
     new_node->node_id.attach_sid = node_id->attach_sid;
 
@@ -241,8 +241,8 @@ sid_node_t *get_sid_mapping(allocator_t hdl, ur_node_id_t *node_id)
 
     allocator = (ssid_allocator_t *)hdl;
     slist_for_each_entry(&allocator->base.node_list, sid_node, sid_node_t, next) {
-        if (memcmp(sid_node->node_id.ueid, node_id->ueid,
-                   sizeof(sid_node->node_id.ueid)) == 0) {
+        if (memcmp(sid_node->node_id.uuid, node_id->uuid,
+                   sizeof(sid_node->node_id.uuid)) == 0) {
             break;
         }
     }
@@ -285,8 +285,8 @@ ur_error_t allocate_sid(allocator_t hdl, ur_node_id_t *node_id)
 new_sid:
     if (node_id->mode & MODE_MOBILE) {
         slist_for_each_entry(&allocator->base.node_list, sid_node, sid_node_t, next) {
-            if (memcmp(sid_node->node_id.ueid, node_id->ueid,
-                       sizeof(sid_node->node_id.ueid)) == 0) {
+            if (memcmp(sid_node->node_id.uuid, node_id->uuid,
+                       sizeof(sid_node->node_id.uuid)) == 0) {
                 break;
             }
         }

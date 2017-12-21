@@ -82,8 +82,8 @@ static void topology_line_case(bool vector_router)
 
     attach_node = umesh_mm_get_attach_node();
     if (attach_node) {
-        uint64_t ueid = ueid64(attach_node->mac);
-        YUNIT_ASSERT(ueid == 12);
+        uint64_t uuid = uuid64(attach_node->mac);
+        YUNIT_ASSERT(uuid == 12);
         YUNIT_ASSERT(umesh_get_meshnetid() == attach_node->netid);
         goto out;
     }
@@ -104,9 +104,9 @@ static void topology_line_case(bool vector_router)
         if (!node)
             continue;
 
-        uint64_t ueid = ueid64(node->mac);
-        printf("node sid=%04x ueid=%llx\n", node->sid, ueid);
-        if (ueid == 12)
+        uint64_t uuid = uuid64(node->mac);
+        printf("node sid=%04x uuid=%llx\n", node->sid, uuid);
+        if (uuid == 12)
             found_12 = 1;
     }
     YUNIT_ASSERT(found_12);

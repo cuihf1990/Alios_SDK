@@ -24,7 +24,7 @@ typedef enum {
 } cache_state_t;
 
 typedef struct address_cache_s {
-    uint8_t ueid[EXT_ADDR_SIZE];
+    uint8_t uuid[EXT_ADDR_SIZE];
     uint16_t meshnetid;
     uint16_t sid;
     uint16_t attach_sid;
