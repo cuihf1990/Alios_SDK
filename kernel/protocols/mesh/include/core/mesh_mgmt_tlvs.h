@@ -33,7 +33,7 @@ typedef enum {
     TYPE_NODE_TYPE         = 0x93,  /* node type TLV */
     TYPE_NETWORK_INFO      = 0x94,  /* packet sequence number */
     TYPE_MCAST_ADDR        = 0x95,  /* multicast address */
-    TYPE_TARGET_UEID       = 0x96,  /* target ueid TLV */
+    TYPE_TARGET_UEID       = 0x96,  /* target uuid TLV */
     TYPE_TARGET_SID        = 0x97,  /* target sid TLV */
     TYPE_REVERSE_RSSI      = 0x98,  /* reverse RSSI */
     TYPE_FORWARD_RSSI      = 0x99,  /* forward RSSI */
@@ -65,10 +65,10 @@ typedef struct mesh_mgmt_tv_s {
     uint8_t type;
 } __attribute__((packed)) mm_tv_t;
 
-typedef struct mesh_mgmt_ueid_tv_s {
+typedef struct mesh_mgmt_uuid_tv_s {
     mm_tv_t base;
-    uint8_t ueid[8];
-} __attribute__((packed)) mm_ueid_tv_t;
+    uint8_t uuid[8];
+} __attribute__((packed)) mm_uuid_tv_t;
 
 typedef struct mesh_mgmt_sid_tv_s {
     mm_tv_t base;

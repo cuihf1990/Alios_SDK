@@ -58,7 +58,7 @@ typedef enum node_type_s {
 } sid_node_type_t;
 
 typedef struct ur_node_id_s {
-    uint8_t ueid[EXT_ADDR_SIZE];
+    uint8_t uuid[EXT_ADDR_SIZE];
     node_mode_t mode;
     uint16_t meshnetid;
     uint16_t sid;
@@ -92,15 +92,15 @@ typedef struct neighbor_s {
     uint32_t last_heard;
 } neighbor_t;
 
-#define ueid64(ueid) ({ \
-    uint64_t id64 = ueid[7];     \
-    id64 <<= 8; id64 |= ueid[6]; \
-    id64 <<= 8; id64 |= ueid[5]; \
-    id64 <<= 8; id64 |= ueid[4]; \
-    id64 <<= 8; id64 |= ueid[3]; \
-    id64 <<= 8; id64 |= ueid[2]; \
-    id64 <<= 8; id64 |= ueid[1]; \
-    id64 <<= 8; id64 |= ueid[0]; \
+#define uuid64(uuid) ({ \
+    uint64_t id64 = uuid[7];     \
+    id64 <<= 8; id64 |= uuid[6]; \
+    id64 <<= 8; id64 |= uuid[5]; \
+    id64 <<= 8; id64 |= uuid[4]; \
+    id64 <<= 8; id64 |= uuid[3]; \
+    id64 <<= 8; id64 |= uuid[2]; \
+    id64 <<= 8; id64 |= uuid[1]; \
+    id64 <<= 8; id64 |= uuid[0]; \
     id64; \
 })
 #endif  /* UR_TOPOLOGY_H */

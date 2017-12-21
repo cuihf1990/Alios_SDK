@@ -105,7 +105,7 @@ void umesh_mm_set_prev_channel(void);
 uint16_t umesh_mm_get_local_sid(void);
 neighbor_t *umesh_mm_get_attach_node(void);
 neighbor_t *umesh_mm_get_attach_candidate(void);
-uint8_t *umesh_mm_get_local_ueid(void);
+uint8_t *umesh_mm_get_local_uuid(void);
 node_state_t umesh_mm_get_device_state(void);
 attach_state_t umesh_mm_get_attach_state(void);
 uint16_t umesh_mm_get_meshnetid(network_context_t *network);
@@ -157,7 +157,7 @@ static inline bool is_bcast_sid(ur_addr_t *addr)
 
 uint8_t set_mm_netinfo_tv(network_context_t *network, uint8_t *data);
 uint8_t set_mm_channel_tv(network_context_t *network, uint8_t *data);
-uint8_t set_mm_ueid_tv(uint8_t *data, uint8_t type, uint8_t *ueid);
+uint8_t set_mm_uuid_tv(uint8_t *data, uint8_t type, uint8_t *uuid);
 uint8_t set_mm_path_cost_tv(network_context_t *network, uint8_t *data);
 uint8_t set_mm_node_id_tv(uint8_t *data, uint8_t type, ur_node_id_t *node);
 uint8_t set_mm_sid_tv(uint8_t *data, uint8_t type, uint16_t sid);

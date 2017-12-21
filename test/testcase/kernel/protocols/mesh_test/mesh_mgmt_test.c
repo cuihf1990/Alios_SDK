@@ -37,18 +37,18 @@ void test_uradar_mesh_mgmt_case(void)
     YUNIT_ASSERT(UR_ERROR_NONE == umesh_mm_stop());
     YUNIT_ASSERT(DEVICE_STATE_DISABLED == umesh_mm_get_device_state());
     YUNIT_ASSERT(BCAST_SID == umesh_mm_get_local_sid());
-    uint8_t *ueid;
-    YUNIT_ASSERT_PTR_NOT_NULL((ueid = umesh_mm_get_local_ueid()));
-    YUNIT_ASSERT(0 != memcmp(ueid, INVALID_UEID, 8));
+    uint8_t *uuid;
+    YUNIT_ASSERT_PTR_NOT_NULL((uuid = umesh_mm_get_local_uuid()));
+    YUNIT_ASSERT(0 != memcmp(uuid, INVALID_UEID, 8));
 
     mac_address_t mac_addr;
     mac_addr.len = sizeof(mac_addr.addr);
     memset(mac_addr.addr, 0x00, sizeof(mac_addr.addr));
     mac_addr.addr[0] = 0x03;
     YUNIT_ASSERT_PTR_NULL(get_neighbor_by_mac_addr((const uint8_t *)&mac_addr));
-    YUNIT_ASSERT_PTR_NULL(get_neighbor_by_sid(umesh_mm_get_meshnetid(NULL), 0x1200));
-    uint8_t ueid1[8] = {0};
-    YUNIT_ASSERT_PTR_NULL(get_neighbor_by_mac_addr(ueid1));
+    YUNIT_ASSERT_PTR_NULL(get_neighbor_by_sid(0x1200, umesh_mm_get_meshnetid(NULL)));
+    uint8_t uuid1[8] = {0};
+    YUNIT_ASSERT_PTR_NULL(get_neighbor_by_mac_addr(uuid1));
     YUNIT_ASSERT(0 != umesh_mm_get_meshnetid(NULL));
     YUNIT_ASSERT_PTR_NOT_NULL(umesh_mm_get_mac_address());
     YUNIT_ASSERT(UR_ERROR_NONE == umesh_mm_set_mode(MODE_MOBILE));

@@ -88,7 +88,7 @@ static inline bool is_local_ucast_address(message_info_t *info)
             }
             break;
         case EXT_ADDR_SIZE:
-            if (memcmp(addr->addr, umesh_mm_get_local_ueid(), sizeof(addr->addr)) == 0) {
+            if (memcmp(addr->addr, umesh_mm_get_local_uuid(), sizeof(addr->addr)) == 0) {
                 matched = true;
             }
             break;
@@ -894,7 +894,7 @@ static void message_handler(void *args)
                                      info->mode & (~MODE_LEADER));
     if (info->network == NULL) {
         if (cmp_mode <= 0) {
-            info->network = get_hal_default_network_context(hal);
+            info->network = get_default_network_context();
         } else {
             info->network = get_sub_network_context(hal);
         }
@@ -914,8 +914,7 @@ static void message_handler(void *args)
         is_diff_level = true;
     }
 
-    if (info->network == NULL ||
-        (is_check_level && is_diff_level)) {
+    if (info->network == NULL || (is_check_level && is_diff_level)) {
         message_free(message);
         return;
     }

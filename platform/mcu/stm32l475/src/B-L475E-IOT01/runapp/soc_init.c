@@ -374,7 +374,6 @@ GETCHAR_PROTOTYPE
 
 int32_t hal_uart_send(uart_dev_t *uart, const void *data, uint32_t size, uint32_t timeout) {
     HAL_UART_StateTypeDef state = HAL_UART_STATE_BUSY_TX;
-    int ret;
     if(uart==NULL||data==NULL) {
       return -EINVAL;
     }
@@ -398,7 +397,7 @@ int32_t hal_uart_send(uart_dev_t *uart, const void *data, uint32_t size, uint32_
 
     aos_mutex_unlock(&stm32_uart[uart->port].uart_tx_mutex);
 
-    return size;
+    return 0;
 }
 
 int32_t hal_uart_recv(uart_dev_t *uart, void *data, uint32_t expect_size, uint32_t *recv_size, uint32_t timeout) {

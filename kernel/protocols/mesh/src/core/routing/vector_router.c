@@ -62,7 +62,7 @@ static vertex_t *vertex_alloc()
 
     vertex->sid     = INVALID_SID;
     vertex->seq     = 0;
-    memset(vertex->ueid, 0xff, sizeof(vertex->ueid));
+    memset(vertex->uuid, 0xff, sizeof(vertex->uuid));
     vertex->edges   = NULL;
     vertex->dist    = INFINITY_PATH_COST;
     vertex->flag.visit = UNVISITED;
@@ -98,20 +98,20 @@ static vertex_t *get_vertex_by_sid(uint16_t sid)
 }
 
 
-static vertex_t *get_vertex_by_ueid(uint8_t *ueid)
+static vertex_t *get_vertex_by_uuid(uint8_t *uuid)
 {
     vertex_t *vertex;
     for_each_vertex(vertex) {
-        if (memcmp(vertex->ueid, ueid, sizeof(vertex->ueid)) == 0) {
+        if (memcmp(vertex->uuid, uuid, sizeof(vertex->uuid)) == 0) {
             return vertex;
         }
     }
     return NULL;
 }
 
-static ur_error_t delete_vertex_by_ueid(uint8_t *ueid)
+static ur_error_t delete_vertex_by_uuid(uint8_t *uuid)
 {
-    vertex_t *vertex = get_vertex_by_ueid(ueid);
+    vertex_t *vertex = get_vertex_by_uuid(uuid);
     if (vertex == NULL) {
         return UR_ERROR_FAIL;
     }
@@ -147,10 +147,10 @@ static ur_error_t delete_vertex_by_ueid(uint8_t *ueid)
     return UR_ERROR_NONE;
 }
 
-static ur_error_t add_vertex_by_ueid(uint8_t *ueid, uint16_t sid)
+static ur_error_t add_vertex_by_uuid(uint8_t *uuid, uint16_t sid)
 {
     vertex_t *vertex;
-    vertex = get_vertex_by_ueid(ueid);
+    vertex = get_vertex_by_uuid(uuid);
     if (vertex != NULL) {
         if (vertex->sid == sid) {
             return UR_ERROR_FAIL;
@@ -171,18 +171,18 @@ static ur_error_t add_vertex_by_ueid(uint8_t *ueid, uint16_t sid)
     g_vr_state.vertex_num++;
     slist_add_tail(&vertex->next, &g_vr_state.vertex_list);
 
-    memcpy(vertex->ueid, ueid, sizeof(vertex->ueid));
+    memcpy(vertex->uuid, uuid, sizeof(vertex->uuid));
     vertex->sid = sid;
     return UR_ERROR_NONE;
 }
 
-static ur_error_t update_vertex(uint8_t cmd, uint8_t *ueid, uint16_t sid)
+static ur_error_t update_vertex(uint8_t cmd, uint8_t *uuid, uint16_t sid)
 {
     switch (cmd) {
         case COMMAND_VERTEX_UPDATE:
-            return add_vertex_by_ueid(ueid, sid);
+            return add_vertex_by_uuid(uuid, sid);
         case COMMAND_VERTEX_DELETE:
-            return delete_vertex_by_ueid(ueid);
+            return delete_vertex_by_uuid(uuid);
     }
 
     return UR_ERROR_FAIL;
@@ -448,7 +448,7 @@ static void send_topology_sync_data()
         while (vertex != NULL && (len + sizeof(vertex_tv_t)) < MAX_CMD_LEN) {
             tv = (vertex_tv_t *)(data + len);
             tv->type = TYPE_VERTEX;
-            memcpy(tv->ueid, vertex->ueid, sizeof(vertex->ueid));
+            memcpy(tv->uuid, vertex->uuid, sizeof(vertex->uuid));
             tv->sid = vertex->sid;
 
             len += sizeof(vertex_tv_t);
@@ -518,7 +518,7 @@ static void send_topology_sync_data()
     restart_topology_sync_timer();
 }
 
-static void send_vertex_update(uint8_t *ueid, uint16_t sid, uint16_t to)
+static void send_vertex_update(uint8_t *uuid, uint16_t sid, uint16_t to)
 {
     uint8_t *data, len;
     router_command_t *cmd;
@@ -532,7 +532,7 @@ static void send_vertex_update(uint8_t *ueid, uint16_t sid, uint16_t to)
     cmd->sid = vertex_me->sid;
     tv = (vertex_tv_t *)(data + sizeof(router_command_t));
     tv->type = TYPE_VERTEX;
-    memcpy(tv->ueid, ueid, sizeof(tv->ueid));
+    memcpy(tv->uuid, uuid, sizeof(tv->uuid));
     tv->sid  = sid;
 
     MESH_LOG_DEBUG("vector router: send vertex update to %04x, len = %d", to, len);
@@ -594,7 +594,7 @@ static void send_heartbeat_message()
 
     vertex_tv = (vertex_tv_t *)(data + len);
     vertex_tv->type = TYPE_VERTEX;
-    memcpy(vertex_tv->ueid, vertex_me->ueid, sizeof(vertex_tv->ueid));
+    memcpy(vertex_tv->uuid, vertex_me->uuid, sizeof(vertex_tv->uuid));
     vertex_tv->sid  = vertex_me->sid;
     len += sizeof(vertex_tv_t);
 
@@ -704,8 +704,8 @@ static ur_error_t handle_topology_sync_data(const uint8_t *data,
         switch (type) {
             case TYPE_VERTEX:
                 vertex_tv = (vertex_tv_t *)(data + len);
-                if (memcmp(vertex_tv->ueid, vertex_me->ueid, sizeof(vertex_tv->ueid)) != 0) {
-                    update_vertex(COMMAND_VERTEX_UPDATE, vertex_tv->ueid, vertex_tv->sid);
+                if (memcmp(vertex_tv->uuid, vertex_me->uuid, sizeof(vertex_tv->uuid)) != 0) {
+                    update_vertex(COMMAND_VERTEX_UPDATE, vertex_tv->uuid, vertex_tv->sid);
                 }
                 len += sizeof(vertex_tv_t);
                 break;
@@ -760,7 +760,7 @@ static ur_error_t handle_vertex_update(const uint8_t *data, uint16_t length)
 
     cmd = (router_command_t *)data;
     tv  = (vertex_tv_t *)(data + sizeof(router_command_t));
-    vertex = get_vertex_by_ueid(tv->ueid);
+    vertex = get_vertex_by_uuid(tv->uuid);
     if (vertex == NULL) {
         return UR_ERROR_FAIL;
     }
@@ -773,7 +773,7 @@ static ur_error_t handle_vertex_update(const uint8_t *data, uint16_t length)
 
     MESH_LOG_DEBUG("vector router: received vertex update from %04x", cmd->sid);
 
-    error = update_vertex(cmd->cmd, tv->ueid, tv->sid);
+    error = update_vertex(cmd->cmd, tv->uuid, tv->sid);
 
     return error;
 }
@@ -814,10 +814,10 @@ static ur_error_t handle_heartbeat_message(const uint8_t *data, uint16_t length,
     }
 
     vertex_tv = (vertex_tv_t *)(data + sizeof(router_command_t));
-    vertex = get_vertex_by_ueid(vertex_tv->ueid);
+    vertex = get_vertex_by_uuid(vertex_tv->uuid);
     if (vertex == NULL) {
-        update_vertex(COMMAND_VERTEX_UPDATE, vertex_tv->ueid, vertex_tv->sid);
-        vertex = get_vertex_by_ueid(vertex_tv->ueid);
+        update_vertex(COMMAND_VERTEX_UPDATE, vertex_tv->uuid, vertex_tv->sid);
+        vertex = get_vertex_by_uuid(vertex_tv->uuid);
         if (vertex == NULL) {
             return UR_ERROR_FAIL;
         }
@@ -919,7 +919,7 @@ static void vertex_timeout_check()
     while (1) {
         for_each_vertex(vertex) {
             if (vertex->flag.timeout >= VERTEX_ALIVE_TIMEOUT / HEARTBEAT_TIMEOUT) {
-                update_vertex(COMMAND_VERTEX_DELETE, vertex->ueid, vertex->sid);
+                update_vertex(COMMAND_VERTEX_DELETE, vertex->uuid, vertex->sid);
                 newinfo++;
                 goto next_loop;
             }
@@ -1037,7 +1037,7 @@ ur_error_t vector_router_neighbor_updated(neighbor_t *neighbor)
     uint16_t src, dst;
     uint8_t cost;
 
-    if (get_vertex_by_ueid(neighbor->mac) == NULL) {
+    if (get_vertex_by_uuid(neighbor->mac) == NULL) {
         return UR_ERROR_FAIL;
     }
 
@@ -1125,7 +1125,7 @@ ur_error_t vector_router_event_triggered(uint8_t event, uint8_t *data,
                 return UR_ERROR_NONE;
             }
             vertex_me->sid = netids->sid;
-            send_vertex_update(vertex_me->ueid, vertex_me->sid, BCAST_SID);
+            send_vertex_update(vertex_me->uuid, vertex_me->sid, BCAST_SID);
         } else {
             if (is_unique_netid(g_vr_state.meshnetid)) {
                 vector_router_deinit();
@@ -1134,7 +1134,7 @@ ur_error_t vector_router_event_triggered(uint8_t event, uint8_t *data,
 
             g_vr_state.meshnetid = netids->meshnetid;
             vertex_me->sid = netids->sid;
-            memcpy(vertex_me->ueid, umesh_mm_get_local_ueid(), sizeof(vertex_me->ueid));
+            memcpy(vertex_me->uuid, umesh_mm_get_local_uuid(), sizeof(vertex_me->uuid));
             if (netids->sid == LEADER_SID) {
                 g_vr_state.status = STATUS_UP;
             } else {
