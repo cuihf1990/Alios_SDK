@@ -29,11 +29,16 @@ if [ -f ${mk3060firmware} ]; then
     sleep 30
     python alink_testrun.py --testname=${prefix}2pps --firmware=${mk3060firmware} --model=${model} > ~/${model}_2pps.txt 2>&1 &
     mk3060_2pps_pid=$!
+    python alink_mesh_testrun.py --testname=${prefix}5pps --firmware=${mk3060firmware} --model=${model} > ~/${model}_mesh_5pps.txt 2>&1 &
+    mk3060_mesh_5pps_pid=$!
+    python alink_mesh_testrun.py --testname=${prefix}2pps --firmware=${mk3060firmware} --model=${model} > ~/${model}_mesh_2pps.txt 2>&1 &
+    mk3060_mesh_2pps_pid=$!
     python stability_test.py --firmware=${mk3060firmware} --model=${model} --withalink=1 > ~/${model}_stability_alink.txt 2>&1 &
     mk3060_stability_alink_pid=$!
     python stability_test.py --firmware=${mk3060firmware} --model=${model} --withalink=0 > ~/${model}_stability_noalink.txt 2>&1 &
     mk3060_stability_noalink_pid=$!
-    alinkpids="${alinkpids} ${mk3060_5pps_pid} ${mk3060_2pps_pid} ${mk3060_stability_alink_pid} ${mk3060_stability_noalink_pid}"
+    alinkpids="${alinkpids} ${mk3060_5pps_pid} ${mk3060_2pps_pid} ${mk3060_mesh_5pps_pid} ${mk3060_mesh_2pps_pid}"
+    alinkpids="${alinkpids} ${mk3060_stability_alink_pid} ${mk3060_stability_noalink_pid}"
 fi
 if [ -f ${esp32firmware} ]; then
     model=esp32
@@ -42,11 +47,16 @@ if [ -f ${esp32firmware} ]; then
     sleep 30
     python alink_testrun.py --testname=${prefix}2pps --firmware=${esp32firmware} --model=${model} > ~/${model}_2pps.txt 2>&1 &
     esp32_2pps_pid=$!
+    python alink_testrun.py --testname=${prefix}5pps --firmware=${esp32firmware} --model=${model} > ~/${model}_mesh_5pps.txt 2>&1 &
+    esp32_mesh_5pps_pid=$!
+    python alink_testrun.py --testname=${prefix}2pps --firmware=${esp32firmware} --model=${model} > ~/${model}_mesh_2pps.txt 2>&1 &
+    esp32_mesh_2pps_pid=$!
     python stability_test.py --firmware=${esp32firmware} --model=${model} --withalink=1 > ~/${model}_stability_alink.txt 2>&1 &
     esp32_stability_alink_pid=$!
     python stability_test.py --firmware=${esp32firmware} --model=${model} --withalink=0 > ~/${model}_stability_noalink.txt 2>&1 &
     esp32_stability_noalink_pid=$!
-    alinkpids="${alinkpids} ${esp32_5pps_pid} ${esp32_2pps_pid} ${esp32_stability_alink_pid} ${esp32_stability_noalink_pid}"
+    alinkpids="${alinkpids} ${esp32_5pps_pid} ${esp32_2pps_pid} ${esp32_mesh_5pps_pid} ${esp32_mesh_2pps_pid}"
+    alinkpids="${alinkpids} ${esp32_stability_alink_pid} ${esp32_stability_noalink_pid}"
 fi
 
 title=""
@@ -133,6 +143,10 @@ if [ -f ${mk3060firmware} ]; then
     mk3060_5pps_ret=$?
     wait ${mk3060_2pps_pid}
     mk3060_2pps_ret=$?
+    wait ${mk3060_mesh_5pps_pid}
+    mk3060_mesh_5pps_ret=$?
+    wait ${mk3060_mesh_2pps_pid}
+    mk3060_mesh_2pps_ret=$?
     echo -e "\n---------------------------------------------------------\n" >> ${logfile}
     if [ ${mk3060_5pps_ret} -eq 0 ]; then
         echo -e "run Alink 5PPS test with ${model} succeed, log:\n" >> ${logfile}
@@ -154,6 +168,28 @@ if [ -f ${mk3060firmware} ]; then
     fi
     cat ~/${model}_2pps.txt >> ${logfile}
     rm -f ~/${model}_2pps.txt
+
+    echo -e "\n---------------------------------------------------------\n" >> ${logfile}
+    if [ ${mk3060_mesh_5pps_ret} -eq 0 ]; then
+        echo -e "run Alink MESH5PPS test with ${model} succeed, log:\n" >> ${logfile}
+        title="${title} MK3060: MESH5PPS-PASS"
+    else
+        echo -e "run Alink MESH5PPS test with ${model} failed, log:\n" >> ${logfile}
+        title="${title} MK3060: MESH5PPS-FAIL"
+    fi
+    cat ~/${model}_mesh_5pps.txt >> ${logfile}
+    rm -f ~/${model}_mesh_5pps.txt
+
+    echo -e "\n---------------------------------------------------------\n" >> ${logfile}
+    if [ ${mk3060_mesh_2pps_ret} -eq 0 ]; then
+        echo -e "run Alink MESH2PPS test with ${model} succeed, log:\n" >> ${logfile}
+        title="${title} MESH2PPS-PASS;"
+    else
+        echo -e "run Alink MESH2PPS test with ${model} failed, log:\n" >> ${logfile}
+        title="${title} MESH2PPS-FAIL;"
+    fi
+    cat ~/${model}_mesh_2pps.txt >> ${logfile}
+    rm -f ~/${model}_mesh_2pps.txt
 fi
 
 if [ -f ${esp32firmware} ]; then
@@ -162,6 +198,10 @@ if [ -f ${esp32firmware} ]; then
     esp32_5pps_ret=$?
     wait ${esp32_2pps_pid}
     esp32_2pps_ret=$?
+    wait ${esp32_mesh_5pps_pid}
+    esp32_mesh_5pps_ret=$?
+    wait ${esp32_mesh_2pps_pid}
+    esp32_mesh_2pps_ret=$?
     echo -e "\n---------------------------------------------------------\n" >> ${logfile}
     if [ ${esp32_5pps_ret} -eq 0 ]; then
         echo -e "run Alink 5PPS test with ${model} succeed, log:\n" >> ${logfile}
@@ -183,6 +223,28 @@ if [ -f ${esp32firmware} ]; then
     fi
     cat ~/${model}_2pps.txt >> ${logfile}
     rm -f ~/${model}_2pps.txt
+
+    echo -e "\n---------------------------------------------------------\n" >> ${logfile}
+    if [ ${esp32_mesh_5pps_ret} -eq 0 ]; then
+        echo -e "run Alink MESH5PPS test with ${model} succeed, log:\n" >> ${logfile}
+        title="${title} ESP32: MESH5PPS-PASS"
+    else
+        echo -e "run Alink 5PPS test with ${model} failed, log:\n" >> ${logfile}
+        title="${title} ESP32: 5PPS-FAIL"
+    fi
+    cat ~/${model}_mesh_5pps.txt >> ${logfile}
+    rm -f ~/${model}_mesh_5pps.txt
+
+    echo -e "\n---------------------------------------------------------\n" >> ${logfile}
+    if [ ${esp32_mesh_2pps_ret} -eq 0 ]; then
+        echo -e "run Alink MESH2PPS test with ${model} succeed, log:\n" >> ${logfile}
+        title="${title} MESH2PPS-PASS;"
+    else
+        echo -e "run Alink MESH2PPS test with ${model} failed, log:\n" >> ${logfile}
+        title="${title} MESH2PPS-FAIL;"
+    fi
+    cat ~/${model}_mesh_2pps.txt >> ${logfile}
+    rm -f ~/${model}_mesh_2pps.txt
 fi
 
 if [ -f ${mk3060firmware} ]; then
