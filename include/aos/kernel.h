@@ -13,6 +13,7 @@ extern "C" {
 #endif
 
 #define AOS_WAIT_FOREVER    0xffffffffu
+#define AOS_NO_WAIT         0x0
 #define AOS_DEFAULT_APP_PRI 32
 
 typedef struct {
