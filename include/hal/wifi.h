@@ -189,6 +189,8 @@ struct hal_wifi_module_s {
     /* mesh related */
     void (*mesh_register_cb)(hal_wifi_module_t *m, monitor_data_cb_t fn);
     void (*mesh_set_bssid)(hal_wifi_module_t *m, const uint8_t *mac);
+    int  (*mesh_enable)(hal_wifi_module_t *m);
+    int  (*mesh_disable)(hal_wifi_module_t *m);
     int  (*mesh_radio_sleep)(hal_wifi_module_t *m);
     int  (*mesh_radio_wakeup)(hal_wifi_module_t *m);
 };

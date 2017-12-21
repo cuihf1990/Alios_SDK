@@ -24,6 +24,7 @@ $(NAME)_SOURCES := src/core/umesh.c \
                    src/hal/interfaces.c \
                    src/hal/umesh_hal.c \
                    src/hal/80211.c \
+                   src/hal/wifi.c \
                    src/utilities/message.c \
                    src/utilities/timer.c \
                    src/utilities/memory.c \

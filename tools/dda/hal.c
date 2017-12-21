@@ -188,13 +188,13 @@ static int linuxhost_ur_get_channel(umesh_hal_module_t *module)
     return priv->channel;
 }
 
-int linuxhost_umesh_hal_radio_wakeup(struct umesh_hal_module_s *module)
+static int linuxhost_umesh_hal_radio_wakeup(struct umesh_hal_module_s *module)
 {
     g_radio_wakeup = true;
     return 0;
 }
 
-int linuxhost_umesh_hal_radio_sleep(struct umesh_hal_module_s *module)
+static int linuxhost_umesh_hal_radio_sleep(struct umesh_hal_module_s *module)
 {
     g_radio_wakeup = false;
     return 0;
