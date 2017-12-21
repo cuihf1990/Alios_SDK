@@ -49,15 +49,15 @@ static void CASE_aosapi_kernel_event_op_and()
     /*the event now should has event flag value as EVENT_INIT_FLAG(0x0F0F0F0F) */
 
     /* try to get flag EVENT_FLAG_1(0x00000001) with AND operation should success */
-    ret = aos_event_get(&event, EVENT_FLAG_1, RHINO_AND, &actl_flags,RHINO_NO_WAIT);
+    ret = aos_event_get(&event, EVENT_FLAG_1, RHINO_AND, &actl_flags,AOS_NO_WAIT);
     YUNIT_ASSERT_MSG(ret==(RHINO_SUCCESS), "ret=%d", ret);
 
     /* try to get flag EVENT_FLAG_2(0x01000F01) with AND operation should success */
-    ret = aos_event_get(&event, EVENT_FLAG_2, RHINO_AND, &actl_flags, RHINO_NO_WAIT);
+    ret = aos_event_get(&event, EVENT_FLAG_2, RHINO_AND, &actl_flags, AOS_NO_WAIT);
     YUNIT_ASSERT_MSG(ret==(RHINO_SUCCESS), "ret=%d", ret);
 
     /* try to get flag EVENT_FLAG_3(0x000000F0) with AND operation should fail */
-    ret = aos_event_get(&event, EVENT_FLAG_3, RHINO_AND, &actl_flags, RHINO_NO_WAIT);
+    ret = aos_event_get(&event, EVENT_FLAG_3, RHINO_AND, &actl_flags, AOS_NO_WAIT);
     YUNIT_ASSERT_MSG(ret!=(RHINO_SUCCESS), "ret=%d", ret);    
 
     /* destory event */
@@ -79,7 +79,7 @@ static void CASE_aosapi_kernel_event_op_andclear()
     /*the event now should has event flag value as EVENT_INIT_FLAG(0x0F0F0F0F) */
 
     /* try to get flag EVENT_FLAG_1(0x00000001) with AND_CLEAR operation should success */
-    ret = aos_event_get(&event, EVENT_FLAG_1, RHINO_AND_CLEAR, &actl_flags,RHINO_NO_WAIT);
+    ret = aos_event_get(&event, EVENT_FLAG_1, RHINO_AND_CLEAR, &actl_flags,AOS_NO_WAIT);
     YUNIT_ASSERT_MSG(ret==(RHINO_SUCCESS), "ret=%d", ret);
 
     /* now the event should has flag 0x0F0F0F0E */
@@ -88,13 +88,13 @@ static void CASE_aosapi_kernel_event_op_andclear()
      * try to get flag EVENT_FLAG_2(0x01000F01) with AND_CLEAR operation should fail,
      * because (0x0F0F0F0E & 0x01000F01) != 0x01000F01
      */
-    ret = aos_event_get(&event, EVENT_FLAG_2, RHINO_AND, &actl_flags, RHINO_NO_WAIT);
+    ret = aos_event_get(&event, EVENT_FLAG_2, RHINO_AND, &actl_flags, AOS_NO_WAIT);
     YUNIT_ASSERT_MSG(ret!=(RHINO_SUCCESS), "ret=%d", ret);
 
     /* now the event should still has flag 0x0F0F0F0E */
 
     /* try to get flag EVENT_FLAG_3(0x000000F0) with AND operation should fail */
-    ret = aos_event_get(&event, EVENT_FLAG_3, RHINO_AND, &actl_flags, RHINO_NO_WAIT);
+    ret = aos_event_get(&event, EVENT_FLAG_3, RHINO_AND, &actl_flags, AOS_NO_WAIT);
     YUNIT_ASSERT_MSG(ret!=(RHINO_SUCCESS), "ret=%d", ret);    
 
     /* destory event */
@@ -120,15 +120,15 @@ static void CASE_aosapi_kernel_event_op_or()
     /*the event now should has event flag value as EVENT_INIT_FLAG|EVENT_FLAG_1 = 0x0F0F0F0F */
 
     /* try to get flag EVENT_FLAG_1(0x00000001) with OR operation should success */
-    ret = aos_event_get(&event, EVENT_FLAG_1, RHINO_OR, &actl_flags,RHINO_NO_WAIT);
+    ret = aos_event_get(&event, EVENT_FLAG_1, RHINO_OR, &actl_flags, AOS_NO_WAIT);
     YUNIT_ASSERT_MSG(ret==(RHINO_SUCCESS), "ret=%d", ret);
 
     /* try to get flag EVENT_FLAG_2(0x01000F01) with OR operation should success */
-    ret = aos_event_get(&event, EVENT_FLAG_2, RHINO_OR, &actl_flags, RHINO_NO_WAIT);
+    ret = aos_event_get(&event, EVENT_FLAG_2, RHINO_OR, &actl_flags, AOS_NO_WAIT);
     YUNIT_ASSERT_MSG(ret==(RHINO_SUCCESS), "ret=%d", ret);
 
     /* try to get flag EVENT_FLAG_3(0x000000F0) with OR operation should fail */
-    ret = aos_event_get(&event, EVENT_FLAG_3, RHINO_OR, &actl_flags, RHINO_NO_WAIT);
+    ret = aos_event_get(&event, EVENT_FLAG_3, RHINO_OR, &actl_flags, AOS_NO_WAIT);
     YUNIT_ASSERT_MSG(ret!=(RHINO_SUCCESS), "ret=%d", ret);    
 
     /* destory event */
@@ -150,7 +150,7 @@ static void CASE_aosapi_kernel_event_op_orclear()
     /*the event now should has event flag value as EVENT_INIT_FLAG|EVENT_FLAG_1 = 0x0F0F0F0F */
 
     /* try to get flag EVENT_FLAG_1(0x00000001) with OR_CLEAR operation should success */
-    ret = aos_event_get(&event, EVENT_FLAG_1, RHINO_OR_CLEAR, &actl_flags,RHINO_NO_WAIT);
+    ret = aos_event_get(&event, EVENT_FLAG_1, RHINO_OR_CLEAR, &actl_flags,AOS_NO_WAIT);
     YUNIT_ASSERT_MSG(ret==(RHINO_SUCCESS), "ret=%d", ret);
 
     /* now the event should has flag 0x0F0F0F0E*/
@@ -159,13 +159,13 @@ static void CASE_aosapi_kernel_event_op_orclear()
      * try to get flag EVENT_FLAG_2(0x01000F01) with OR_CLEAR operation should success,
      * because (0x0F0F0F0E & 0x01000F01) > 0
      */
-    ret = aos_event_get(&event, EVENT_FLAG_2, RHINO_OR_CLEAR, &actl_flags, RHINO_NO_WAIT);
+    ret = aos_event_get(&event, EVENT_FLAG_2, RHINO_OR_CLEAR, &actl_flags, AOS_NO_WAIT);
     YUNIT_ASSERT_MSG(ret==(RHINO_SUCCESS), "ret=%d", ret);
 
     /* now the event should has flag 0x0E0F000E*/
 
     /* try to get flag EVENT_FLAG_3(0x000000F0) with OR operation should fail */
-    ret = aos_event_get(&event, EVENT_FLAG_3, RHINO_OR, &actl_flags, RHINO_NO_WAIT);
+    ret = aos_event_get(&event, EVENT_FLAG_3, RHINO_OR, &actl_flags, AOS_NO_WAIT);
     YUNIT_ASSERT_MSG(ret!=(RHINO_SUCCESS), "ret=%d", ret);    
 
     /* destory event */
@@ -180,14 +180,14 @@ static void event_test_task1_entry(void* arg)
     uint32_t actl_flags;
 
     /* try to get flag EVENT_FLAG_3(0x000000F0) with OR operation should fail */
-    ret = aos_event_get(&event, EVENT_FLAG_3, RHINO_OR, &actl_flags, RHINO_NO_WAIT);
+    ret = aos_event_get(&event, EVENT_FLAG_3, RHINO_OR, &actl_flags, AOS_NO_WAIT);
     YUNIT_ASSERT_MSG(ret!=(RHINO_SUCCESS), "ret=%d", ret);    
 
     /* 
      * try to get flag EVENT_FLAG_3(0x000000F0) with OR operation should wait here,
      * task2 will set the flags with 0x000000F0, and then task1 will continue
      */
-    ret = aos_event_get(&event, EVENT_FLAG_3, RHINO_OR, &actl_flags, RHINO_WAIT_FOREVER);
+    ret = aos_event_get(&event, EVENT_FLAG_3, RHINO_OR, &actl_flags, AOS_WAIT_FOREVER);
     YUNIT_ASSERT_MSG(ret==(RHINO_SUCCESS), "ret=%d", ret);
 
     /* give the samphore to let main task continue*/
@@ -238,7 +238,7 @@ static void CASE_aosapi_kernel_event_op_multask(void)
     YUNIT_ASSERT_MSG(ret==(RHINO_SUCCESS), "ret=%d", ret);
 
     /* wait for task1 to give samphore */
-    ret = aos_sem_wait(&sem, RHINO_WAIT_FOREVER);
+    ret = aos_sem_wait(&sem, AOS_WAIT_FOREVER);
     YUNIT_ASSERT_MSG(ret==(RHINO_SUCCESS), "ret=%d", ret);
 
     /* destory samphore */
@@ -259,4 +259,5 @@ void aosapi_kernel_event_test_entry(yunit_test_suite_t *suite)
     yunit_add_test_case(suite, "kernel.event.op_orclear",   CASE_aosapi_kernel_event_op_orclear);
     yunit_add_test_case(suite, "kernel.event.op_multask",   CASE_aosapi_kernel_event_op_multask);
 }
+
 
