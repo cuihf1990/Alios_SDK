@@ -1,4 +1,4 @@
-NAME := libdevice
+NAME := libiotx-system
 
 GLOBAL_INCLUDES += \
     ./ \
