@@ -1,4 +1,4 @@
-NAME := Lib_MICO_Bluetooth_Firmware_for_$(BT_CHIP)$(BT_CHIP_REVISION)
+NAME := libmicobtfw
 
 $(NAME)_COMPONENTS := bluetooth.mk3239.aosbt_shim_layer
 

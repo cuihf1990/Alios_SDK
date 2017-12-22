@@ -1,4 +1,4 @@
-NAME := Lib_Bluetooth_Embedded_Dual_mode_Stack_for_$(BT_CHIP)$(BT_CHIP_REVISION)
+NAME := libbtdualmode
 
 BTE_PLATFORM_DIR := ../BTE_platform
 
