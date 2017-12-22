@@ -12,6 +12,7 @@
 #include "core/sid_allocator.h"
 #include "core/address_mgmt.h"
 #include "core/mesh_mgmt_tlvs.h"
+#include "core/keys_mgr.h"
 #ifdef CONFIG_AOS_MESH_LOWPOWER
 #include "core/lowpower_mgmt.h"
 #endif
