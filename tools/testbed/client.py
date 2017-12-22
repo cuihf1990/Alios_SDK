@@ -461,6 +461,18 @@ class Client:
                 return None
         return self.model_interface[model]
 
+    def load_interfaces(self):
+        candidates = glob.glob("board/*/*.py")
+        for d in candidates:
+            r = re.search("board/(.*)/(.*)\.py", d)
+            if r == None:
+                continue
+            model = r.groups()[0]
+            if model != r.groups()[1]:
+                continue
+            self.get_interface_by_model(model)
+            print 'model loaded - ',model
+
     def device_erase(self, port, term):
         model = 'unknown'
         if 'model' in self.devices[port]['attributes']:
@@ -603,6 +615,8 @@ class Client:
             return "fail"
 
     def client_func(self, server_ip, server_port):
+        self.load_interfaces()
+
         result = self.connect_to_server(server_ip, server_port)
         if result == 'success':
             print 'connect to server {0}:{1} succeeded'.format(server_ip, server_port)
