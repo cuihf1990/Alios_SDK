@@ -1093,7 +1093,7 @@ static ur_error_t handle_sid_request(message_t *message)
     }
     memcpy(node_id.uuid, uuid->uuid, sizeof(node_id.uuid));
 
-    neighbor_t *node = get_neighbor_by_mac_addr(node_id.uuid);
+    neighbor_t *node = get_neighbor_by_mac_addr(node_id.uuid, NULL);
     if (node == NULL) {
         node_id.sid = INVALID_SID;
     }

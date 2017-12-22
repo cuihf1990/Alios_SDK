@@ -589,13 +589,13 @@ static neighbor_t *get_next_node(message_info_t *info)
 
     local_sid = umesh_mm_get_local_sid();
     if (info->dest.addr.len == EXT_ADDR_SIZE) {
-        next = get_neighbor_by_mac_addr(info->dest.addr.addr);
+        next = get_neighbor_by_mac_addr(info->dest.addr.addr, NULL);
         return next;
     }
 
     if (info->dest.addr.len == SHORT_ADDR_SIZE &&
         is_partial_function_sid(info->dest.addr.short_addr)) {
-        next = get_neighbor_by_sid(info->dest.netid, info->dest.addr.short_addr);
+        next = get_neighbor_by_sid(info->dest.netid, info->dest.addr.short_addr, NULL);
         return next;
     }
 
@@ -622,12 +622,12 @@ static neighbor_t *get_next_node(message_info_t *info)
             if (next_hop == LEADER_SID) {
                 next_hop = get_leader_sid(info->dest.netid);
             }
-            next = get_neighbor_by_sid(info->dest.netid, next_hop);
+            next = get_neighbor_by_sid(info->dest.netid, next_hop, NULL);
         } else if (is_subnet(network->meshnetid)) {
             next = umesh_mm_get_attach_node();
         } else {
             next_hop = ur_router_get_next_hop(network, get_leader_sid(info->dest.netid));
-            next = get_neighbor_by_sid(get_main_netid(info->dest.netid), next_hop);
+            next = get_neighbor_by_sid(get_main_netid(info->dest.netid), next_hop, NULL);
         }
     } else {
         next = umesh_mm_get_attach_candidate();
@@ -636,11 +636,33 @@ static neighbor_t *get_next_node(message_info_t *info)
     return next;
 }
 
+static void get_tx_network_context(message_info_t *info)
+{
+    network_context_t *network = info->network;
+    neighbor_t *nbr = NULL;
+    hal_context_t *hal = NULL;
+
+    if (network == NULL) {
+        network = get_network_context_by_meshnetid(info->dest.netid, false);
+    }
+    if (network == NULL) {
+        if (info->dest.addr.len == EXT_ADDR_SIZE) {
+            nbr = get_neighbor_by_mac_addr(info->dest.addr.addr, &hal);
+        } else if (info->dest.addr.len == SHORT_ADDR_SIZE) {
+            nbr = get_neighbor_by_sid(info->dest.netid, info->dest.addr.short_addr, &hal);
+        }
+        if (nbr) {
+            network = get_hal_default_network_context(hal);
+        } else {
+            network = get_default_network_context();
+        }
+    }
+    info->network = network;
+}
+
 static void set_src_info(message_info_t *info)
 {
-    if (info->network == NULL) {
-        info->network = get_network_context_by_meshnetid(info->dest.netid, true);
-    }
+    get_tx_network_context(info);
     info->src.netid = umesh_mm_get_meshnetid(info->network);
     info->src.addr.len = SHORT_ADDR_SIZE;
     info->src.addr.short_addr = umesh_mm_get_local_sid();
@@ -870,9 +892,6 @@ static void message_handler(void *args)
         info->dest2.addr.len = 0;
         message_set_payload_offset(message, -info->payload_offset);
         info->flags |= INSERT_MESH_HEADER;
-        if (info->type != MESH_FRAME_TYPE_DATA) {
-            set_src_info(info);
-        }
         forward = true;
     }
 
@@ -926,7 +945,11 @@ static void message_handler(void *args)
 #endif
 
     if (forward == true) {
-        info->network = get_network_context_by_meshnetid(info->dest.netid, true);
+        info->network = NULL;
+        get_tx_network_context(info);
+        if (info->type != MESH_FRAME_TYPE_DATA) {
+            set_src_info(info);
+        }
         network = info->network;
         hal = network->hal;
 

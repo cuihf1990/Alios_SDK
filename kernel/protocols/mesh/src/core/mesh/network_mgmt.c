@@ -67,7 +67,7 @@ static void handle_discovery_timer(void *args)
 
     if (is_unique_netid(g_nm_state.discover_result.meshnetid)) {
         mm_netinfo_tv_t netinfo;
-        nbr = get_neighbor_by_mac_addr(g_nm_state.discover_result.addr.addr);
+        nbr = get_neighbor_by_mac_addr(g_nm_state.discover_result.addr.addr, NULL);
         netinfo.leader_mode = g_nm_state.discover_result.leader_mode;
         netinfo.size = g_nm_state.discover_result.net_size;
         if (nbr && umesh_mm_migration_check(network, nbr, &netinfo)) {
@@ -90,7 +90,7 @@ static void handle_discovery_timer(void *args)
     g_nm_state.started = false;
     if (migrate) {
         umesh_mm_set_channel(hal, g_nm_state.discover_result.channel);
-        nbr = get_neighbor_by_mac_addr(g_nm_state.discover_result.addr.addr);
+        nbr = get_neighbor_by_mac_addr(g_nm_state.discover_result.addr.addr, NULL);
         g_nm_state.handler(nbr);
     } else if (umesh_mm_get_device_state() >= DEVICE_STATE_LEAF) {
         umesh_mm_set_channel(hal, umesh_mm_get_prev_channel());

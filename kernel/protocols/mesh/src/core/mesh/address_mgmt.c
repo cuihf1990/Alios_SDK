@@ -178,9 +178,9 @@ ur_error_t address_resolve(message_t *message)
     }
 
     if (info->dest.addr.len == SHORT_ADDR_SIZE) {
-        nbr = get_neighbor_by_sid(info->dest.netid, info->dest.addr.short_addr);
+        nbr = get_neighbor_by_sid(info->dest.netid, info->dest.addr.short_addr, NULL);
     } else if (info->dest.addr.len == EXT_ADDR_SIZE) {
-        nbr = get_neighbor_by_mac_addr(info->dest.addr.addr);
+        nbr = get_neighbor_by_mac_addr(info->dest.addr.addr, NULL);
     }
 
     if (nbr) {

@@ -31,6 +31,6 @@ ur_error_t register_neighbor_updater(neighbor_updated_t updater);
 neighbor_t *update_neighbor(const message_info_t *info, uint8_t *tlvs,
                             uint16_t length, bool is_attach);
 ur_error_t remove_neighbor(hal_context_t *hal, neighbor_t *neighbor);
-neighbor_t *get_neighbor_by_mac_addr(const uint8_t *addr);
-neighbor_t *get_neighbor_by_sid(uint16_t meshnetid, uint16_t sid);
+neighbor_t *get_neighbor_by_mac_addr(const uint8_t *addr, hal_context_t **hal);
+neighbor_t *get_neighbor_by_sid(uint16_t meshnetid, uint16_t sid, hal_context_t **hal);
 #endif  /* UR_LINK_MGMT_H */

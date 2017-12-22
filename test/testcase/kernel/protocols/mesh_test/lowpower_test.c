@@ -119,6 +119,7 @@ static void two_hops_one_lowpower(void)
     g_lowpower_sched_type = LOWPOWER_NONE_SCHEDULE;
 
     cmd_to_agent("stop");
+    cmd_to_agent("mode RX_ON");
     stop_node(12);
     stop_node(13);
 }

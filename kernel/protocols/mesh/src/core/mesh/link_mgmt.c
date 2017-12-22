@@ -104,7 +104,7 @@ static ur_error_t send_link_request(ur_addr_t *dest, uint8_t *tlvs, uint8_t tlvs
     message_info_t *info;
     neighbor_t *nbr;
 
-    nbr = get_neighbor_by_sid(dest->netid, dest->addr.short_addr);
+    nbr = get_neighbor_by_sid(dest->netid, dest->addr.short_addr, NULL);
     if (nbr == NULL) {
         return UR_ERROR_FAIL;
     }
@@ -394,7 +394,7 @@ neighbor_t *update_neighbor(const message_info_t *info,
     MESH_LOG_DEBUG("update neighbor");
 
     hal = get_hal_context(info->hal_type);
-    nbr = get_neighbor_by_mac_addr(info->src_mac.addr.addr);
+    nbr = get_neighbor_by_mac_addr(info->src_mac.addr.addr, NULL);
 
     if (length == 0) {
         goto exit;
@@ -489,16 +489,19 @@ exit:
     return nbr;
 }
 
-neighbor_t *get_neighbor_by_mac_addr(const uint8_t *addr)
+neighbor_t *get_neighbor_by_mac_addr(const uint8_t *addr, hal_context_t **hal)
 {
     neighbor_t *nbr = NULL;
     slist_t *hals;
-    hal_context_t *hal;
+    hal_context_t *hal_context;
 
     hals = get_hal_contexts();
-    slist_for_each_entry(hals, hal, hal_context_t, next) {
-        slist_for_each_entry(&hal->neighbors_list, nbr, neighbor_t, next) {
+    slist_for_each_entry(hals, hal_context, hal_context_t, next) {
+        slist_for_each_entry(&hal_context->neighbors_list, nbr, neighbor_t, next) {
             if (memcmp(addr, nbr->mac, sizeof(nbr->mac)) == 0 &&  nbr->state > STATE_INVALID) {
+                if (hal) {
+                    *hal = hal_context;
+                }
                 return nbr;
             }
         }
@@ -506,20 +509,23 @@ neighbor_t *get_neighbor_by_mac_addr(const uint8_t *addr)
     return nbr;
 }
 
-neighbor_t *get_neighbor_by_sid(uint16_t meshnetid, uint16_t sid)
+neighbor_t *get_neighbor_by_sid(uint16_t meshnetid, uint16_t sid, hal_context_t **hal)
 {
-    neighbor_t *node = NULL;
+    neighbor_t *nbr = NULL;
     slist_t *hals;
-    hal_context_t *hal;
+    hal_context_t *hal_context;
 
     if (meshnetid == BCAST_NETID || sid == BCAST_SID) {
         return NULL;
     }
     hals = get_hal_contexts();
-    slist_for_each_entry(hals, hal, hal_context_t, next) {
-        slist_for_each_entry(&hal->neighbors_list, node, neighbor_t, next) {
-            if (node->sid == sid && node->netid == meshnetid && node->state > STATE_INVALID) {
-                return node;
+    slist_for_each_entry(hals, hal_context, hal_context_t, next) {
+        slist_for_each_entry(&hal_context->neighbors_list, nbr, neighbor_t, next) {
+            if (nbr->sid == sid && nbr->netid == meshnetid && nbr->state > STATE_INVALID) {
+                if (hal) {
+                    *hal = hal_context;
+                }
+                return nbr;
             }
         }
     }
@@ -537,7 +543,7 @@ static ur_error_t send_link_accept_and_request(ur_addr_t *dest, uint8_t *tlvs, u
     message_info_t *info;
     network_context_t *network;
 
-    node = get_neighbor_by_mac_addr(dest->addr.addr);
+    node = get_neighbor_by_mac_addr(dest->addr.addr, NULL);
     if (node == NULL) {
         return UR_ERROR_FAIL;
     }
@@ -581,7 +587,7 @@ static ur_error_t send_link_accept(ur_addr_t *dest, uint8_t *tlvs, uint8_t tlvs_
     message_info_t *info;
     network_context_t *network;
 
-    node = get_neighbor_by_mac_addr(dest->addr.addr);
+    node = get_neighbor_by_mac_addr(dest->addr.addr, NULL);
     if (node == NULL) {
         return UR_ERROR_FAIL;
     }
@@ -637,7 +643,7 @@ uint8_t insert_mesh_header_ies(network_context_t *network, message_info_t *info,
         goto exit;
     }
 
-    nbr = get_neighbor_by_sid(info->dest.netid, info->dest.addr.short_addr);
+    nbr = get_neighbor_by_sid(info->dest.netid, info->dest.addr.short_addr, NULL);
     if (nbr) {
         rssi = (mm_rssi_tv_t *)(hal->frame.data + info->header_ies_offset + offset);
         umesh_mm_init_tv_base((mm_tv_t *)rssi, TYPE_REVERSE_RSSI);
@@ -769,7 +775,7 @@ ur_error_t handle_link_accept_and_request(message_t *message)
 
     info = message->info;
     network = info->network;
-    node = get_neighbor_by_mac_addr(info->src_mac.addr.addr);
+    node = get_neighbor_by_mac_addr(info->src_mac.addr.addr, NULL);
     if (node == NULL) {
         return UR_ERROR_NONE;
     }
@@ -815,7 +821,7 @@ ur_error_t handle_link_accept(message_t *message)
 
     MESH_LOG_DEBUG("handle link accept");
     info = message->info;
-    node = get_neighbor_by_mac_addr(info->src_mac.addr.addr);
+    node = get_neighbor_by_mac_addr(info->src_mac.addr.addr, NULL);
     if (node == NULL) {
         return UR_ERROR_NONE;
     }

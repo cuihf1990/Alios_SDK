@@ -45,10 +45,10 @@ void test_uradar_mesh_mgmt_case(void)
     mac_addr.len = sizeof(mac_addr.addr);
     memset(mac_addr.addr, 0x00, sizeof(mac_addr.addr));
     mac_addr.addr[0] = 0x03;
-    YUNIT_ASSERT_PTR_NULL(get_neighbor_by_mac_addr((const uint8_t *)&mac_addr));
-    YUNIT_ASSERT_PTR_NULL(get_neighbor_by_sid(0x1200, umesh_mm_get_meshnetid(NULL)));
+    YUNIT_ASSERT_PTR_NULL(get_neighbor_by_mac_addr((const uint8_t *)&mac_addr, NULL));
+    YUNIT_ASSERT_PTR_NULL(get_neighbor_by_sid(0x1200, umesh_mm_get_meshnetid(NULL), NULL));
     uint8_t uuid1[8] = {0};
-    YUNIT_ASSERT_PTR_NULL(get_neighbor_by_mac_addr(uuid1));
+    YUNIT_ASSERT_PTR_NULL(get_neighbor_by_mac_addr(uuid1, NULL));
     YUNIT_ASSERT(0 != umesh_mm_get_meshnetid(NULL));
     YUNIT_ASSERT_PTR_NOT_NULL(umesh_mm_get_mac_address());
     YUNIT_ASSERT(UR_ERROR_NONE == umesh_mm_set_mode(MODE_MOBILE));
