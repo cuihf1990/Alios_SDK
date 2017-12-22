@@ -802,14 +802,12 @@ static ur_error_t handle_attach_request(message_t *message)
         goto exit;
     }
 
-    node = get_neighbor_by_mac_addr(uuid->uuid);
-    if (node && node == network->attach_node) {
-        MESH_LOG_INFO("ignore attach point's attach request");
+    if ((node = update_neighbor(info, tlvs, tlvs_length, true)) == NULL) {
         error = UR_ERROR_FAIL;
         goto exit;
     }
 
-    if ((node = update_neighbor(info, tlvs, tlvs_length, true)) == NULL) {
+    if (is_pf_mode(umesh_get_mode()) || (node && node == network->attach_node)) {
         error = UR_ERROR_FAIL;
         goto exit;
     }
@@ -899,8 +897,7 @@ static ur_error_t handle_attach_response(message_t *message)
                           sizeof(symmetric_key->symmetric_key));
     }
 
-    if ((g_mm_state.device.mode & MODE_MOBILE) == 0 &&
-        (info->src.netid == network->prev_netid) &&
+    if (info->src.netid == network->prev_netid &&
         (network->prev_path_cost < (path_cost->cost + nbr->stats.link_cost))) {
         return UR_ERROR_NONE;
     }

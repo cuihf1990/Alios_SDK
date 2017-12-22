@@ -149,6 +149,10 @@ static ur_error_t send_discovery_response(network_context_t *network,
     message_info_t *info;
     uint8_t *data_orig;
 
+    if (is_pf_mode(umesh_get_mode())) {
+        return UR_ERROR_FAIL;
+    }
+
     length = sizeof(mm_header_t) + sizeof(mm_netinfo_tv_t) + sizeof(mm_channel_tv_t);
     data = ur_mem_alloc(length);
     if (data == NULL) {

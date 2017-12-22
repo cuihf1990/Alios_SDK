@@ -155,6 +155,11 @@ static inline bool is_bcast_sid(ur_addr_t *addr)
     return false;
 }
 
+static inline bool is_pf_mode(node_mode_t mode)
+{
+    return ((mode & MODE_MOBILE) || ((mode & MODE_RX_ON) == 0))? true: false;
+}
+
 uint8_t set_mm_netinfo_tv(network_context_t *network, uint8_t *data);
 uint8_t set_mm_channel_tv(network_context_t *network, uint8_t *data);
 uint8_t set_mm_uuid_tv(uint8_t *data, uint8_t type, uint8_t *uuid);
