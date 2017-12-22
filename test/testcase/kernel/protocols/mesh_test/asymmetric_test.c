@@ -28,7 +28,7 @@ static void two_nodes_case(void)
 
     set_rssi_ext(IF_WIFI, 11, 12, 0, 1);
 
-    umesh_set_mode(MODE_RX_ON);
+    cmd_to_agent("mode RX_ON");
     cmd_to_agent("start");
     check_cond_wait((DEVICE_STATE_LEADER == umesh_mm_get_device_state()), 15);
     YUNIT_ASSERT(ur_router_get_default_router() == SID_ROUTER);
@@ -43,7 +43,7 @@ static void two_nodes_case(void)
     }
 
     stop_node(12);
-    umesh_stop();
+    cmd_to_agent("stop");
 }
 
 static void three_nodes_case(void)
@@ -73,7 +73,7 @@ static void three_nodes_case(void)
     check_p2p_str_wait("router", 12, "testcmd state", 10);
     check_p2p_str_wait("SID_ROUTER", 12, "testcmd router", 2);
 
-    umesh_set_mode(MODE_RX_ON);
+    cmd_to_agent("mode RX_ON");
     cmd_to_agent("start");
     check_cond_wait((DEVICE_STATE_ROUTER == umesh_mm_get_device_state()), 15);
     YUNIT_ASSERT(ur_router_get_default_router() == SID_ROUTER);
@@ -92,9 +92,8 @@ static void three_nodes_case(void)
 
     stop_node(12);
     stop_node(13);
-    umesh_stop();
+    cmd_to_agent("stop");
 }
-
 
 void test_uradar_asymmetric_link_case(void)
 {
@@ -105,6 +104,7 @@ void test_uradar_asymmetric_link_case(void)
     run_times(two_nodes_case(), 1);
     run_times(three_nodes_case(), 1);
 
+    aos_msleep(500);
     mem_stats = ur_mem_get_stats();
     YUNIT_ASSERT(num == mem_stats->num);
 }

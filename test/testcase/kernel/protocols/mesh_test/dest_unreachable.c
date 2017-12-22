@@ -29,7 +29,7 @@ static void one_layer_case(void)
      */
     set_line_rssi(11, 14);
 
-    umesh_set_mode(MODE_RX_ON);
+    cmd_to_agent("mode RX_ON");
     cmd_to_agent("start");
     check_cond_wait((DEVICE_STATE_LEADER == umesh_mm_get_device_state()), 15);
     YUNIT_ASSERT(ur_router_get_default_router() == SID_ROUTER);
@@ -73,7 +73,7 @@ static void one_layer_case(void)
     stop_node(12);
     stop_node(13);
     stop_node(14);
-    umesh_stop();
+    cmd_to_agent("stop");
 }
 
 void test_uradar_dest_become_unreachable_case(void)
@@ -84,6 +84,7 @@ void test_uradar_dest_become_unreachable_case(void)
 
     run_times(one_layer_case(), 1);
 
+    aos_msleep(500);
     mem_stats = ur_mem_get_stats();
     YUNIT_ASSERT(num == mem_stats->num);
 }

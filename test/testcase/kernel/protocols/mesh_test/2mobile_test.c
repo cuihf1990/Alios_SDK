@@ -29,6 +29,7 @@ static void run_in_hop1(void)
     YUNIT_ASSERT(umesh_get_sid() == 0xc001);
 
     cmd_to_agent("stop");
+    cmd_to_agent("mode FIXED");
     stop_node(12);
     stop_node(13);
 
@@ -51,6 +52,7 @@ static void run_in_hop2(void)
     YUNIT_ASSERT(umesh_get_sid() == 0xc001);
 
     cmd_to_agent("stop");
+    cmd_to_agent("mode FIXED");
     stop_node(12);
     stop_node(13);
 

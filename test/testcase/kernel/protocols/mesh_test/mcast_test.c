@@ -48,11 +48,12 @@ void test_uradar_mcast_case(void)
     cmd_to_master(ping_cmd);
     check_p2p_str_wait("1", 12, "testcmd autotest_acked", 10);
 
-    umesh_stop();
+    cmd_to_agent("stop");
     stop_node(14);
     stop_node(13);
     stop_node(12);
 
+    aos_msleep(500);
     mem_stats = ur_mem_get_stats();
     YUNIT_ASSERT(num == mem_stats->num);
 }

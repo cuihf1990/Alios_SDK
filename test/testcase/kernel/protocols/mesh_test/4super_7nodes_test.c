@@ -106,13 +106,14 @@ static void subnet_is_wifi_case(void)
     uint8_t index;
 
     build_topo_wifi();
-    umesh_stop();
+    cmd_to_agent("stop");
 
     start_node_ext(1, MODE_SUPER | MODE_RX_ON, -1, 1);
     check_p2p_str_wait("leader", 1, "testcmd state", 10);
     check_p2p_str_wait("VECTOR_ROUTER", 1, "testcmd router", 2);
 
-    umesh_set_mode(MODE_SUPER | MODE_RX_ON);
+    cmd_to_agent("mode SUPER");
+    cmd_to_agent("mode RX_ON");
     cmd_to_agent("start");
     check_cond_wait((DEVICE_STATE_SUPER_ROUTER == umesh_mm_get_device_state()), 15);
     YUNIT_ASSERT(ur_router_get_default_router() == VECTOR_ROUTER);
@@ -169,7 +170,8 @@ static void subnet_is_wifi_case(void)
     for (index = 1; index < 11; index++) {
         stop_node(index);
     }
-    umesh_stop();
+    cmd_to_agent("stop");
+    cmd_to_agent("mode ROUTER");
     aos_msleep(1 * 1000);
 }
 
@@ -181,7 +183,7 @@ static void subnet_is_ble_case(void)
 
     build_topo_wifi_ble();
 
-    umesh_stop();
+    cmd_to_agent("stop");
 
     start_node_ext(153, MODE_SUPER | MODE_RX_ON, -1, 3);
     check_p2p_str_wait("leader", 153, "testcmd state", 10);

@@ -36,7 +36,7 @@ static void one_super_router_case(void)
      */
 
     set_full_rssi(151, 155);
-    umesh_stop();
+    cmd_to_agent("stop");
 
     start_node_ext(151, MODE_SUPER | MODE_RX_ON, -1, 3);
     check_p2p_str_wait("leader", 151, "testcmd state", 10);
@@ -98,7 +98,7 @@ static void two_super_router_case(void)
      */
 
     set_full_rssi(151, 156);
-    umesh_stop();
+    cmd_to_agent("stop");
 
     start_node_ext(151, MODE_SUPER | MODE_RX_ON, -1, 3);
     check_p2p_str_wait("leader", 151, "testcmd state", 10);

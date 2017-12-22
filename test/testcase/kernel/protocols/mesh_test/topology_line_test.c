@@ -114,7 +114,7 @@ static void topology_line_case(bool vector_router)
 out:
     stop_node(12);
     stop_node(13);
-    umesh_stop();
+    cmd_to_agent("stop");
 }
 
 void test_uradar_topology_line_case(void)
@@ -126,6 +126,7 @@ void test_uradar_topology_line_case(void)
     run_times(topology_line_case(true), 1);
     run_times(topology_line_case(false), 1);
 
+    aos_msleep(500);
     mem_stats = ur_mem_get_stats();
     YUNIT_ASSERT(num == mem_stats->num);
 }
