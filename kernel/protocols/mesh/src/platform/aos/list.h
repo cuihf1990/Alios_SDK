@@ -15,10 +15,9 @@ extern "C" {
  * @param[in]   type     the type of the struct this is embedded in.
  * @param[in]   member   the name of the variable within the struct.
  */
-#define aos_offsetof(type, member) ({ \
-    type tmp;                         \
-    (long)(&tmp.member) - (long)&tmp; \
-})
+#define aos_offsetof(type, member) ( \
+    (long)&(((type*)0)->member)      \
+)
 
 /*
  * Get the struct for this entry.
@@ -298,9 +297,9 @@ static inline void slist_init(slist_t *head)
  * @param[in]   type     the type of the struct this is embedded in.
  * @param[in]   member   the name of the slist_t within the struct.
  */
-#define slist_entry(addr, type, member) ({                                   \
-    addr ? (type *)((long)addr - aos_offsetof(type, member)) : (type *)addr; \
-})
+#define slist_entry(addr, type, member) (                                    \
+    addr ? (type *)((long)addr - aos_offsetof(type, member)) : (type *)addr \
+)
 
 /*
 * Get the first element from a list.
