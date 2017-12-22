@@ -98,7 +98,6 @@ endif
 
 ifneq ($(mesh),0)
 $(NAME)_COMPONENTS += protocols.mesh
-$(NAME)_SOURCES  += hal/mesh.c
 endif
 
 ble := 0
