@@ -8,7 +8,7 @@
 #
 
 
-NAME := Lib_SPI_Flash_Library_$(PLATFORM)
+NAME := Lib_SPI_Flash_Library
 
 $(NAME)_SOURCES := spi_flash.c spi_flash_platform.c
 
