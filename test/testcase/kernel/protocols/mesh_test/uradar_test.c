@@ -159,6 +159,7 @@ extern void test_uradar_topo_case(void);
 extern void test_hal_mesh_case(void);
 extern void test_diags_case(void);
 extern void test_umesh_4super_7nodes_case(void);
+extern void test_umesh_lowpower_case();
 
 /* submodule ut */
 static yunit_test_case_t krhino_uradar_sub_testcases[] = {
@@ -189,6 +190,7 @@ static yunit_test_case_t krhino_uradar_com_testcases[] = {
     { "asymmetric_link", test_uradar_asymmetric_link_case },
     { "topology", test_uradar_topo_case },
     { "4super_7nodes", test_umesh_4super_7nodes_case },
+    { "lowpower", test_umesh_lowpower_case },
     YUNIT_TEST_CASE_NULL
 };
 
@@ -246,6 +248,7 @@ static yunit_test_case_t krhino_uradar_testcases[] = {
     { "asymmetric_link", test_uradar_asymmetric_link_case },
     { "topology", test_uradar_topo_case },
     { "4super_7nodes", test_umesh_4super_7nodes_case },
+    { "lowpower", test_umesh_lowpower_case },
     /* stress case */
     { "scales_5", test_uradar_scales_5nodes_case },
     { "scales_10", test_uradar_scales_10nodes_case },

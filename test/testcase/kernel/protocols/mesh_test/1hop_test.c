@@ -23,7 +23,7 @@
 
 #include "dda_util.h"
 
-uint8_t g_lowpower_sched_type = LOWPOWER_NONE_SCHEDULE;
+static uint8_t g_lowpower_sched_type = LOWPOWER_NONE_SCHEDULE;
 
 static void me_as_leader(bool vector_router)
 {
