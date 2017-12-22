@@ -54,7 +54,6 @@ typedef void *aos_semaphore_t;
 //typedef void * aos_mutex_t;
 typedef void *aos_thread_t;
 //typedef void * aos_queue_t;
-typedef void *aos_event_t; // AOS OS event: aos_semaphore_t, aos_mutex_t or aos_queue_t
 typedef void (*timer_handler_t)( void *arg );
 typedef OSStatus (*event_handler_t)( void *arg );
 typedef uint32_t  aos_time_t;
@@ -92,7 +91,6 @@ extern aos_worker_thread_t aos_worker_thread;
 #define aos_rtos_reload_timer            aos_reload_timer
 #define aos_rtos_deinit_timer            aos_deinit_timer
 #define aos_rtos_is_timer_running        aos_is_timer_running
-#define aos_rtos_init_event_fd           aos_create_event_fd
 #define aos_rtos_deinit_event_fd         aos_delete_event_fd
 
 #define aos_rtos_thread_msleep           aos_rtos_delay_milliseconds
@@ -630,16 +628,6 @@ bool aos_rtos_is_timer_running( aos_bt_timer_t *timer );
 int SetTimer(unsigned long ms, void (*psysTimerHandler)(void));
 int SetTimer_uniq(unsigned long ms, void (*psysTimerHandler)(void));
 int UnSetTimer(void (*psysTimerHandler)(void));
-
-/** @brief    Initialize an endpoint for a RTOS event, a file descriptor
-  *           will be created, can be used for select
-  *
-  * @param    event_handle : aos_semaphore_t, aos_mutex_t or aos_queue_t
-  *
-  * @retval   On success, a file descriptor for RTOS event is returned.
-  *           On error, -1 is returned.
-  */
-int aos_rtos_init_event_fd(aos_event_t event_handle);
 
 /** @brief    De-initialise an endpoint created from a RTOS event
   *
