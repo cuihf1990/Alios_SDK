@@ -25,13 +25,6 @@ typedef enum interface_state_s {
     INTERFACE_DOWN_LEADER_REBOOT,  // leader reboot
 } interface_state_t;
 
-typedef enum attach_state_s {
-    ATTACH_IDLE,
-    ATTACH_REQUEST,
-    ATTACH_SID_REQUEST,
-    ATTACH_DONE,
-} attach_state_t;
-
 typedef enum auth_state_s {
     AUTH_IDLE,
     AUTH_REQUEST_START,
@@ -50,7 +43,7 @@ typedef struct channel_list_s {
 typedef void (*auth_handler_t)(neighbor_t *nbr, bool result);
 
 typedef struct network_data_s {
-    uint8_t  version;
+    uint8_t version;
     uint16_t size;
 } network_data_t;
 
@@ -142,7 +135,6 @@ typedef struct network_context_s {
 
     interface_state_t state;
     // attach
-    attach_state_t attach_state;
     uint16_t path_cost;
     uint16_t sid;
     uint16_t meshnetid;

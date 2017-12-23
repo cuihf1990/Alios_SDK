@@ -915,8 +915,7 @@ static void message_handler(void *args)
             } else {
                 forward = true;
             }
-        } else if (info->type == MESH_FRAME_TYPE_CMD &&
-                   info->dest.netid == BCAST_NETID) {
+        } else if (info->type == MESH_FRAME_TYPE_CMD && info->dest.netid == BCAST_NETID) {
             recv = true;
         }
     }

@@ -282,6 +282,13 @@ ur_error_t handle_discovery_response(message_t *message)
     return UR_ERROR_NONE;
 }
 
+void umesh_network_stop_discover(void)
+{
+    ur_stop_timer(&g_nm_state.discover_start_timer, NULL);
+    ur_stop_timer(&g_nm_state.discover_timer, NULL);
+    memset(&g_nm_state.discover_result, 0xff, sizeof(g_nm_state.discover_result));
+}
+
 static void start_discover(void)
 {
     network_context_t *network;
@@ -303,8 +310,7 @@ static void start_discover(void)
     g_nm_state.discover_times = 0;
     ur_start_timer(&g_nm_state.discover_timer, hal->discovery_interval,
                    handle_discovery_timer, NULL);
-    memset(&g_nm_state.discover_result, 0, sizeof(g_nm_state.discover_result));
-    g_nm_state.discover_result.meshnetid = BCAST_NETID;
+    memset(&g_nm_state.discover_result, 0xff, sizeof(g_nm_state.discover_result));
 }
 
 void umesh_network_mgmt_register_callback(discovered_handler_t handler)
@@ -332,6 +338,7 @@ static ur_error_t mesh_interface_up(void)
     MESH_LOG_DEBUG("network mgmt mesh interface up handler");
 
     ur_stop_timer(&g_nm_state.discover_start_timer, NULL);
+    ur_stop_timer(&g_nm_state.discover_timer, NULL);
     if (umesh_get_device_state() == DEVICE_STATE_LEADER) {
         start_discover_timer();
     }
@@ -360,8 +367,7 @@ static void lowpower_radio_down_handler(schedule_type_t type)
         return;
     }
     ur_stop_timer(&g_nm_state.discover_timer, NULL);
-    memset(&g_nm_state.discover_result, 0, sizeof(g_nm_state.discover_result));
-    g_nm_state.discover_result.meshnetid = BCAST_NETID;
+    memset(&g_nm_state.discover_result, 0xff, sizeof(g_nm_state.discover_result));
 }
 
 static void lowpower_radio_up_handler(schedule_type_t type)

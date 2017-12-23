@@ -17,7 +17,6 @@ void test_uradar_sid_router_case(void)
 
     network_context_t network = {
         .meshnetid = 0x100,
-        .attach_state = ATTACH_DONE
     };
     netids_t netids;
 

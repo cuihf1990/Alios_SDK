@@ -22,6 +22,7 @@ ur_error_t handle_discovery_request(message_t *message);
 ur_error_t handle_discovery_response(message_t *message);
 void umesh_network_mgmt_init(void);
 void umesh_network_mgmt_register_callback(discovered_handler_t handler);
+void umesh_network_stop_discover(void);
 
 #endif  /* UR_NETWORK_MGMT_H */
 
