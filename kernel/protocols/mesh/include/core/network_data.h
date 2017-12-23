@@ -2,14 +2,14 @@
  * Copyright (C) 2015-2017 Alibaba Group Holding Limited
  */
 
+#ifndef UR_NETWORK_DATA_H
+#define UR_NETWORK_DATA_H
+
 #include <stdbool.h>
 
 #include "ip/ip.h"
 #include "utilities/configs.h"
 #include "hal/interface_context.h"
-
-#ifndef UR_NETWORK_DATA_H
-#define UR_NETWORK_DATA_H
 
 enum {
     STABLE_MAIN_VERSION_OFFSET = 5,

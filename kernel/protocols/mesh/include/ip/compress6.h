@@ -3,7 +3,7 @@
  */
 
 #ifndef MESH_COMPRESS6_H
-#define MESH_COMPRESS66_H
+#define MESH_COMPRESS6_H
 
 #include "utilities/message.h"
 #include "utilities/memory.h"
