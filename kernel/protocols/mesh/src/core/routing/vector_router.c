@@ -261,7 +261,7 @@ static uint16_t scan_new_edges()
 
     newedges = 0;
     for_each_vertex(vertex) {
-        neighbor = get_neighbor_by_sid(umesh_get_meshnetid(), vertex->sid);
+        neighbor = get_neighbor_by_sid(umesh_get_meshnetid(), vertex->sid, NULL);
         if (neighbor != NULL) {
             uint16_t src, dst;
             uint8_t  cost;

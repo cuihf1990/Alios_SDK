@@ -29,9 +29,9 @@ void topo_test_function(uint16_t first_node, uint16_t num, uint32_t timeout)
     for (index = 1; index < num; index++) {
         start_node_ext(index + first_node, MODE_RX_ON, -1, -1);
     }
-    umesh_stop();
-    umesh_set_mode(MODE_RX_ON);
-    umesh_start();
+    cmd_to_agent("stop");
+    cmd_to_agent("mode RX_ON");
+    cmd_to_agent("start");
     check_cond_wait(num == umesh_mm_get_meshnetsize(), timeout);
 
     ur_ut_send_cmd_to_ddm("sendall sids");
@@ -42,8 +42,8 @@ void topo_test_function(uint16_t first_node, uint16_t num, uint32_t timeout)
     for (index = 1; index < num; index++) {
         stop_node(index + first_node);
     }
-    umesh_stop();
-
+    cmd_to_agent("stop");
+    aos_msleep(1000);
     mem_stats = ur_mem_get_stats();
     YUNIT_ASSERT(mem_num == mem_stats->num);
 }
