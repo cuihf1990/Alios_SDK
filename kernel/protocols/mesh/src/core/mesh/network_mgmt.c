@@ -34,7 +34,7 @@ typedef struct network_mgmt_state_s {
 
     ur_timer_t discover_start_timer;
     ur_timer_t discover_timer;
-    uint8_t discover_channel;
+    uint8_t discover_channel_index;
     uint8_t discover_times;
     discover_result_t discover_result;
 
@@ -60,8 +60,8 @@ static void handle_discovery_timer(void *args)
     MESH_LOG_DEBUG("handle discovery timer");
 
     g_nm_state.discover_timer = NULL;
-    if (g_nm_state.discover_channel >= hal->channel_list.num) {
-        g_nm_state.discover_channel = 0;
+    if (g_nm_state.discover_channel_index >= hal->channel_list.num) {
+        g_nm_state.discover_channel_index = 0;
         g_nm_state.discover_times++;
     }
 
@@ -76,14 +76,11 @@ static void handle_discovery_timer(void *args)
     }
 
     if (g_nm_state.discover_times < DISCOVERY_RETRY_TIMES && migrate == false) {
-        if (umesh_mm_get_prev_channel() == g_nm_state.discover_channel) {
-            g_nm_state.discover_channel++;
-        }
-        umesh_mm_set_channel(hal, hal->channel_list.channels[g_nm_state.discover_channel]);
+        umesh_mm_set_channel(hal, hal->channel_list.channels[g_nm_state.discover_channel_index]);
         send_discovery_request(network);
         ur_start_timer(&g_nm_state.discover_timer, hal->discovery_interval,
                        handle_discovery_timer, NULL);
-        g_nm_state.discover_channel++;
+        g_nm_state.discover_channel_index++;
         return;
     }
 
@@ -161,7 +158,7 @@ static ur_error_t send_discovery_response(network_context_t *network,
     data_orig = data;
     data += sizeof(mm_header_t);
     data += set_mm_netinfo_tv(network, data);
-    data += set_mm_channel_tv(network, data);
+    data += set_mm_channel_tv(network->hal, data);
 
     message = mf_build_message(MESH_FRAME_TYPE_CMD, COMMAND_DISCOVERY_RESPONSE,
                                data_orig, length, NETWORK_MGMT_2);
@@ -302,7 +299,7 @@ static void start_discover(void)
     g_nm_state.started = true;
     network = get_default_network_context();
     hal = network->hal;
-    g_nm_state.discover_channel = 0;
+    g_nm_state.discover_channel_index = 0;
     g_nm_state.discover_times = 0;
     ur_start_timer(&g_nm_state.discover_timer, hal->discovery_interval,
                    handle_discovery_timer, NULL);
