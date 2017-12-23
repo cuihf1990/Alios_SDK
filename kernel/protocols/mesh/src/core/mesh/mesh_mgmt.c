@@ -442,7 +442,7 @@ static uint8_t get_tv_value(network_context_t *network,
             break;
         case TYPE_UCAST_CHANNEL:
         case TYPE_BCAST_CHANNEL:
-            length += set_mm_channel_tv(network, data);
+            length += set_mm_channel_tv(network->hal, data);
             break;
 #ifdef CONFIG_AOS_MESH_LOWPOWER
         case TYPE_TIME_SLOT:
@@ -634,7 +634,7 @@ ur_error_t send_advertisement(network_context_t *network)
     }
 
     data += set_mm_path_cost_tv(network, data);
-    data += set_mm_channel_tv(network, data);
+    data += set_mm_channel_tv(network->hal, data);
 
     message = mf_build_message(MESH_FRAME_TYPE_CMD, COMMAND_ADVERTISEMENT,
                                data_orig, length, MESH_MGMT_1);
@@ -1902,17 +1902,17 @@ uint8_t set_mm_netinfo_tv(network_context_t *network, uint8_t *data)
     return sizeof(mm_netinfo_tv_t);
 }
 
-uint8_t set_mm_channel_tv(network_context_t *network, uint8_t *data)
+uint8_t set_mm_channel_tv(hal_context_t *hal, uint8_t *data)
 {
     mm_channel_tv_t *channel;
 
-    if (network->hal->module->type != MEDIA_TYPE_WIFI) {
+    if (hal->module->type != MEDIA_TYPE_WIFI) {
         return 0;
     }
 
     channel = (mm_channel_tv_t *)data;
     umesh_mm_init_tv_base((mm_tv_t *)channel, TYPE_UCAST_CHANNEL);
-    channel->channel = umesh_mm_get_channel(network->hal);
+    channel->channel = umesh_mm_get_channel(hal);
 
     return sizeof(mm_channel_tv_t);
 }
