@@ -300,7 +300,7 @@ static ur_error_t send_address_query(ur_addr_t *dest, uint8_t query_type, ur_nod
             data += set_mm_node_id_tv(data, TYPE_NODE_ID, target);
             break;
         case TARGET_QUERY:
-            data += set_mm_uuid_tv(data, TYPE_TARGET_UEID, target->uuid);
+            data += set_mm_uuid_tv(data, TYPE_TARGET_UUID, target->uuid);
             break;
         default:
             assert(0);
@@ -367,7 +367,7 @@ ur_error_t handle_address_query(message_t *message)
             }
             break;
         case TARGET_QUERY:
-            uuid = (mm_uuid_tv_t *)umesh_mm_get_tv(tlvs, tlvs_length, TYPE_TARGET_UEID);
+            uuid = (mm_uuid_tv_t *)umesh_mm_get_tv(tlvs, tlvs_length, TYPE_TARGET_UUID);
             if (uuid) {
                 error = get_target_by_uuid(&target_node, uuid->uuid);
                 if (error == UR_ERROR_NONE && is_partial_function_sid(target_node.sid) == true) {
@@ -412,7 +412,7 @@ static ur_error_t send_address_query_response(ur_addr_t *dest, ur_node_id_t *att
     data_orig = data;
     data += sizeof(mm_header_t);
     data += set_mm_node_id_tv(data, TYPE_NODE_ID, target_node);
-    data += set_mm_uuid_tv(data, TYPE_TARGET_UEID, target_node->uuid);
+    data += set_mm_uuid_tv(data, TYPE_TARGET_UUID, target_node->uuid);
 
     if (attach_node->sid != INVALID_SID && is_unique_netid(attach_node->meshnetid)) {
         data += set_mm_node_id_tv(data, TYPE_ATTACH_NODE_ID, attach_node);
@@ -461,7 +461,7 @@ ur_error_t handle_address_query_response(message_t *message)
                                                    TYPE_ATTACH_NODE_ID);
     target_id = (mm_node_id_tv_t *)umesh_mm_get_tv(tlvs, tlvs_length, TYPE_NODE_ID);
     target_uuid = (mm_uuid_tv_t *)umesh_mm_get_tv(tlvs, tlvs_length,
-                                                  TYPE_TARGET_UEID);
+                                                  TYPE_TARGET_UUID);
 
     if (target_id == NULL || target_uuid == NULL) {
         error = UR_ERROR_FAIL;
@@ -538,7 +538,7 @@ static ur_error_t send_address_notification(void)
     }
     data_orig = data;
     data += sizeof(mm_header_t);
-    data += set_mm_uuid_tv(data, TYPE_TARGET_UEID, umesh_mm_get_local_uuid());
+    data += set_mm_uuid_tv(data, TYPE_TARGET_UUID, umesh_mm_get_local_uuid());
 
     node_id.sid = umesh_mm_get_local_sid();
     node_id.meshnetid = umesh_get_meshnetid();
@@ -637,7 +637,7 @@ ur_error_t handle_address_notification(message_t *message)
     target_node = (mm_node_id_tv_t *)umesh_mm_get_tv(tlvs, tlvs_length,
                                                      TYPE_NODE_ID);
     target_uuid = (mm_uuid_tv_t *)umesh_mm_get_tv(tlvs, tlvs_length,
-                                                  TYPE_TARGET_UEID);
+                                                  TYPE_TARGET_UUID);
     hal_type = (mm_hal_type_tv_t *)umesh_mm_get_tv(tlvs, tlvs_length,
                                                    TYPE_DEF_HAL_TYPE);
 

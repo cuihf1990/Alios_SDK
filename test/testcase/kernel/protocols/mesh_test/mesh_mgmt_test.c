@@ -10,7 +10,7 @@
 #include "core/mesh_forwarder.h"
 #include "hal/interfaces.h"
 
-#define INVALID_UEID "\xff\xff\xff\xff\xff\xff\xff\xff"
+#define INVALID_UUID "\xff\xff\xff\xff\xff\xff\xff\xff"
 
 extern void hal_arch_time_msleep(int ms);
 extern void ur_ut_send_cmd_to_ddm(const char *cmd);
@@ -39,7 +39,7 @@ void test_uradar_mesh_mgmt_case(void)
     YUNIT_ASSERT(BCAST_SID == umesh_mm_get_local_sid());
     uint8_t *uuid;
     YUNIT_ASSERT_PTR_NOT_NULL((uuid = umesh_mm_get_local_uuid()));
-    YUNIT_ASSERT(0 != memcmp(uuid, INVALID_UEID, 8));
+    YUNIT_ASSERT(0 != memcmp(uuid, INVALID_UUID, 8));
 
     mac_address_t mac_addr;
     mac_addr.len = sizeof(mac_addr.addr);
