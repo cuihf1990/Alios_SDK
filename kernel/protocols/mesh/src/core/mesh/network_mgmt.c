@@ -47,13 +47,12 @@ typedef struct network_mgmt_state_s {
 static network_mgmt_state_t g_nm_state;
 
 static void handle_discovery_timer(void *args);
-static ur_error_t send_discovery_request(network_context_t *netowrk);
-static ur_error_t send_discovery_response(network_context_t *network,
-                                          ur_addr_t *dest);
+static ur_error_t send_discovery_request(void);
+static ur_error_t send_discovery_response(network_context_t *network, ur_addr_t *dest);
+
 static void handle_discovery_timer(void *args)
 {
-    network_context_t *network = get_default_network_context();
-    hal_context_t *hal = network->hal;
+    hal_context_t *hal = get_default_hal_context();
     neighbor_t *nbr;
     bool migrate = false;
 
@@ -70,14 +69,14 @@ static void handle_discovery_timer(void *args)
         nbr = get_neighbor_by_mac_addr(g_nm_state.discover_result.addr.addr, NULL);
         netinfo.leader_mode = g_nm_state.discover_result.leader_mode;
         netinfo.size = g_nm_state.discover_result.net_size;
-        if (nbr && umesh_mm_migration_check(network, nbr, &netinfo)) {
+        if (nbr && umesh_mm_migration_check(nbr, &netinfo)) {
             migrate = true;
         }
     }
 
     if (g_nm_state.discover_times < DISCOVERY_RETRY_TIMES && migrate == false) {
         umesh_mm_set_channel(hal, hal->channel_list.channels[g_nm_state.discover_channel_index]);
-        send_discovery_request(network);
+        send_discovery_request();
         ur_start_timer(&g_nm_state.discover_timer, hal->discovery_interval,
                        handle_discovery_timer, NULL);
         g_nm_state.discover_channel_index++;
@@ -97,7 +96,7 @@ static void handle_discovery_timer(void *args)
     }
 }
 
-static ur_error_t send_discovery_request(network_context_t *network)
+static ur_error_t send_discovery_request(void)
 {
     ur_error_t error = UR_ERROR_MEM;
     uint16_t length;
@@ -124,20 +123,18 @@ static ur_error_t send_discovery_request(network_context_t *network)
                                data_orig, length, NETWORK_MGMT_1);
     if (message) {
         info = message->info;
-        info->network = network;
         set_mesh_short_addr(&info->dest, BCAST_NETID, BCAST_SID);
         error = mf_send_message(message);
     }
     ur_mem_free(data_orig, length);
 
-    MESH_LOG_DEBUG("send discovery request in channel %d, len %d",
-                   umesh_mm_get_channel(network->hal), length);
+    MESH_LOG_DEBUG("send discovery request in channel index %d, len %d",
+                   g_nm_state.discover_channel_index, length);
 
     return error;
 }
 
-static ur_error_t send_discovery_response(network_context_t *network,
-                                          ur_addr_t *dest)
+static ur_error_t send_discovery_response(network_context_t *network, ur_addr_t *dest)
 {
     ur_error_t error = UR_ERROR_MEM;
     message_t *message;
@@ -294,6 +291,10 @@ static void start_discover(void)
     network_context_t *network;
     hal_context_t *hal;
 
+    if (umesh_get_mode() & MODE_LEADER) {
+        return;
+    }
+
 #ifdef CONFIG_AOS_MESH_LOWPOWER
     if ((umesh_get_mode() & MODE_RX_ON) == 0 && lowpower_is_radio_up() == false) {
         g_nm_state.discover_pending = true;
@@ -320,9 +321,7 @@ void umesh_network_mgmt_register_callback(discovered_handler_t handler)
 
 static void handle_start_discover_timer(void *args)
 {
-    if ((umesh_get_mode() & MODE_LEADER) == 0) {
-        start_discover();
-    }
+    start_discover();
 }
 
 static void start_discover_timer(void)

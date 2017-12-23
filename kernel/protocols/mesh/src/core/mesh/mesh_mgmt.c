@@ -71,13 +71,12 @@ static void become_detached(interface_state_t reason);
 static void handle_attach_timer(void *args);
 static void handle_migrate_reset_timer(void *args);
 
-static ur_error_t send_attach_request(network_context_t *network);
+static ur_error_t send_attach_request(void);
 static ur_error_t send_attach_response(network_context_t *network,
                                        ur_addr_t *dest, ur_node_id_t *node_id);
-static ur_error_t send_sid_request(network_context_t *network);
-static ur_error_t send_sid_response(network_context_t *network,
-                                    ur_addr_t *dest, ur_addr_t *dest2,
-                                    ur_node_id_t *node_id);
+static ur_error_t send_sid_request(void);
+static ur_error_t send_sid_response(network_context_t *network, ur_addr_t *dest,
+                                    ur_addr_t *dest2, ur_node_id_t *node_id);
 static ur_error_t send_advertisement(network_context_t *network);
 static void start_advertisement_timer(void *args);
 static void mesh_interface_state_callback(interface_state_t state);
@@ -175,14 +174,12 @@ static void set_default_network_data(void)
 
 static uint16_t generate_meshnetid(uint8_t sid, uint8_t index)
 {
-    uint16_t meshnetid;
-    uint8_t sub_meshnetid;
+    uint16_t meshnetid = nd_get_stable_meshnetid();
 
-    sub_meshnetid = ((sid << 2) | index);
-    meshnetid = nd_get_stable_meshnetid() | sub_meshnetid;
-    if (g_mm_state.device.state == DEVICE_STATE_LEADER &&
-        index == 0) {
-        nd_set_stable_meshnetid(meshnetid);
+    if (index == 0 && g_mm_state.attach_context.attach_node) {
+        meshnetid = g_mm_state.attach_context.attach_node->netid;
+    } else if (index) {
+        meshnetid = nd_get_stable_meshnetid() | ((sid << 2) | index);
     }
     return meshnetid;
 }
@@ -212,47 +209,54 @@ void set_mesh_ext_addr(ur_addr_t *addr, uint16_t netid, uint8_t *value)
     addr->netid = netid;
 }
 
-void get_leader_addr(ur_addr_t *addr)
+static void set_attach_context(uint16_t sid, bool init_allocator)
 {
-    network_context_t *network = get_default_network_context();
-
-    set_mesh_short_addr(addr, mm_get_main_netid(network), LEADER_SID);
-}
-
-static void set_leader_network_context(network_context_t *default_network,
-                                       bool init_allocator)
-{
-    slist_t *networks;
-    uint8_t index = 0;
+    slist_t *networks = get_network_contexts();
     network_context_t *network;
+    hal_context_t *prev_hal = NULL;
+    uint8_t index = 0;
+    uint8_t channel;
 
-    networks = get_network_contexts();
+    g_mm_state.attach_context.attach_state = ATTACH_DONE;
+    ur_stop_timer(&g_mm_state.attach_context.migrate_reset_timer, NULL);
+    ur_stop_timer(&g_mm_state.attach_context.attach_timer, NULL);
+    if (g_mm_state.attach_context.attach_node) {
+        g_mm_state.attach_context.attach_node->state = STATE_NEIGHBOR;
+        g_mm_state.attach_context.attach_node = NULL;
+    }
+    if (g_mm_state.attach_context.attach_candidate) {
+        g_mm_state.attach_context.attach_candidate->flags &=
+            (~(NBR_SID_CHANGED | NBR_DISCOVERY_REQUEST | NBR_NETID_CHANGED));
+        g_mm_state.attach_context.attach_node = g_mm_state.attach_context.attach_candidate;
+        g_mm_state.attach_context.path_cost = g_mm_state.attach_context.attach_node->path_cost +
+                                       g_mm_state.attach_context.attach_node->stats.link_cost;
+        g_mm_state.attach_context.attach_node->state = STATE_PARENT;
+    }
+    g_mm_state.attach_context.attach_candidate = NULL;
+    g_mm_state.attach_context.path_cost = 0;
+    g_mm_state.attach_context.sid = sid;
+    g_mm_state.attach_context.candidate_meshnetid = BCAST_NETID;
+
     slist_for_each_entry(networks, network, network_context_t, next) {
-        if (network == default_network) {
-            continue;
-        }
         network->state = INTERFACE_UP;
-        g_mm_state.attach_context.attach_state = ATTACH_DONE;
-        g_mm_state.attach_context.attach_candidate = NULL;
-        g_mm_state.attach_context.sid =
-                        default_network == NULL ? LEADER_SID : g_mm_state.attach_context.sid;
-        g_mm_state.attach_context.candidate_meshnetid = BCAST_NETID;
-        network->meshnetid = generate_meshnetid(g_mm_state.attach_context.sid, index);
-        ++index;
-        g_mm_state.attach_context.path_cost = 0;
-        if (g_mm_state.attach_context.attach_node) {
-            g_mm_state.attach_context.attach_node->state = STATE_NEIGHBOR;
-            g_mm_state.attach_context.attach_node = NULL;
-        }
-        ur_stop_timer(&g_mm_state.attach_context.attach_timer, NULL);
-        ur_stop_timer(&g_mm_state.attach_context.migrate_reset_timer, NULL);
+        network->meshnetid = generate_meshnetid(sid, index);
         if (init_allocator) {
+            sid_allocator_deinit(network);
             sid_allocator_init(network);
         }
-        start_advertisement_timer(network);
-        if (default_network) {
-            umesh_mm_set_channel(network->hal, network->hal->def_channel);
+        if (prev_hal != network->hal) {
+            prev_hal = network->hal;
+            if (network->hal != get_default_hal_context() || sid == LEADER_SID) {
+                if (index == 0 && (g_mm_state.device.mode & MODE_LEADER)) {
+                    channel = hal_umesh_get_channel(prev_hal->module);
+                } else {
+                    channel = prev_hal->def_channel;
+                }
+                umesh_mm_set_channel(prev_hal, channel);
+            }
         }
+        start_advertisement_timer(network);
+        ++index;
     }
 }
 
@@ -298,69 +302,26 @@ static ur_error_t sid_allocated_handler(message_info_t *info,
             g_mm_state.attach_context.attach_state = ATTACH_IDLE;
             return UR_ERROR_FAIL;
     }
-
     if (g_mm_state.attach_context.attach_node == NULL ||
         network->meshnetid != g_mm_state.attach_context.attach_candidate->netid ||
         g_mm_state.attach_context.sid != allocated_sid->sid) {
         init_allocator = true;
     }
-    g_mm_state.attach_context.sid = allocated_sid->sid;
-    g_mm_state.attach_context.attach_state = ATTACH_DONE;
-    if (g_mm_state.attach_context.attach_node) {
-        g_mm_state.attach_context.attach_node->state = STATE_NEIGHBOR;
-    }
-    g_mm_state.attach_context.attach_node = g_mm_state.attach_context.attach_candidate;
-    g_mm_state.attach_context.attach_candidate->flags &=
-        (~(NBR_SID_CHANGED | NBR_DISCOVERY_REQUEST | NBR_NETID_CHANGED));
-    g_mm_state.attach_context.attach_candidate = NULL;
-    g_mm_state.attach_context.candidate_meshnetid = BCAST_NETID;
-    g_mm_state.attach_context.attach_node->stats.link_cost = 256;
-    g_mm_state.attach_context.path_cost = g_mm_state.attach_context.attach_node->path_cost +
-                         g_mm_state.attach_context.attach_node->stats.link_cost;
-    g_mm_state.attach_context.attach_node->state = STATE_PARENT;
-    network->meshnetid = g_mm_state.attach_context.attach_node->netid;
-    memset(&network->network_data, 0,  sizeof(network->network_data));
-    if (init_allocator) {
-        sid_allocator_deinit(network);
-        sid_allocator_init(network);
-    }
-
+    set_attach_context(allocated_sid->sid, init_allocator);
     g_mm_state.leader_mode = netinfo->leader_mode;
-    ur_stop_timer(&g_mm_state.attach_context.attach_timer, NULL);
-    start_advertisement_timer(network);
-    network->state = INTERFACE_UP;
     mesh_interface_state_callback(INTERFACE_UP);
-
-    ur_stop_timer(&g_mm_state.attach_context.migrate_reset_timer, NULL);
     umesh_mm_set_prev_channel();
-
-    set_leader_network_context(network, init_allocator);
-
     MESH_LOG_INFO("allocate sid 0x%04x, become %d in net %04x",
                   g_mm_state.attach_context.sid, g_mm_state.device.state, network->meshnetid);
-
     return UR_ERROR_NONE;
 }
 
 void become_leader(void)
 {
     ur_configs_t configs;
-    slist_t *networks;
-    network_context_t *network;
-    uint8_t channel;
 
     if (umesh_mm_get_mode() & MODE_MOBILE) {
         return;
-    }
-
-    networks = get_network_contexts();
-    slist_for_each_entry(networks, network, network_context_t, next) {
-        if (g_mm_state.device.mode & MODE_LEADER) {
-            channel = hal_umesh_get_channel(network->hal->module);
-        } else {
-            channel = network->hal->def_channel;
-        }
-        umesh_mm_set_channel(network->hal, channel);
     }
 
     g_mm_state.device.state = DEVICE_STATE_LEADER;
@@ -375,7 +336,7 @@ void become_leader(void)
         configs.main_version %= 7;
     }
     nd_set_stable_main_version(configs.main_version);
-    set_leader_network_context(NULL, true);
+    set_attach_context(LEADER_SID, true);
     umesh_mm_set_prev_channel();
     mesh_interface_state_callback(INTERFACE_UP);
     calculate_network_key();
@@ -574,16 +535,14 @@ mm_tv_t *umesh_mm_get_tv(const uint8_t *data, const uint16_t length,
 static void handle_attach_timer(void *args)
 {
     bool detached = false;
-    network_context_t *network = (network_context_t *)args;
 
     MESH_LOG_DEBUG("handle attach timer");
-
     g_mm_state.attach_context.attach_timer = NULL;
     switch (g_mm_state.attach_context.attach_state) {
         case ATTACH_REQUEST:
             if (g_mm_state.attach_context.retry_times < ATTACH_REQUEST_RETRY_TIMES) {
                 ++g_mm_state.attach_context.retry_times;
-                send_attach_request(network);
+                send_attach_request();
                 ur_start_timer(&g_mm_state.attach_context.attach_timer, ATTACH_REQUEST_INTERVAL,
                                handle_attach_timer, NULL);
             } else {
@@ -593,7 +552,7 @@ static void handle_attach_timer(void *args)
         case ATTACH_SID_REQUEST:
             if (g_mm_state.attach_context.retry_times < ATTACH_REQUEST_RETRY_TIMES) {
                 ++g_mm_state.attach_context.retry_times;
-                send_sid_request(network);
+                send_sid_request();
                 ur_start_timer(&g_mm_state.attach_context.attach_timer, ATTACH_REQUEST_INTERVAL,
                                handle_attach_timer, NULL);
             } else {
@@ -695,7 +654,7 @@ ur_error_t send_advertisement(network_context_t *network)
     return error;
 }
 
-static ur_error_t send_attach_request(network_context_t *network)
+static ur_error_t send_attach_request(void)
 {
     ur_error_t error = UR_ERROR_NONE;
     uint16_t length;
@@ -726,8 +685,6 @@ static ur_error_t send_attach_request(network_context_t *network)
     }
 
     info = message->info;
-    info->network = network;
-
     mac = umesh_mm_get_mac_address();
     calculate_one_time_key(NULL, umesh_get_timestamp(), mac->addr);
     set_mesh_short_addr(&info->dest, g_mm_state.attach_context.attach_candidate->netid,
@@ -899,12 +856,10 @@ static ur_error_t handle_attach_response(message_t *message)
     mm_cost_tv_t *path_cost;
     uint8_t *tlvs;
     uint16_t tlvs_length;
-    network_context_t *network;
     message_info_t *info;
     mm_symmetric_key_tv_t *symmetric_key;
 
     info = message->info;
-    network = info->network;
     if (is_in_attaching(g_mm_state.attach_context.attach_state) == false) {
         return UR_ERROR_NONE;
     }
@@ -955,7 +910,7 @@ static ur_error_t handle_attach_response(message_t *message)
     error = sid_allocated_handler(info, tlvs, tlvs_length);
     if (error != UR_ERROR_NONE) {
         g_mm_state.attach_context.attach_state = ATTACH_SID_REQUEST;
-        send_sid_request(network);
+        send_sid_request();
         g_mm_state.attach_context.retry_times = 1;
         ur_start_timer(&g_mm_state.attach_context.attach_timer, ATTACH_REQUEST_INTERVAL,
                        handle_attach_timer, NULL);
@@ -966,9 +921,10 @@ exit:
     return error;
 }
 
-static ur_error_t send_sid_request(network_context_t *network)
+static ur_error_t send_sid_request(void)
 {
     ur_error_t error = UR_ERROR_NONE;
+    network_context_t *network = get_default_network_context();
     message_t *message;
     uint8_t *data;
     uint8_t *data_orig;
@@ -978,7 +934,7 @@ static ur_error_t send_sid_request(network_context_t *network)
     uint16_t netid;
     uint16_t sid;
 
-    if (network == NULL || g_mm_state.attach_context.attach_candidate == NULL) {
+    if (g_mm_state.attach_context.attach_candidate == NULL) {
         return UR_ERROR_FAIL;
     }
 
@@ -1019,8 +975,7 @@ static ur_error_t send_sid_request(network_context_t *network)
     // dest
     sid = g_mm_state.attach_context.attach_candidate->sid;
     netid = g_mm_state.attach_context.attach_candidate->netid;
-    if ((g_mm_state.device.mode & MODE_MOBILE) ||
-        (network->router->sid_type != STRUCTURED_SID)) {
+    if ((g_mm_state.device.mode & MODE_MOBILE) || (network->router->sid_type != STRUCTURED_SID)) {
         netid = get_main_netid(netid);
         set_mesh_short_addr(&info->dest2, netid, BCAST_SID);
     }
@@ -1048,9 +1003,8 @@ static ur_error_t send_sid_response(network_context_t *network,
         return UR_ERROR_FAIL;
     }
 
-    length = sizeof(mm_header_t) + sizeof(mm_sid_tv_t) +
-             sizeof(mm_node_type_tv_t) + sizeof(mm_netinfo_tv_t) +
-             sizeof(mm_mcast_addr_tv_t);
+    length = sizeof(mm_header_t) + sizeof(mm_sid_tv_t) + sizeof(mm_node_type_tv_t) +
+             sizeof(mm_netinfo_tv_t) + sizeof(mm_mcast_addr_tv_t);
 
     data = ur_mem_alloc(length);
     if (data == NULL) {
@@ -1110,11 +1064,8 @@ static ur_error_t handle_sid_request(message_t *message)
         return UR_ERROR_MEM;
     }
     message_copy_to(message, sizeof(mm_header_t), tlvs, tlvs_length);
-
-    attach_node_id = (mm_node_id_tv_t *)umesh_mm_get_tv(tlvs, tlvs_length,
-                                                        TYPE_ATTACH_NODE_ID);
+    attach_node_id = (mm_node_id_tv_t *)umesh_mm_get_tv(tlvs, tlvs_length, TYPE_ATTACH_NODE_ID);
     src_sid = (mm_sid_tv_t *)umesh_mm_get_tv(tlvs, tlvs_length, TYPE_SRC_SID);
-
     uuid = (mm_uuid_tv_t *)umesh_mm_get_tv(tlvs, tlvs_length, TYPE_SRC_UUID);
     mode = (mm_mode_tv_t *)umesh_mm_get_tv(tlvs, tlvs_length, TYPE_MODE);
     if (uuid == NULL || mode == NULL) {
@@ -1129,22 +1080,18 @@ static ur_error_t handle_sid_request(message_t *message)
     if (src_sid) {
         node_id.sid = src_sid->sid;
     }
-
     if (mode->mode & MODE_MOBILE) {
         network = get_sub_network_context(network->hal);
     }
     memcpy(node_id.uuid, uuid->uuid, sizeof(node_id.uuid));
-
     neighbor_t *node = get_neighbor_by_mac_addr(node_id.uuid, NULL);
-    if (node == NULL) {
-        node_id.sid = INVALID_SID;
-    }
+    node_id.sid = (node? node_id.sid: INVALID_SID);
     if (attach_node_id) {
-        if (attach_node_id->mode & MODE_SUPER) {
-            node_id.attach_sid = SUPER_ROUTER_SID;
-        } else {
-            node_id.attach_sid = attach_node_id->sid;
-        }
+#ifdef CONFIG_AOS_MESH_SUPER
+        node_id.attach_sid = (attach_node_id->mode & MODE_SUPER)? SUPER_ROUTER_SID: attach_node_id->sid;
+#else
+        node_id.attach_sid = attach_node_id->sid;
+#endif
     }
     node_id.mode = mode->mode;
     error = sid_allocator_alloc(network, &node_id);
@@ -1334,7 +1281,7 @@ static ur_error_t attach_start(neighbor_t *nbr)
     g_mm_state.attach_context.attach_state = ATTACH_REQUEST;
     update_channel(network->hal, nbr->channel);
     g_mm_state.attach_context.candidate_meshnetid = nbr->netid;
-    send_attach_request(network);
+    send_attach_request();
     ur_start_timer(&g_mm_state.attach_context.attach_timer, ATTACH_REQUEST_INTERVAL,
                    handle_attach_timer, NULL);
     g_mm_state.attach_context.retry_times = 1;
@@ -1366,8 +1313,9 @@ static void write_prev_netinfo(void)
     }
 }
 
-static bool update_migrate_times(network_context_t *network, neighbor_t *nbr)
+static bool update_migrate_times(neighbor_t *nbr)
 {
+    network_context_t *network = get_default_network_context();
     uint16_t netid;
     uint8_t timeout;
     uint32_t interval = network->hal->advertisement_interval * MIGRATE_RESET_TIMEOUT;
@@ -1405,18 +1353,12 @@ static bool update_migrate_times(network_context_t *network, neighbor_t *nbr)
     return true;
 }
 
-static void update_network_data(network_context_t *network,
-                                mm_netinfo_tv_t *netinfo)
+static void update_network_data(network_context_t *network, mm_netinfo_tv_t *netinfo)
 {
-    int8_t diff;
+    int8_t diff = (int8_t)(netinfo->version - nd_get_version(NULL));
     network_data_t network_data;
 
-    if (g_mm_state.device.state == DEVICE_STATE_LEADER) {
-        return;
-    }
-
-    diff = (int8_t)(netinfo->version - nd_get_version(NULL));
-    if (diff > 0) {
+    if (diff > 0 && g_mm_state.device.state != DEVICE_STATE_LEADER) {
         network_data.version = netinfo->version;
         network_data.size = netinfo->size;
         nd_set(NULL, &network_data);
@@ -1472,8 +1414,10 @@ static ur_error_t handle_advertisement(message_t *message)
         set_mesh_ext_addr(&dest, nbr->netid, nbr->mac);
         send_address_error(network, &dest);
     }
-
-    if (umesh_mm_migration_check(network, nbr, netinfo)) {
+    if (network->meshnetid == nbr->netid) {
+        update_network_data(network, netinfo);
+    }
+    if (network == get_default_network_context() && umesh_mm_migration_check(nbr, netinfo)) {
         attach_start(nbr);
     }
 
@@ -1649,7 +1593,11 @@ uint16_t umesh_mm_get_meshnetsize(void)
 
 uint16_t umesh_mm_get_local_sid(void)
 {
-    return g_mm_state.attach_context.sid;
+    if (is_in_attaching(g_mm_state.attach_context.attach_state) == false) {
+        return g_mm_state.attach_context.sid;
+    } else {
+        return BCAST_SID;
+    }
 }
 
 uint8_t *umesh_mm_get_local_uuid(void)
@@ -1791,9 +1739,9 @@ uint8_t umesh_mm_get_leader_mode(void)
     return g_mm_state.leader_mode;
 }
 
-bool umesh_mm_migration_check(network_context_t *network, neighbor_t *nbr,
-                              mm_netinfo_tv_t *netinfo)
+bool umesh_mm_migration_check(neighbor_t *nbr, mm_netinfo_tv_t *netinfo)
 {
+    network_context_t *network = get_default_network_context();
     int8_t cmp_mode = 0;
     bool from_same_net = false;
     bool from_same_core = false;
@@ -1806,20 +1754,17 @@ bool umesh_mm_migration_check(network_context_t *network, neighbor_t *nbr,
     uint16_t net_size = 0;
 
     // not try to migrate to pf node, and mode leader would not migrate
-    if ((nbr->mode & MODE_MOBILE) ||
-        (g_mm_state.device.mode & MODE_LEADER)) {
+    if ((nbr->mode & MODE_MOBILE) || (g_mm_state.device.mode & MODE_LEADER)) {
         return false;
     }
 
     cmp_mode = umesh_mm_compare_mode(g_mm_state.leader_mode, netinfo->leader_mode);
     if (cmp_mode < 0) {
         become_detached(INTERFACE_DOWN_LEADER_MODE);
-        return update_migrate_times(network, nbr);
     }
-
     // detached node try to migrate
     if (g_mm_state.device.state == DEVICE_STATE_DETACHED) {
-        return update_migrate_times(network, nbr);
+        return update_migrate_times(nbr);
     }
 
     // leader not try to migrate to the same net
@@ -1829,13 +1774,11 @@ bool umesh_mm_migration_check(network_context_t *network, neighbor_t *nbr,
         from_same_core = true;
     }
     attach_node = g_mm_state.attach_context.attach_node;
-    if (from_same_net &&
-        (attach_node == NULL || g_mm_state.device.state == DEVICE_STATE_LEADER)) {
+    if (from_same_net && attach_node == NULL) {
         return false;
     }
 
     if (from_same_net) {
-        update_network_data(network, netinfo);
         main_version = (netinfo->stable_version & STABLE_MAIN_VERSION_MASK) >>
                        STABLE_MAIN_VERSION_OFFSET;
         diff = (main_version + 8 - nd_get_stable_main_version()) % 8;
@@ -1891,7 +1834,7 @@ bool umesh_mm_migration_check(network_context_t *network, neighbor_t *nbr,
         }
     }
 
-    return update_migrate_times(network, nbr);
+    return update_migrate_times(nbr);
 }
 
 uint8_t umesh_mm_get_prev_channel(void)

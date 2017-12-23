@@ -107,8 +107,7 @@ ur_error_t umesh_mm_init(node_mode_t mode, mm_cb_t *cb);
 ur_error_t umesh_mm_start(void);
 ur_error_t umesh_mm_stop(void);
 
-bool umesh_mm_migration_check(network_context_t *network, neighbor_t *nbr,
-                              mm_netinfo_tv_t *netinfo);
+bool umesh_mm_migration_check(neighbor_t *nbr, mm_netinfo_tv_t *netinfo);
 uint8_t umesh_mm_get_prev_channel(void);
 void umesh_mm_set_prev_channel(void);
 
@@ -148,7 +147,6 @@ uint16_t tlvs_set_value(network_context_t *network,
                         uint8_t tlvs_length, void *context);
 int16_t tlvs_calc_length(const uint8_t *tlvs, uint8_t tlvs_length);
 
-void get_leader_addr(ur_addr_t *addr);
 void set_mesh_short_addr(ur_addr_t *addr, uint16_t netid, uint16_t sid);
 void set_mesh_ext_addr(ur_addr_t *addr, uint16_t netid, uint8_t *value);
 

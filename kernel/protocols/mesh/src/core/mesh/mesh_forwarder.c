@@ -83,7 +83,7 @@ static inline bool is_local_ucast_address(message_info_t *info)
     switch (addr->len) {
         case SHORT_ADDR_SIZE:
             network = get_network_context_by_meshnetid(info->dest.netid, false);
-            if (network == NULL) {
+            if (network == NULL || is_unique_netid(info->dest.netid) == false) {
                 return matched;
             }
             if (addr->short_addr == umesh_mm_get_local_sid()) {
@@ -496,8 +496,7 @@ static ur_error_t send_fragment(network_context_t *network, message_t *message)
         header_length = info->header_ies_offset;
     } else {
         header_length = info->header_ies_offset;
-        message_copy_to(message, message->frag_offset,
-                        hal->frame.data, header_length);
+        message_copy_to(message, message->frag_offset, hal->frame.data, header_length);
         message_set_payload_offset(message, -info->payload_offset);
     }
 
@@ -677,9 +676,7 @@ static void get_tx_network_context(message_info_t *info)
 static void set_src_info(message_info_t *info)
 {
     get_tx_network_context(info);
-    info->src.netid = umesh_mm_get_meshnetid(info->network);
-    info->src.addr.len = SHORT_ADDR_SIZE;
-    info->src.addr.short_addr = umesh_mm_get_local_sid();
+    set_mesh_short_addr(&info->src, umesh_mm_get_meshnetid(info->network), umesh_mm_get_local_sid());
 }
 
 static bool get_rx_network_context(message_info_t *info, hal_context_t *hal)
@@ -1077,8 +1074,7 @@ static void handle_received_frame(void *context, frame_t *frame,
         info.key_index =
           (umesh_mm_get_attach_state() == ATTACH_REQUEST? ONE_TIME_KEY_INDEX: GROUP_KEY1_INDEX);
         key = get_key(info.key_index);
-        uerror = umesh_aes_decrypt(key, KEY_SIZE,
-                                   frame->data + info.header_ies_offset,
+        uerror = umesh_aes_decrypt(key, KEY_SIZE, frame->data + info.header_ies_offset,
                                    frame->len - info.header_ies_offset,
                                    frame->data + info.header_ies_offset);
     }
