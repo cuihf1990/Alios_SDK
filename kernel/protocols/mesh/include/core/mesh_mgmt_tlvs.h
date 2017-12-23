@@ -14,9 +14,9 @@ enum {
 
 typedef enum {
     TYPE_VERSION           = 0x80,  /* version TLV */
-    TYPE_SRC_UEID          = 0x81,  /* source UEID TLV */
-    TYPE_DEST_UEID         = 0x82,  /* dest UEID TLV */
-    TYPE_ATTACH_NODE_UEID  = 0x83,  /* attach node UEID TLV */
+    TYPE_SRC_UUID          = 0x81,  /* source UUID TLV */
+    TYPE_DEST_UUID         = 0x82,  /* dest UUID TLV */
+    TYPE_ATTACH_NODE_UUID  = 0x83,  /* attach node UUID TLV */
     TYPE_SRC_SID           = 0x84,  /* source sid TLV */
     TYPE_DEST_SID          = 0x85,  /* dest sid TLV */
     TYPE_ALLOCATE_SID      = 0x86,  /* newly allocated sid TLV */
@@ -33,7 +33,7 @@ typedef enum {
     TYPE_NODE_TYPE         = 0x93,  /* node type TLV */
     TYPE_NETWORK_INFO      = 0x94,  /* packet sequence number */
     TYPE_MCAST_ADDR        = 0x95,  /* multicast address */
-    TYPE_TARGET_UEID       = 0x96,  /* target uuid TLV */
+    TYPE_TARGET_UUID       = 0x96,  /* target UUID TLV */
     TYPE_TARGET_SID        = 0x97,  /* target sid TLV */
     TYPE_REVERSE_RSSI      = 0x98,  /* reverse RSSI */
     TYPE_FORWARD_RSSI      = 0x99,  /* forward RSSI */

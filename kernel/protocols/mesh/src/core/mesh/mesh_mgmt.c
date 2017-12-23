@@ -403,11 +403,11 @@ static uint8_t get_tv_value_length(uint8_t type)
         case TYPE_NETWORK_INFO:
             length = sizeof(mm_netinfo_tv_t) - 1;
             break;
-        case TYPE_SRC_UEID:
-        case TYPE_DEST_UEID:
-        case TYPE_ATTACH_NODE_UEID:
+        case TYPE_SRC_UUID:
+        case TYPE_DEST_UUID:
+        case TYPE_ATTACH_NODE_UUID:
         case TYPE_SRC_MAC_ADDR:
-        case TYPE_TARGET_UEID:
+        case TYPE_TARGET_UUID:
             length = 8;
             break;
         case TYPE_MCAST_ADDR:
@@ -437,7 +437,7 @@ static uint8_t get_tv_value(network_context_t *network,
         case TYPE_MCAST_ADDR:
             length += set_mm_mcast_tv(data);
             break;
-        case TYPE_TARGET_UEID:
+        case TYPE_TARGET_UUID:
             length += set_mm_uuid_tv(data, type, umesh_mm_get_local_uuid());
             break;
         case TYPE_UCAST_CHANNEL:
@@ -671,7 +671,7 @@ static ur_error_t send_attach_request(network_context_t *network)
     }
     data_orig = data;
     data += sizeof(mm_header_t);
-    data += set_mm_uuid_tv(data, TYPE_SRC_UEID, g_mm_state.device.uuid);
+    data += set_mm_uuid_tv(data, TYPE_SRC_UUID, g_mm_state.device.uuid);
     data += set_mm_timestamp_tv(data, umesh_get_timestamp());
     message = mf_build_message(MESH_FRAME_TYPE_CMD, COMMAND_ATTACH_REQUEST,
                                data_orig, length, MESH_MGMT_2);
@@ -731,7 +731,7 @@ static ur_error_t send_attach_response(network_context_t *network,
     }
     data_orig = data;
     data += sizeof(mm_header_t);
-    data += set_mm_uuid_tv(data, TYPE_SRC_UEID, g_mm_state.device.uuid);
+    data += set_mm_uuid_tv(data, TYPE_SRC_UUID, g_mm_state.device.uuid);
     data += set_mm_path_cost_tv(network, data);
     data += set_mm_timestamp_tv(data, umesh_get_timestamp());
 #ifdef CONFIG_AOS_MESH_LOWPOWER
@@ -796,7 +796,7 @@ static ur_error_t handle_attach_request(message_t *message)
     message_copy_to(message, sizeof(mm_header_t), tlvs, tlvs_length);
 
     uuid = (mm_uuid_tv_t *)umesh_mm_get_tv(tlvs, tlvs_length,
-                                           TYPE_SRC_UEID);
+                                           TYPE_SRC_UUID);
     if (uuid == NULL) {
         error = UR_ERROR_FAIL;
         goto exit;
@@ -957,7 +957,7 @@ static ur_error_t send_sid_request(network_context_t *network)
     node_id.mode = g_mm_state.device.mode;
     node_id.meshnetid = network->attach_candidate->netid;
     data += set_mm_node_id_tv(data, TYPE_ATTACH_NODE_ID, &node_id);
-    data += set_mm_uuid_tv(data, TYPE_SRC_UEID, g_mm_state.device.uuid);
+    data += set_mm_uuid_tv(data, TYPE_SRC_UUID, g_mm_state.device.uuid);
     data += set_mm_mode_tv(data);
 
     if (network->sid != INVALID_SID &&
@@ -1073,7 +1073,7 @@ static ur_error_t handle_sid_request(message_t *message)
                                                         TYPE_ATTACH_NODE_ID);
     src_sid = (mm_sid_tv_t *)umesh_mm_get_tv(tlvs, tlvs_length, TYPE_SRC_SID);
 
-    uuid = (mm_uuid_tv_t *)umesh_mm_get_tv(tlvs, tlvs_length, TYPE_SRC_UEID);
+    uuid = (mm_uuid_tv_t *)umesh_mm_get_tv(tlvs, tlvs_length, TYPE_SRC_UUID);
     mode = (mm_mode_tv_t *)umesh_mm_get_tv(tlvs, tlvs_length, TYPE_MODE);
     if (uuid == NULL || mode == NULL) {
         ur_mem_free(tlvs, tlvs_length);
