@@ -39,10 +39,10 @@ static void run_in_hop1(void)
     check_p2p_str_wait("1", 12, "testcmd icmp_acked", 5);
 
     cmd_to_agent("stop");
+    cmd_to_agent("mode RX_ON");
     cmd_to_agent("mode FIXED");
     stop_node(12);
     stop_node(13);
-
     aos_msleep(2 * 1000);
 }
 
@@ -70,10 +70,10 @@ static void run_in_hop2(void)
     check_p2p_str_wait("1", 13, "testcmd icmp_acked", 5);
 
     cmd_to_agent("stop");
+    cmd_to_agent("mode RX_ON");
     cmd_to_agent("mode FIXED");
     stop_node(12);
     stop_node(13);
-
     aos_msleep(2 * 1000);
 }
 

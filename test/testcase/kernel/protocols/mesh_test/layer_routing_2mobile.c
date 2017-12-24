@@ -41,7 +41,8 @@ static void topology_line_case(void)
     check_p2p_str_wait("leaf", 14, "testcmd state", 10);
     check_p2p_str_wait("SID_ROUTER", 14, "testcmd router", 2);
 
-    umesh_set_mode(MODE_MOBILE | MODE_RX_ON);
+    cmd_to_agent("mode RX_ON");
+    cmd_to_agent("mode MOBILE");
     cmd_to_agent("start");
     check_cond_wait((DEVICE_STATE_LEAF == umesh_mm_get_device_state()), 15);
     YUNIT_ASSERT(ur_router_get_default_router() == SID_ROUTER);
@@ -54,7 +55,8 @@ static void topology_line_case(void)
     stop_node(12);
     stop_node(13);
     stop_node(14);
-    umesh_stop();
+    cmd_to_agent("stop");
+    cmd_to_agent("mode FIXED");
 }
 
 static void dual_if_topology_line_case(void)
@@ -98,7 +100,7 @@ static void dual_if_topology_line_case(void)
     stop_node(152);
     stop_node(153);
     stop_node(154);
-    umesh_stop();
+    cmd_to_agent("stop");
 }
 
 void test_uradar_layer_routing_2mobile_case(void)
@@ -110,6 +112,7 @@ void test_uradar_layer_routing_2mobile_case(void)
     run_times(topology_line_case(), 1);
     run_times(dual_if_topology_line_case(), 1);
 
+    aos_msleep(500);
     mem_stats = ur_mem_get_stats();
     YUNIT_ASSERT(num == mem_stats->num);
 }

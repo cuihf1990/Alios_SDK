@@ -60,7 +60,7 @@ static void me_as_router(bool vector_router)
     check_cond_wait(umesh_get_device_state() == DEVICE_STATE_ROUTER ||
                     umesh_get_device_state() == DEVICE_STATE_SUPER_ROUTER, 10);
 
-    umesh_stop();
+    cmd_to_agent("stop");
     stop_node(12);
     aos_msleep(2 * 1000);
 }
@@ -86,7 +86,8 @@ static void me_as_router_lowpower(void)
     start_node_ext(12, MODE_RX_ON, -1, -1);
     check_p2p_str_wait("leader", 12, "testcmd state", 10);
 
-    umesh_set_mode(0);
+    cmd_to_agent("stop");
+    cmd_to_agent("mode RX_OFF");
     cmd_to_agent("start");
     check_cond_wait(umesh_get_device_state() == DEVICE_STATE_ROUTER, 10);
 
@@ -102,8 +103,8 @@ static void me_as_router_lowpower(void)
     check_p2p_str_wait("2", 12, "testcmd icmp_acked", 30);
 
     g_lowpower_sched_type = LOWPOWER_NONE_SCHEDULE;
-    umesh_stop();
-    umesh_set_mode(MODE_RX_ON);
+    cmd_to_agent("stop");
+    cmd_to_agent("mode RX_ON");
     stop_node(12);
     aos_msleep(2 * 1000);
 }
@@ -132,13 +133,8 @@ static void me_as_leader_lowpower(void)
     check_p2p_str_wait("2", 12, "testcmd icmp_acked", 30);
 
     g_lowpower_sched_type = LOWPOWER_NONE_SCHEDULE;
-    umesh_stop();
-    umesh_set_mode(MODE_RX_ON);
-    stop_node(12);
-    aos_msleep(2 * 1000);
-
-    umesh_stop();
-    umesh_set_mode(MODE_RX_ON);
+    cmd_to_agent("stop");
+    cmd_to_agent("mode RX_ON");
     stop_node(12);
     aos_msleep(2 * 1000);
 }

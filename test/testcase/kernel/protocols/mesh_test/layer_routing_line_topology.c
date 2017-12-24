@@ -41,7 +41,7 @@ static void topology_line_case(void)
     check_p2p_str_wait("router", 14, "testcmd state", 10);
     check_p2p_str_wait("SID_ROUTER", 14, "testcmd router", 2);
 
-    umesh_set_mode(MODE_RX_ON);
+    cmd_to_agent("mode RX_ON");
     cmd_to_agent("start");
     check_cond_wait((DEVICE_STATE_ROUTER == umesh_mm_get_device_state()), 15);
     YUNIT_ASSERT(ur_router_get_default_router() == SID_ROUTER);
