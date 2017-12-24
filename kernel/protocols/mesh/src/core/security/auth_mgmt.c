@@ -14,31 +14,9 @@
 #include "hal/interfaces.h"
 #include "umesh_utils.h"
 #include "umesh_types.h"
-#include "tfs.h"
-
-typedef struct auth_context_s {
-     bool is_auth_enable;
-     bool is_auth_busy;
-     bool is_auth_success;
-
-     uint8_t id2_challenge[TFS_CHALLENGE_LEN];
-     uint8_t local_id2[TFS_ID2_LEN+1];
-     uint32_t local_id2_len;
-     uint8_t peer_id2[TFS_ID2_LEN+1];
-     uint8_t auth_code[TFS_AUTH_CODE_LEN];
-     uint32_t auth_code_len;
-     ur_addr_t peer;
-     bool peer_auth_result;
-
-     neighbor_t *auth_candidate;
-     auth_state_t auth_state;
-     ur_timer_t auth_timer;
-     uint8_t auth_retry_times;
-     auth_handler_t auth_handler;
-} auth_context_t;
 
 auth_context_t g_auth_context = {
-    .is_auth_enable   = true,
+    .is_auth_enable   = false,
     .is_auth_busy     = false,
     .is_auth_success  = false,
     .local_id2_len    = TFS_ID2_LEN,
@@ -190,8 +168,7 @@ static void handle_udp_socket(const uint8_t *payload, uint16_t length)
 
 static void handle_auth_timer(void *args)
 {
-    //network_context_t *network = (network_context_t *)args;
-    g_auth_context.auth_timer = NULL;
+    network_context_t *network = get_default_network_context();
 
     MESH_LOG_INFO("handle auth timer");
 
@@ -222,7 +199,7 @@ static void handle_auth_timer(void *args)
 
         case AUTH_RELAY_CHALLENGE:
             if (g_auth_context.auth_retry_times < AUTH_RELAY_RETRY_TIMES) {
-                ++g_auth_context.retry_times;
+                ++g_auth_context.auth_retry_times;
                 send_auth_relay(network, &g_auth_context.peer);
                 ur_start_timer(&g_auth_context.auth_timer, network->hal->auth_relay_interval,
                                handle_auth_timer, NULL);
@@ -294,6 +271,33 @@ ur_error_t auth_init(void)
     return UR_ERROR_NONE; 
 }
 
+ur_error_t auth_start(neighbor_t *nbr)
+{
+    ur_error_t error = UR_ERROR_NONE;
+    network_context_t *network = NULL;
+
+    network = get_default_network_context();
+    if (g_auth_context.is_auth_busy ||
+        g_auth_context.auth_candidate ||
+        (g_auth_context.auth_state != AUTH_IDLE &&
+         g_auth_context.auth_state != AUTH_DONE)) {
+         return UR_ERROR_BUSY;
+    }
+
+    g_auth_context.auth_candidate = nbr;
+
+    if (nbr) {
+        if (umesh_mm_get_channel(network->hal) != nbr->channel) {
+            umesh_mm_set_prev_channel();
+            umesh_mm_set_channel(network->hal, nbr->channel);
+        }
+
+        network->candidate_meshnetid = nbr->netid;
+    }
+
+    return error;
+}
+
 void auth_enable(void)
 {
     if (!g_auth_context.is_auth_enable) {
@@ -306,16 +310,6 @@ void auth_disable(void)
     if (g_auth_context.is_auth_enable) {
         g_auth_context.is_auth_enable = false;
     }
-}
-
-auth_status_t *get_auth_context(void)
-{
-    return &g_auth_context;
-}
-
-uint8_t *auth_get_id2_code(void)
-{
-    return g_auth_context.local_id2;
 }
 
 auth_state_t get_auth_state(void)
@@ -333,6 +327,11 @@ bool get_auth_result(void)
     return g_auth_context.is_auth_success;
 }
 
+neighbor_t *get_auth_candidate(void)
+{
+    return g_auth_context.auth_candidate;
+}
+
 bool is_auth_enabled(void)
 {
     return g_auth_context.is_auth_enable;
@@ -346,13 +345,12 @@ bool is_auth_busy(void)
 ur_error_t nm_start_auth(auth_handler_t handler)
 {
     uint32_t random;
-    //network_context_t *network;
+    network_context_t *network = get_default_network_context();
 
     if (!g_auth_context.is_auth_enable) {
         return UR_ERROR_FAIL;
     }
 
-    //network = get_default_network_context();
     if (g_auth_context.auth_timer) {
         ur_stop_timer(&g_auth_context.auth_timer, NULL);
     }
@@ -714,8 +712,6 @@ ur_error_t handle_auth_response(message_t *message)
     //set_auth_state(AUTH_DONE);
     //network->auth_candidate = NULL;
     g_auth_context.is_auth_busy = false;
-
-    MESH_LOG_INFO("send the auth ack message to candidate");
 
 exit:
     ur_mem_free(tlvs, tlvs_length);

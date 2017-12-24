@@ -3,8 +3,8 @@
  */
 
 #include <string.h>
-#include <aos/aos.h>
 
+#include "aos/aos.h"
 #include "core/auth_mgmt.h"
 #include "core/auth_relay.h"
 #include "core/mesh_mgmt.h"
@@ -93,8 +93,6 @@ int socket_sendmsg(int socket, const uint8_t *src, const uint8_t *dst,
 
     // payload
     memcpy(cur, payload, length);
-
-    //printf("udp socket sends msg\n");
 
     ret = lwip_sendto(socket, buffer, len, 0, (struct sockaddr *)&sock_addr,
                       sizeof(sock_addr));

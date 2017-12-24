@@ -9,6 +9,9 @@
 #include "umesh.h"
 #include "umesh_hal.h"
 #include "umesh_utils.h"
+#ifdef CONFIG_AOS_MESH_AUTH
+#include "core/auth_mgmt.h"
+#endif
 #include "core/mesh_forwarder.h"
 #include "core/mesh_mgmt.h"
 #include "core/mesh_mgmt_tlvs.h"
@@ -64,20 +67,55 @@ static ur_error_t send_sid_response(network_context_t *network,
                                     ur_addr_t *dest, ur_addr_t *dest2,
                                     ur_node_id_t *node_id);
 static ur_error_t send_advertisement(network_context_t *network);
+static void start_advertisement_timer(void *args);
 static void mesh_interface_state_callback(interface_state_t state);
 
 static void write_prev_netinfo(void);
 static uint16_t compute_network_metric(uint16_t size, uint16_t path_cost);
 
-static void nbr_discovered_handler(neighbor_t *nbr)
+#ifdef CONFIG_AOS_MESH_AUTH
+void nbr_authed_handler(neighbor_t *nbr, bool result)
+{
+    network_context_t *network = get_default_network_context();
+ 
+    MESH_LOG_INFO("authentication completed");
+ 
+    if (result) {
+        if (!nbr) {
+            // recover advertisement timer
+            start_advertisement_timer(network);
+        }
+        else {
+            set_auth_state(AUTH_DONE);
+            attach_start(nbr);
+        }
+    }
+}
+#endif
+
+void nbr_discovered_handler(neighbor_t *nbr)
 {
     if (nbr) {
-        attach_start(nbr);
+#ifdef CONFIG_AOS_MESH_AUTH
+        if (is_auth_enabled()) {
+            auth_start(nbr);
+        } else
+#endif
+        {
+            attach_start(nbr);
+        }
     } else if ((umesh_get_mode() & MODE_MOBILE) == 0) {
         become_leader();
     } else {
         become_detached(INTERFACE_DOWN_DISCOVER_FAIL);
+        return;
     }
+
+#ifdef CONFIG_AOS_MESH_AUTH
+    if (is_auth_enabled() && !get_auth_result()) {
+        nm_start_auth(nbr_authed_handler);
+    }
+#endif
 }
 
 static bool is_in_attaching(attach_state_t state)
@@ -155,6 +193,12 @@ static void start_advertisement_timer(void *args)
 {
     network_context_t *network = (network_context_t *)args;
 
+#ifdef CONFIG_AOS_MESH_AUTH
+    if (!get_auth_result()) {
+        return;
+    }
+#endif
+
     send_advertisement(network);
     if (umesh_mm_get_mode() & MODE_RX_ON) {
         ur_start_timer(&network->advertisement_timer, network->hal->advertisement_interval,
@@ -187,8 +231,8 @@ static void set_leader_network_context(network_context_t *default_network,
                                        bool init_allocator)
 {
     slist_t *networks;
-    network_context_t *network;
     uint8_t index = 0;
+    network_context_t *network;
 
     networks = get_network_contexts();
     slist_for_each_entry(networks, network, network_context_t, next) {
@@ -385,6 +429,9 @@ static uint8_t get_tv_value_length(uint8_t type)
         case TYPE_STATE_FLAGS:
         case TYPE_UCAST_CHANNEL:
         case TYPE_BCAST_CHANNEL:
+#ifdef CONFIG_AOS_MESH_AUTH
+        case TYPE_ID2_AUTH_RESULT:
+#endif
             length = 1;
             break;
         case TYPE_SRC_SID:
@@ -426,6 +473,14 @@ static uint8_t get_tv_value_length(uint8_t type)
         case TYPE_SYMMETRIC_KEY:
             length = 16;
             break;
+#ifdef CONFIG_AOS_MESH_AUTH
+        case TYPE_NODE_ID2:
+            length = 24;
+            break;
+        case TYPE_ID2_CHALLENGE:
+            length = 32;
+            break;
+#endif
         default:
             length = 0;
             break;
@@ -710,12 +765,12 @@ static ur_error_t send_attach_response(network_context_t *network,
                                        ur_addr_t *dest, ur_node_id_t *node_id)
 {
     ur_error_t error = UR_ERROR_MEM;
-    mm_symmetric_key_tv_t *symmetric_key;
     message_t *message;
     uint8_t *data;
     uint8_t *data_orig;
     uint16_t length;
     message_info_t *info;
+    mm_symmetric_key_tv_t *symmetric_key;
 
     length = sizeof(mm_header_t) + sizeof(mm_cost_tv_t) +
              sizeof(mm_uuid_tv_t) + sizeof(mm_timestamp_tv_t);
@@ -862,11 +917,11 @@ static ur_error_t handle_attach_response(message_t *message)
     ur_error_t error;
     neighbor_t *nbr;
     mm_cost_tv_t *path_cost;
-    mm_symmetric_key_tv_t *symmetric_key;
     uint8_t *tlvs;
     uint16_t tlvs_length;
     network_context_t *network;
     message_info_t *info;
+    mm_symmetric_key_tv_t *symmetric_key;
 
     info = message->info;
     network = info->network;
@@ -1237,13 +1292,13 @@ void become_detached(interface_state_t reason)
 
 static neighbor_t *choose_attach_candidate(neighbor_t *nbr)
 {
-    hal_context_t *hal = get_default_hal_context();
     slist_t *nbrs;
     int8_t cmp_mode;
-    network_context_t *network = get_default_network_context();
     neighbor_t *attach_candidate = NULL;
     uint16_t cur_metric;
     uint16_t new_metric;
+    hal_context_t *hal = get_default_hal_context();
+    network_context_t *network = get_default_network_context();
 
     if (nbr && nbr->attach_candidate_timeout == 0) {
         return nbr;
@@ -1395,6 +1450,12 @@ static ur_error_t handle_advertisement(message_t *message)
         return UR_ERROR_NONE;
     }
 
+#ifdef CONFIG_AOS_MESH_AUTH
+    if (!get_auth_result()) {
+        return UR_ERROR_NONE;
+    }
+#endif
+ 
     MESH_LOG_DEBUG("handle advertisement");
 
     info = message->info;
@@ -1422,8 +1483,10 @@ static ur_error_t handle_advertisement(message_t *message)
         return UR_ERROR_NONE;
     }
 
-    if (network->router->sid_type == STRUCTURED_SID && network->meshnetid == nbr->netid &&
-        is_direct_child(network->sid_base, info->src.addr.short_addr) && !is_allocated_child(network->sid_base, nbr)) {
+    if (network->router->sid_type == STRUCTURED_SID &&
+        network->meshnetid == nbr->netid &&
+        is_direct_child(network->sid_base, info->src.addr.short_addr) &&
+        !is_allocated_child(network->sid_base, nbr)) {
         set_mesh_ext_addr(&dest, nbr->netid, nbr->mac);
         send_address_error(network, &dest);
     }
@@ -1491,6 +1554,20 @@ ur_error_t umesh_mm_handle_frame_received(message_t *message)
         case COMMAND_ROUTING_INFO_UPDATE:
             error = handle_router_message_received(message);
             break;
+#ifdef CONFIG_AOS_MESH_AUTH
+        case COMMAND_AUTH_REQUEST:
+            error = handle_auth_request(message);
+            break;
+        case COMMAND_AUTH_RESPONSE:
+            error = handle_auth_response(message);
+            break;
+        case COMMAND_AUTH_RELAY:
+            error = handle_auth_relay(message);
+            break;
+        case COMMAND_AUTH_ACK:
+            error = handle_auth_ack(message);
+            break;
+#endif
         default:
             break;
     }
@@ -1564,6 +1641,9 @@ ur_error_t umesh_mm_stop(void)
 {
     become_detached(INTERFACE_DOWN_MESH_STOP);
     g_mm_state.device.state = DEVICE_STATE_DISABLED;
+#ifdef CONFIG_AOS_MESH_AUTH
+    nm_stop_auth();
+#endif
     return UR_ERROR_NONE;
 }
 

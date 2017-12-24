@@ -9,6 +9,9 @@
 #include "umesh_hal.h"
 #include "umesh_utils.h"
 #include "core/mcast.h"
+#ifdef CONFIG_AOS_MESH_AUTH
+#include "core/auth_mgmt.h"
+#endif
 #include "core/link_mgmt.h"
 #include "core/router_mgr.h"
 #include "core/network_data.h"
@@ -20,7 +23,7 @@
 #include "core/address_mgmt.h"
 #include "core/fragments.h"
 #include "core/network_mgmt.h"
-#if (defined CONFIG_NET_LWIP)
+#ifdef CONFIG_NET_LWIP
 #include "ip/compress6.h"
 #include "ip/lwip_adapter.h"
 #endif
@@ -306,6 +309,10 @@ ur_error_t umesh_init(node_mode_t mode)
     mf_init();
     nd_init();
     mcast_init();
+#ifdef CONFIG_AOS_MESH_AUTH
+    auth_init();
+    auth_enable();
+#endif
 #ifdef CONFIG_AOS_MESH_LOWPOWER
     extern void lowpower_init(void);
     lowpower_init();
