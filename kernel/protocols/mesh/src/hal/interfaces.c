@@ -84,9 +84,12 @@ static hal_context_t *new_hal_context(umesh_hal_module_t *module, media_type_t t
     memset(&hal->link_stats, 0, sizeof(hal->link_stats));
 
     if (type == MEDIA_TYPE_WIFI) {
-        hal->def_channel = 6;
-        hal->channel = 6;
+        hal->def_channel = 1;
+        hal->channel = 1;
         hal->discovery_interval = WIFI_DISCOVERY_TIMEOUT;
+        hal->auth_request_interval = WIFI_AUTH_REQUEST_TIMEOUT;
+        hal->auth_relay_interval = WIFI_AUTH_RELAY_TIMEOUT;
+        hal->auth_response_interval = WIFI_AUTH_RESPONSE_TIMEOUT;
         hal->attach_request_interval = WIFI_ATTACH_REQUEST_TIMEOUT;
         hal->sid_request_interval = WIFI_SID_REQUEST_TIMEOUT;
         hal->link_quality_update_interval = (umesh_get_mode() & MODE_MOBILE)? \
@@ -97,6 +100,9 @@ static hal_context_t *new_hal_context(umesh_hal_module_t *module, media_type_t t
         hal->def_channel = hal->channel_list.channels[0];
         hal->channel = hal->channel_list.channels[0];
         hal->discovery_interval = BLE_DISCOVERY_TIMEOUT;
+        hal->auth_request_interval = BLE_AUTH_REQUEST_TIMEOUT;
+        hal->auth_relay_interval = BLE_AUTH_RELAY_TIMEOUT;
+        hal->auth_response_interval = BLE_AUTH_RESPONSE_TIMEOUT;
         hal->attach_request_interval = BLE_ATTACH_REQUEST_TIMEOUT;
         hal->sid_request_interval = BLE_SID_REQUEST_TIMEOUT;
         hal->link_quality_update_interval = (umesh_get_mode() & MODE_MOBILE)? \
@@ -107,6 +113,9 @@ static hal_context_t *new_hal_context(umesh_hal_module_t *module, media_type_t t
         hal->def_channel = hal->channel_list.channels[0];
         hal->channel = hal->channel_list.channels[0];
         hal->discovery_interval = IEEE154_DISCOVERY_TIMEOUT;
+        hal->auth_request_interval = IEEE154_AUTH_REQUEST_TIMEOUT;
+        hal->auth_relay_interval = IEEE154_AUTH_RELAY_TIMEOUT;
+        hal->auth_response_interval = IEEE154_AUTH_RESPONSE_TIMEOUT;
         hal->attach_request_interval = IEEE154_ATTACH_REQUEST_TIMEOUT;
         hal->sid_request_interval = IEEE154_SID_REQUEST_TIMEOUT;
         hal->link_quality_update_interval = (umesh_get_mode() & MODE_MOBILE)? \

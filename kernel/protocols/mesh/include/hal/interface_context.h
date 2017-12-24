@@ -32,10 +32,22 @@ typedef enum attach_state_s {
     ATTACH_DONE,
 } attach_state_t;
 
+typedef enum auth_state_s {
+    AUTH_IDLE,
+    AUTH_REQUEST_START,
+    AUTH_RELAY_CHALLENGE,
+    AUTH_RELAY_AUTH_CODE,
+    AUTH_RELAY_AUTH_RESULT,
+    AUTH_RECV_CHALLENGE,
+    AUTH_DONE,
+} auth_state_t;
+
 typedef struct channel_list_s {
     const uint8_t *channels;
     uint8_t num;
 } channel_list_t;
+
+typedef void (*auth_handler_t)(neighbor_t *nbr, bool result);
 
 typedef struct network_data_s {
     uint8_t  version;
@@ -114,6 +126,9 @@ typedef struct hal_context_s {
     uint32_t link_quality_update_interval;
     uint32_t neighbor_alive_interval;
     uint32_t advertisement_interval;
+    uint32_t auth_request_interval;
+    uint32_t auth_relay_interval;
+    uint32_t auth_response_interval;
 
     int last_sent;  // 0 success, -1 fail
 } hal_context_t;

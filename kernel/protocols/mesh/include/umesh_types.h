@@ -74,9 +74,9 @@ typedef struct ur_ip6_prefix_s {
 } __attribute__((packed)) ur_ip6_prefix_t;
 
 enum {
-    UR_IP6_HLEN      = 40,
-    MESH_IP4_HLEN    = 20,
-    UR_UDP_HLEN      = 8,
+    UR_IP6_HLEN   = 40,
+    MESH_IP4_HLEN = 20,
+    UR_UDP_HLEN   = 8,
 };
 
 typedef struct mac_address_s {
@@ -100,7 +100,6 @@ typedef struct umesh_extnetid_s {
 
 enum {
     KEY_SIZE           = 16,  // bytes
-
     INVALID_KEY_INDEX  = 0xff,
     ONE_TIME_KEY_INDEX = 0,
     GROUP_KEY1_INDEX   = 1,

@@ -50,8 +50,13 @@ typedef enum {
     TYPE_BCAST_CHANNEL     = 0xa4,  /* bcast channel */
     TYPE_TIME_SLOT         = 0xa5,  /* time slot */
     TYPE_BUFQUEUE_SIZE     = 0xa6,  /* buffer queue size */
+    TYPE_NODE_ID2          = 0xa7,  /* node ID2 */
+    TYPE_ID2_CHALLENGE     = 0xa8,  /* ID2 challenge number */
+    TYPE_ID2_TIMESTAMP     = 0xa9,  /* ID2 timestamp */
+    TYPE_ID2_AUTH_RESULT   = 0xaa,  /* ID2 auth result */
     TYPE_MESH_PREFIX       = 0x0,   /* mesh prefix TLV */
     TYPE_TLV_REQUEST       = 0x1,   /* TLV requests TLV */
+    TYPE_ID2_AUTH_CODE     = 0x7e,  /* ID2 auth code */
     TYPE_HEADER_IES_TERMINATOR = 0x7f,  /* header TLVs terminator */
     TYPE_INVALID           = 0xff,
 } mm_tlv_type_t;
@@ -81,7 +86,7 @@ typedef struct mesh_mgmt_mode_tv_s {
 } __attribute__((packed)) mm_mode_tv_t;
 
 typedef struct mesh_mgmt_size_tv_s {
-    mm_tv_t  base;
+    mm_tv_t base;
     uint16_t size;
 } __attribute__((packed)) mm_size_tv_t;
 
@@ -91,17 +96,17 @@ typedef struct mesh_mgmt_scan_mask_tv_s {
 } __attribute__((packed)) mm_scan_mask_tv_t;
 
 typedef struct mesh_mgmt_cost_tv_s {
-    mm_tv_t  base;
+    mm_tv_t base;
     uint16_t cost;
 } __attribute__((packed)) mm_cost_tv_t;
 
 typedef struct mesh_mgmt_mac_addr_tv_s {
-    mm_tv_t       base;
+    mm_tv_t base;
     mac_address_t addr;
 } __attribute__((packed)) mm_mac_addr_tv_t;
 
 typedef struct mesh_mgmt_weight_tv_s {
-    mm_tv_t  base;
+    mm_tv_t base;
     uint16_t weight;
 } __attribute__((packed)) mm_weight_tv_t;
 
@@ -111,9 +116,9 @@ typedef struct mesh_mgmt_node_type_tv_s {
 } __attribute__((packed)) mm_node_type_tv_t;
 
 typedef struct mesh_mgmt_netinfo_tv_s {
-    mm_tv_t  base;
-    uint8_t  stable_version;
-    uint8_t  version;
+    mm_tv_t base;
+    uint8_t stable_version;
+    uint8_t version;
     uint16_t size: 13;
     uint16_t subnet_size_1: 3;
     uint8_t subnet_size_2;
@@ -121,9 +126,9 @@ typedef struct mesh_mgmt_netinfo_tv_s {
 } __attribute__((packed)) mm_netinfo_tv_t;
 
 typedef struct mesh_mgmt_ssid_info_tv_s {
-    mm_tv_t  base;
+    mm_tv_t base;
     uint16_t child_num;
-    uint8_t  free_slots;
+    uint8_t free_slots;
 } __attribute__((packed)) mm_ssid_info_tv_t;
 
 typedef struct mesh_mgmt_sid_type_tv_s {
@@ -144,7 +149,7 @@ typedef struct mesh_mgmt_node_id_tv_s {
 } __attribute__((packed)) mm_node_id_tv_t;
 
 typedef struct mesh_mgmt_mcast_addr_tv_s {
-    mm_tv_t       base;
+    mm_tv_t base;
     ur_ip6_addr_t mcast;
 } __attribute__((packed)) mm_mcast_addr_tv_t;
 
@@ -190,12 +195,31 @@ typedef struct mesh_mgmt_bufqueue_size_tv_s {
 } __attribute__((packed)) mm_bufqueue_size_tv_t;
 
 typedef struct mesh_mgmt_prefix_tlv_s {
-    mm_tlv_t        base;
+    mm_tlv_t base;
     ur_ip6_prefix_t prefix;
 } __attribute__((packed)) mm_prefix_tlv_t;
 
 typedef struct mesh_mgmt_tlv_request_tlv_s {
     mm_tlv_t base;
 } __attribute__((packed)) mm_tlv_request_tlv_t;
+
+typedef struct mesh_mgmt_id2_auth_code_s {
+    mm_tlv_t base;
+} __attribute__((packed)) mm_id2_auth_code_tlv_t;
+
+typedef struct mesh_mgmt_node_id2_tv_s {
+    mm_tv_t base;
+    uint8_t device_id[24];
+} __attribute__((packed)) mm_node_id2_tv_t;
+
+typedef struct mesh_mgmt_id2_challenge_s {
+    mm_tv_t base;
+    uint8_t challenge[32];
+} __attribute__((packed)) mm_id2_challenge_tv_t;
+
+typedef struct mesh_mgmt_id2_auth_result_s {
+    mm_tv_t base;
+    bool result;
+} __attribute__((packed)) mm_id2_auth_result_tv_t;
 
 #endif  /* UR_MM_TLVS_H */

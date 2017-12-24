@@ -7,6 +7,9 @@
 
 enum {
     WIFI_DISCOVERY_TIMEOUT           = 75,     /* ms */
+    WIFI_AUTH_REQUEST_TIMEOUT        = 3000,   /* ms */
+    WIFI_AUTH_RELAY_TIMEOUT          = 3000,   /* ms */
+    WIFI_AUTH_RESPONSE_TIMEOUT       = 3000,   /* ms */
     WIFI_ATTACH_REQUEST_TIMEOUT      = 1000,   /* ms */
     WIFI_SID_REQUEST_TIMEOUT         = 3000,   /* ms */
     WIFI_LINK_QUALITY_MOBILE_TIMEOUT = 1000,   /* ms */

@@ -41,6 +41,10 @@ typedef enum mm_command_s {
     COMMAND_ADDRESS_UNREACHABLE     = 0x14,
     COMMAND_ADDRESS_ERROR           = 0x15,
     COMMAND_ROUTING_INFO_UPDATE     = 0x16,
+    COMMAND_AUTH_REQUEST            = 0x17,
+    COMMAND_AUTH_RESPONSE           = 0x18,
+    COMMAND_AUTH_RELAY              = 0x19,
+    COMMAND_AUTH_ACK                = 0x1a,
 
     // diags command
     COMMAND_TRACE_ROUTE_REQUEST     = 0x71,
@@ -50,6 +54,8 @@ typedef enum mm_command_s {
 enum {
     ATTACH_REQUEST_RETRY_TIMES      = 2,
     ATTACH_SID_RETRY_TIMES          = 2,
+    AUTH_REQUEST_RETRY_TIMES        = 2,
+    AUTH_RELAY_RETRY_TIMES          = 2,
     BECOME_LEADER_TIMEOUT           = 3,
     MIGRATE_TIMEOUT                 = 2,
     DETACHED_MIGRATE_TIMEOUT        = 1,
@@ -105,6 +111,7 @@ void umesh_mm_set_prev_channel(void);
 uint16_t umesh_mm_get_local_sid(void);
 neighbor_t *umesh_mm_get_attach_node(void);
 neighbor_t *umesh_mm_get_attach_candidate(void);
+neighbor_t *umesh_mm_get_auth_candidate(void);
 uint8_t *umesh_mm_get_local_uuid(void);
 node_state_t umesh_mm_get_device_state(void);
 attach_state_t umesh_mm_get_attach_state(void);
