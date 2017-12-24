@@ -64,7 +64,15 @@ endif
 ifeq ($(COMPILER),armcc)
 GLOBAL_ASMFLAGS += --cpu=7E-M -g --apcs=interwork --pd "__MICROLIB SETA 1" --pd "STM32L475xx SETA 1"
 else ifeq ($(COMPILER),iar)
+GLOBAL_ASMFLAGS += --cpu Cortex-M4 \
+                   --cpu_mode thumb \
+                   --endian little
 else
+GLOBAL_ASMFLAGS += -mcpu=cortex-m4 \
+                   -march=armv7-m  \
+                   -mlittle-endian \
+                   -mthumb -mthumb-interwork \
+                   -w
 endif
 
 ifeq ($(COMPILER),armcc)
