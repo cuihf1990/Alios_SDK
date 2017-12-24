@@ -638,6 +638,7 @@ static neighbor_t *get_next_node(message_info_t *info)
 
 static void get_tx_network_context(message_info_t *info)
 {
+#ifdef CONFIG_AOS_MESH_SUPER
     network_context_t *network = info->network;
     neighbor_t *nbr = NULL;
     hal_context_t *hal = NULL;
@@ -658,6 +659,9 @@ static void get_tx_network_context(message_info_t *info)
         }
     }
     info->network = network;
+#else
+    info->network = get_default_network_context();
+#endif
 }
 
 static void set_src_info(message_info_t *info)
@@ -667,6 +671,54 @@ static void set_src_info(message_info_t *info)
     info->src.addr.len = SHORT_ADDR_SIZE;
     info->src.addr.short_addr = umesh_mm_get_local_sid();
 }
+
+static bool get_rx_network_context(message_info_t *info, hal_context_t *hal)
+{
+#ifdef CONFIG_AOS_MESH_SUPER
+    int8_t cmp_mode;
+    bool is_diff_level = false;
+    uint16_t meshnetid;
+
+    if (is_unique_netid(info->dest.netid)) {
+        info->network = get_network_context_by_meshnetid(info->dest.netid, false);
+        if (info->network == NULL) {
+            info->network = (is_subnet(info->dest.netid)? get_sub_network_context(hal): \
+                                                          get_hal_default_network_context(hal));
+        }
+    } else if (is_unique_netid(info->src.netid)) {
+        info->network = get_network_context_by_meshnetid(info->src.netid, false);
+    }
+
+    cmp_mode = umesh_mm_compare_mode(umesh_mm_get_mode() & (~MODE_LEADER),
+                                     info->mode & (~MODE_LEADER));
+    if (info->network == NULL) {
+        info->network = ((cmp_mode <= 0)? get_hal_default_network_context(hal): \
+                                          get_sub_network_context(hal));
+    }
+    meshnetid = umesh_mm_get_meshnetid(info->network);
+    if (is_unique_netid(meshnetid)) {
+        uint8_t local_subnet_type = is_subnet(meshnetid) ? 1 : 0;
+        uint8_t subnet_type = is_subnet(info->src.netid) ? 1 : 0;
+        if ((local_subnet_type ^ subnet_type) ||
+            (cmp_mode == -1 && local_subnet_type == 0 && subnet_type == 0)) {
+            is_diff_level = true;
+        }
+        if (cmp_mode < 0 && subnet_type) {
+            is_diff_level = false;
+        }
+    } else if (cmp_mode == 1) {
+        is_diff_level = true;
+    }
+
+    if (is_unique_netid(info->src.netid) && !is_unique_netid(info->dest.netid) && is_diff_level) {
+        return false;
+    }
+#else
+    info->network = get_default_network_context();
+#endif
+    return true;
+}
+
 
 static void set_dest_encrypt_flag(message_info_t *info)
 {
@@ -831,10 +883,6 @@ static void message_handler(void *args)
     message_info_t *info;
     bool recv = false;
     bool forward = false;
-    int8_t cmp_mode;
-    bool is_diff_level = false;
-    bool is_check_level = false;
-    uint16_t meshnetid;
 
     if (umesh_mm_get_device_state() == DEVICE_STATE_DISABLED) {
         return;
@@ -895,47 +943,9 @@ static void message_handler(void *args)
         forward = true;
     }
 
-    if (is_unique_netid(info->dest.netid)) {
-        info->network = get_network_context_by_meshnetid(info->dest.netid, false);
-        if (info->network == NULL) {
-            if (is_subnet(info->dest.netid)) {
-                info->network = get_sub_network_context(hal);
-            } else {
-                info->network = get_hal_default_network_context(hal);
-            }
-        }
-    } else if (is_unique_netid(info->src.netid)) {
-        info->network = get_network_context_by_meshnetid(info->src.netid, false);
-        is_check_level = true;
-    }
-
-    cmp_mode = umesh_mm_compare_mode(umesh_mm_get_mode() & (~MODE_LEADER),
-                                     info->mode & (~MODE_LEADER));
-    if (info->network == NULL) {
-        if (cmp_mode <= 0) {
-            info->network = get_default_network_context();
-        } else {
-            info->network = get_sub_network_context(hal);
-        }
-    }
-    meshnetid = umesh_mm_get_meshnetid(info->network);
-    if (is_unique_netid(meshnetid)) {
-        uint8_t local_subnet_type = is_subnet(meshnetid) ? 1 : 0;
-        uint8_t subnet_type = is_subnet(info->src.netid) ? 1 : 0;
-        if ((local_subnet_type ^ subnet_type) ||
-            (cmp_mode == -1 && local_subnet_type == 0 && subnet_type == 0)) {
-            is_diff_level = true;
-        }
-        if (cmp_mode < 0 && subnet_type) {
-            is_diff_level = false;
-        }
-    } else if (cmp_mode == 1) {
-        is_diff_level = true;
-    }
-
-    if (info->network == NULL || (is_check_level && is_diff_level)) {
+    if (get_rx_network_context(info, hal) == false) {
         message_free(message);
-        return;
+        goto exit;
     }
 
 #ifdef CONFIG_AOS_MESH_DEBUG
