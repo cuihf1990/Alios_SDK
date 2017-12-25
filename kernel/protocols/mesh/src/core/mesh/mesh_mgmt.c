@@ -684,7 +684,7 @@ static ur_error_t send_attach_request(network_context_t *network)
     info->network = network;
 
     mac = umesh_mm_get_mac_address();
-    calculate_one_time_key(network->one_time_key, umesh_get_timestamp(), mac->addr);
+    calculate_one_time_key(NULL, umesh_get_timestamp(), mac->addr);
     set_mesh_short_addr(&info->dest, network->attach_candidate->netid,
                         network->attach_candidate->sid);
     error = mf_send_message(message);
@@ -743,9 +743,7 @@ static ur_error_t send_attach_response(network_context_t *network,
     if (umesh_mm_get_seclevel() > SEC_LEVEL_0) {
         symmetric_key = (mm_symmetric_key_tv_t *)data;
         umesh_mm_init_tv_base((mm_tv_t *)symmetric_key, TYPE_SYMMETRIC_KEY);
-        memcpy(symmetric_key->symmetric_key,
-               get_symmetric_key(GROUP_KEY1_INDEX),
-               sizeof(symmetric_key->symmetric_key));
+        memcpy(symmetric_key->symmetric_key, get_key(GROUP_KEY1_INDEX), KEY_SIZE);
         data += sizeof(mm_symmetric_key_tv_t);
     }
     if (node_id->sid != INVALID_SID && node_id->sid != BCAST_SID) {
@@ -893,8 +891,7 @@ static ur_error_t handle_attach_response(message_t *message)
             error = UR_ERROR_FAIL;
             goto exit;
         }
-        set_symmetric_key(GROUP_KEY1_INDEX, symmetric_key->symmetric_key,
-                          sizeof(symmetric_key->symmetric_key));
+        set_key(GROUP_KEY1_INDEX, symmetric_key->symmetric_key, KEY_SIZE);
     }
 
     if (info->src.netid == network->prev_netid &&

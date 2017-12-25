@@ -544,7 +544,7 @@ static ur_error_t send_fragment(network_context_t *network, message_t *message)
         }
         key = next_node->one_time_key;
     } else if (info->key_index != INVALID_KEY_INDEX) {
-        key = get_symmetric_key(GROUP_KEY1_INDEX);
+        key = get_key(GROUP_KEY1_INDEX);
     }
 
     if ((info->flags & ENCRYPT_ENABLE_FLAG) &&
@@ -1025,7 +1025,6 @@ static void handle_received_frame(void *context, frame_t *frame,
     message_info_t info;
     ur_error_t uerror = UR_ERROR_NONE;
     const uint8_t *key;
-    network_context_t *network;
 
     hal->link_stats.in_frames++;
     if (umesh_mm_get_device_state() == DEVICE_STATE_DISABLED) {
@@ -1059,17 +1058,10 @@ static void handle_received_frame(void *context, frame_t *frame,
     memcpy(&rx_frame->frame_info, frame_info, sizeof(rx_frame->frame_info));
     bzero(&info, sizeof(info));
     uerror = resolve_message_info(rx_frame, &info, frame->data);
-    if (uerror == UR_ERROR_NONE &&
-        (info.flags & ENCRYPT_ENABLE_FLAG)) {
-        if (umesh_mm_get_attach_state() == ATTACH_REQUEST) {
-            network = get_default_network_context();
-            key = network->one_time_key;
-            info.key_index = ONE_TIME_KEY_INDEX;
-        } else {
-            key = get_symmetric_key(GROUP_KEY1_INDEX);
-            info.key_index = GROUP_KEY1_INDEX;
-        }
-
+    if (uerror == UR_ERROR_NONE && (info.flags & ENCRYPT_ENABLE_FLAG)) {
+        info.key_index =
+          (umesh_mm_get_attach_state() == ATTACH_REQUEST? ONE_TIME_KEY_INDEX: GROUP_KEY1_INDEX);
+        key = get_key(info.key_index);
         uerror = umesh_aes_decrypt(key, KEY_SIZE,
                                    frame->data + info.header_ies_offset,
                                    frame->len - info.header_ies_offset,

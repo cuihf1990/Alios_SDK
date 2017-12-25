@@ -38,7 +38,6 @@ typedef struct {
 
     void *context;
     umesh_hal_module_t *module;
-    mesh_key_t keys[2];
     unsigned char bssid[6];
     unsigned char macaddr[6];
 

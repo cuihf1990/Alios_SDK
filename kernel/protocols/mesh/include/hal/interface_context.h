@@ -147,7 +147,6 @@ typedef struct network_context_s {
     uint16_t sid;
     uint16_t meshnetid;
     uint16_t candidate_meshnetid;
-    uint8_t *one_time_key;
 
     neighbor_t *attach_node;
     neighbor_t *attach_candidate;

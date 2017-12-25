@@ -83,7 +83,6 @@ typedef struct {
 
     void *context;
     umesh_hal_module_t *module;
-    mesh_key_t keys[2];
     unsigned char bssid[WIFI_MAC_ADDR_SIZE];
     unsigned char macaddr[WIFI_MAC_ADDR_SIZE];
 

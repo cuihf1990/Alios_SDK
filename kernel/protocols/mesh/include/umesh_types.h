@@ -98,18 +98,6 @@ typedef struct umesh_extnetid_s {
     uint8_t len;
 } umesh_extnetid_t;
 
-enum {
-    KEY_SIZE           = 16,  // bytes
-    INVALID_KEY_INDEX  = 0xff,
-    ONE_TIME_KEY_INDEX = 0,
-    GROUP_KEY1_INDEX   = 1,
-};
-
-typedef struct mesh_key_s {
-    uint8_t len;
-    uint8_t key[KEY_SIZE];
-} mesh_key_t;
-
 typedef struct frame_s {
     uint8_t *data;
     uint16_t len;
