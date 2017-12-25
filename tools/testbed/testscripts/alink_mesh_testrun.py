@@ -270,7 +270,7 @@ def main(firmware='~/lb-all.bin', model='mk3060', testname='5pps'):
         time.sleep(5)
 
         #connect device to alink
-        time.sleep(10)
+        time.sleep(30)
         filter = ['uuid:', 'alink is not connected']
         role = at.device_run_cmd(device, ['umesh', 'status'], 1, 1.5, ['state\t'])
         response = at.device_run_cmd(device, ['uuid'], 1, 1.5, filter)
