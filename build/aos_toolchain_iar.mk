@@ -1,5 +1,5 @@
 TOOLCHAIN_PATH ?=
-TOOLCHAIN_PREFIX := arm
+TOOLCHAIN_PREFIX :=
 CC      := $(TOOLCHAIN_PATH)iccarm
 CXX     := $(TOOLCHAIN_PATH)iccarm
 AS      := $(TOOLCHAIN_PATH)iasmarm
@@ -44,7 +44,7 @@ COMPILER_SPECIFIC_RELEASE_LDFLAGS      :=
 COMPILER_SPECIFIC_DEPS_FLAG                := -e --dlib_config=full -D_TIMESPEC_DEFINED --silent --only_stdout --no_warnings --diag_warning=Pe167,Pe144,Pe513
 COMPILER_SPECIFIC_COMP_ONLY_FLAG           := 
 COMPILER_SPECIFIC_LINK_MAP                  = --map $(1)
-COMPILER_SPECIFIC_LINK_FILES                = $(1)
+COMPILER_SPECIFIC_LINK_FILES                = --whole_archive $(1)
 COMPILER_SPECIFIC_LINK_SCRIPT_DEFINE_OPTION = 
 COMPILER_SPECIFIC_LINK_SCRIPT               =
 
@@ -72,13 +72,18 @@ CPU_LDFLAGS    :=
 #MAPFILE_PARSER            :=$(MAKEFILES_PATH)/scripts/map_parse_armcc.py
 
 # $(1) is map file, $(2) is CSV output file
-COMPILER_SPECIFIC_MAPFILE_DISPLAY_SUMMARY = $(PYTHON) $(MAPFILE_PARSER) $(1)
+# iar map file format is different 
+#COMPILER_SPECIFIC_MAPFILE_DISPLAY_SUMMARY = $(PYTHON) $(MAPFILE_PARSER) $(1)
 
 OBJDUMP := "$(TOOLCHAIN_PATH)$(TOOLCHAIN_PREFIX)ielfdumparm$(EXECUTABLE_SUFFIX)"
 OBJCOPY := "$(TOOLCHAIN_PATH)$(TOOLCHAIN_PREFIX)ielftool$(EXECUTABLE_SUFFIX)"
+# -R .eh_frame -R .init -R .fini -R .comment -R .ARM.attributes -> iobjmanip --remvoe_secton
+OBJCOPY_BIN_FLAGS   := --bin --silent
+OBJCOPY_HEX_FLAGS   := --ihex --silent
 
 #no need to strip in arm fromelf
-#STRIP   := "$(TOOLCHAIN_PATH)$(TOOLCHAIN_PREFIX)fromelf$(EXECUTABLE_SUFFIX)"
+STRIP   := "$(TOOLCHAIN_PATH)ielftool"
+STRIPFLAGS := --strip --silent
 
 LINK_OUTPUT_SUFFIX  :=.iarElf
 BIN_OUTPUT_SUFFIX   :=.bin
