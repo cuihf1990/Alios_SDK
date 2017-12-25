@@ -1,8 +1,10 @@
-import os, sys, time, socket, signal
+import os, sys, time, socket, ssl, signal
 import thread, threading, json, traceback
 import TBframe
 
-MAX_MSG_LENTH      = 2000
+MAX_MSG_LENTH = 2000
+ENCRYPT_CLIENT = True
+ENCRYPT_TERMINAL = False
 DEBUG = True
 
 def signal_handler(sig, frame):
@@ -11,6 +13,8 @@ def signal_handler(sig, frame):
 
 class Server:
     def __init__(self):
+        self.keyfile = 'server_key.pem'
+        self.certfile = 'server_cert.pem'
         self.client_socket = 0
         self.terminal_socket = 0
         self.client_list = []
@@ -215,8 +219,14 @@ class Server:
                     elif type == TBframe.CLIENT_TAG:
                         client['tag'] = value
                         print 'client {0} tag: {1}'.format(client['uuid'],repr(value))
-            except socket.timeout:
-                continue
+            except (socket.timeout, ssl.SSLError) as e:
+                if ENCRYPT_CLIENT == True and e.message == 'The read operation timed out':
+                    continue
+                elif ENCRYPT_CLIENT == False and e.message == 'timed out':
+                    continue
+                else:
+                    if DEBUG: traceback.print_exc()
+                    break
             except:
                 if DEBUG: traceback.print_exc()
                 break
@@ -489,8 +499,14 @@ class Server:
                         terminal['socket'].send(data)
                         print "terminal {0}:{1}".format(terminal['addr'][0], terminal['addr'][1]),
                         print "downloading log of device {0}:{1} ... succeed".format(uuid, port)
-            except socket.timeout:
-                continue
+            except (socket.timeout, ssl.SSLError) as e:
+                if ENCRYPT_TERMINAL == True and e.message == 'The read operation timed out':
+                    continue
+                elif ENCRYPT_TERMINAL == False and e.message == 'timed out':
+                    continue
+                else:
+                    if DEBUG: traceback.print_exc()
+                    break
             except:
                 if DEBUG: traceback.print_exc()
                 break
@@ -520,18 +536,28 @@ class Server:
 
     def client_listen_thread(self):
         self.client_socket.listen(5)
+        if ENCRYPT_CLIENT:
+            self.client_socket = ssl.wrap_socket(self.client_socket, self.keyfile, self.certfile, True)
         while self.keep_running:
-            conn, addr = self.client_socket.accept()
-            thread.start_new_thread(self.client_serve_thread, (conn, addr,))
+            try:
+                (conn, addr) = self.client_socket.accept()
+                thread.start_new_thread(self.client_serve_thread, (conn, addr,))
+            except:
+                traceback.print_exc()
 
     def terminal_listen_thread(self):
         self.terminal_socket.listen(5)
+        if ENCRYPT_TERMINAL:
+            self.terminal_socket = ssl.wrap_socket(self.terminal_socket, self.keyfile, self.certfile, True)
         while self.keep_running:
-            conn, addr = self.terminal_socket.accept()
-            terminal = {'socket':conn, 'addr':addr}
-            self.terminal_list.append(terminal)
-            thread.start_new_thread(self.terminal_serve_thread, (terminal,))
-            print "terminal ", addr," connected"
+            try:
+                (conn, addr) = self.terminal_socket.accept()
+                terminal = {'socket':conn, 'addr':addr}
+                self.terminal_list.append(terminal)
+                thread.start_new_thread(self.terminal_serve_thread, (terminal,))
+                print "terminal ", addr," connected"
+            except:
+                traceback.print_exc()
 
     def statistics_thread(self):
         minute = time.strftime("%Y-%m-%d@%H:%M")

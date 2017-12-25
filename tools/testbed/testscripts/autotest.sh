@@ -229,8 +229,8 @@ if [ -f ${esp32firmware} ]; then
         echo -e "run Alink MESH5PPS test with ${model} succeed, log:\n" >> ${logfile}
         title="${title} ESP32: MESH5PPS-PASS"
     else
-        echo -e "run Alink 5PPS test with ${model} failed, log:\n" >> ${logfile}
-        title="${title} ESP32: 5PPS-FAIL"
+        echo -e "run Alink MESH5PPS test with ${model} failed, log:\n" >> ${logfile}
+        title="${title} ESP32: MESH5PPS-FAIL"
     fi
     cat ~/${model}_mesh_5pps.txt >> ${logfile}
     rm -f ~/${model}_mesh_5pps.txt

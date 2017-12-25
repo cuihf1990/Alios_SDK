@@ -1,7 +1,8 @@
 import os, sys, time, platform, json, traceback, random, re
-import socket, thread, threading, subprocess, signal, Queue, importlib
+import socket, ssl, thread, threading, subprocess, signal, Queue, importlib
 import TBframe
 
+ENCRYPT = True
 DEBUG = True
 LOCALLOG = False
 
@@ -587,13 +588,24 @@ class Client:
         except:
             raise ConnectionLost
 
-    def client_func(self, server_ip, server_port):
-        self.service_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+    def connect_to_server(self, server_ip, server_port):
+        sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        if ENCRYPT:
+            sock = ssl.wrap_socket(sock, cert_reqs=ssl.CERT_REQUIRED, ca_certs='server_cert.pem')
         try:
-            self.service_socket.connect((server_ip, server_port))
+            sock.connect((server_ip, server_port))
+            self.service_socket = sock
             self.connected = True
-            print 'connect to server {0}:{1} succeeded'.format(server_ip, server_port)
+            return "success"
         except:
+            if DEBUG: traceback.print_exc()
+            return "fail"
+
+    def client_func(self, server_ip, server_port):
+        result = self.connect_to_server(server_ip, server_port)
+        if result == 'success':
+            print 'connect to server {0}:{1} succeeded'.format(server_ip, server_port)
+        else:
             print 'connect to server {0}:{1} failed'.format(server_ip, server_port)
             return
 
@@ -808,24 +820,16 @@ class Client:
                         self.send_device_list()
             except ConnectionLost:
                 self.connected = False
-                print 'connection to server lost, try reconnecting...'
                 self.service_socket.close()
-                self.service_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+                print 'connection to server lost, try reconnecting...'
                 while True:
-                    try:
-                        self.service_socket.connect((server_ip, server_port))
-                        time.sleep(0.1)
-                        self.connected = True
+                    result = self.connect_to_server(server_ip, server_port)
+                    if result == 'success':
                         self.send_packet(TBframe.CLIENT_UUID, self.uuid)
                         self.send_packet(TBframe.CLIENT_TAG, self.poll_str)
                         self.send_device_list()
                         break
-                    except:
-                        try:
-                            time.sleep(1)
-                        except:
-                            self.service_socket.close()
-                            return
+                    time.sleep(1)
                 print 'connection to server resumed'
             except KeyboardInterrupt:
                 print "client exiting ..."
