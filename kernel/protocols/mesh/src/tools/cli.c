@@ -681,6 +681,7 @@ static void process_status(int argc, char *argv[])
     channel_t channel;
 
     response_append("state\t%s\r\n", state2str(umesh_get_device_state()));
+    response_append("\tattach\t%s\r\n", attachstate2str(umesh_mm_get_attach_state()));
     networks = get_network_contexts();
     slist_for_each_entry(networks, network, network_context_t, next) {
         response_append("<<network %s %d>>\r\n",
@@ -688,7 +689,6 @@ static void process_status(int argc, char *argv[])
         response_append("\tnetid\t0x%x\r\n", umesh_mm_get_meshnetid(network));
         response_append("\tmac\t" EXT_ADDR_FMT "\r\n",
                         EXT_ADDR_DATA(network->hal->mac_addr.addr));
-        response_append("\tattach\t%s\r\n", attachstate2str(network->attach_state));
         response_append("\tsid\t%04x\r\n", umesh_mm_get_local_sid());
         response_append("\tnetsize\t%d\r\n", umesh_mm_get_meshnetsize());
         response_append("\trouter\t%s\r\n", routerid2str(network->router->id));
@@ -696,13 +696,12 @@ static void process_status(int argc, char *argv[])
                         hal_umesh_get_bcast_mtu(network->hal->module));
         response_append("\tucast_mtu\t%d\r\n",
                         hal_umesh_get_ucast_mtu(network->hal->module));
-        response_append("\tuptime\t%d\r\n", umesh_now_ms());
-#ifdef CONFIG_AOS_MESH_LOWPOWER
-        response_append("\tsleetime\t%d, ratio %d\%\r\n",
-                lowpower_get_sleep_time(), (lowpower_get_sleep_time() * 100) / umesh_now_ms());
-#endif
     }
-
+    response_append("\tuptime\t%d\r\n", umesh_now_ms());
+#ifdef CONFIG_AOS_MESH_LOWPOWER
+    response_append("\tsleetime\t%d, ratio %d\%\r\n",
+            lowpower_get_sleep_time(), (lowpower_get_sleep_time() * 100) / umesh_now_ms());
+#endif
     get_channel(&channel);
     response_append("\tchannel\t%d\r\n", channel.channel);
 }

@@ -27,16 +27,21 @@
 
 typedef struct mm_device_s {
     node_state_t state;
-    node_mode_t  mode;
+    node_mode_t mode;
     uint8_t uuid[8];
     bool reboot_flag;
     uint8_t seclevel;
     int8_t prev_channel;
 } mm_device_t;
 
+typedef struct attach_context_s {
+    attach_state_t attach_state;
+} attach_context_t;
+
 typedef struct mesh_mgmt_state_s {
     mm_device_t device;
     node_mode_t leader_mode;
+    attach_context_t attach_context;
     slist_t interface_callback;
 #ifdef CONFIG_AOS_MESH_LOWPOWER
     lowpower_events_handler_t lowpower_callback;
@@ -68,9 +73,16 @@ static void nbr_discovered_handler(neighbor_t *nbr)
 {
     if (nbr) {
         attach_start(nbr);
-    } else {
+    } else if ((umesh_get_mode() & MODE_MOBILE) == 0) {
         become_leader();
+    } else {
+        become_detached(INTERFACE_DOWN_DISCOVER_FAIL);
     }
+}
+
+static bool is_in_attaching(attach_state_t state)
+{
+    return (state == ATTACH_IDLE || state == ATTACH_DONE)? false: true;
 }
 
 static void update_channel(hal_context_t *hal, uint8_t channel)
@@ -184,7 +196,7 @@ static void set_leader_network_context(network_context_t *default_network,
             continue;
         }
         network->state = INTERFACE_UP;
-        network->attach_state = ATTACH_DONE;
+        g_mm_state.attach_context.attach_state = ATTACH_DONE;
         network->attach_candidate = NULL;
         network->sid = default_network == NULL ? LEADER_SID : default_network->sid;
         network->candidate_meshnetid = BCAST_NETID;
@@ -255,7 +267,7 @@ static ur_error_t sid_allocated_handler(message_info_t *info,
             }
             break;
         default:
-            network->attach_state = ATTACH_IDLE;
+            g_mm_state.attach_context.attach_state = ATTACH_IDLE;
             return UR_ERROR_FAIL;
     }
 
@@ -266,7 +278,7 @@ static ur_error_t sid_allocated_handler(message_info_t *info,
     }
 
     network->sid = allocated_sid->sid;
-    network->attach_state = ATTACH_DONE;
+    g_mm_state.attach_context.attach_state = ATTACH_DONE;
     if (network->attach_node) {
         network->attach_node->state = STATE_NEIGHBOR;
     }
@@ -531,7 +543,7 @@ static void handle_attach_timer(void *args)
     MESH_LOG_DEBUG("handle attach timer");
 
     network->attach_timer = NULL;
-    switch (network->attach_state) {
+    switch (g_mm_state.attach_context.attach_state) {
         case ATTACH_REQUEST:
             if (network->retry_times < ATTACH_REQUEST_RETRY_TIMES) {
                 ++network->retry_times;
@@ -557,7 +569,7 @@ static void handle_attach_timer(void *args)
     }
 
     if (detached) {
-        network->attach_state = ATTACH_IDLE;
+        g_mm_state.attach_context.attach_state = ATTACH_IDLE;
         network->candidate_meshnetid = BCAST_NETID;
         network->attach_candidate = NULL;
         if (g_mm_state.device.state < DEVICE_STATE_LEAF) {
@@ -597,12 +609,11 @@ ur_error_t send_advertisement(network_context_t *network)
     message_info_t *info;
     uint16_t subnet_size = 0;
 
-    if (network == NULL || umesh_mm_get_local_sid() == INVALID_SID) {
+    if (network == NULL || umesh_mm_get_local_sid() == BCAST_SID) {
         return UR_ERROR_FAIL;
     }
 
-    length = sizeof(mm_header_t) + sizeof(mm_netinfo_tv_t) +
-             sizeof(mm_cost_tv_t);
+    length = sizeof(mm_header_t) + sizeof(mm_netinfo_tv_t) + sizeof(mm_cost_tv_t);
     if (network->hal->module->type == MEDIA_TYPE_WIFI) {
         length += sizeof(mm_channel_tv_t);
     }
@@ -793,8 +804,7 @@ static ur_error_t handle_attach_request(message_t *message)
     }
     message_copy_to(message, sizeof(mm_header_t), tlvs, tlvs_length);
 
-    uuid = (mm_uuid_tv_t *)umesh_mm_get_tv(tlvs, tlvs_length,
-                                           TYPE_SRC_UUID);
+    uuid = (mm_uuid_tv_t *)umesh_mm_get_tv(tlvs, tlvs_length, TYPE_SRC_UUID);
     if (uuid == NULL) {
         error = UR_ERROR_FAIL;
         goto exit;
@@ -860,7 +870,7 @@ static ur_error_t handle_attach_response(message_t *message)
 
     info = message->info;
     network = info->network;
-    if (network->attach_state == ATTACH_DONE) {
+    if (is_in_attaching(g_mm_state.attach_context.attach_state) == false) {
         return UR_ERROR_NONE;
     }
 
@@ -909,7 +919,7 @@ static ur_error_t handle_attach_response(message_t *message)
     ur_stop_timer(&network->attach_timer, network);
     error = sid_allocated_handler(info, tlvs, tlvs_length);
     if (error != UR_ERROR_NONE) {
-        network->attach_state = ATTACH_SID_REQUEST;
+        g_mm_state.attach_context.attach_state = ATTACH_SID_REQUEST;
         send_sid_request(network);
         network->retry_times = 1;
         ur_start_timer(&network->attach_timer, network->hal->sid_request_interval,
@@ -1213,6 +1223,7 @@ void become_detached(interface_state_t reason)
         reset_network_context();
         MESH_LOG_INFO("become detached, reason %d", reason);
         g_mm_state.device.state = DEVICE_STATE_DETACHED;
+        g_mm_state.attach_context.attach_state = ATTACH_IDLE;
     }
 
     write_prev_netinfo();
@@ -1262,9 +1273,7 @@ static ur_error_t attach_start(neighbor_t *nbr)
     network_context_t *network = NULL;
 
     network = get_default_network_context();
-    if (network->attach_candidate ||
-        (network->attach_state != ATTACH_IDLE &&
-         network->attach_state != ATTACH_DONE)) {
+    if (is_in_attaching(g_mm_state.attach_context.attach_state)) {
         return UR_ERROR_BUSY;
     }
 
@@ -1276,7 +1285,7 @@ static ur_error_t attach_start(neighbor_t *nbr)
         return UR_ERROR_FAIL;
     }
     network->attach_candidate = nbr;
-    network->attach_state = ATTACH_REQUEST;
+    g_mm_state.attach_context.attach_state = ATTACH_REQUEST;
     update_channel(network->hal, nbr->channel);
     network->candidate_meshnetid = nbr->netid;
     send_attach_request(network);
@@ -1284,6 +1293,7 @@ static ur_error_t attach_start(neighbor_t *nbr)
                    handle_attach_timer, network);
     network->retry_times = 1;
     ur_stop_timer(&network->advertisement_timer, network);
+    umesh_network_stop_discover();
 
     MESH_LOG_INFO("%d node, attach start, from %04x:%04x to %04x:%x",
                   g_mm_state.device.state, network->attach_node ?
@@ -1568,11 +1578,10 @@ uint16_t umesh_mm_get_meshnetid(network_context_t *network)
         return meshnetid;
     }
 
-    if (network->attach_state == ATTACH_IDLE ||
-        network->attach_state == ATTACH_DONE) {
-        meshnetid = network->meshnetid;
-    } else if (network->attach_candidate) {
+    if (network->attach_candidate) {
         meshnetid = network->attach_candidate->netid;
+    } else {
+        meshnetid = network->meshnetid;
     }
     return meshnetid;
 }
@@ -1584,22 +1593,13 @@ uint16_t umesh_mm_get_meshnetsize(void)
 
 uint16_t umesh_mm_get_local_sid(void)
 {
-    uint16_t sid = INVALID_SID;
-    network_context_t *network;
-
-    network = get_default_network_context();
+    network_context_t *network = get_default_network_context();
 
     if (network == NULL) {
-        return sid;
+        return INVALID_SID;
     }
 
-    if (network->attach_state == ATTACH_IDLE ||
-        network->attach_state == ATTACH_DONE) {
-        sid = network->sid;
-    } else {
-        sid = BCAST_SID;
-    }
-    return sid;
+    return is_in_attaching(g_mm_state.attach_context.attach_state)? BCAST_SID: network->sid;
 }
 
 uint8_t *umesh_mm_get_local_uuid(void)
@@ -1723,10 +1723,7 @@ node_state_t umesh_mm_get_device_state(void)
 
 attach_state_t umesh_mm_get_attach_state(void)
 {
-    network_context_t *network;
-
-    network = get_default_network_context();
-    return network->attach_state;
+    return g_mm_state.attach_context.attach_state;
 }
 
 neighbor_t *umesh_mm_get_attach_node(void)

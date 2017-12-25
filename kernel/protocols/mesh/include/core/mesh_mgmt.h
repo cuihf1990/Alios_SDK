@@ -73,6 +73,13 @@ enum {
     PATH_COST_SWITCH_HYST           = 384,
 };
 
+typedef enum attach_state_s {
+    ATTACH_IDLE,
+    ATTACH_REQUEST,
+    ATTACH_SID_REQUEST,
+    ATTACH_DONE,
+} attach_state_t;
+
 typedef struct mesh_mgmt_header_s {
     uint8_t command;
 } mm_header_t;

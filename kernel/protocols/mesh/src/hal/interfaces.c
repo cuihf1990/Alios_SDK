@@ -80,10 +80,10 @@ static hal_context_t *new_hal_context(umesh_hal_module_t *module, media_type_t t
 
     memset(hal->frame.data, 0 , mtu);
     memset(&hal->link_stats, 0, sizeof(hal->link_stats));
+    hal->channel = hal_umesh_get_channel(module);
 
     if (type == MEDIA_TYPE_WIFI) {
         hal->def_channel = 1;
-        hal->channel = 1;
         hal->discovery_interval = WIFI_DISCOVERY_TIMEOUT;
         hal->auth_request_interval = WIFI_AUTH_REQUEST_TIMEOUT;
         hal->auth_relay_interval = WIFI_AUTH_RELAY_TIMEOUT;
@@ -96,7 +96,6 @@ static hal_context_t *new_hal_context(umesh_hal_module_t *module, media_type_t t
         hal->advertisement_interval = WIFI_ADVERTISEMENT_TIMEOUT;
     } else if (module->type == MEDIA_TYPE_BLE) {
         hal->def_channel = hal->channel_list.channels[0];
-        hal->channel = hal->channel_list.channels[0];
         hal->discovery_interval = BLE_DISCOVERY_TIMEOUT;
         hal->auth_request_interval = BLE_AUTH_REQUEST_TIMEOUT;
         hal->auth_relay_interval = BLE_AUTH_RELAY_TIMEOUT;
@@ -109,7 +108,6 @@ static hal_context_t *new_hal_context(umesh_hal_module_t *module, media_type_t t
         hal->advertisement_interval = BLE_ADVERTISEMENT_TIMEOUT;
     } else if (module->type == MEDIA_TYPE_15_4) {
         hal->def_channel = hal->channel_list.channels[0];
-        hal->channel = hal->channel_list.channels[0];
         hal->discovery_interval = IEEE154_DISCOVERY_TIMEOUT;
         hal->auth_request_interval = IEEE154_AUTH_REQUEST_TIMEOUT;
         hal->auth_relay_interval = IEEE154_AUTH_RELAY_TIMEOUT;
@@ -239,7 +237,6 @@ void reset_network_context(void)
     networks = get_network_contexts();
     slist_for_each_entry(networks, network, network_context_t, next) {
         network->state = INTERFACE_DOWN;
-        network->attach_state = ATTACH_IDLE;
         ur_stop_timer(&network->advertisement_timer, network);
         ur_stop_timer(&network->attach_timer, network);
         ur_stop_timer(&network->migrate_wait_timer, network);
