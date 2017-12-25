@@ -84,4 +84,39 @@ void __write()
 
 }
 
+void bzero()
+{
+
+}
+
+void __lseek()
+{
+
+}
+
+void __close()
+{
+
+}
+
+int remove(char const *p)
+{
+	return 0;
+}
+	
+void gettimeofday()
+{
+
+}
+
+void getopt()
+{
+
+}
+
+void optarg()
+{
+
+}
+
  #endif

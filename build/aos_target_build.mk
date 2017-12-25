@@ -279,7 +279,11 @@ $(LINK_OUTPUT_FILE): $(LINK_LIBS) $(AOS_SDK_LINK_SCRIPT) $(LINK_OPTS_FILE) $(LIN
 
 # Stripped elf file target - Strips the full elf file and outputs to a new .stripped.elf file
 $(STRIPPED_LINK_OUTPUT_FILE): $(LINK_OUTPUT_FILE)
+ifeq ($(COMPILER),iar)
+	$(QUIET)$(STRIP) $(STRIPFLAGS) $< $(STRIP_OUTPUT_PREFIX)$@
+else
 	$(QUIET)$(STRIP) $(STRIP_OUTPUT_PREFIX)$@ $(STRIPFLAGS) $<
+endif
 	
 # Bin file target - uses objcopy to convert the stripped elf into a binary file
 $(BIN_OUTPUT_FILE): $(STRIPPED_LINK_OUTPUT_FILE)

@@ -73,7 +73,7 @@ GLOBAL_LDFLAGS += -L --cpu=7E-M   \
                   -L --xref -L --callgraph -L --symbols \
                   -L --info=sizes -L --info=totals -L --info=unused -L --info=veneers -L --info=summarysizes
 else ifeq ($(COMPILER),iar)
-GLOBAL_LDFLAGS += --cpu=Cortex-M4
+GLOBAL_LDFLAGS += --silent --cpu=Cortex-M4.vfp
 
 else
 GLOBAL_LDFLAGS += -mcpu=cortex-m4  \
