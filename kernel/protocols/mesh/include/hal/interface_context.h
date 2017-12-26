@@ -114,8 +114,6 @@ typedef struct hal_context_s {
 
     // hal configurations
     uint32_t discovery_interval;
-    uint32_t attach_request_interval;
-    uint32_t sid_request_interval;
     uint32_t link_quality_update_interval;
     uint32_t neighbor_alive_interval;
     uint32_t advertisement_interval;
@@ -132,34 +130,11 @@ typedef struct network_context_s {
     uint8_t flags;
 
     hal_context_t *hal;
-
     interface_state_t state;
-    // attach
-    uint16_t path_cost;
-    uint16_t sid;
     uint16_t meshnetid;
-    uint16_t candidate_meshnetid;
-
-    neighbor_t *attach_node;
-    neighbor_t *attach_candidate;
-    uint8_t retry_times;
-    uint8_t leader_times;
-    uint8_t migrate_times;
-    ur_timer_t attach_timer;
     ur_timer_t advertisement_timer;
-    ur_timer_t migrate_wait_timer;
-    uint32_t migrate_interval;
-    uint32_t notification_interval;
-    uint16_t prev_netid;
-    uint16_t prev_path_cost;
-
-    // network data
     network_data_t network_data;
-
-    // sid
     allocator_t sid_base;
-
-    // routing
     router_t *router;
 } network_context_t;
 

@@ -25,7 +25,7 @@ uint8_t insert_mesh_header_ies(network_context_t *network, message_info_t *info,
                                int16_t hdr_ies_limit);
 ur_error_t handle_mesh_header_ies(message_t *message);
 
-typedef void (* neighbor_updated_t)(neighbor_t *nbr);
+typedef void (* neighbor_updated_t)(hal_context_t *hal, neighbor_t *nbr);
 ur_error_t register_neighbor_updater(neighbor_updated_t updater);
 
 neighbor_t *update_neighbor(const message_info_t *info, uint8_t *tlvs,

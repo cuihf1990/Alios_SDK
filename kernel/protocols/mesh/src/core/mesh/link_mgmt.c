@@ -179,7 +179,7 @@ static void update_neighbors_link_cost(hal_context_t *hal)
         }
         if (nbr->stats.link_cost >= LINK_COST_THRESHOLD) {
             nbr->state = STATE_INVALID;
-            g_lm_state.neighbor_updater(nbr);
+            g_lm_state.neighbor_updater(hal, nbr);
             remove_neighbor(hal, nbr);
         }
     }
@@ -309,7 +309,7 @@ static void handle_update_nbr_timer(void *args)
             update_sid_mapping(network->sid_base, &node_id, false);
         }
         node->state = STATE_INVALID;
-        g_lm_state.neighbor_updater(node);
+        g_lm_state.neighbor_updater(hal, node);
         remove_neighbor(hal, node);
     }
 }
@@ -474,7 +474,7 @@ neighbor_t *update_neighbor(const message_info_t *info,
     start_update_nbr_timer(hal);
     nbr->sid = info->src.addr.short_addr;
     nbr->netid = info->src.netid;
-    g_lm_state.neighbor_updater(nbr);
+    g_lm_state.neighbor_updater(hal, nbr);
 
 exit:
     if (nbr) {

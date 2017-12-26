@@ -5,6 +5,7 @@
 #include <string.h>
 #include <assert.h>
 
+#include "umesh.h"
 #include "core/mesh_mgmt.h"
 #include "core/address_mgmt.h"
 #include "core/router_mgr.h"
@@ -345,7 +346,7 @@ static ur_error_t mesh_interface_up(void)
         router->cb.start();
         if (router->cb.handle_subscribe_event) {
             netids.meshnetid = network->meshnetid;
-            netids.sid = (network == default_network)? network->sid: LEADER_SID;
+            netids.sid = (network == default_network)? umesh_get_sid(): LEADER_SID;
             router->cb.handle_subscribe_event(EVENT_SID_UPDATED, (uint8_t *)&netids,
                                               sizeof(netids_t));
         }
