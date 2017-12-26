@@ -1,5 +1,5 @@
-import os, sys, time, socket, ssl, signal
-import thread, threading, json, traceback
+import os, sys, time, socket, ssl, signal, re
+import thread, threading, json, traceback, shutil
 import TBframe
 
 MAX_MSG_LENTH = 2000
@@ -19,8 +19,9 @@ class Server:
         self.terminal_socket = 0
         self.client_list = []
         self.terminal_list = []
-        self.allocated = {'lock':threading.Lock(), 'devices':[], 'timeout':0}
         self.keep_running = True
+        self.log_preserve_period = (7 * 24 * 3600) * 3 #save log for 3 weeks
+        self.allocated = {'lock':threading.Lock(), 'devices':[], 'timeout':0}
         self.special_purpose_set = {'mk3060-alink':[], 'esp32-alink':[]}
         #mk3060
         self.special_purpose_set['mk3060-alink'] += ['DN02QRKQ', 'DN02RDVL', 'DN02RDVT', 'DN02RDVV']
@@ -142,48 +143,55 @@ class Server:
                             client['devices'][port]['valid'] = False
                             print "device {0} removed from client {1}".format(port, client['uuid'])
 
-                        for port in list(client['devices']):
-                            if port in file:
-                                continue
-                            try:
-                                filename = 'server/' + client['uuid'] + '-' + port.split('/')[-1] + '.log'
-                                file[port] = open(filename, 'a')
-                            except:
-                                print "error: can not open/create file ", filename
-                                continue
                         for port in list(file):
                             if client['devices'][port]['valid'] == True:
                                 continue
-                            file[port].close()
+                            file[port]['handle'].close()
                             file.pop(port)
                         self.send_device_list_to_all()
                     elif type == TBframe.DEVICE_LOG:
-                        port = value.split(':')[0]
-                        if port not in file:
-                            continue
-
-                        try:
-                            logtime = value.split(':')[1]
-                            logstr = value[len(port) + 1 + len(logtime):]
-                            logtime = float(logtime)
-                            logtimestr=time.strftime("%Y-%m-%d@%H:%M:%S", time.localtime(logtime))
-                            logtimestr += ("{0:.3f}".format(logtime-int(logtime)))[1:]
-                            logstr = logtimestr + logstr
-                            file[port].write(logstr)
-                        except:
-                            if DEBUG: traceback.print_exc()
-                            continue
-                        if 'tag' in client and client['tag'] in logstr:
-                            continue
-                        if client['devices'][port]['log_subscribe'] != []:
-                            log = client['uuid'] + ',' + port
-                            log += value[len(port):]
+                        #forwad log to subscribed devices
+                        if client['devices'][port]['log_subscribe'] != [] and \
+                           ('tag' not in client or client['tag'] not in value):
+                            log = client['uuid'] + ',' + value
                             data = TBframe.construct(type, log)
                             for s in client['devices'][port]['log_subscribe']:
                                 try:
                                     s.send(data)
                                 except:
                                     continue
+
+                        #save log to files
+                        port = value.split(':')[0]
+                        try:
+                            logtime = value.split(':')[1]
+                            logstr = value[len(port) + 1 + len(logtime):]
+                            logtime = float(logtime)
+                            logtimestr = time.strftime("%Y-%m-%d@%H:%M:%S", time.localtime(logtime))
+                            logtimestr += ("{0:.3f}".format(logtime-int(logtime)))[1:]
+                            logstr = logtimestr + logstr
+                            logdatestr = time.strftime("%Y-%m-%d", time.localtime(logtime))
+                        except:
+                            if DEBUG: traceback.print_exc()
+                            continue
+                        if (port not in file) or (file[port]['date'] != logdatestr):
+                            if port in file:
+                                file[port]['handle'].close()
+                                file.pop(port)
+                            log_dir = 'server/' + logdatestr
+                            if os.path.isdir(log_dir) == False:
+                                try:
+                                    os.mkdir(log_dir)
+                                except:
+                                    print "error: can not create directory {0}".format(log_dir)
+                            filename = log_dir + '/' + client['uuid'] + '-' + port.split('/')[-1]  + '.log'
+                            try:
+                                handle = open(filename, 'a+')
+                                file[port] = {'handle':handle, 'date': logdatestr}
+                            except:
+                                print "error: can not open/create file ", filename
+                        if port in file and file[port]['date'] == logdatestr:
+                            file[port]['handle'].write(logstr)
                     elif type == TBframe.DEVICE_STATUS:
                         #print value
                         port = value.split(':')[0]
@@ -485,7 +493,8 @@ class Server:
                         if len(dev_str_split) != 2:
                             continue
                         [uuid, port] = dev_str_split
-                        filename = 'server/' + uuid + '-' + port.split('/')[-1] + '.log'
+                        datestr = time.strftime('%Y-%m-%d')
+                        filename = 'server/' + datestr + '/' + uuid + '-' + port.split('/')[-1] + '.log'
                         client = self.get_client_by_uuid(uuid)
                         if client == None or port not in list(client['devices']) or os.path.exists(filename) == False:
                             data = TBframe.construct(TBframe.CMD_ERROR,'fail')
@@ -561,6 +570,7 @@ class Server:
 
     def statistics_thread(self):
         minute = time.strftime("%Y-%m-%d@%H:%M")
+        datestr = time.strftime("%Y-%m-%d")
         statistics={ \
                 'terminal_num_max':0, \
                 'client_num_max':0, \
@@ -579,7 +589,26 @@ class Server:
             print "error: unable to create/open {0}".format(logname)
             return
         while self.keep_running:
-            time.sleep(2)
+            time.sleep(3)
+
+            #remove outdated log files
+            if time.strftime("%Y-%m-%d") != datestr:
+                tbefore = time.mktime(time.strptime(time.strftime('%Y-%m-%d'), '%Y-%m-%d'))
+                tbefore -= self.log_preserve_period
+                flist = os.listdir('server')
+                for fname in flist:
+                    if os.path.isdir('server/'+ fname) == False:
+                        continue
+                    if re.match('[0-9]{4}-[0-9]{2}-[0-9]{2}', fname) == None:
+                        continue
+                    ftime = time.strptime(fname, '%Y-%m-%d')
+                    ftime = time.mktime(ftime)
+                    if ftime >= tbefore:
+                        continue
+                    shutil.rmtree('server/' + fname)
+                datestr = time.strftime("%Y-%m-%d")
+
+            #generate and save statistics data
             client_cnt = 0
             device_cnt = 0
             device_use = 0
@@ -607,6 +636,7 @@ class Server:
             statistics['device_num_avg'] += device_cnt
             statistics['device_use_avg'] += device_use
             statistics_cnt += 1.0
+
             now = time.strftime("%Y-%m-%d@%H:%M")
             if now == minute:
                 continue
