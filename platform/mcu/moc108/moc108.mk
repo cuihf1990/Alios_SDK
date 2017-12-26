@@ -20,7 +20,7 @@ $(NAME)_COMPONENTS += platform/arch/arm/armv5
 $(NAME)_COMPONENTS += libc rhino yloop modules.fs.kv alicrypto digest_algorithm
 $(NAME)_COMPONENTS += platform/mcu/moc108/hal_init
 $(NAME)_COMPONENTS += platform/mcu/moc108/mx108/mx378/driver/entry
-
+$(NAME)_COMPONENTS += prov
 
 GLOBAL_DEFINES += CONFIG_MX108
 GLOBAL_DEFINES += CONFIG_AOS_KV_MULTIPTN_MODE
@@ -166,7 +166,7 @@ $(NAME)_INCLUDES := mx108/mx378/ip/common \
                     mx108/mx378/app/ftp \
                     mx108/mx378/app/led
 
-$(NAME)_SOURCES :=  aos/aos_main.c
+$(NAME)_SOURCES :=  aos/aos_main.c aos/qc_test.c
 $(NAME)_INCLUDES += aos
                     
 $(NAME)_SOURCES +=  mx108/mx378/app/app.c \
