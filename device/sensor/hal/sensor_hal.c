@@ -292,10 +292,6 @@ int sensor_init(void){
     g_sensor_cnt = 0 ;
     
     sensor_io_bus_init(&i2c);
-    
-#ifdef AOS_SENSOR_BARO_ST_LPS22HB  
-    drv_baro_st_lps22hb_init();
-#endif /* AOS_SENSOR_BARO_ST_LPS22HB */
 
 #ifdef AOS_SENSOR_HUMI_BOSCH_BME280  
     drv_humi_bosch_bme280_init();
