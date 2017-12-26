@@ -76,6 +76,7 @@ void test_diags_case(void)
     ur_mem_free(data_orig, length);
     interface_stop();
 
+    aos_msleep(1000);
     mem_stats = ur_mem_get_stats();
     YUNIT_ASSERT(num == mem_stats->num);
 }
