@@ -101,7 +101,7 @@ static void iotx_device_name_auth_callback(void *user, void *p_message)
     }
     COAP_DEBUG("Receive response message:\r\n");
     COAP_DEBUG("* Response Code : 0x%x\r\n", message->header.code);
-    COAP_DEBUG("* Payload: %s\r\n", message->payload==NULL?(const char*)message->payload:NULL_STR);
+    COAP_DEBUG("* Payload: %s\r\n", message->payload?(const char*)message->payload:NULL_STR);
 
     switch (message->header.code) {
         case COAP_MSG_CODE_205_CONTENT: {
@@ -674,7 +674,7 @@ iotx_coap_context_t *IOT_CoAP_Init(iotx_coap_config_t *p_config)
 
     /*It should be implement by the user*/
     if (NULL != p_config->p_devinfo) {
-        memset(p_iotx_coap->p_devinfo, 0x00, sizeof(iotx_deviceinfo_t));
+        //memset(p_iotx_coap->p_devinfo, 0x00, sizeof(iotx_deviceinfo_t));
         strncpy(p_iotx_coap->p_devinfo->device_id,    p_config->p_devinfo->device_id,   IOTX_DEVICE_ID_LEN);
         strncpy(p_iotx_coap->p_devinfo->product_key,  p_config->p_devinfo->product_key, IOTX_PRODUCT_KEY_LEN);
         strncpy(p_iotx_coap->p_devinfo->device_secret, p_config->p_devinfo->device_secret, IOTX_DEVICE_SECRET_LEN);

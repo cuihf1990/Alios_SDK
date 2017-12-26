@@ -199,8 +199,11 @@ CoAPContext *CoAPContext_create(CoAPInitParam *param)
             p_ctx    =  NULL;
         }
     }
+    else{
+        aos_poll_read_fd(p_ctx->network.socket_id, cb_recv, p_ctx);
+    }
    
-    aos_poll_read_fd(p_ctx->network.socket_id, cb_recv, p_ctx);
+    
     return p_ctx;
 }
 
@@ -211,7 +214,7 @@ void CoAPContext_free(CoAPContext *p_ctx)
 
     aos_cancel_poll_read_fd(p_ctx->network.socket_id,cb_recv,p_ctx);
     CoAPNetwork_deinit(&p_ctx->network);
-
+    
     list_for_each_entry_safe(cur, next, &p_ctx->list.sendlist, CoAPSendNode, sendlist) {
         if (NULL != cur) {
             if (NULL != cur->message) {
@@ -221,7 +224,7 @@ void CoAPContext_free(CoAPContext *p_ctx)
             coap_free(cur);
             cur = NULL;
         }
-    }
+    }  
 
     if (NULL != p_ctx->recvbuf) {
         coap_free(p_ctx->recvbuf);
