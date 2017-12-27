@@ -41,6 +41,7 @@ COMPILER_SPECIFIC_RELEASE_CXXFLAGS     := -DNDEBUG $(COMPILER_SPECIFIC_OPTIMIZED
 COMPILER_SPECIFIC_RELEASE_ASFLAGS      :=
 COMPILER_SPECIFIC_RELEASE_LDFLAGS      := 
 
+# -MD -> --dependencies xx.d
 COMPILER_SPECIFIC_DEPS_FLAG                := -e --dlib_config=full -D_TIMESPEC_DEFINED --silent --only_stdout --no_warnings --diag_warning=Pe167,Pe144,Pe513
 COMPILER_SPECIFIC_COMP_ONLY_FLAG           := 
 COMPILER_SPECIFIC_LINK_MAP                  = --map $(1)
