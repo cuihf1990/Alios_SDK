@@ -121,7 +121,6 @@ void umesh_mm_set_prev_channel(void);
 uint16_t umesh_mm_get_local_sid(void);
 neighbor_t *umesh_mm_get_attach_node(void);
 neighbor_t *umesh_mm_get_attach_candidate(void);
-neighbor_t *umesh_mm_get_auth_candidate(void);
 uint8_t *umesh_mm_get_local_uuid(void);
 node_state_t umesh_mm_get_device_state(void);
 attach_state_t umesh_mm_get_attach_state(void);

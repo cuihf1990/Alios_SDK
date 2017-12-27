@@ -59,6 +59,13 @@ $(NAME)_SOURCES += src/core/mesh/lowpower_mgmt.c
 GLOBAL_DEFINES += CONFIG_AOS_MESH_LOWPOWER
 endif
 
+MESHAUTH ?= 0
+ifeq ($(MESHAUTH), 1)
+$(NAME)_SOURCES += src/core/security/auth_mgmt.c
+$(NAME)_SOURCES += src/core/security/auth_relay.c
+GLOBAL_DEFINES += CONFIG_AOS_MESH_AUTH
+endif
+
 ifeq ($(CONFIG_AOS_MESH_TAPIF), 1)
 $(NAME)_SOURCES += src/ip/tapif_adapter.c
 $(NAME)_DEFINES += CONFIG_AOS_MESH_TAPIF

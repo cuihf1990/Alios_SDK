@@ -6,6 +6,9 @@
 #define UR_MM_TLVS_H
 
 #include "ip/ip.h"
+#ifdef CONFIG_AOS_MESH_AUTH
+#include "auth_mgmt.h"
+#endif
 
 /* mesh managememt TLV types. */
 enum {
@@ -50,13 +53,14 @@ typedef enum {
     TYPE_BCAST_CHANNEL     = 0xa4,  /* bcast channel */
     TYPE_TIME_SLOT         = 0xa5,  /* time slot */
     TYPE_BUFQUEUE_SIZE     = 0xa6,  /* buffer queue size */
+#ifdef CONFIG_AOS_MESH_AUTH
     TYPE_NODE_ID2          = 0xa7,  /* node ID2 */
     TYPE_ID2_CHALLENGE     = 0xa8,  /* ID2 challenge number */
-    TYPE_ID2_TIMESTAMP     = 0xa9,  /* ID2 timestamp */
-    TYPE_ID2_AUTH_RESULT   = 0xaa,  /* ID2 auth result */
+    TYPE_ID2_AUTH_RESULT   = 0xa9,  /* ID2 auth result */
+    TYPE_ID2_AUTH_CODE     = 0x7e,  /* ID2 auth code */
+#endif
     TYPE_MESH_PREFIX       = 0x0,   /* mesh prefix TLV */
     TYPE_TLV_REQUEST       = 0x1,   /* TLV requests TLV */
-    TYPE_ID2_AUTH_CODE     = 0x7e,  /* ID2 auth code */
     TYPE_HEADER_IES_TERMINATOR = 0x7f,  /* header TLVs terminator */
     TYPE_INVALID           = 0xff,
 } mm_tlv_type_t;
@@ -203,23 +207,25 @@ typedef struct mesh_mgmt_tlv_request_tlv_s {
     mm_tlv_t base;
 } __attribute__((packed)) mm_tlv_request_tlv_t;
 
+#ifdef CONFIG_AOS_MESH_AUTH
 typedef struct mesh_mgmt_id2_auth_code_s {
     mm_tlv_t base;
 } __attribute__((packed)) mm_id2_auth_code_tlv_t;
 
 typedef struct mesh_mgmt_node_id2_tv_s {
     mm_tv_t base;
-    uint8_t device_id[24];
+    uint8_t device_id[TFS_ID2_LEN];
 } __attribute__((packed)) mm_node_id2_tv_t;
 
 typedef struct mesh_mgmt_id2_challenge_s {
     mm_tv_t base;
-    uint8_t challenge[32];
+    uint8_t challenge[TFS_CHALLENGE_LEN];
 } __attribute__((packed)) mm_id2_challenge_tv_t;
 
 typedef struct mesh_mgmt_id2_auth_result_s {
     mm_tv_t base;
     bool result;
 } __attribute__((packed)) mm_id2_auth_result_tv_t;
+#endif
 
 #endif  /* UR_MM_TLVS_H */

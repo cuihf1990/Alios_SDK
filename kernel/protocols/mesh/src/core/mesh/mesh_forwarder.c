@@ -9,6 +9,9 @@
 #include "umesh.h"
 #include "umesh_hal.h"
 #include "umesh_utils.h"
+#ifdef CONFIG_AOS_MESH_AUTH
+#include "core/auth_mgmt.h"
+#endif
 #include "core/mesh_mgmt.h"
 #include "core/mesh_forwarder.h"
 #include "core/router_mgr.h"
@@ -39,8 +42,8 @@ enum {
 
 enum {
     SENT_SUCCESS = 0,
-    SENT_FAIL = -1,
-    SENT_DROP = -2,
+    SENT_FAIL    = -1,
+    SENT_DROP    = -2,
 };
 
 typedef struct mesh_fwd_state_s {
@@ -353,9 +356,9 @@ static uint8_t insert_mesh_header(network_context_t *network,
             length += sizeof(mesh_short_addr_t);
             break;
         case EXT_ADDR_SIZE:
+            control->control[0] |= (EXT_ADDR_MODE << MESH_HEADER_SRC_OFFSET);
             ext_addr = (mesh_ext_addr_t *)(hal->frame.data + length);
             memcpy(ext_addr->addr, info->src.addr.addr, sizeof(ext_addr->addr));
-            control->control[0] |= (EXT_ADDR_MODE << MESH_HEADER_SRC_OFFSET);
             length += sizeof(mesh_ext_addr_t);
             break;
         default:
@@ -599,6 +602,13 @@ static neighbor_t *get_next_node(message_info_t *info)
         return next;
     }
 
+#ifdef CONFIG_AOS_MESH_AUTH
+    if (get_auth_state() < AUTH_DONE) {
+        next = get_auth_candidate();
+        return next;
+    }
+#endif
+
     if (local_sid == BCAST_SID) {
         next = umesh_mm_get_attach_candidate();
         return next;
@@ -737,6 +747,12 @@ static void set_dest_encrypt_flag(message_info_t *info)
             info->command == COMMAND_DISCOVERY_REQUEST ||
             info->command == COMMAND_DISCOVERY_RESPONSE ||
             info->command == COMMAND_ATTACH_REQUEST ||
+#ifdef CONFIG_AOS_MESH_AUTH
+            info->command == COMMAND_AUTH_REQUEST ||
+            info->command == COMMAND_AUTH_RESPONSE ||
+            info->command == COMMAND_AUTH_RELAY ||
+            info->command == COMMAND_AUTH_ACK ||
+#endif
             info->command == COMMAND_LINK_ACCEPT) {
             info->key_index = INVALID_KEY_INDEX;
             return;
@@ -1072,6 +1088,31 @@ static void handle_received_frame(void *context, frame_t *frame,
         hal->link_stats.in_drops++;
         return;
     }
+
+#ifdef CONFIG_AOS_MESH_AUTH
+    // drop specific msg if auth doesn't finish
+    if (info.type == MESH_FRAME_TYPE_CMD) {
+        if (!get_auth_result() &&
+            (info.command == COMMAND_ADVERTISEMENT ||
+            info.command == COMMAND_ATTACH_REQUEST ||
+            info.command == COMMAND_ATTACH_RESPONSE ||
+            info.command == COMMAND_SID_REQUEST ||
+            info.command == COMMAND_SID_RESPONSE ||
+            info.command == COMMAND_ADDRESS_QUERY ||
+            info.command == COMMAND_ADDRESS_QUERY_RESPONSE ||
+            info.command == COMMAND_ADDRESS_NOTIFICATION ||
+            info.command == COMMAND_LINK_REQUEST ||
+            info.command == COMMAND_LINK_ACCEPT ||
+            info.command == COMMAND_LINK_ACCEPT_AND_REQUEST ||
+            info.command == COMMAND_ADDRESS_UNREACHABLE ||
+            info.command == COMMAND_ADDRESS_ERROR ||
+            info.command == COMMAND_ROUTING_INFO_UPDATE)) {
+            MESH_LOG_INFO("drop msg %d due to incompleted auth", info.command);
+            hal->link_stats.in_drops++;
+            return;
+        }
+    }
+#endif
 
     message = message_alloc(frame->len, MESH_FORWARDER_2);
     if (message == NULL) {
