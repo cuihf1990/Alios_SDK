@@ -100,8 +100,8 @@ typedef enum {
     DEV_POWER_OFF = 0,
     DEV_POWER_ON,
     DEV_SLEEP,
-    DEV_SUPEND,
-    DEV_DEEP_SUPEND,
+    DEV_SUSPEND,
+    DEV_DEEP_SUSPEND,
 } dev_power_mode_e;
 
 typedef enum {
@@ -124,8 +124,8 @@ typedef enum {
 } data_type_e;
 
 typedef enum {
-	m_per_s = 0,
-	u_tesla,
+	mg = 0,
+	uGauss,
 	rad_s,
 	pa,
 	pecent,
@@ -276,6 +276,13 @@ typedef struct _sensor_node_t{
     char         *path;
     int           fd;
 } sensor_node_t;
+
+typedef enum{
+    ACC_RANGE_2G,
+    ACC_RANGE_4G,
+    ACC_RANGE_8G,
+    ACC_RANGE_16G,
+}acc_range_e;
     
 #endif /* HAL_SENSOR_H */
 
