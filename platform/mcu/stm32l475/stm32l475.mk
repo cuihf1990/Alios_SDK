@@ -11,14 +11,14 @@ NAME := stm32l475
 
 HOST_OPENOCD := stm32l475
 
-STM32_NONSTD_SOCKET := true
+#STM32_NONSTD_SOCKET := true
 
 $(NAME)_TYPE := kernel
 
 $(NAME)_COMPONENTS += platform/arch/arm/armv7m
 $(NAME)_COMPONENTS += libc rhino hal modules.fs.kv vfs digest_algorithm
 
-GLOBAL_DEFINES += STM32_USE_SPI_WIFI
+#GLOBAL_DEFINES += STM32_USE_SPI_WIFI
 
 GLOBAL_DEFINES += CONFIG_AOS_KV_MULTIPTN_MODE
 GLOBAL_DEFINES += CONFIG_AOS_KV_PTN=6
@@ -150,7 +150,6 @@ $(NAME)_SOURCES := src/B-L475E-IOT01/runapp/stm32l4xx_hal_msp.c      \
                    src/common/csp/wifi/src/es_wifi_io.c        \
                    src/common/csp/wifi/src/wifi.c              \
                    src/B-L475E-IOT01/hal/hw.c                     \
-                   src/B-L475E-IOT01/hal/wifi_port.c              \
                    src/B-L475E-IOT01/hal/flash_port.c              \
                    src/B-L475E-IOT01/hal/ota_port.c              \
                    src/B-L475E-IOT01/hal/hal_i2c_stm32l4.c       \
@@ -159,6 +158,11 @@ $(NAME)_SOURCES := src/B-L475E-IOT01/runapp/stm32l4xx_hal_msp.c      \
                    src/B-L475E-IOT01/sensor/sensors_data.c \
                    src/B-L475E-IOT01/sensor/sensors.c \
                    src/B-L475E-IOT01/sensor/qspi.c
+ifeq (wifi.mk3060,$(module))
+$(NAME)_SOURCES     += src/B-L475E-IOT01/hal/wifi_atcmd.c
+else
+$(NAME)_SOURCES     += src/B-L475E-IOT01/hal/wifi_port.c
+endif
 
 ifeq ($(COMPILER),armcc)
 $(NAME)_SOURCES += src/B-L475E-IOT01/runapp/startup_stm32l475xx_armcc.s

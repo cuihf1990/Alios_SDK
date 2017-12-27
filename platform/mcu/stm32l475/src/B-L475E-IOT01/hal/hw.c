@@ -13,10 +13,12 @@
 #include <hal/base.h>
 #include <hal/wifi.h>
 #include <hal/ota.h>
+#include "stm32_wifi.h"
 #include "stm32l4xx_hal_cortex.h"
 
 #define TAG "hw"
 
+#define WIFI_PRODUCT_INFO_SIZE                      ES_WIFI_MAX_SSID_NAME_SIZE
 #define us2tick(us) \
     ((us * RHINO_CONFIG_TICKS_PER_SECOND + 999999) / 1000000)
 
@@ -61,11 +63,12 @@ void hal_timer_stop(hal_timer_t *tmr)
     tmr->priv = NULL;
 }
 
-extern hal_wifi_module_t sim_aos_wifi_stm23l475;
+extern hal_wifi_module_t sim_aos_wifi_stm32l475;
 extern struct hal_ota_module_s stm32l475_ota_module;
 void hw_start_hal(void)
 {
     printf("start-----------hal\n");
-    hal_wifi_register_module(&sim_aos_wifi_stm23l475);
+    hal_wifi_register_module(&sim_aos_wifi_stm32l475);
     hal_ota_register_module(&stm32l475_ota_module);
+    hal_wifi_init();
 }

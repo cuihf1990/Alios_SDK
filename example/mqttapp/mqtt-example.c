@@ -23,6 +23,11 @@
 #include <netmgr.h>
 #include <aos/cli.h>
 #include <aos/cloud.h>
+
+#ifdef AOS_ATCMD
+#include <atparser.h>
+#endif
+
 #if defined(MQTT_ID2_AUTH) && defined(TEST_ID2_DAILY)
 /*
     #define PRODUCT_KEY             "OvNmiEYRDSY"
@@ -337,9 +342,30 @@ static struct cli_command mqttcmd = {
     .function = handle_mqtt
 };
 
+#ifdef AOS_ATCMD
+static void at_uart_configure(uart_dev_t *u)
+{
+    u->port                = AT_UART_PORT;
+    u->config.baud_rate    = AT_UART_BAUDRATE;
+    u->config.data_width   = AT_UART_DATA_WIDTH;
+    u->config.parity       = AT_UART_PARITY;
+    u->config.stop_bits    = AT_UART_STOP_BITS;
+    u->config.flow_control = AT_UART_FLOW_CONTROL;
+}
+#endif
 
 int application_start(int argc, char *argv[])
 {
+#if AOS_ATCMD
+    uart_dev_t at_uart;
+    at_uart_configure(&at_uart);
+    at.init(&at_uart, AT_RECV_DELIMITER, AT_SEND_DELIMITER, 1000);
+    at.set_mode(ASYN);
+#endif
+
+#ifdef WITH_SAL
+    sal_init();
+#endif
     aos_set_log_level(AOS_LL_DEBUG);
 
     aos_register_event_filter(EV_WIFI, wifi_service_event, NULL);
