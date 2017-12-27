@@ -1092,9 +1092,9 @@ static void handle_received_frame(void *context, frame_t *frame,
 #ifdef CONFIG_AOS_MESH_AUTH
     // drop specific msg if auth doesn't finish
     if (info.type == MESH_FRAME_TYPE_CMD) {
-        if (!get_auth_result() &&
-            (info.command == COMMAND_ADVERTISEMENT ||
-            info.command == COMMAND_ATTACH_REQUEST ||
+        if ((umesh_mm_get_device_state() != DEVICE_STATE_LEADER) &&
+            !get_auth_result() &&
+            (info.command == COMMAND_ATTACH_REQUEST ||
             info.command == COMMAND_ATTACH_RESPONSE ||
             info.command == COMMAND_SID_REQUEST ||
             info.command == COMMAND_SID_RESPONSE ||
