@@ -16,7 +16,6 @@ enum {
     BLE_LINK_QUALITY_TIMEOUT        = 30000,  /* ms */
     BLE_ADVERTISEMENT_TIMEOUT       = 20000,  /* ms, 20 seconds */
     BLE_NEIGHBOR_ALIVE_TIMEOUT      = 120000, /* ms, 2  mins */
-    BLE_MIGRATE_WAIT_TIMEOUT        = 6 * BLE_ADVERTISEMENT_TIMEOUT,
     BLE_NOTIFICATION_TIMEOUT        = 300000, /* ms, 5 mins */
     BLE_ADDR_CACHE_ALIVE_TIMEOUT    = 10,
 };

@@ -238,7 +238,6 @@ void process_networks(int argc, char *argv[])
         response_append("  hal %d\r\n", network->hal->module->type);
         response_append("  state %s\r\n", network->state == 0 ? "up" : "down");
         response_append("  meshnetid %x\r\n", network->meshnetid);
-        response_append("  sid %x\r\n", network->sid);
         response_append("  sid type %d\r\n", network->router->sid_type);
         response_append("  route id %d\r\n", network->router->id);
         response_append("  netdata version %d\r\n", network->network_data.version);

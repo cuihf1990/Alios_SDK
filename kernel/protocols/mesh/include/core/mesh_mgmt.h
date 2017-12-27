@@ -59,12 +59,15 @@ enum {
     BECOME_LEADER_TIMEOUT           = 3,
     MIGRATE_TIMEOUT                 = 2,
     DETACHED_MIGRATE_TIMEOUT        = 1,
+    MIGRATE_RESET_TIMEOUT           = 5,
 
 #ifndef CONFIG_AOS_DDA
     ATTACH_CANDIDATE_TIMEOUT        = 30, /* 30 * ADVERTISEMENT_TIMEOUT */
 #else
     ATTACH_CANDIDATE_TIMEOUT        = 0,
 #endif
+
+    ATTACH_REQUEST_INTERVAL         = 1000, /* 1s */
 };
 
 enum {
@@ -177,7 +180,7 @@ static inline bool is_pf_mode(node_mode_t mode)
 uint8_t set_mm_netinfo_tv(network_context_t *network, uint8_t *data);
 uint8_t set_mm_channel_tv(hal_context_t *hal, uint8_t *data);
 uint8_t set_mm_uuid_tv(uint8_t *data, uint8_t type, uint8_t *uuid);
-uint8_t set_mm_path_cost_tv(network_context_t *network, uint8_t *data);
+uint8_t set_mm_path_cost_tv(uint8_t *data);
 uint8_t set_mm_node_id_tv(uint8_t *data, uint8_t type, ur_node_id_t *node);
 uint8_t set_mm_sid_tv(uint8_t *data, uint8_t type, uint16_t sid);
 uint8_t set_mm_mode_tv(uint8_t *data);

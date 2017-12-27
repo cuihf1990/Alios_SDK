@@ -29,7 +29,6 @@ static network_context_t *new_network_context(hal_context_t *hal, uint8_t index,
     memset(network, 0, sizeof(network_context_t));
     network->index = index;
     network->hal = hal;
-    network->sid = INVALID_SID;
 
     network->router = ur_get_router_by_id(router_id);
     network->router->network = network;
@@ -88,8 +87,6 @@ static hal_context_t *new_hal_context(umesh_hal_module_t *module, media_type_t t
         hal->auth_request_interval = WIFI_AUTH_REQUEST_TIMEOUT;
         hal->auth_relay_interval = WIFI_AUTH_RELAY_TIMEOUT;
         hal->auth_response_interval = WIFI_AUTH_RESPONSE_TIMEOUT;
-        hal->attach_request_interval = WIFI_ATTACH_REQUEST_TIMEOUT;
-        hal->sid_request_interval = WIFI_SID_REQUEST_TIMEOUT;
         hal->link_quality_update_interval = (umesh_get_mode() & MODE_MOBILE)? \
                           WIFI_LINK_QUALITY_MOBILE_TIMEOUT: WIFI_LINK_QUALITY_TIMEOUT;
         hal->neighbor_alive_interval = WIFI_NEIGHBOR_ALIVE_TIMEOUT;
@@ -100,8 +97,6 @@ static hal_context_t *new_hal_context(umesh_hal_module_t *module, media_type_t t
         hal->auth_request_interval = BLE_AUTH_REQUEST_TIMEOUT;
         hal->auth_relay_interval = BLE_AUTH_RELAY_TIMEOUT;
         hal->auth_response_interval = BLE_AUTH_RESPONSE_TIMEOUT;
-        hal->attach_request_interval = BLE_ATTACH_REQUEST_TIMEOUT;
-        hal->sid_request_interval = BLE_SID_REQUEST_TIMEOUT;
         hal->link_quality_update_interval = (umesh_get_mode() & MODE_MOBILE)? \
                            BLE_LINK_QUALITY_MOBILE_TIMEOUT: BLE_LINK_QUALITY_TIMEOUT;
         hal->neighbor_alive_interval = BLE_NEIGHBOR_ALIVE_TIMEOUT;
@@ -112,8 +107,6 @@ static hal_context_t *new_hal_context(umesh_hal_module_t *module, media_type_t t
         hal->auth_request_interval = IEEE154_AUTH_REQUEST_TIMEOUT;
         hal->auth_relay_interval = IEEE154_AUTH_RELAY_TIMEOUT;
         hal->auth_response_interval = IEEE154_AUTH_RESPONSE_TIMEOUT;
-        hal->attach_request_interval = IEEE154_ATTACH_REQUEST_TIMEOUT;
-        hal->sid_request_interval = IEEE154_SID_REQUEST_TIMEOUT;
         hal->link_quality_update_interval = (umesh_get_mode() & MODE_MOBILE)? \
                      IEEE154_LINK_QUALITY_MOBILE_TIMEOUT: IEEE154_LINK_QUALITY_TIMEOUT;
         hal->neighbor_alive_interval = IEEE154_NEIGHBOR_ALIVE_TIMEOUT;
@@ -137,27 +130,9 @@ void interface_init(void)
     }
 }
 
-static void set_network_configs(network_context_t *network)
-{
-    switch (network->hal->module->type) {
-        case MEDIA_TYPE_WIFI:
-            network->migrate_interval = WIFI_MIGRATE_WAIT_TIMEOUT;
-            break;
-        case MEDIA_TYPE_BLE:
-            network->migrate_interval = BLE_MIGRATE_WAIT_TIMEOUT;
-            break;
-        case MEDIA_TYPE_15_4:
-            network->migrate_interval = IEEE154_MIGRATE_WAIT_TIMEOUT;
-            break;
-        default:
-            break;
-    }
-}
-
 void interface_start(void)
 {
     hal_context_t *hal;
-    network_context_t *network;
     uint8_t index;
 
     index = 0;
@@ -166,18 +141,13 @@ void interface_start(void)
 
         if (is_wifi) {
             if (umesh_mm_get_mode() & MODE_SUPER) {
-                network = new_network_context(hal, index++, VECTOR_ROUTER);
-                set_network_configs(network);
-
-                network = new_network_context(hal, index++, SID_ROUTER);
-                set_network_configs(network);
+                new_network_context(hal, index++, VECTOR_ROUTER);
+                new_network_context(hal, index++, SID_ROUTER);
             } else {
-                network = new_network_context(hal, index++, SID_ROUTER);
-                set_network_configs(network);
+                new_network_context(hal, index++, SID_ROUTER);
             }
         } else {
-            network = new_network_context(hal, index++, SID_ROUTER);
-            set_network_configs(network);
+            new_network_context(hal, index++, SID_ROUTER);
         }
     }
 }
@@ -238,21 +208,7 @@ void reset_network_context(void)
     slist_for_each_entry(networks, network, network_context_t, next) {
         network->state = INTERFACE_DOWN;
         ur_stop_timer(&network->advertisement_timer, network);
-        ur_stop_timer(&network->attach_timer, network);
-        ur_stop_timer(&network->migrate_wait_timer, network);
-        network->sid       = BCAST_SID;
-        network->path_cost = INFINITY_PATH_COST;
         network->meshnetid = INVALID_NETID;
-        network->prev_netid = INVALID_NETID;
-        network->prev_path_cost = INFINITY_PATH_COST;
-        if (network->attach_node != NULL &&
-            network->attach_node->state == STATE_PARENT) {
-            network->attach_node->state = STATE_NEIGHBOR;
-        }
-        network->attach_node = NULL;
-        network->attach_candidate = NULL;
-        network->candidate_meshnetid = BCAST_NETID;
-        network->migrate_times = 0;
     }
 }
 
