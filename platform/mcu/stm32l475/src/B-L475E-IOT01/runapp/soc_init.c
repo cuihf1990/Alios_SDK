@@ -242,6 +242,12 @@ uint8_t Button_WaitForPush(uint32_t delay)
   return BP_NOT_PUSHED;
 }
 
+/* bufferQueue for uart */
+#define MAX_BUF_UART_BYTES  1000
+
+kbuf_queue_t g_buf_queue_uart[COMn];
+char g_buf_uart[COMn][MAX_BUF_UART_BYTES];
+const char *g_pc_buf_queue_name[COMn] = {"buf_queue_uart0", "buf_queue_uart4"};
 
 static int UART_Init(uart_dev_t *uart)
 {
@@ -320,6 +326,12 @@ static int UART_Init(uart_dev_t *uart)
     stm32_uart[uart->port].handle.Init.OverSampling = UART_OVERSAMPLING_16;
     stm32_uart[uart->port].handle.Init.OneBitSampling = UART_ONE_BIT_SAMPLE_DISABLE;
     stm32_uart[uart->port].handle.AdvancedInit.AdvFeatureInit = UART_ADVFEATURE_NO_INIT;
+    
+    if(krhino_buf_queue_create(&g_buf_queue_uart[uart->port], g_pc_buf_queue_name[uart->port], g_buf_uart[uart->port], MAX_BUF_UART_BYTES, 1) != 0){
+        return -2;
+    }
+    
+    stm32_uart[uart->port].handle.buffer_queue = &g_buf_queue_uart[uart->port];
     BSP_COM_Init(uart->port,&stm32_uart[uart->port].handle);
     aos_mutex_new(&stm32_uart[uart->port].uart_tx_mutex);
     aos_mutex_new(&stm32_uart[uart->port].uart_rx_mutex);
@@ -400,36 +412,39 @@ int32_t hal_uart_send(uart_dev_t *uart, const void *data, uint32_t size, uint32_
     return 0;
 }
 
-int32_t hal_uart_recv(uart_dev_t *uart, void *data, uint32_t expect_size, uint32_t *recv_size, uint32_t timeout) {
-    HAL_UART_StateTypeDef state = HAL_UART_STATE_BUSY_RX;
-    int ret;
-    if(uart==NULL||data==NULL) {
-      return -EINVAL;
+int32_t hal_uart_recv(uart_dev_t *uart, void *data, uint32_t expect_size, uint32_t *recv_size, uint32_t timeout) 
+{
+    uint8_t *pdata = (uint8_t *)data;
+    int i = 0;
+    uint32_t rx_count = 0;
+    int32_t ret = -1;
+
+    if ((uart == NULL) || (data == NULL)) {
+        return -1;
     }
-    if(uart->port>COMn-1) {
-      return -EINVAL;
-    }
+
     aos_mutex_lock(&stm32_uart[uart->port].uart_rx_mutex, RHINO_WAIT_FOREVER);
 
-    if (recv_size != NULL) {
-        *recv_size = expect_size;
+    for (i = 0; i < expect_size; i++)
+    {
+        ret = HAL_UART_Receive_IT_Buf_Queue_1byte(&stm32_uart[uart->port].handle, &pdata[i], timeout); 
+        if (ret == 0) {
+            rx_count++;
+        } else {
+            break;
+        }
     }
 
-    if (stm32_uart[uart->port].handle.RxState != HAL_UART_STATE_READY) {
-        aos_sem_wait(&stm32_uart[uart->port].uart_rx_sem, timeout);
-    } else {
-        state = HAL_UART_STATE_READY;
+    *recv_size = rx_count;
+
+    if(rx_count != 0)
+    {
+        ret = 0;
     }
-
-    ret = HAL_UART_Receive_IT(&stm32_uart[uart->port].handle, (uint8_t *)data, expect_size);
-    // if (HAL_UART_Receive_IT(&stm32_uart[uart->port].handle, (uint8_t *)data, expect_size) != HAL_OK) {
-    //     Error_Handler();
-    // }
-
-    if (HAL_UART_STATE_READY == state) {
-        aos_sem_wait(&stm32_uart[uart->port].uart_rx_sem, timeout);
+    else
+    {
+        ret = -1;
     }
-
     aos_mutex_unlock(&stm32_uart[uart->port].uart_rx_mutex);
 
     return ret;
@@ -539,12 +554,15 @@ void HAL_UART_TxCpltCallback(UART_HandleTypeDef *huart)
   */
 void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart)
 {
+  return;
+#if 0
   for(int i=0;i<COMn;i++){
     if(&stm32_uart[i].handle==huart){
         aos_sem_signal(&stm32_uart[i].uart_rx_sem);
         break;
     }
   }
+#endif
 }
 
 static int default_UART_Init()
