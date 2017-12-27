@@ -44,7 +44,7 @@ $(eval COMPONENTS += $(filter $(TEST_COMPONENTS),  $(subst /,.,$(strip $(TEST_CO
 endef
 
 #####################################################################################
-# Macro FIND_COMPONENT  使用广度遍历搜索所有组件
+# Macro FIND_COMPONENT  use breadth traversal to search component
 # $(1) is the list of components left to process. $(COMP) is set as the first element in the list
 define FIND_COMPONENT
 
