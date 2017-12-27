@@ -21,7 +21,8 @@ modification history
  * RHINO_CONFIG_ATOMIC_GENERIC.
  */
 
-#include <k_api.h>
+#include "k_api.h"
+#include "k_atomic.h"
 
 #ifdef RHINO_CONFIG_ATOMIC_GENERIC
 
