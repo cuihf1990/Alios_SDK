@@ -7,8 +7,7 @@
 #  permission of MXCHIP Corporation.
 #
 
-
-NAME := Lib_MICO_Bluetooth_Smart_Framework
+NAME := bt_smart
 
 GLOBAL_INCLUDES += include
 
@@ -26,5 +25,3 @@ $(NAME)_SOURCES := mico_bt_management.c \
                    internal/bt_smartbridge_helper.c \
                    internal/bt_smartbridge_stack_interface.c \
                    LinkListUtils.c StringUtils.c
-                   
-                   

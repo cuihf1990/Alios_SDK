@@ -3,7 +3,7 @@
 # All Rights Reserved.
 #
 
-NAME := Lib_MICO_Bluetooth_Firmware_for_$(BT_CHIP)$(BT_CHIP_REVISION)
+NAME := lib_mico_ble_firmware
 
 # Use Firmware images which are already present
 ifeq ($(BT_CHIP_XTAL_FREQUENCY),)
