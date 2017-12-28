@@ -19,7 +19,6 @@ static int get_ip_stat_helper(hal_wifi_ip_stat_t *result);
 
 static void fetch_ip_stat(void *arg)
 {
-    char out[128];
     hal_wifi_ip_stat_t ip_stat = {0};
     hal_wifi_module_t *m;
 
@@ -110,7 +109,6 @@ static int wifi_start(hal_wifi_module_t *m, hal_wifi_init_type_t *init_para)
 
     (void)init_para;
 
-    hal_wifi_ip_stat_t ip_stat;
 
     if (strcmp(init_para->wifi_key, "open") == 0) {
         snprintf(in, sizeof(in), AT_CMD_CONNECT_AP"=%s",
@@ -203,8 +201,6 @@ static int get_ip_stat_helper(hal_wifi_ip_stat_t *result)
 
 static int get_ip_stat(hal_wifi_module_t *m, hal_wifi_ip_stat_t *out_net_para, hal_wifi_type_t wifi_type)
 {
-    char out[128] = {0};
-
     (void)wifi_type;
     (void)m;
 
@@ -283,8 +279,8 @@ static int wlan_send_80211_raw_frame(hal_wifi_module_t *m, uint8_t *buf, int len
     return 0;
 }
 
-hal_wifi_module_t sim_aos_wifi_stm32l475 = {
-    .base.name           = "sim_aos_wifi_stm32l475",
+hal_wifi_module_t sim_aos_wifi_module_mk3060 = {
+    .base.name           = "sim_aos_wifi_module_mk3060",
     .init                =  wifi_init,
     .get_mac_addr        =  wifi_get_mac_addr,
     .start               =  wifi_start,

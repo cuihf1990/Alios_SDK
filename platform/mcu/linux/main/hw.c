@@ -228,7 +228,11 @@ int csp_printf(const char *fmt, ...)
 }
 #endif
 
+#if defined(DEV_SAL_MK3060)
+extern hal_wifi_module_t sim_aos_wifi_module_mk3060;
+#else
 extern hal_wifi_module_t sim_aos_wifi_linux;
+#endif
 extern struct hal_ota_module_s linuxhost_ota_module;
 uart_dev_t uart_0;
 
@@ -250,7 +254,11 @@ void hw_start_hal(options_t *poptions)
 #endif
 
 #ifdef AOS_HAL
+#if defined(DEV_SAL_MK3060)
+    hal_wifi_register_module(&sim_aos_wifi_module_mk3060);
+#else
     hal_wifi_register_module(&sim_aos_wifi_linux);
+#endif
     hal_ota_register_module(&linuxhost_ota_module);
 #endif
 
