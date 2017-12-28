@@ -1,10 +1,16 @@
-/*
- * Copyright (C) 2015-2017 Alibaba Group Holding Limited
+/**
+ *  UNPUBLISHED PROPRIETARY SOURCE CODE
+ *  Copyright (c) 2016 MXCHIP Inc.
+ *
+ *  The contents of this file may not be disclosed to third parties, copied or
+ *  duplicated in any form, in whole or in part, without the prior written
+ *  permission of MXCHIP Corporation.
+ *
  */
 
 #pragma once
 
-#include "data_types.h"
+#include "data_types.h" 
 
 #ifdef __cplusplus
 extern "C" {
@@ -12,9 +18,9 @@ extern "C" {
 
 #define BTEWICED                        TRUE
 
-#if 1
+#if 1 
 //oscar++
-#define BTM_DEFAULT_AUTH_REQ            BTM_AUTH_SPGB_NO            //oscar
+#define BTM_DEFAULT_AUTH_REQ            BTM_AUTH_SPGB_NO			//oscar
 //#define HCI_DEFAULT_INACT_TOUT          11200                       //7sec (11200*0.625) for minray
 //oscar--
 #endif
@@ -105,7 +111,7 @@ extern "C" {
 #define AVRC_CONTROL_MTU                (L2CAP_MTU_SIZE)
 #define AVRC_BROWSE_MTU                 (L2CAP_MTU_SIZE)
 
-#else
+#else 
 
 /* RFCOMM definitions */
 #define RFCOMM_INCLUDED                 FALSE
@@ -264,7 +270,7 @@ extern "C" {
 #define SDP_MAX_PROTOCOL_PARAMS         2
 #define SDP_RAW_DATA_SERVER             FALSE
 
-#else
+#else 
 
 #define SDP_INCLUDED                    FALSE
 #define SDP_CLIENT_ENABLED              FALSE
@@ -278,7 +284,7 @@ extern "C" {
 #define SDP_MAX_PROTOCOL_PARAMS         2
 #define SDP_RAW_DATA_SERVER             FALSE
 
-#endif
+#endif 
 
 #if (defined(BTU_DYNAMIC_CB_INCLUDED)  && (BTU_DYNAMIC_CB_INCLUDED == TRUE))
 #define MAX_L2CAP_CLIENTS               (btu_cb.l2c_cfg_max_clients)
@@ -320,13 +326,13 @@ extern "C" {
 #define BT_TRACE_PROTOCOL               FALSE
 #endif
 
-#ifndef BT_USE_TRACES
+#ifndef BT_USE_TRACES 
 #define BT_USE_TRACES                   FALSE
 #endif
 
-#ifndef BT_TRACE_VERBOSE
-#define BT_TRACE_VERBOSE                FALSE
-#endif
+#ifndef BT_TRACE_VERBOSE                
+#define BT_TRACE_VERBOSE                FALSE 
+#endif 
 
 #define USE_EXTERNAL_HCD                1
 

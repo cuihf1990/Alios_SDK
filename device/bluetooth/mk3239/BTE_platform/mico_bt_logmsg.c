@@ -1,5 +1,11 @@
-/*
- * Copyright (C) 2015-2017 Alibaba Group Holding Limited
+/**
+ *  UNPUBLISHED PROPRIETARY SOURCE CODE
+ *  Copyright (c) 2016 MXCHIP Inc.
+ *
+ *  The contents of this file may not be disclosed to third parties, copied or
+ *  duplicated in any form, in whole or in part, without the prior written
+ *  permission of MXCHIP Corporation.
+ *
  */
 
 /*****************************************************************************
@@ -22,16 +28,15 @@
 extern int mico_debug_enabled;
 extern mico_mutex_t stdio_tx_mutex;
 
-static void printlog(char *M, char *N)
+static void printlog(char *M, char * N)
 {
-    if (mico_debug_enabled == 0) {
-        return;
-    }
+    if (mico_debug_enabled==0)
+      return;
     mico_rtos_lock_mutex( &stdio_tx_mutex );
     printf("[%ld][%s] %s\r\n", mico_rtos_get_time(), M, N);
     mico_rtos_unlock_mutex( &stdio_tx_mutex );
 }
-void WPRINT_BT_APP_INFO(const char *info, ...)
+void WPRINT_BT_APP_INFO(const char * info, ...)
 {
     char buffer[256]; // Save stack space - make global
     va_list ap;
@@ -52,10 +57,11 @@ void
 LogMsg(UINT32 trace_set_mask, const char *fmt_str, ...)
 {
     char buffer[256]; // Save stack space - make global
-    //    char timeBuf[16];
+//    char timeBuf[16];
     va_list ap;
 
-    if ((!mico_log_enabled) && (TRACE_GET_TYPE(trace_set_mask) != TRACE_TYPE_ERROR)) {
+    if ((!mico_log_enabled) && (TRACE_GET_TYPE(trace_set_mask) != TRACE_TYPE_ERROR))
+    {
         /* If  mico logging disabled, then only log errors */
         return;
     }
@@ -76,7 +82,8 @@ ScrLog(UINT32 trace_set_mask, const char *fmt_str, ...)
     va_list ap;
 
 
-    if ((!mico_log_enabled) && (TRACE_GET_TYPE(trace_set_mask) != TRACE_TYPE_ERROR)) {
+    if ((!mico_log_enabled) && (TRACE_GET_TYPE(trace_set_mask) != TRACE_TYPE_ERROR))
+    {
         /* If  mico logging disabled, then only log errors */
         return;
     }
@@ -203,8 +210,7 @@ void LogMsg_5( UINT32 trace_set_mask, const char *fmt_str, UINTPTR p1, UINTPTR p
  **                      Nothing.
  **
  *********************************************************************************/
-void LogMsg_6( UINT32 trace_set_mask, const char *fmt_str, UINTPTR p1, UINTPTR p2, UINTPTR p3, UINTPTR p4, UINTPTR p5,
-               UINTPTR p6 )
+void LogMsg_6( UINT32 trace_set_mask, const char *fmt_str, UINTPTR p1, UINTPTR p2, UINTPTR p3, UINTPTR p4, UINTPTR p5, UINTPTR p6 )
 {
     LogMsg( trace_set_mask, fmt_str, p1, p2, p3, p4, p5, p6 );
 }

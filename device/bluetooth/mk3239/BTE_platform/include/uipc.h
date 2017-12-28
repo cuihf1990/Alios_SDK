@@ -1,5 +1,11 @@
-/*
- * Copyright (C) 2015-2017 Alibaba Group Holding Limited
+/**
+ *  UNPUBLISHED PROPRIETARY SOURCE CODE
+ *  Copyright (c) 2016 MXCHIP Inc.
+ *
+ *  The contents of this file may not be disclosed to third parties, copied or
+ *  duplicated in any form, in whole or in part, without the prior written
+ *  permission of MXCHIP Corporation.
+ *
  */
 
 /********************************************************************************
@@ -60,10 +66,10 @@
 
 typedef UINT8 tUIPC_CH_ID;
 
-/* points to BT_HDR which describes event type and length of data;
-** len contains the number of bytes of entire message
-** (sizeof(BT_HDR) + offset + size of data)
-*/
+ /* points to BT_HDR which describes event type and length of data;
+ ** len contains the number of bytes of entire message
+ ** (sizeof(BT_HDR) + offset + size of data)
+ */
 typedef void (tUIPC_RCV_CBACK)(BT_HDR *p_msg);
 
 #ifdef __cplusplus

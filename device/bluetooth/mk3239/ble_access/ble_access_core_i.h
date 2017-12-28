@@ -1,22 +1,58 @@
-/*
- * Copyright (C) 2015-2017 Alibaba Group Holding Limited
- */
+/**
+ ******************************************************************************
+ * @file    ble_access_core_i.h
+ * @author  Jian Zhang
+ * @version V1.2.1
+ * @date    26-Dec-2016
+ * @file    BLE ACCESS Protocol Components
+ * ******************************************************************************
+ *
+ *  The MIT License
+ *  Copyright (c) 2014 MXCHIP Inc.
+ *
+ *  Permission is hereby granted, free of charge, to any person obtaining a copy
+ *  of this software and associated documentation files (the "Software"), to deal
+ *  in the Software without restriction, including without limitation the rights
+ *  to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ *  copies of the Software, and to permit persons to whom the Software is furnished
+ *  to do so, subject to the following conditions:
+ *
+ *  The above copyright notice and this permission notice shall be included in
+ *  all copies or substantial portions of the Software.
+ *
+ *  THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ *  IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ *  FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ *  AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY,
+ *  WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR
+ *  IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+ *
+ ******************************************************************************
+ *  BLE Vendor Specific Device
+ *
+ * Features demonstrated
+ *  - Implement BLE_ACCESS Center Protocol developed by MXCHIP on MiCOKit-3239.
+ *  - You should see details about this protocol on mico.io. 
+ *
+ ******************************************************************************
+ **/
 
 #ifndef __BLE_ACCESS_CORE_I_H__
 #define __BLE_ACCESS_CORE_I_H__
 
-#include "smartbt.h"
+#include "mico.h"
+#include "mico_bt.h"
 
 /*
  *-------------------------------------------------------------------------------------------------
  *
- *  Configurations & Constants
+ *  Configurations & Constants 
  *
  *-------------------------------------------------------------------------------------------------
  */
 
 /* Debug Logout */
-#define BLE_ACCESS_DEBUG                             0
+#define BLE_ACCESS_DEBUG                             0 
 
 /* The maximum number of remote connections */
 #define MAX_CONCURRENT_CONNECTIONS                   10
@@ -100,8 +136,8 @@
 /* Device info ready to connect */
 typedef struct {
     linked_list_node_t          this_node;     /* Linked-list node of this device */
-    aos_bt_smart_device_t      device;        /* Remote BT device */
-    aos_bool_t                 reported;      /* Is reported? */
+    mico_bt_smart_device_t      device;        /* Remote BT device */
+    mico_bool_t                 reported;      /* Is reported? */
 } ble_access_connecting_device_t;
 
 /* The Peer device Advertisement data */
@@ -109,23 +145,23 @@ typedef struct {
     uint8_t                     mxchip[6];
     uint8_t                     adv_type;
     uint8_t                     alert_state;
-    aos_bt_device_address_t    direct_addr;
+    mico_bt_device_address_t    direct_addr;
 } ble_access_manufactor_data_t;
 
 /*
- * A BLE Access Core BLE Device
+ * A BLE Access Core BLE Device 
  */
 typedef struct {
-    // Device ID
+    // Device ID 
     uint32_t                        device_id;
     // BT Socket for Every BLE Connection
-    aos_bt_smartbridge_socket_t    socket;
-    // A timer for Authentication Process
-    aos_timer_t                    timer;
-    // Authentication State
+    mico_bt_smartbridge_socket_t    socket;
+    // A timer for Authentication Process 
+    mico_timer_t                    timer;
+    // Authentication State 
     uint8_t                         auth_state;
     // Is used ?
-    aos_bool_t                     used;
+    mico_bool_t                     used;
     // Some handles for a service of a BLE Connection.
     struct {
         // Notify Characteristic Value handle in MXCHIP Service
@@ -138,7 +174,7 @@ typedef struct {
 /*
  *-------------------------------------------------------------------------------------------------
  *
- *  Local Function Prototype
+ *  Local Function Prototype 
  *
  *-------------------------------------------------------------------------------------------------
  */
@@ -149,20 +185,18 @@ typedef struct {
 /* Calculate An array size */
 #define ble_access_array_size(array)    (sizeof(array)/sizeof(array[0]))
 
-/*
- * Remote device list management
+/* 
+ * Remote device list management 
  */
 extern OSStatus ble_access_connect_list_init           (void);
 extern OSStatus ble_access_connect_list_deinit         (void);
 
-extern OSStatus ble_access_connect_list_add            (const aos_bt_smart_device_t *remote_device,
-                                                        aos_bool_t is_reported);
-extern OSStatus ble_access_connect_list_get            (aos_bt_smart_device_t **address, aos_bool_t *reported);
-extern OSStatus ble_access_connect_list_get_by_address (aos_bt_smart_device_t **device, aos_bool_t *reported,
-                                                        const aos_bt_device_address_t address);
-extern OSStatus ble_access_connect_list_find_by_address(const aos_bt_device_address_t address);
-extern OSStatus ble_access_connect_list_remove         (aos_bt_smart_device_t *device);
-extern OSStatus ble_access_connect_list_set_report     (const aos_bt_smart_device_t *device, aos_bool_t is_reported);
+extern OSStatus ble_access_connect_list_add            (const mico_bt_smart_device_t *remote_device, mico_bool_t is_reported);
+extern OSStatus ble_access_connect_list_get            (mico_bt_smart_device_t **address, mico_bool_t *reported);
+extern OSStatus ble_access_connect_list_get_by_address (mico_bt_smart_device_t **device, mico_bool_t *reported, const mico_bt_device_address_t address);
+extern OSStatus ble_access_connect_list_find_by_address(const mico_bt_device_address_t address);
+extern OSStatus ble_access_connect_list_remove         (mico_bt_smart_device_t* device);
+extern OSStatus ble_access_connect_list_set_report     (const mico_bt_smart_device_t *device, mico_bool_t is_reported);
 
 /*
  * Utils function
@@ -171,19 +205,18 @@ extern OSStatus ble_access_connect_list_set_report     (const aos_bt_smart_devic
 const char *print_request_str(uint8_t request);
 
 extern OSStatus ble_access_get_manufactor_adv_data(uint8_t *eir_data,
-                                                   uint8_t  eir_data_length,
-                                                   ble_access_manufactor_data_t *manufactor_data);
+                                                     uint8_t  eir_data_length,
+                                                     ble_access_manufactor_data_t *manufactor_data);
 
 extern OSStatus ble_access_check_adv_type         (const uint8_t *adv_data,
                                                    uint8_t length,
                                                    uint8_t adv_type,
                                                    ble_access_manufactor_data_t *manu_data);
 
-extern void ble_access_set_scan_cfg               (aos_bt_smart_scan_settings_t *scan_cfg,
-                                                   aos_bool_t is_auto_scanning);
+extern void ble_access_set_scan_cfg               (mico_bt_smart_scan_settings_t *scan_cfg, 
+                                                   mico_bool_t is_auto_scanning);
 
-extern OSStatus ble_access_start_timer            (ble_access_device_t *dev, event_handler_t timer_event_handle,
-                                                   void *arg);
+extern OSStatus ble_access_start_timer            (ble_access_device_t *dev, event_handler_t timer_event_handle, void *arg);
 extern OSStatus ble_access_stop_timer             (ble_access_device_t *dev);
 
 /*
@@ -192,9 +225,9 @@ extern OSStatus ble_access_stop_timer             (ble_access_device_t *dev);
 extern void                 ble_access_initialize_devices     (void);
 extern void                 ble_access_deinit_devices         (void);
 extern ble_access_device_t *ble_access_get_free_device        (void);
-extern void                 ble_access_release_device         (aos_bool_t free, const ble_access_device_t *device);
-//extern ble_access_device_t *ble_access_find_device_by_socket  (const aos_bt_smartbridge_socket_t *socket);
-extern ble_access_device_t *ble_access_find_device_by_address (const aos_bt_device_address_t address);
+extern void                 ble_access_release_device         (mico_bool_t free, const ble_access_device_t *device);
+//extern ble_access_device_t *ble_access_find_device_by_socket  (const mico_bt_smartbridge_socket_t *socket);
+extern ble_access_device_t *ble_access_find_device_by_address (const mico_bt_device_address_t address);
 
 extern OSStatus ble_access_create_worker_thread(void);
 extern OSStatus ble_access_send_aync_event(event_handler_t event_handle, void *arg);

@@ -1,6 +1,9 @@
-NAME := libmicobtfw
+#
+# Copyright 2016, MXCHIP Corporation
+# All Rights Reserved.
+#
 
-$(NAME)_COMPONENTS := bluetooth.mk3239.aosbt_shim_layer
+NAME := Lib_MICO_Bluetooth_Firmware_for_$(BT_CHIP)$(BT_CHIP_REVISION)
 
 # Use Firmware images which are already present
 ifeq ($(BT_CHIP_XTAL_FREQUENCY),)

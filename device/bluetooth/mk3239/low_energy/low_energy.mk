@@ -1,4 +1,9 @@
-NAME := libbtle
+#
+# Copyright 2016, MXCHIP Corporation
+# All Rights Reserved.
+#
+
+NAME := Lib_Bluetooth_Embedded_Low_energy_Stack_for_$(BT_CHIP)$(BT_CHIP_REVISION)
 
 BTE_PLATFORM_DIR := ../BTE_platform
 
@@ -19,7 +24,7 @@ endif
 
 
 # Include appropriate firmware as component
-$(NAME)_COMPONENTS += bluetooth.mk3239.firmware
+$(NAME)_COMPONENTS += framework/bluetooth/firmware
 
 $(NAME)_SOURCES += $(BTE_PLATFORM_DIR)/mico_bt_bus.c \
                    $(BTE_PLATFORM_DIR)/mico_bt_hcd.c \
