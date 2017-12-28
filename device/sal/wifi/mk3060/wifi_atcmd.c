@@ -279,8 +279,8 @@ static int wlan_send_80211_raw_frame(hal_wifi_module_t *m, uint8_t *buf, int len
     return 0;
 }
 
-hal_wifi_module_t sim_aos_wifi_module_mk3060 = {
-    .base.name           = "sim_aos_wifi_module_mk3060",
+hal_wifi_module_t aos_wifi_module_mk3060 = {
+    .base.name           = "aos_wifi_module_mk3060",
     .init                =  wifi_init,
     .get_mac_addr        =  wifi_get_mac_addr,
     .start               =  wifi_start,

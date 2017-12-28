@@ -15,14 +15,10 @@ GLOBAL_DEFINES += STDIO_UART=0
 GLOBAL_DEFINES += RHINO_CONFIG_TICK_TASK=0
 
 sal ?= 1 
-ifeq (1, $(sal))
+ifeq (1,$(sal))
 $(NAME)_COMPONENTS += sal
 else
 GLOBAL_DEFINES += CONFIG_NO_TCPIP
-endif
-
-ifeq (wifi.mk3060,$(module))
-$(NAME)_COMPONENTS += sal.wifi.mk3060
 endif
 
 
