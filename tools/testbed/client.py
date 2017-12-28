@@ -373,6 +373,7 @@ class Client:
             elif os == 'Linux':
                 devices_new = glob.glob('/dev/mxchip-*')
                 devices_new += glob.glob('/dev/espif-*')
+                devices_new += glob.glob('/dev/emulator-*')
                 if devices_new == []:
                     devices_new += glob.glob('/dev/ttyUSB*')
             elif os == 'Darwin':
