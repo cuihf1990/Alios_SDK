@@ -297,6 +297,10 @@ int sensor_init(void){
     drv_humi_bosch_bme280_init();
 #endif /* AOS_SENSOR_HUMI_BOSCH_BME280 */
 
+#ifdef AOS_SENSOR_ACC_BOSCH_BMA253  
+    drv_acc_bosch_bma253_init();
+#endif /* AOS_SENSOR_ACC_BOSCH_BMA253 */
+
     ret = sensor_hal_register();
     if(ret != 0){
         return -1;
