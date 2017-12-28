@@ -52,10 +52,6 @@ typedef enum mm_command_s {
 } mm_command_t;
 
 enum {
-    ATTACH_REQUEST_RETRY_TIMES      = 2,
-    ATTACH_SID_RETRY_TIMES          = 2,
-    AUTH_REQUEST_RETRY_TIMES        = 2,
-    AUTH_RELAY_RETRY_TIMES          = 2,
     BECOME_LEADER_TIMEOUT           = 3,
     MIGRATE_TIMEOUT                 = 2,
     DETACHED_MIGRATE_TIMEOUT        = 1,
@@ -66,8 +62,6 @@ enum {
 #else
     ATTACH_CANDIDATE_TIMEOUT        = 0,
 #endif
-
-    ATTACH_REQUEST_INTERVAL         = 1000, /* 1s */
 };
 
 enum {

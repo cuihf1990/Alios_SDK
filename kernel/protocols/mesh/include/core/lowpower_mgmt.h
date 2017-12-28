@@ -14,11 +14,6 @@ typedef enum {
     LOWPOWER_ATTACHED_SCHEDULE = 3,
 } schedule_type_t;
 
-enum {
-    SLOTS_SIZE = 3,
-    SLOT_INTERVAL = 6000,
-};
-
 typedef struct time_slot_s {
     uint8_t slot_num;
     uint32_t offset;

@@ -591,7 +591,7 @@ static void handle_attach_timer(void *args)
             }
             break;
         case ATTACH_SID_REQUEST:
-            if (g_mm_state.attach_context.retry_times < ATTACH_SID_RETRY_TIMES) {
+            if (g_mm_state.attach_context.retry_times < ATTACH_REQUEST_RETRY_TIMES) {
                 ++g_mm_state.attach_context.retry_times;
                 send_sid_request(network);
                 ur_start_timer(&g_mm_state.attach_context.attach_timer, ATTACH_REQUEST_INTERVAL,

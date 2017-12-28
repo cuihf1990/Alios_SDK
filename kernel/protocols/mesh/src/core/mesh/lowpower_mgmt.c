@@ -52,7 +52,8 @@ static uint8_t get_next_slot_num(const uint8_t *mac, uint8_t slot_num)
 
     memcpy(key.mac, mac, EXT_ADDR_SIZE);
     key.slot_num = (uint32_t)slot_num;
-    next_slot_num = (umesh_get_hashword((uint32_t *)&key, sizeof(key) / 4, 0) % SLOTS_SIZE) + 1;
+    next_slot_num =
+             (umesh_get_hashword((uint32_t *)&key, sizeof(key) / 4, 0) % SCHEDULE_SLOTS_SIZE) + 1;
     return next_slot_num;
 }
 
@@ -91,7 +92,8 @@ static void update_schedule_timer(schedule_type_t type)
         mac = (umesh_get_mac_address(MEDIA_TYPE_DFL))->addr;
         g_lowpower_state.slot_num = g_lowpower_state.next_slot_num;
         next_slot = get_next_slot_num(mac, g_lowpower_state.slot_num);
-        offset = (next_slot + SLOTS_SIZE - g_lowpower_state.slot_num) * SLOT_INTERVAL;
+        offset =
+           (next_slot + SCHEDULE_SLOTS_SIZE - g_lowpower_state.slot_num) * SCHEDULE_SLOT_INTERVAL;
         ur_start_timer(&g_lowpower_state.wakeup_timer, offset, handle_wakeup_timer, NULL);
         g_lowpower_state.next_slot_num = next_slot;
         g_lowpower_state.timestamp = umesh_now_ms();
@@ -101,10 +103,10 @@ static void update_schedule_timer(schedule_type_t type)
     } else if (g_lowpower_state.attach_node) {
         slot = g_lowpower_state.parent_time_slot.slot_num;
         next_slot = get_next_slot_num(g_lowpower_state.attach_node->mac, slot);
-        offset = (next_slot + SLOTS_SIZE - slot) * SLOT_INTERVAL;
+        offset = (next_slot + SCHEDULE_SLOTS_SIZE - slot) * SCHEDULE_SLOT_INTERVAL;
         offset -= g_lowpower_state.parent_time_slot.offset;
         if (offset < 0) {
-            wakeup_timer_handler(LOWPOWER_PARENT_SCHEDULE, SLOT_INTERVAL + offset);
+            wakeup_timer_handler(LOWPOWER_PARENT_SCHEDULE, SCHEDULE_SLOT_INTERVAL + offset);
         } else {
             ur_start_timer(&g_lowpower_state.parent_wakeup_timer, offset,
                            handle_parent_wakeup_timer, NULL);
@@ -197,13 +199,13 @@ static void wakeup_timer_handler(schedule_type_t type, uint32_t wakeup_interval)
 static void handle_parent_wakeup_timer(void *args)
 {
     g_lowpower_state.parent_wakeup_timer = NULL;
-    wakeup_timer_handler(LOWPOWER_PARENT_SCHEDULE, SLOT_INTERVAL);
+    wakeup_timer_handler(LOWPOWER_PARENT_SCHEDULE, SCHEDULE_SLOT_INTERVAL);
 }
 
 static void handle_wakeup_timer(void *args)
 {
     g_lowpower_state.wakeup_timer = NULL;
-    wakeup_timer_handler(g_lowpower_state.schedule_type, SLOT_INTERVAL);
+    wakeup_timer_handler(g_lowpower_state.schedule_type, SCHEDULE_SLOT_INTERVAL);
 }
 
 static void stop_timers(void)
@@ -228,7 +230,7 @@ static ur_error_t mesh_interface_up(void)
             update_schedule_timer(LOWPOWER_PARENT_SCHEDULE);
         }
     }
-    g_lowpower_state.next_slot_num = (((uint8_t)umesh_get_random()) % SLOTS_SIZE + 1);
+    g_lowpower_state.next_slot_num = (((uint8_t)umesh_get_random()) % SCHEDULE_SLOTS_SIZE + 1);
     g_lowpower_state.timestamp = umesh_now_ms();
     update_schedule_timer(LOWPOWER_ATTACHED_SCHEDULE);
     return UR_ERROR_NONE;
@@ -252,7 +254,7 @@ static ur_error_t mesh_interface_down(interface_state_t state)
             radio_sleep();
         }
         if (state != INTERFACE_DOWN_MESH_STOP) {
-            g_lowpower_state.slot_num = (((uint8_t)umesh_get_random()) % SLOTS_SIZE + 1);
+            g_lowpower_state.slot_num = (((uint8_t)umesh_get_random()) % SCHEDULE_SLOTS_SIZE + 1);
             g_lowpower_state.timestamp = umesh_now_ms();
             update_schedule_timer(LOWPOWER_ATTACHING_SCHEDULE);
         }
