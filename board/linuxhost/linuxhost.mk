@@ -32,6 +32,12 @@ GLOBAL_LDFLAGS += -m32
 
 GLOBAL_INCLUDES += .
 
+sal ?= 0
+
+ifeq (1,$(sal))
+$(NAME)_COMPONENTS += sal
+endif
+
 # Define the default component testcase set
 TEST_COMPONENTS += basic api cjson digest_algorithm hashtable
 TEST_COMPONENTS += rhino vfs yloop kv deviceIO vcall fatfs

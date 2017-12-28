@@ -157,10 +157,8 @@ $(NAME)_SOURCES := src/B-L475E-IOT01/runapp/stm32l4xx_hal_msp.c      \
                    src/B-L475E-IOT01/sensor/vl53l0x_proximity.c \
                    src/B-L475E-IOT01/sensor/sensors_data.c \
                    src/B-L475E-IOT01/sensor/sensors.c \
-                   src/B-L475E-IOT01/sensor/qspi.c
-ifneq (1, $(sal))
-$(NAME)_SOURCES     += src/B-L475E-IOT01/hal/wifi_port.c
-endif
+                   src/B-L475E-IOT01/sensor/qspi.c \
+                   src/B-L475E-IOT01/hal/wifi_port.c
 
 ifeq ($(COMPILER),armcc)
 $(NAME)_SOURCES += src/B-L475E-IOT01/runapp/startup_stm32l475xx_armcc.s

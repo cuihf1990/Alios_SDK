@@ -229,7 +229,7 @@ int csp_printf(const char *fmt, ...)
 #endif
 
 #if defined(DEV_SAL_MK3060)
-extern hal_wifi_module_t sim_aos_wifi_module_mk3060;
+extern hal_wifi_module_t aos_wifi_module_mk3060;
 #else
 extern hal_wifi_module_t sim_aos_wifi_linux;
 #endif
@@ -255,7 +255,7 @@ void hw_start_hal(options_t *poptions)
 
 #ifdef AOS_HAL
 #if defined(DEV_SAL_MK3060)
-    hal_wifi_register_module(&sim_aos_wifi_module_mk3060);
+    hal_wifi_register_module(&aos_wifi_module_mk3060);
 #else
     hal_wifi_register_module(&sim_aos_wifi_linux);
 #endif
