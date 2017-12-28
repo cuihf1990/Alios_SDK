@@ -58,9 +58,7 @@ $(NAME)_SOURCES     += soc/uart.c
 $(NAME)_SOURCES     += main/arg_options.c
 $(NAME)_SOURCES     += main/main.c
 $(NAME)_SOURCES     += main/hw.c
-ifneq (,$(filter sal at_adapter,$(COMPONENTS)))
-$(NAME)_SOURCES     += main/wifi_atcmd.c
-else
+ifneq (1,$(sal))
 $(NAME)_SOURCES     += main/wifi_port.c
 endif
 $(NAME)_SOURCES     += main/ota_port.c

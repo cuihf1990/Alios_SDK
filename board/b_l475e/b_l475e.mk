@@ -11,13 +11,14 @@ SUPPORT_BINS         := no
 $(NAME)_SOURCES := board.c osa_flash.c
 
 GLOBAL_INCLUDES += .
-GLOBAL_DEFINES += STDIO_UART=0 #CONFIG_NO_TCPIP
-GLOBAL_DEFINES += RHINO_CONFIG_TICK_TASK=0 RHINO_CONFIG_WORKQUEUE=0
+GLOBAL_DEFINES += STDIO_UART=0
+GLOBAL_DEFINES += RHINO_CONFIG_TICK_TASK=0
 
 sal ?= 1 
-ifeq ($(sal),1)
-GLOBAL_DEFINES += RHINO_CONFIG_WORKQUEUE=1
+ifeq (1, $(sal))
 $(NAME)_COMPONENTS += sal
+else
+GLOBAL_DEFINES += CONFIG_NO_TCPIP
 endif
 
 ifeq (wifi.mk3060,$(module))
@@ -54,8 +55,6 @@ EXTRA_TARGET_MAKEFILES +=  $(MAKEFILES_PATH)/aos_standard_targets.mk
 ifeq (, $(findstring yts, $(BUILD_STRING)))
 GLOBAL_DEFINES += RHINO_CONFIG_WORKQUEUE=1
 TEST_COMPONENTS += basic api wifi_hal rhino vcall kv yloop alicrypto cjson digest_algorithm hashtable
-else ifeq ($(sal),1)
-GLOBAL_DEFINES += RHINO_CONFIG_WORKQUEUE=1
 else
 GLOBAL_DEFINES += RHINO_CONFIG_WORKQUEUE=0
 endif
