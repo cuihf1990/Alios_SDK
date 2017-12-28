@@ -9,7 +9,6 @@
 #include <unistd.h>
 #include <assert.h>
 #include <sys/time.h>
-#include "json_parser.h"
 #include "aos/aos.h"
 #include "aos/network.h"
 #include "kvmgr.h"
