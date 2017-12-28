@@ -1,4 +1,16 @@
-import os, sys, time, serial, subprocess, traceback
+import os, sys, time, serial, subprocess, traceback, glob
+
+def list_devices(os):
+    return glob.glob('/dev/mxchip-*')
+
+def new_device(port):
+    try:
+        ser = serial.Serial(port, 921600, timeout = 0.02)
+        ser.setRTS(False)
+    except:
+        ser = None
+        print 'mk3060: open {0} error'.format(port)
+    return ser
 
 def erase(port):
     error = 'fail'

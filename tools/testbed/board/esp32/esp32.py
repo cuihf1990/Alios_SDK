@@ -1,7 +1,19 @@
-import os, sys, time, serial, subprocess, traceback
+import os, sys, time, serial, subprocess, traceback, glob
 
-DEBUG = True
-LOCALLOG = False
+def list_devices(os):
+    return glob.glob('/dev/espif-*')
+
+def new_device(port):
+    try:
+        ser = serial.Serial(port, 115200, timeout = 0.02)
+        ser.setRTS(True)
+        ser.setDTR(False)
+        time.sleep(0.1)
+        ser.setDTR(True)
+    except:
+        ser = None
+        print 'esp32: open {0} error'.format(port)
+    return ser
 
 def erase(port):
     retry = 3

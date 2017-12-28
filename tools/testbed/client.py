@@ -40,7 +40,6 @@ class Client:
         self.devices = {}
         self.keep_running = True
         self.connected = False
-        self.models = ['mk3060', 'esp32']
         self.poll_str = '\x1b[t'
         bytes = os.urandom(4)
         for byte in bytes:
@@ -68,7 +67,8 @@ class Client:
         try:
             self.service_socket.send(data)
         except:
-            self.connected = False
+            #self.connected = False
+            pass
 
     def run_poll_command(self, port, command, lines_expect, timeout):
         filter = {}
@@ -108,8 +108,12 @@ class Client:
         if self.devices[port]['attributes'] != {}:
             content = port + ':' + json.dumps(self.devices[port]['attributes'], sort_keys=True)
             data = TBframe.construct(TBframe.DEVICE_STATUS, content)
-            self.service_socket.send(data)
-        poll_timeout = time.time() + 5 + random.uniform(0, self.poll_interval/3)
+            try:
+                self.service_socket.send(data)
+            except:
+                #self.connected = False
+                pass
+        poll_timeout = time.time() + 3 + random.uniform(0, self.poll_interval/10)
         while os.path.exists(port) and exit_condition.is_set() == False:
             try:
                 if time.time() >= poll_timeout:
@@ -268,7 +272,7 @@ class Client:
                 try:
                     self.service_socket.send(data)
                 except:
-                    self.connected = False
+                    #self.connected = False
                     continue
             except:
                 if os.path.exists(port) == False:
@@ -351,7 +355,7 @@ class Client:
                 try:
                     self.service_socket.send(data)
                 except:
-                    self.connected == False
+                    #self.connected = False
                     continue
         if LOCALLOG:
             flog.close()
@@ -362,86 +366,67 @@ class Client:
         self.send_device_list()
         print 'device log poll thread for {0} exited'.format(port)
 
+    def add_new_device(self, mi, port):
+        ser = mi.new_device(port)
+        if ser == None:
+            return False
+        self.devices[port] = {'valid':True, \
+                              'serial':ser, \
+                              'if' : mi, \
+                              'slock':threading.Lock(), \
+                              'attributes':{}, \
+                              'ucmd_queue':Queue.Queue(12), \
+                              'pcmd_queue':Queue.Queue(64), \
+                              'plog_queue':Queue.Queue(64)}
+        self.devices[port]['attributes']['status'] = 'inactive'
+        return True
+
+    def add_old_device(self, mi, port):
+        ser = mi.new_device(port)
+        if ser == None:
+            return False
+        self.devices[port]['serial'] = ser
+        if self.devices[port]['slock'].locked():
+            self.devices[port]['slock'].release()
+        while self.devices[port]['ucmd_queue'].empty() == False:
+            self.devices[port]['ucmd_queue'].get()
+        while self.devices[port]['pcmd_queue'].empty() == False:
+            self.devices[port]['pcmd_queue'].get()
+        while self.devices[port]['plog_queue'].empty() == False:
+            self.devices[port]['plog_queue'].get()
+        self.devices[port]['attributes']['status'] = 'inactive'
+        self.devices[port]['valid'] = True
+        return True
+
+    def list_devices(self):
+        os = platform.system()
+        devices_new = []
+        for model in self.model_interface:
+            mi = self.model_interface[model]
+
+            devices = mi.list_devices(os)
+            for port in devices:
+                if port in self.devices and self.devices[port]['valid'] == True:
+                    continue
+                if port not in self.devices:
+                    ret = self.add_new_device(mi, port)
+                else:
+                    ret = self.add_old_device(mi, port)
+                if ret == True:
+                    devices_new.append(port)
+
+        devices_new.sort()
+        return devices_new
+
     def device_monitor(self):
         while self.keep_running:
-            os = platform.system()
-            if os == 'Windows':
-                coms = serial.tools.list_ports.comports()
-                devices_new = []
-                for com in coms:
-                    devices_new.append(com.device)
-            elif os == 'Linux':
-                devices_new = glob.glob('/dev/mxchip-*')
-                devices_new += glob.glob('/dev/espif-*')
-                devices_new += glob.glob('/dev/emulator-*')
-                if devices_new == []:
-                    devices_new += glob.glob('/dev/ttyUSB*')
-            elif os == 'Darwin':
-                devices_new = glob.glob('/dev/tty.usbserial*')
-            elif 'CYGWIN' in os:
-                devices_new = glob.glob('/dev/ttyS*')
-            else:
-                print 'unsupported os "{0}"'.format(os)
-                break
-
-            devices_new.sort()
+            devices_new = self.list_devices()
             for port in devices_new:
-                if port in self.devices and self.devices[port]['valid']:
-                    continue
-                if port in self.devices:
-                    try:
-                        self.devices[port]['serial'].close()
-                        self.devices[port]['serial'].open()
-                    except:
-                        print 'device_monitor, error: unable to open {0}'.format(port)
-                        continue
-                    if self.devices[port]['slock'].locked():
-                        self.devices[port]['slock'].release()
-                    while self.devices[port]['ucmd_queue'].empty() == False:
-                        self.devices[port]['ucmd_queue'].get()
-                    while self.devices[port]['pcmd_queue'].empty() == False:
-                        self.devices[port]['pcmd_queue'].get()
-                    while self.devices[port]['plog_queue'].empty() == False:
-                        self.devices[port]['plog_queue'].get()
-                    self.devices[port]['valid'] = True
-                else:
-                    if 'mxchip' in port:
-                        baudrate = 921600
-                    elif 'espif' in port:
-                        baudrate = 115200
-                    else:
-                        baudrate = 115200
-
-                    try:
-                        ser = serial.Serial(port, baudrate, timeout = 0.02)
-                    except:
-                        print 'device_monitor, error: unable to open {0}'.format(port)
-                        continue
-                    self.devices[port] = {'valid':True, \
-                                          'serial':ser, \
-                                          'slock':threading.Lock(), \
-                                          'attributes':{}, \
-                                          'ucmd_queue':Queue.Queue(12), \
-                                          'pcmd_queue':Queue.Queue(64), \
-                                          'plog_queue':Queue.Queue(64)}
-                try:
-                    if 'mxchip' in port:
-                        self.devices[port]['attributes']['model'] = 'MK3060'
-                        ser.setRTS(False)
-                    if 'espif' in port:
-                        self.devices[port]['attributes']['model'] = 'ESP32'
-                        ser.setRTS(True)
-                        ser.setDTR(False)
-                        time.sleep(0.1)
-                        ser.setDTR(True)
-                except:
-                    self.devices[port]['valid'] = False
-                    continue
                 print 'device {0} added'.format(port)
-                self.devices[port]['attributes']['status'] = 'inactive'
                 exit_condition = threading.Event()
                 thread.start_new_thread(self.device_log_poll, (port, exit_condition,))
                 thread.start_new_thread(self.device_cmd_process, (port, exit_condition,))
+            if devices_new != []:
                 self.send_device_list()
             time.sleep(0.1)
         print 'device monitor thread exited'
@@ -461,13 +446,20 @@ class Client:
                 return None
         return self.model_interface[model]
 
-    def device_erase(self, port, term):
-        model = 'unknown'
-        if 'model' in self.devices[port]['attributes']:
-            model = self.devices[port]['attributes']['model']
-        model = model.lower()
+    def load_interfaces(self):
+        candidates = glob.glob("board/*/*.py")
+        for d in candidates:
+            r = re.search("board/(.*)/(.*)\.py", d)
+            if r == None:
+                continue
+            model = r.groups()[0]
+            if model != r.groups()[1]:
+                continue
+            self.get_interface_by_model(model)
+            print 'model loaded - ',model
 
-        interface = self.get_interface_by_model(model)
+    def device_erase(self, port, term):
+        interface = self.devices[port]['if']
         if interface == None:
             print "error: erasing dose not support model '{0}'".format(model)
             content = ','.join(term) + ',' + 'unsupported model'
@@ -497,11 +489,7 @@ class Client:
             self.send_packet(TBframe.DEVICE_PROGRAM, content)
             return
 
-        model = 'unknown'
-        if 'model' in self.devices[port]['attributes']:
-            model = self.devices[port]['attributes']['model']
-        model = model.lower()
-        interface = self.get_interface_by_model(model)
+        interface = self.devices[port]['if']
         if interface == None:
             print "error: programming dose not support model '{0}'".format(model)
             content = ','.join(term) + ',' + 'unsupported model'
@@ -532,11 +520,7 @@ class Client:
             self.send_packet(type, content)
             return
 
-        model = 'unknown'
-        if 'model' in self.devices[port]['attributes']:
-            model = self.devices[port]['attributes']['model']
-        model = model.lower()
-        interface = self.get_interface_by_model(model)
+        interface = self.devices[port]['if']
         if interface == None:
             print "error: controlling dose not support model '{0}'".format(model)
             content = ','.join(term) + ',' + 'unsupported model'
@@ -603,6 +587,8 @@ class Client:
             return "fail"
 
     def client_func(self, server_ip, server_port):
+        self.load_interfaces()
+
         result = self.connect_to_server(server_ip, server_port)
         if result == 'success':
             print 'connect to server {0}:{1} succeeded'.format(server_ip, server_port)
