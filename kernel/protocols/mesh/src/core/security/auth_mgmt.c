@@ -48,7 +48,7 @@ static void handle_udp_socket(const uint8_t *payload, uint16_t length)
                   mac->addr[3], mac->addr[4], mac->addr[5]);
 
     // src
-    if (umesh_mm_get_device_state() > DEVICE_STATE_LEAF &&
+    if (umesh_mm_get_device_state() == DEVICE_STATE_LEADER ||
         g_auth_context.is_auth_success) {
         memcpy(g_auth_context.peer.addr.addr, cur, EXT_ADDR_SIZE);
 
@@ -104,7 +104,7 @@ static void handle_udp_socket(const uint8_t *payload, uint16_t length)
                 g_auth_context.auth_state = AUTH_RECV_CHALLENGE;
                 ur_start_timer(&g_auth_context.auth_timer, network->hal->auth_relay_interval,
                                handle_auth_timer, NULL);
-            } else if (umesh_mm_get_device_state() > DEVICE_STATE_LEAF &&
+            } else if (umesh_mm_get_device_state() == DEVICE_STATE_LEADER ||
                        g_auth_context.is_auth_success) {
                 MESH_LOG_INFO("sp server -> joiner router: challenge");
 
@@ -144,8 +144,9 @@ static void handle_udp_socket(const uint8_t *payload, uint16_t length)
                 g_auth_context.auth_state = AUTH_DONE;
                 g_auth_context.auth_candidate = NULL;
                 g_auth_context.auth_handler(NULL, g_auth_context.is_auth_success);
-            } else if (umesh_mm_get_device_state() > DEVICE_STATE_LEAF &&
+            } else if (umesh_mm_get_device_state() == DEVICE_STATE_LEADER ||
                        g_auth_context.is_auth_success) {
+ 
                 MESH_LOG_INFO("sp server -> joiner router: joiner's auth result");
 
                 // auth result
@@ -271,33 +272,6 @@ ur_error_t auth_init(void)
     return UR_ERROR_NONE; 
 }
 
-ur_error_t auth_start(neighbor_t *nbr)
-{
-    ur_error_t error = UR_ERROR_NONE;
-    network_context_t *network = NULL;
-
-    network = get_default_network_context();
-    if (g_auth_context.is_auth_busy ||
-        g_auth_context.auth_candidate ||
-        (g_auth_context.auth_state != AUTH_IDLE &&
-         g_auth_context.auth_state != AUTH_DONE)) {
-         return UR_ERROR_BUSY;
-    }
-
-    g_auth_context.auth_candidate = nbr;
-
-    if (nbr) {
-        if (umesh_mm_get_channel(network->hal) != nbr->channel) {
-            umesh_mm_set_prev_channel();
-            umesh_mm_set_channel(network->hal, nbr->channel);
-        }
-
-        network->candidate_meshnetid = nbr->netid;
-    }
-
-    return error;
-}
-
 void auth_enable(void)
 {
     if (!g_auth_context.is_auth_enable) {
@@ -342,10 +316,26 @@ bool is_auth_busy(void)
     return g_auth_context.is_auth_busy;
 }
 
-ur_error_t nm_start_auth(auth_handler_t handler)
+ur_error_t start_auth(neighbor_t *nbr, auth_handler_t handler)
 {
     uint32_t random;
     network_context_t *network = get_default_network_context();
+
+    if (g_auth_context.is_auth_busy ||
+        g_auth_context.auth_candidate ||
+        (g_auth_context.auth_state != AUTH_IDLE &&
+         g_auth_context.auth_state != AUTH_DONE)) {
+         return UR_ERROR_BUSY;
+    }
+
+    if (nbr) {
+        if (umesh_mm_get_channel(network->hal) != nbr->channel) {
+            umesh_mm_set_prev_channel();
+            umesh_mm_set_channel(network->hal, nbr->channel);
+        }
+
+        network->candidate_meshnetid = nbr->netid;
+    }
 
     if (!g_auth_context.is_auth_enable) {
         return UR_ERROR_FAIL;
@@ -355,6 +345,7 @@ ur_error_t nm_start_auth(auth_handler_t handler)
         ur_stop_timer(&g_auth_context.auth_timer, NULL);
     }
 
+    g_auth_context.auth_candidate = nbr;
     g_auth_context.auth_state = AUTH_REQUEST_START;
 
     random = umesh_get_random();
@@ -366,7 +357,7 @@ ur_error_t nm_start_auth(auth_handler_t handler)
     return UR_ERROR_NONE;
 }
 
-ur_error_t nm_stop_auth(void)
+ur_error_t stop_auth(void)
 {
     if (!g_auth_context.is_auth_enable) {
         return UR_ERROR_FAIL;
@@ -743,7 +734,8 @@ ur_error_t handle_auth_relay(message_t *message)
     info = message->info;
     network = (network_context_t *)info->network;
 
-    if (!get_auth_result()) {
+    if (!get_auth_result() &&
+        umesh_mm_get_device_state() != DEVICE_STATE_LEADER) {
         joiner = true;
     }
 

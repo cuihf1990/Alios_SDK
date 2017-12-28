@@ -23,6 +23,7 @@ typedef enum interface_state_s {
     INTERFACE_DOWN_MESH_STOP,  // mesh stopped
     INTERFACE_DOWN_LEADER_MODE,  // leader mode is larger then local
     INTERFACE_DOWN_LEADER_REBOOT,  // leader reboot
+    INTERFACE_DOWN_AUTH_FAILURE,  // auth fails
 } interface_state_t;
 
 typedef enum auth_state_s {

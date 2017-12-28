@@ -88,19 +88,15 @@ static uint16_t compute_network_metric(uint16_t size, uint16_t path_cost);
 #ifdef CONFIG_AOS_MESH_AUTH
 void nbr_authed_handler(neighbor_t *nbr, bool result)
 {
-    network_context_t *network = get_default_network_context();
- 
     MESH_LOG_INFO("authentication completed");
  
     if (result) {
-        if (!nbr) {
-            // recover advertisement timer
-            start_advertisement_timer(network);
-        }
-        else {
+        if (nbr) {
             set_auth_state(AUTH_DONE);
             attach_start(nbr);
         }
+    } else {
+        become_detached(INTERFACE_DOWN_AUTH_FAILURE);
     }
 }
 #endif
@@ -109,8 +105,8 @@ void nbr_discovered_handler(neighbor_t *nbr)
 {
     if (nbr) {
 #ifdef CONFIG_AOS_MESH_AUTH
-        if (is_auth_enabled()) {
-            auth_start(nbr);
+        if (is_auth_enabled() && !get_auth_result()) {
+            start_auth(nbr, nbr_authed_handler);
         } else
 #endif
         {
@@ -120,14 +116,7 @@ void nbr_discovered_handler(neighbor_t *nbr)
         become_leader();
     } else {
         become_detached(INTERFACE_DOWN_DISCOVER_FAIL);
-        return;
     }
-
-#ifdef CONFIG_AOS_MESH_AUTH
-    if (is_auth_enabled() && !get_auth_result()) {
-        nm_start_auth(nbr_authed_handler);
-    }
-#endif
 }
 
 static bool is_in_attaching(attach_state_t state)
@@ -201,12 +190,6 @@ static uint16_t generate_meshnetid(uint8_t sid, uint8_t index)
 static void start_advertisement_timer(void *args)
 {
     network_context_t *network = (network_context_t *)args;
-
-#ifdef CONFIG_AOS_MESH_AUTH
-    if (!get_auth_result()) {
-        return;
-    }
-#endif
 
     send_advertisement(network);
     if (umesh_mm_get_mode() & MODE_RX_ON) {
@@ -1456,12 +1439,6 @@ static ur_error_t handle_advertisement(message_t *message)
     if (g_mm_state.device.state < DEVICE_STATE_DETACHED) {
         return UR_ERROR_NONE;
     }
-
-#ifdef CONFIG_AOS_MESH_AUTH
-    if (!get_auth_result()) {
-        return UR_ERROR_NONE;
-    }
-#endif
  
     MESH_LOG_DEBUG("handle advertisement");
 
@@ -1647,7 +1624,7 @@ ur_error_t umesh_mm_stop(void)
     become_detached(INTERFACE_DOWN_MESH_STOP);
     g_mm_state.device.state = DEVICE_STATE_DISABLED;
 #ifdef CONFIG_AOS_MESH_AUTH
-    nm_stop_auth();
+    stop_auth();
 #endif
     return UR_ERROR_NONE;
 }

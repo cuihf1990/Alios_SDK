@@ -56,8 +56,7 @@ ur_error_t send_auth_response(network_context_t *network, ur_addr_t *dest);
 ur_error_t send_auth_relay(network_context_t *network, ur_addr_t *dest);
 ur_error_t send_auth_ack(network_context_t *netowrk);
 
-ur_error_t auth_start(neighbor_t *nbr);
-ur_error_t nm_start_auth(auth_handler_t handler);
-ur_error_t nm_stop_auth(void);
+ur_error_t start_auth(neighbor_t *nbr, auth_handler_t handler);
+ur_error_t stop_auth(void);
 
 #endif  /* UR_AUTH_MGMT_H */
