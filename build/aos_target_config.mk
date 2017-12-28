@@ -283,13 +283,16 @@ else ifeq (,$(BINS))
 AOS_SDK_DEFINES += BUILD_BIN
 endif
 
-$(info processing components: $(COMPONENTS))
-
 CURDIR :=
+ifneq ($(DEFAULT_ALL_COMPONENTS), )
+$(info default all components.)
+$(eval COMPONENTS := $(subst @, ,$(DEFAULT_ALL_COMPONENTS)))
+else
+$(info processing components: $(COMPONENTS))
 $(eval $(call FIND_COMPONENT, $(COMPONENTS)))
+endif
 # remove repeat component
 $(eval COMPONENTS := $(sort $(COMPONENTS)) )
-$(info all components: $(COMPONENTS) )
 $(eval $(call PROCESS_COMPONENT, $(COMPONENTS)))
 
 PLATFORM    :=$(notdir $(PLATFORM_FULL))
