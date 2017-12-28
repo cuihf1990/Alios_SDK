@@ -1,5 +1,11 @@
-/*
- * Copyright (C) 2015-2017 Alibaba Group Holding Limited
+/**
+ *  UNPUBLISHED PROPRIETARY SOURCE CODE
+ *  Copyright (c) 2016 MXCHIP Inc.
+ *
+ *  The contents of this file may not be disclosed to third parties, copied or
+ *  duplicated in any form, in whole or in part, without the prior written
+ *  permission of MXCHIP Corporation.
+ *
  */
 
 /****************************************************************************
@@ -15,28 +21,28 @@
 /* Include target-specific build configuration header */
 #ifdef BUILDCFG
 #if ((defined(NFC_HAL_TARGET) && (NFC_HAL_TARGET == TRUE)) && !defined(NFC_HAL_SHARED_GKI))
-/* Building NFC HAL w/ non-shared GKI resources */
-#include "buildcfg_hal.h"
+    /* Building NFC HAL w/ non-shared GKI resources */
+    #include "buildcfg_hal.h"
 #else
-/* Default build configuration file */
-#include "buildcfg.h"
+    /* Default build configuration file */
+    #include "buildcfg.h"
 #endif
 #endif /* BUILDCFG */
 
 /* Include target-specific GKI configuration */
 #if ((defined(NFC_STANDALONE) && (NFC_STANDALONE == TRUE)) || defined(NFC_HAL_SHARED_GKI))
-/* Building NFC stack, or NFC HAL w/ shared GKI resources (use shared NFC/HAL target files) */
-#include "gki_target.h"
-#include "nfc_target.h"
-#include "nfc_types.h"
+    /* Building NFC stack, or NFC HAL w/ shared GKI resources (use shared NFC/HAL target files) */
+    #include "gki_target.h"
+    #include "nfc_target.h"
+    #include "nfc_types.h"
 #elif (defined(NFC_HAL_TARGET) && (NFC_HAL_TARGET == TRUE))
-/* Building NFC HAL w/ non-shared GKI resources (use HAL-specific target file) */
-#include "gki_hal_target.h"
-#include "nfc_types.h"
+    /* Building NFC HAL w/ non-shared GKI resources (use HAL-specific target file) */
+    #include "gki_hal_target.h"
+    #include "nfc_types.h"
 #else
-/* Default: building all other targets */
-#include "bt_target.h"
-#include "bt_types.h"
+    /* Default: building all other targets */
+    #include "bt_target.h"
+    #include "bt_types.h"
 #endif
 
 /* Error codes */
@@ -117,7 +123,7 @@
 #define GKI_POOL_ID_6                6
 #define GKI_POOL_ID_7                7
 #define GKI_POOL_ID_8                8
-#define GKI_POOL_ID_9                9
+#define GKI_POOL_ID_9                9 
 #define GKI_POOL_ID_10               10
 #define GKI_POOL_ID_11               11
 #define GKI_POOL_ID_12               12
@@ -340,7 +346,8 @@
 
 /* Define a timer list entry
 */
-typedef struct _tle {
+typedef struct _tle
+{
     struct _tle  *p_next;
     struct _tle  *p_prev;
     TIMER_CBACK  *p_cback;
@@ -352,7 +359,8 @@ typedef struct _tle {
 
 /* Define a timer list queue
 */
-typedef struct {
+typedef struct
+{
     TIMER_LIST_ENT   *p_first;
     TIMER_LIST_ENT   *p_last;
     INT32             last_ticks;
@@ -362,7 +370,8 @@ typedef struct {
 /***********************************************************************
 ** This queue is a general purpose buffer queue, for application use.
 */
-typedef struct {
+typedef struct
+{
     void    *p_first;
     void    *p_last;
     UINT16   count;
@@ -383,7 +392,8 @@ typedef void (*TASKPTR)(UINT32);
 /***********************************************************************
 ** Mutex defintions
 */
-typedef struct {
+typedef struct
+{
     void *p_platform_mutex;
 } GKI_MUTEX;
 
@@ -454,19 +464,19 @@ GKI_API extern UINT16  GKI_get_pool_bufsize (UINT8);
 
 /* Timer management
 */
-GKI_API extern void    GKI_add_to_timer_list (TIMER_LIST_Q *, TIMER_LIST_ENT *);
+GKI_API extern void    GKI_add_to_timer_list (TIMER_LIST_Q *, TIMER_LIST_ENT  *);
 GKI_API extern void    GKI_delay(UINT32);
 GKI_API extern UINT32  GKI_get_tick_count(void);
 GKI_API extern INT8   *GKI_get_time_stamp(INT8 *);
 GKI_API extern void    GKI_init_timer_list (TIMER_LIST_Q *);
-GKI_API extern void    GKI_init_timer_list_entry (TIMER_LIST_ENT *);
+GKI_API extern void    GKI_init_timer_list_entry (TIMER_LIST_ENT  *);
 GKI_API extern INT32   GKI_ready_to_sleep (void);
-GKI_API extern void    GKI_remove_from_timer_list (TIMER_LIST_Q *, TIMER_LIST_ENT *);
+GKI_API extern void    GKI_remove_from_timer_list (TIMER_LIST_Q *, TIMER_LIST_ENT  *);
 GKI_API extern void    GKI_start_timer(UINT8, INT32, BOOLEAN);
 GKI_API extern void    GKI_stop_timer (UINT8);
 GKI_API extern void    GKI_timer_update(INT32);
 GKI_API extern UINT16  GKI_update_timer_list (TIMER_LIST_Q *, INT32);
-GKI_API extern UINT32  GKI_get_remaining_ticks (TIMER_LIST_Q *, TIMER_LIST_ENT *);
+GKI_API extern UINT32  GKI_get_remaining_ticks (TIMER_LIST_Q *, TIMER_LIST_ENT  *);
 GKI_API extern UINT16  GKI_wait(UINT16, UINT32);
 
 /* Start and Stop system time tick callback

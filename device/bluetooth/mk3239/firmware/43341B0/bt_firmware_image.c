@@ -13,7 +13,8 @@ const char brcm_patch_version[] = "BCM43341B0_002.001.014.0105.0114.hcd";
 
 const uint8_t brcm_patchram_format = 0x01;
 
-const uint8_t brcm_patchram_buf[] = {
+const uint8_t brcm_patchram_buf[] =
+{
     76, 252, 139, 0, 128, 33, 0, 1, 6, 0, 234, 68, 114, 66, 4, 26, 193,
     94, 0, 239, 99, 21, 131, 164, 239, 99, 21, 131, 164, 55, 2, 86, 2, 86,
     2, 87, 2, 87, 2, 88, 2, 88, 2, 89, 2, 89, 2, 90, 2, 90, 2, 91, 2, 91,

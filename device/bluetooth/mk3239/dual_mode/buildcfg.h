@@ -1,10 +1,16 @@
-/*
- * Copyright (C) 2015-2017 Alibaba Group Holding Limited
+/**
+ *  UNPUBLISHED PROPRIETARY SOURCE CODE
+ *  Copyright (c) 2016 MXCHIP Inc.
+ *
+ *  The contents of this file may not be disclosed to third parties, copied or
+ *  duplicated in any form, in whole or in part, without the prior written
+ *  permission of MXCHIP Corporation.
+ *
  */
 
 #pragma once
 
-#include "data_types.h"
+#include "data_types.h" 
 
 #ifdef __cplusplus
 extern "C" {
@@ -12,9 +18,9 @@ extern "C" {
 
 #define BTEWICED                        TRUE
 
-#if 1
+#if 1 
 //oscar++
-#define BTM_DEFAULT_AUTH_REQ            BTM_AUTH_SPGB_NO            //oscar
+#define BTM_DEFAULT_AUTH_REQ            BTM_AUTH_SPGB_NO			//oscar
 //#define HCI_DEFAULT_INACT_TOUT          11200                       //7sec (11200*0.625) for minray
 //oscar--
 #endif
@@ -250,13 +256,13 @@ extern "C" {
 #define BT_TRACE_PROTOCOL               FALSE
 #endif
 
-#ifndef BT_USE_TRACES
+#ifndef BT_USE_TRACES 
 #define BT_USE_TRACES                   FALSE
 #endif
 
-#ifndef BT_TRACE_VERBOSE
+#ifndef BT_TRACE_VERBOSE                
 #define BT_TRACE_VERBOSE                FALSE
-#endif
+#endif 
 
 #define USE_EXTERNAL_HCD                1
 

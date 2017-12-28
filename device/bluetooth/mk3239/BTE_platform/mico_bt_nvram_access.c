@@ -1,5 +1,11 @@
-/*
- * Copyright (C) 2015-2017 Alibaba Group Holding Limited
+/**
+ *  UNPUBLISHED PROPRIETARY SOURCE CODE
+ *  Copyright (c) 2016 MXCHIP Inc.
+ *
+ *  The contents of this file may not be disclosed to third parties, copied or
+ *  duplicated in any form, in whole or in part, without the prior written
+ *  permission of MXCHIP Corporation.
+ *
  */
 
 /*****************************************************************************
@@ -21,14 +27,14 @@
 #include "bt_types.h"   /* This must be defined AFTER buildcfg.h */
 #include "bt_trace.h"
 
-#include "aos_bt_dev.h"
+#include "mico_bt_dev.h"
 
-#include "aos_bt_nvram_access.h"
+#include "mico_bt_nvram_access.h"
 
 /** NVRAM entry for bonded device */
 #pragma pack(1)
 typedef struct {
-    aos_bt_device_address_t    bd_addr;        /**< Device address */
+    mico_bt_device_address_t    bd_addr;        /**< Device address */
     uint8_t                     addr_type;      /**< BLE_ADDR_PUBLIC or BLE_ADDR_RANDOM */
     uint8_t                     device_type;    /**< BT_DEVICE_TYPE_BREDR or BT_DEVICE_TYPE_BLE */
     uint16_t                    length;         /**< Length of key_blobs (link key information) */
@@ -62,26 +68,25 @@ void mico_bt_nvram_access_init()
  * @param[in]  paired_device_list : array for getting bd address of bonded devices
  * @param[in/out] p_num_devices :  list size of paired_device_list/total number of bonded devices stored
  *
- * @return      AOS_BT_SUCCESS or ERROR
+ * @return      MICO_BT_SUCCESS or ERROR
  */
-aos_bt_result_t mico_bt_nvram_access_get_bonded_devices(aos_bt_dev_bonded_device_info_t bonded_device_list[],
-                                                        uint16_t *p_num_devices)
+mico_bt_result_t mico_bt_nvram_access_get_bonded_devices(mico_bt_dev_bonded_device_info_t bonded_device_list[], uint16_t *p_num_devices)
 {
     int index, list_size = 0;
     mico_bt_nvram_access_entry_t *p_entry;
     char key[32];
-    int buflen = sizeof(mico_bt_nvram_access_entry_t) + AOS_BT_DCT_MAX_KEYBLOBS;
-
+    int buflen = sizeof(mico_bt_nvram_access_entry_t) + MICO_BT_DCT_MAX_KEYBLOBS;
+    
     *p_num_devices = 0;
     p_entry = (mico_bt_nvram_access_entry_t *)malloc(buflen);
     if (p_entry == NULL) {
         return -1;
     }
-    for (index = 0 ; index < AOS_BT_DCT_MAX_DEVICES ; index++) {
+    for(index = 0 ; index < MICO_BT_DCT_MAX_DEVICES ; index++)
+    {
         sprintf(key, "bt_bounded_dev%d", index);
-        if (aos_kv_get(key, p_entry, buflen) != 0) {
+        if (aos_kv_get(key, p_entry, buflen) != 0)
             continue;
-        }
 
         memcpy(bonded_device_list[list_size].bd_addr, p_entry->bd_addr, sizeof(p_entry->bd_addr));
         bonded_device_list[list_size].addr_type = p_entry->addr_type;
@@ -93,13 +98,13 @@ aos_bt_result_t mico_bt_nvram_access_get_bonded_devices(aos_bt_dev_bonded_device
     APPL_TRACE_DEBUG2("%s num bonded devices : %d", __FUNCTION__, *p_num_devices );
 
     free(p_entry);
-    return AOS_BT_SUCCESS;
+    return MICO_BT_SUCCESS;
 }
 
 
 
 /**
- * Function     eico_bt_nvram_access_save_bonded_device_key
+ * Function     mico_bt_nvram_access_save_bonded_device_key
  *
  *  save link key information of bonded device
  *
@@ -107,31 +112,31 @@ aos_bt_result_t mico_bt_nvram_access_get_bonded_devices(aos_bt_dev_bonded_device
  * @param[in]  p_keyblobs : key blobs including key header, link keys and key length
  * @param[in]  key_len :  total length of p_keyblobs
  *
- * @return      AOS_BT_SUCCESS or ERROR
+ * @return      MICO_BT_SUCCESS or ERROR
  */
-aos_bt_result_t mico_bt_nvram_access_save_bonded_device_key(aos_bt_device_address_t bd_addr,
-                                                            aos_bt_ble_address_type_t addr_type, uint8_t device_type, uint8_t *p_keyblobs, uint16_t key_len)
+mico_bt_result_t mico_bt_nvram_access_save_bonded_device_key(mico_bt_device_address_t bd_addr, mico_bt_ble_address_type_t addr_type, uint8_t device_type, uint8_t *p_keyblobs, uint16_t key_len)
 
 {
-    int index, list_size = 0, idle_index = -1, ret = AOS_BT_SUCCESS;
+    int index, list_size = 0, idle_index=-1, ret = MICO_BT_SUCCESS;
     mico_bt_nvram_access_entry_t *p_entry;
     char key[32];
-    int buflen = sizeof(mico_bt_nvram_access_entry_t) + AOS_BT_DCT_MAX_KEYBLOBS;
+    int buflen = sizeof(mico_bt_nvram_access_entry_t) + MICO_BT_DCT_MAX_KEYBLOBS;
 
     p_entry = (mico_bt_nvram_access_entry_t *)malloc(buflen);
     if (p_entry == NULL) {
         return -1;
     }
 
-    for (index = 0 ; index < AOS_BT_DCT_MAX_DEVICES ; index++) {
+    for(index = 0 ; index < MICO_BT_DCT_MAX_DEVICES ; index++)
+    {
         sprintf(key, "bt_bounded_dev%d", index);
         if (aos_kv_get(key, p_entry, buflen) != 0) {
             idle_index = index;
             continue;
         }
 
-        if ( !memcmp(p_entry->bd_addr, bd_addr, sizeof(aos_bt_device_address_t) )) { // found
-            if ( (key_len == p_entry->length) && (memcmp( p_entry->key_blobs, p_keyblobs, key_len ) == 0)) { // same key
+        if( !memcmp(p_entry->bd_addr, bd_addr, sizeof(mico_bt_device_address_t) )){// found
+            if( (key_len == p_entry->length) && (memcmp( p_entry->key_blobs, p_keyblobs, key_len ) == 0)) {// same key
                 APPL_TRACE_DEBUG0( "Same key, write ignore..." );
             } else {
                 p_entry->length = key_len;
@@ -143,15 +148,15 @@ aos_bt_result_t mico_bt_nvram_access_save_bonded_device_key(aos_bt_device_addres
             goto EXIT;
         }
     }
-
+    
     if (idle_index > 0) {
         sprintf(key, "bt_bounded_dev%d", idle_index);
-        memcpy(p_entry->bd_addr, bd_addr, AOS_BT_DCT_ADDR_FIELD);
+        memcpy(p_entry->bd_addr,bd_addr,MICO_BT_DCT_ADDR_FIELD);
         p_entry->addr_type = addr_type;
         p_entry->device_type = device_type;
         p_entry->length = key_len;
         memcpy(p_entry->key_blobs, p_keyblobs, key_len);
-        aos_kv_set(key, p_entry, p_entry->length + sizeof(mico_bt_nvram_access_entry_t), 1);
+        aos_kv_set(key, p_entry, p_entry->length+sizeof(mico_bt_nvram_access_entry_t), 1);
         APPL_TRACE_DEBUG0( "Create new one" );
     } else {
         ret = -1;
@@ -173,36 +178,36 @@ EXIT:
  * @param[in]  bd_addr : bd_addr of bonded device
  * @param[out]  p_key_entry :  key information stored
  *
- * @return      AOS_BT_SUCCESS or ERROR
+ * @return      MICO_BT_SUCCESS or ERROR
  */
-aos_bt_result_t mico_bt_nvram_access_load_bonded_device_keys(aos_bt_device_address_t bd_addr,
-                                                             mico_bt_nvram_access_entry_t *p_key_entry, uint8_t entry_max_length)
+mico_bt_result_t mico_bt_nvram_access_load_bonded_device_keys(mico_bt_device_address_t bd_addr, mico_bt_nvram_access_entry_t *p_key_entry,uint8_t entry_max_length)
 {
-    int index, ret = AOS_BT_NO_RESOURCES;
+    int index, ret = MICO_BT_NO_RESOURCES;
     mico_bt_nvram_access_entry_t *p_entry;
     char key[32];
-    int buflen = sizeof(mico_bt_nvram_access_entry_t) + AOS_BT_DCT_MAX_KEYBLOBS;
+    int buflen = sizeof(mico_bt_nvram_access_entry_t) + MICO_BT_DCT_MAX_KEYBLOBS;
 
     p_entry = (mico_bt_nvram_access_entry_t *)malloc(buflen);
     if (p_entry == NULL) {
         return -1;
     }
 
-    for (index = 0 ; index < AOS_BT_DCT_MAX_DEVICES ; index++) {
+    for(index = 0 ; index < MICO_BT_DCT_MAX_DEVICES ; index++)
+    {
         sprintf(key, "bt_bounded_dev%d", index);
         if (aos_kv_get(key, p_entry, buflen) != 0) {
             continue;
         }
 
-        if ( !memcmp(p_entry->bd_addr, bd_addr, sizeof(aos_bt_device_address_t) )) { // found
+        if( !memcmp(p_entry->bd_addr, bd_addr, sizeof(mico_bt_device_address_t) )){// found
             if (entry_max_length < p_entry->length) {
-                ret = AOS_BT_ILLEGAL_VALUE;
+                ret = MICO_BT_ILLEGAL_VALUE;
             } else {
                 p_key_entry->addr_type = p_entry->addr_type;
                 p_key_entry->device_type = p_entry->device_type;
                 p_key_entry->length = p_entry->length;
                 memcpy(p_key_entry->key_blobs, p_entry->key_blobs, p_entry->length);
-                ret = AOS_BT_SUCCESS;
+                ret = MICO_BT_SUCCESS;
             }
         }
     }
@@ -221,29 +226,30 @@ EXIT:
  *
  * @param[in]  bd_addr : bd_addr of bonded device to be removed
 
- * @return      AOS_BT_SUCCESS or ERROR
+ * @return      MICO_BT_SUCCESS or ERROR
  */
-aos_bt_result_t mico_bt_nvram_access_delete_bonded_device(aos_bt_device_address_t bd_addr)
+mico_bt_result_t mico_bt_nvram_access_delete_bonded_device(mico_bt_device_address_t bd_addr)
 {
-    int index, ret = AOS_BT_NO_RESOURCES;
+    int index, ret = MICO_BT_NO_RESOURCES;
     mico_bt_nvram_access_entry_t *p_entry;
     char key[32];
-    int buflen = sizeof(mico_bt_nvram_access_entry_t) + AOS_BT_DCT_MAX_KEYBLOBS;
+    int buflen = sizeof(mico_bt_nvram_access_entry_t) + MICO_BT_DCT_MAX_KEYBLOBS;
 
     p_entry = (mico_bt_nvram_access_entry_t *)malloc(buflen);
     if (p_entry == NULL) {
         return -1;
     }
 
-    for (index = 0 ; index < AOS_BT_DCT_MAX_DEVICES ; index++) {
+    for(index = 0 ; index < MICO_BT_DCT_MAX_DEVICES ; index++)
+    {
         sprintf(key, "bt_bounded_dev%d", index);
         if (aos_kv_get(key, p_entry, buflen) != 0) {
             continue;
         }
 
-        if ( !memcmp(p_entry->bd_addr, bd_addr, sizeof(aos_bt_device_address_t) )) { // found
+        if( !memcmp(p_entry->bd_addr, bd_addr, sizeof(mico_bt_device_address_t) )){// found
             aos_kv_del(key);
-            ret = AOS_BT_SUCCESS;
+            ret = MICO_BT_SUCCESS;
             goto EXIT;
         }
     }
@@ -263,19 +269,18 @@ EXIT:
  *
  * @param[out]  p_lkeys: local identity key information
  *
- * @return      AOS_BT_SUCCESS or ERROR
+ * @return      MICO_BT_SUCCESS or ERROR
  */
-aos_bt_result_t mico_bt_nvram_access_load_local_identity_keys(aos_bt_local_identity_keys_t *p_lkeys)
+mico_bt_result_t mico_bt_nvram_access_load_local_identity_keys(mico_bt_local_identity_keys_t *p_lkeys)
 {
     int ret;
 
-    ret = aos_kv_get("bt_local_key", p_lkeys, sizeof(aos_bt_local_identity_keys_t));
+    ret = aos_kv_get("bt_local_key", p_lkeys, sizeof(mico_bt_local_identity_keys_t));
 
-    if (ret != 0) {
-        return AOS_BT_NO_RESOURCES;
-    } else {
-        return AOS_BT_SUCCESS;
-    }
+    if (ret != 0)
+        return MICO_BT_NO_RESOURCES;
+    else
+        return MICO_BT_SUCCESS;
 }
 
 
@@ -286,19 +291,18 @@ aos_bt_result_t mico_bt_nvram_access_load_local_identity_keys(aos_bt_local_ident
  *
  * @param[in]  p_lkeys : local identity key information
  *
- * @return      AOS_BT_SUCCESS or ERROR
+ * @return      MICO_BT_SUCCESS or ERROR
  */
-aos_bt_result_t mico_bt_nvram_access_save_local_identity_keys(aos_bt_local_identity_keys_t *p_lkeys)
+mico_bt_result_t mico_bt_nvram_access_save_local_identity_keys(mico_bt_local_identity_keys_t *p_lkeys)
 {
     int ret;
 
-    ret = aos_kv_set("bt_local_key", p_lkeys, sizeof(aos_bt_local_identity_keys_t), 1);
+    ret = aos_kv_set("bt_local_key", p_lkeys, sizeof(mico_bt_local_identity_keys_t), 1);
 
-    if (ret != 0) {
-        return AOS_BT_NO_RESOURCES;
-    } else {
-        return AOS_BT_SUCCESS;
-    }
+    if (ret != 0)
+        return MICO_BT_NO_RESOURCES;
+    else
+        return MICO_BT_SUCCESS;
 }
 
 
@@ -313,31 +317,31 @@ aos_bt_result_t mico_bt_nvram_access_save_local_identity_keys(aos_bt_local_ident
  *
  * @return      TRUE if there is available space or FALSE
  */
-BOOLEAN mico_bt_nvram_access_key_storage_available(aos_bt_device_address_t bd_addr, int req_size)
+BOOLEAN mico_bt_nvram_access_key_storage_available(mico_bt_device_address_t bd_addr, int req_size)
 {
     int index, found = 0;
     mico_bt_nvram_access_entry_t *p_entry;
     char key[32];
-    int buflen = sizeof(mico_bt_nvram_access_entry_t) + AOS_BT_DCT_MAX_KEYBLOBS;
-
+    int buflen = sizeof(mico_bt_nvram_access_entry_t) + MICO_BT_DCT_MAX_KEYBLOBS;
+    
     p_entry = (mico_bt_nvram_access_entry_t *)malloc(buflen);
     if (p_entry == NULL) {
         return -1;
     }
-    for (index = 0 ; index < AOS_BT_DCT_MAX_DEVICES ; index++) {
+    for(index = 0 ; index < MICO_BT_DCT_MAX_DEVICES ; index++)
+    {
         sprintf(key, "bt_bounded_dev%d", index);
         if (aos_kv_get(key, p_entry, buflen) != 0) {
             found = 1;
         }
     }
-
+    
     free(p_entry);
-
-    if (found == 0) {
+    
+    if(found == 0)
         return FALSE;
-    } else {
+    else
         return TRUE;
-    }
 }
 
 
@@ -349,26 +353,23 @@ BOOLEAN mico_bt_nvram_access_key_storage_available(aos_bt_device_address_t bd_ad
  * @param[out]  p_index : index of stored key
  * @param[out]  p_key_entry : key information stored
  *
- * @return      AOS_BT_SUCCESS or ERROR
+ * @return      MICO_BT_SUCCESS or ERROR
  */
-aos_bt_result_t mico_bt_nvram_access_enum_bonded_device_keys(int8_t *p_index, mico_bt_nvram_access_entry_t *p_key_entry,
-                                                             uint8_t entry_max_length)
+mico_bt_result_t mico_bt_nvram_access_enum_bonded_device_keys(int8_t *p_index, mico_bt_nvram_access_entry_t * p_key_entry, uint8_t entry_max_length)
 {
     static int8_t enum_index = 0;
     char key[32];
 
     *p_index = enum_index;
-
+    
     sprintf(key, "bt_bounded_dev%d", enum_index);
     enum_index++;
-    if (enum_index == AOS_BT_DCT_MAX_KEYBLOBS) {
+    if (enum_index == MICO_BT_DCT_MAX_KEYBLOBS)
         enum_index = 0;
-    }
-    if (aos_kv_get(key, p_key_entry, entry_max_length + sizeof(*p_key_entry)) != 0) {
+    if (aos_kv_get(key, p_key_entry, entry_max_length+sizeof(*p_key_entry)) != 0)
         return -1;
-    }
-
-    return AOS_BT_SUCCESS;
+    
+    return MICO_BT_SUCCESS;
 }
 
 /**
@@ -381,25 +382,25 @@ aos_bt_result_t mico_bt_nvram_access_enum_bonded_device_keys(int8_t *p_index, mi
  *
  * @return      TRUE if found or FALSE
  */
-mico_bool_t mico_bt_nvram_access_find_device( aos_bt_device_address_t key_bdaddr )
+mico_bool_t mico_bt_nvram_access_find_device( mico_bt_device_address_t key_bdaddr )
 {
     int index, list_size = 0;
     mico_bt_nvram_access_entry_t *p_entry;
     char key[32];
-    int buflen = sizeof(mico_bt_nvram_access_entry_t) + AOS_BT_DCT_MAX_KEYBLOBS;
+    int buflen = sizeof(mico_bt_nvram_access_entry_t) + MICO_BT_DCT_MAX_KEYBLOBS;
     mico_bool_t found_keyblobs = FALSE;
-
+    
     p_entry = (mico_bt_nvram_access_entry_t *)malloc(buflen);
     if (p_entry == NULL) {
         return -1;
     }
-    for (index = 0 ; index < AOS_BT_DCT_MAX_DEVICES ; index++) {
+    for(index = 0 ; index < MICO_BT_DCT_MAX_DEVICES ; index++)
+    {
         sprintf(key, "bt_bounded_dev%d", index);
-        if (aos_kv_get(key, p_entry, buflen) != 0) {
+        if (aos_kv_get(key, p_entry, buflen) != 0)
             continue;
-        }
 
-        if ( !memcmp(p_entry->bd_addr, key_bdaddr, sizeof(aos_bt_device_address_t) )) { // found
+        if( !memcmp(p_entry->bd_addr, key_bdaddr, sizeof(mico_bt_device_address_t) )){// found
             found_keyblobs = TRUE;
             break;
         }
