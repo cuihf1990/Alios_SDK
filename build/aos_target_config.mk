@@ -66,6 +66,8 @@ $(if $(filter 1,$(words $(TEMP_MAKEFILE))),,$(error More than one component with
 
 $(eval include $(TEMP_MAKEFILE))
 $(eval COMPONENTS += $($(NAME)_COMPONENTS))
+$(call PREPROCESS_TEST_COMPONENT, $(COMPONENTS), $(TEST_COMPONENTS))
+
 $(eval PROCESSED_COMPONENTS_LOCS += $(COMP))
 
 DEPENDENCY += '$(NAME)': '$($(NAME)_COMPONENTS)',
@@ -165,7 +167,6 @@ $(eval PROCESSED_COMPONENTS += $(NAME))
 
 $(eval $(NAME)_SOURCES := $(sort $($(NAME)_SOURCES)) )
 
-$(call PREPROCESS_TEST_COMPONENT, $(COMPONENTS), $(TEST_COMPONENTS))
 endef
 
 
