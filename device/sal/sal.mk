@@ -1,6 +1,5 @@
 NAME := sal
 
-$(NAME)_COMPONENTS += sal.wifi.mk3060
 $(NAME)_TYPE := kernel
 ifneq (1,$(at_adapter))
 GLOBAL_DEFINES += WITH_SAL # for sal general use

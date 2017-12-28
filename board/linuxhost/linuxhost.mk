@@ -36,6 +36,7 @@ sal ?= 0
 
 ifeq (1,$(sal))
 $(NAME)_COMPONENTS += sal
+$(NAME)_COMPONENTS += sal.wifi.mk3060
 endif
 
 # Define the default component testcase set
