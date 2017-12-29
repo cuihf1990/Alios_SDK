@@ -11,9 +11,7 @@ b_l475e_platforms="b_l475e"
 esp32_targets="alinkapp helloworld"
 esp32_platforms="esp32devkitc"
 bins_type="app framework kernel"
-mk3239_targets="bluetooth.ble_advertisements bluetooth.ble_hello_center \
-                bluetooth.ble_hello_sensor bluetooth.ble_scan \
-                bluetooth.ble_whitelist_connect"
+mk3239_targets="bluetooth.ble_advertisements bluetooth.ble_show_system_time"
 mk3239_platforms="mk3239"
 
 DEBUG="no"
