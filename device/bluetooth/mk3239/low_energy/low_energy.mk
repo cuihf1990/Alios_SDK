@@ -3,7 +3,7 @@
 # All Rights Reserved.
 #
 
-NAME := Lib_Bluetooth_Embedded_Low_energy_Stack_for_$(BT_CHIP)$(BT_CHIP_REVISION)
+NAME := lib_ble_low_energy
 
 BTE_PLATFORM_DIR := ../BTE_platform
 

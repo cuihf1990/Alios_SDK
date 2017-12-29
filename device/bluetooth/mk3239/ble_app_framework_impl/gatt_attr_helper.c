@@ -14,7 +14,21 @@ void ble_attr_indicate(ble_gatt_attr_t *attr, peripheral_hdl_t hdl,
         if (p->hdl == hdl) break;
 
     if (!p) return;
-    
+
     mico_bt_peripheral_ext_attribute_value_write(attr, len, 0, data);
     mico_bt_peripheral_gatt_indicate_attribute_value(&p->skt, attr);
+}
+
+void ble_attr_notify(ble_gatt_attr_t *attr, peripheral_hdl_t hdl,
+                     uint16_t len, const uint8_t *data)
+{
+    peripheral_socket_t *p = g_skt_head;
+
+    for (; p; p = p->next)
+        if (p->hdl == hdl) break;
+
+    if (!p) return;
+
+    mico_bt_peripheral_ext_attribute_value_write(attr, len, 0, data);
+    mico_bt_peripheral_gatt_notify_attribute_value(&p->skt, attr);
 }
