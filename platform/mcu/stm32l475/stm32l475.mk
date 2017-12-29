@@ -43,7 +43,8 @@ GLOBAL_INCLUDES += \
                    Drivers/BSP/Components/lsm6dsl \
                    Drivers/BSP/Components/vl53l0x \
                    Drivers/CMSIS/Include \
-                   ../../../include/hal
+                   ../../../include/hal \
+                   Middlewares/USB_Device/Core/Inc
 
 GLOBAL_CFLAGS += -DSTM32L475xx
 
@@ -158,7 +159,10 @@ $(NAME)_SOURCES := src/B-L475E-IOT01/runapp/stm32l4xx_hal_msp.c      \
                    src/B-L475E-IOT01/sensor/sensors_data.c \
                    src/B-L475E-IOT01/sensor/sensors.c \
                    src/B-L475E-IOT01/sensor/qspi.c \
-                   src/B-L475E-IOT01/hal/wifi_port.c
+                   src/B-L475E-IOT01/hal/wifi_port.c \
+                   Middlewares/USB_Device/Core/Src/usbd_core.c \
+                   Middlewares/USB_Device/Core/Src/usbd_ctlreq.c \
+                   Middlewares/USB_Device/Core/Src/usbd_ioreq.c
 
 ifeq ($(COMPILER),armcc)
 $(NAME)_SOURCES += src/B-L475E-IOT01/runapp/startup_stm32l475xx_armcc.s
