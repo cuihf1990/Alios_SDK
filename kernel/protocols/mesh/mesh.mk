@@ -23,8 +23,8 @@ $(NAME)_SOURCES := src/core/umesh.c \
                    src/ip/ip_address.c \
                    src/hal/interfaces.c \
                    src/hal/umesh_hal.c \
-                   src/hal/80211.c \
-                   src/hal/wifi.c \
+                   src/hal/wifi/80211_frame.c \
+                   src/hal/wifi/wifi.c \
                    src/utilities/message.c \
                    src/utilities/timer.c \
                    src/utilities/memory.c \
