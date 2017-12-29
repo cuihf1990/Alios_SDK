@@ -158,7 +158,7 @@ endif
 ifeq ($(HOST_ARCH),Cortex-M4F)
 CPU_CFLAGS     := -mthumb -mcpu=cortex-m4 -mfpu=fpv4-sp-d16 -mfloat-abi=hard
 CPU_CXXFLAGS   := -mthumb -mcpu=cortex-m4 -mfpu=fpv4-sp-d16 -mfloat-abi=hard
-CPU_ASMFLAGS   := -mcpu=cortex-m4 -mfpu=fpv4-sp-d16 -mfloat-abi=hard
+CPU_ASMFLAGS   := $(CPU_CFLAGS)
 CPU_LDFLAGS    := -mthumb -mcpu=cortex-m4 -Wl,-A,thumb
 CLIB_LDFLAGS_NANO       += -mfpu=fpv4-sp-d16 -mfloat-abi=hard
 CLIB_LDFLAGS_NANO_FLOAT += -mfpu=fpv4-sp-d16 -mfloat-abi=hard
@@ -167,21 +167,21 @@ endif
 ifeq ($(HOST_ARCH),Cortex-M4)
 CPU_CFLAGS     := -mthumb -mcpu=cortex-m4
 CPU_CXXFLAGS   := -mthumb -mcpu=cortex-m4
-CPU_ASMFLAGS   := -mcpu=cortex-m4 -mfpu=softvfp
+CPU_ASMFLAGS   := $(CPU_CFLAGS)
 CPU_LDFLAGS    := -mthumb -mcpu=cortex-m4 -Wl,-A,thumb
 endif
 
 ifeq ($(HOST_ARCH),Cortex-M3)
 CPU_CFLAGS   := -mthumb -mcpu=cortex-m3
 CPU_CXXFLAGS := -mthumb -mcpu=cortex-m3
-CPU_ASMFLAGS := -mcpu=cortex-m3 -mfpu=softvfp
+CPU_ASMFLAGS   := $(CPU_CFLAGS)
 CPU_LDFLAGS  := -mthumb -mcpu=cortex-m3 -Wl,-A,thumb
 endif
 
 ifeq ($(HOST_ARCH),Cortex-M0)
 CPU_CFLAGS   := -mthumb -mcpu=cortex-m0
 CPU_CXXFLAGS := -mthumb -mcpu=cortex-m0
-CPU_ASMFLAGS := -mcpu=cortex-m0 -mthumb
+CPU_ASMFLAGS   := $(CPU_CFLAGS)
 CPU_LDFLAGS  := -mthumb -mcpu=cortex-m0 -Wl,-A,thumb
 endif
 
