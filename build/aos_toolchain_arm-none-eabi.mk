@@ -15,10 +15,12 @@ else
 HOST_INSTRUCTION_SET := THUMB
 endif
 
+TOOLCHAIN_PATH    ?=
 TOOLCHAIN_PREFIX  := arm-none-eabi-
 TOOLCHAIN_VERSION := 5_4-2016q3-20160926
+
 ifneq (,$(wildcard $(TOOLS_ROOT)/compiler/arm-none-eabi-$(TOOLCHAIN_VERSION)/$(HOST_OS)/bin))
-TOOLCHAIN_PATH := $(TOOLS_ROOT)/compiler/arm-none-eabi-$(TOOLCHAIN_VERSION)/$(HOST_OS)/bin/
+TOOLCHAIN_PATH    := $(TOOLS_ROOT)/compiler/arm-none-eabi-$(TOOLCHAIN_VERSION)/$(HOST_OS)/bin/
 endif
 
 BINS ?=
@@ -28,12 +30,15 @@ ifeq ($(HOST_OS),Win32)
 # Windows settings
 ################
 
-$(eval GCC_VER := $(shell arm-none-eabi-gcc --version | findstr "Copyright"))
-ifeq ($(TOOLCHAIN_PATH),)
-ifeq ($(GCC_VER),)
-TOOLCHAIN_PATH := $(TOOLS_ROOT)/compiler/arm-none-eabi-$(TOOLCHAIN_VERSION)/Win32/bin/
+ifeq (,$(TOOLCHAIN_PATH))
+SYSTEM_GCC_PATH = $(shell where $(TOOLCHAIN_PREFIX)gcc.exe)
+ifneq (,$(findstring $(TOOLCHAIN_PREFIX)gcc.exe,$(SYSTEM_GCC_PATH))
+SYSTEM_TOOLCHAIN_PATH = $(subst $(TOOLCHAIN_PREFIX)gcc.exe,,$(SYSTEM_GCC_PATH))
+TOOLCHAIN_PATH := $(SYSTEM_TOOLCHAIN_PATH)
 else
-TOOLCHAIN_PATH :=
+DOWNLOAD_URL   = "https://launchpad.net/gcc-arm-embedded/+download"
+TOOLCHIAN_FILE = "gcc-arm-none-eabi-5_4-2016q3-20160926-win32.zip"
+$(error can not find compiler toolchain, please download $(TOOLCHIAN_FILE) from $(DOWNLOAD_URL) and unzip to $(TOOLS_ROOT)/compiler/arm-none-eabi-$(TOOLCHAIN_VERSION)/$(HOST_OS) folder)
 endif
 endif
 
@@ -47,7 +52,18 @@ ifneq (,$(filter $(HOST_OS),Linux32 Linux64))
 # Linux 32/64-bit settings
 ################
 
-TOOLCHAIN_PATH    ?=
+ifeq (,$(TOOLCHAIN_PATH))
+SYSTEM_GCC_PATH = $(shell which $(TOOLCHAIN_PREFIX)gcc)
+ifneq (,$(findstring $(TOOLCHAIN_PREFIX)gcc,$(SYSTEM_GCC_PATH)))
+SYSTEM_TOOLCHAIN_PATH = $(subst $(TOOLCHAIN_PREFIX)gcc,,$(SYSTEM_GCC_PATH))
+TOOLCHAIN_PATH := $(SYSTEM_TOOLCHAIN_PATH)
+else
+DOWNLOAD_URL   = "https://launchpad.net/gcc-arm-embedded/+download"
+TOOLCHIAN_FILE = "gcc-arm-none-eabi-5_4-2016q3-20160926-linux.tar.bz2"
+$(error can not find compiler toolchain, please download $(TOOLCHIAN_FILE) from $(DOWNLOAD_URL) and unzip to $(TOOLS_ROOT)/compiler/arm-none-eabi-$(TOOLCHAIN_VERSION)/$(HOST_OS) folder)
+endif
+endif
+
 GDB_KILL_OPENOCD   = 'shell killall openocd'
 GDBINIT_STRING     = 'shell $(COMMON_TOOLS_PATH)dash -c "trap \\"\\" 2;$(OPENOCD_FULL_NAME) -f $(OPENOCD_CFG_PATH)interface/$(JTAG).cfg -f $(OPENOCD_CFG_PATH)$(HOST_OPENOCD)/$(HOST_OPENOCD).cfg -f $(OPENOCD_CFG_PATH)$(HOST_OPENOCD)/$(HOST_OPENOCD)_gdb_jtag.cfg -l $(OPENOCD_LOG_FILE) &"'
 GDB_COMMAND        = "$(TOOLCHAIN_PATH)$(TOOLCHAIN_PREFIX)gdb"
@@ -58,13 +74,24 @@ ifeq ($(HOST_OS),OSX)
 # OSX settings
 ################
 
-TOOLCHAIN_PATH    ?=
+ifeq (,$(TOOLCHAIN_PATH))
+SYSTEM_GCC_PATH = $(shell which $(TOOLCHAIN_PREFIX)gcc)
+ifneq (,$(findstring $(TOOLCHAIN_PREFIX)gcc,$(SYSTEM_GCC_PATH)))
+SYSTEM_TOOLCHAIN_PATH = $(subst $(TOOLCHAIN_PREFIX)gcc,,$(SYSTEM_GCC_PATH))
+TOOLCHAIN_PATH := $(SYSTEM_TOOLCHAIN_PATH)
+else
+DOWNLOAD_URL   = "https://launchpad.net/gcc-arm-embedded/+download"
+TOOLCHIAN_FILE = "gcc-arm-none-eabi-5_4-2016q3-20160926-mac.tar.bz2"
+$(error can not find compiler toolchain, please download $(TOOLCHIAN_FILE) from $(DOWNLOAD_URL) and unzip to $(TOOLS_ROOT)/compiler/arm-none-eabi-$(TOOLCHAIN_VERSION)/$(HOST_OS) folder)
+endif
+endif
+
 GDB_KILL_OPENOCD   = 'shell killall openocd_run'
 GDBINIT_STRING     = 'shell $(COMMON_TOOLS_PATH)dash -c "trap \\"\\" 2;$(OPENOCD_FULL_NAME) -f $(OPENOCD_CFG_PATH)interface/$(JTAG).cfg -f $(OPENOCD_CFG_PATH)$(HOST_OPENOCD)/$(HOST_OPENOCD).cfg -f $(OPENOCD_CFG_PATH)$(HOST_OPENOCD)/$(HOST_OPENOCD)_gdb_jtag.cfg -l $(OPENOCD_LOG_FILE) &"'
 GDB_COMMAND        = "$(TOOLCHAIN_PATH)$(TOOLCHAIN_PREFIX)gdb"
 
 else # OSX
-$(error incorrect 'make' used ($(MAKE)) - please use:  (Windows) .\make.exe <target_string>    (OS X, Linux) ./make <target_string>)
+$(error unsupport OS $(HOST_OS))
 endif # OSX
 endif # Linux32 Linux64 OSX
 endif # Win32
