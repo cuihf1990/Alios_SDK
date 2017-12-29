@@ -11,14 +11,15 @@ NAME := stm32l475
 
 HOST_OPENOCD := stm32l475
 
-#STM32_NONSTD_SOCKET := true
+ifeq (, $(findstring sal, $(BUILD_STRING)))
+STM32_NONSTD_SOCKET := true
+GLOBAL_DEFINES += STM32_USE_SPI_WIFI
+endif
 
 $(NAME)_TYPE := kernel
 
 $(NAME)_COMPONENTS += platform/arch/arm/armv7m
 $(NAME)_COMPONENTS += libc rhino hal modules.fs.kv vfs digest_algorithm
-
-#GLOBAL_DEFINES += STM32_USE_SPI_WIFI
 
 GLOBAL_DEFINES += CONFIG_AOS_KV_MULTIPTN_MODE
 GLOBAL_DEFINES += CONFIG_AOS_KV_PTN=6
