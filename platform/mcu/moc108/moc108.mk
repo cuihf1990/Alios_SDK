@@ -20,6 +20,8 @@ $(NAME)_COMPONENTS := platform/arch/arm/armv5
 $(NAME)_COMPONENTS += libc rhino yloop modules.fs.kv alicrypto digest_algorithm
 $(NAME)_COMPONENTS += platform/mcu/moc108/hal_init
 $(NAME)_COMPONENTS += platform/mcu/moc108/mx108/mx378/driver/entry
+$(NAME)_COMPONENTS += platform/mcu/moc108/aos/framework_runtime
+$(NAME)_COMPONENTS += platform/mcu/moc108/aos/app_runtime
 $(NAME)_COMPONENTS += prov
 $(NAME)_COMPONENTS += hal
 
