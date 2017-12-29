@@ -117,6 +117,7 @@ for target in ${mk3060_targets}; do
 done
 
 #multi-bins, mk3060
+if [ 0 -eq 1 ]; then
 aos make clean > /dev/null 2>&1
 for target in ${mk3060_targets}; do
     for platform in ${mk3060_platforms}; do
@@ -148,6 +149,7 @@ for target in ${mk3060_targets}; do
         done
     done
 done
+fi
 
 #single-bin, b_l475e
 aos make clean > /dev/null 2>&1
