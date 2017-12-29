@@ -204,8 +204,7 @@ size_t krhino_global_space_get(void)
 #if (RHINO_CONFIG_TIMER > 0)
     mem += sizeof(g_timer_head) + sizeof(g_timer_count)
            + sizeof(g_timer_task) + sizeof(g_timer_task_stack)
-           + sizeof(g_timer_queue) + sizeof(g_timer_msg)
-           + sizeof(g_timer_pool) + sizeof(timer_queue_cb);
+           + sizeof(g_timer_queue) + sizeof(timer_queue_cb);
 #endif
 
 #if (RHINO_CONFIG_SYSTEM_STATS > 0)
