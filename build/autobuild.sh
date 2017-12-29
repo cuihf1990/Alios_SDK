@@ -45,11 +45,12 @@ for target in ${linux_posix_targets}; do
             pwd && ls
         fi
         vcall=posix aos make ${target}@${platform} JOBS=${JNUM} > ${target}@${platform}@${branch}.log 2>&1
+        ret=$?
         if [ "${DEBUG}" != "no" ]; then
             echo "after make posix ${target}@${platform}@${branch}"
             pwd && ls
         fi
-        if [ $? -eq 0 ]; then
+        if [ ${ret} -eq 0 ]; then
             echo "build vcall=posix ${target}@${platform} at ${branch} branch succeed"
             rm -f ${target}@${platform}@${branch}.log
         else
@@ -71,11 +72,12 @@ for target in ${linux_targets}; do
             pwd && ls
         fi
         aos make ${target}@${platform} JOBS=${JNUM} > ${target}@${platform}@${branch}.log 2>&1
+        ret=$?
         if [ "${DEBUG}" != "no" ]; then
             echo "after make ${target}@${platform}@${branch}"
             pwd && ls
         fi
-        if [ $? -eq 0 ]; then
+        if [ ${ret} -eq 0 ]; then
             echo "build ${target}@${platform} at ${branch} branch succeed"
             rm -f ${target}@${platform}@${branch}.log
         else
@@ -97,11 +99,12 @@ for target in ${mk3060_targets}; do
             pwd && ls
         fi
         aos make ${target}@${platform} JOBS=${JNUM} > ${target}@${platform}@${branch}.log 2>&1
+        ret=$?
         if [ "${DEBUG}" != "no" ]; then
             echo "after make ${target}@${platform}@${branch}"
             pwd && ls
         fi
-        if [ $? -eq 0 ]; then
+        if [ ${ret} -eq 0 ]; then
             rm -f ${target}@${platform}@${branch}.log
             echo "build ${target}@${platform} at ${branch} branch succeed"
         else
@@ -128,11 +131,12 @@ for target in ${mk3060_targets}; do
                 pwd && ls
             fi
             aos make ${target}@${platform} BINS=${bins} JOBS=${JNUM} > ${target}@${platform}@${bins}@${branch}.log 2>&1
+            ret=$?
             if [ "${DEBUG}" != "no" ]; then
                 echo "after make ${target}@${platform}@${bins}@${branch}"
                 pwd && ls
             fi
-            if [ $? -eq 0 ]; then
+            if [ ${ret} -eq 0 ]; then
                 rm -f ${target}@${platform}@${bins}@${branch}.log
                 echo "build ${target}@${platform} BINS=${bins} as multiple BINs at ${branch} branch succeed"
             else
@@ -156,11 +160,12 @@ for target in ${b_l475e_targets}; do
             pwd && ls
         fi
         aos make ${target}@${platform} JOBS=${JNUM} > ${target}@${platform}@${branch}.log 2>&1
+        ret=$?
         if [ "${DEBUG}" != "no" ]; then
             echo "after make ${target}@${platform}@${branch}"
             pwd && ls
         fi
-        if [ $? -eq 0 ]; then
+        if [ ${ret} -eq 0 ]; then
             rm -f ${target}@${platform}@${branch}.log
             echo "build ${target}@${platform} at ${branch} branch succeed"
         else
@@ -183,11 +188,12 @@ for target in ${esp32_targets}; do
             pwd && ls
         fi
         aos make -e ${target}@${platform} wifi=1 JOBS=${JNUM} > ${target}@${platform}@${branch}.log 2>&1
+        ret=$?
         if [ "${DEBUG}" != "no" ]; then
             echo "after make ${target}@${platform}@${branch}"
             pwd && ls
         fi
-        if [ $? -eq 0 ]; then
+        if [ ${ret} -eq 0 ]; then
             rm -f ${target}@${platform}@${branch}.log
             echo "build ${target}@${platform} at ${branch} branch succeed"
         else
@@ -211,11 +217,12 @@ for target in ${mk3239_targets}; do
         fi
         echo "Building mk3239"
         aos make ${target}@${platform} JOBS=${JNUM} > ${target}@${platform}@${branch}.log 2>&1
+        ret=$?
         if [ "${DEBUG}" != "no" ]; then
             echo "after make ${target}@${platform}@${branch}"
             pwd && ls
         fi
-        if [ $? -eq 0 ]; then
+        if [ ${ret} -eq 0 ]; then
             rm -f ${target}@${platform}@${branch}.log
             echo "build ${target}@${platform} at ${branch} branch succeed"
         else
