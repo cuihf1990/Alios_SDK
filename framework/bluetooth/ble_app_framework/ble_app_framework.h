@@ -92,4 +92,19 @@ void ble_attr_indicate
     const uint8_t *data
 );
 
+/**
+ * Send notification of a GATT attribute value to client device.
+ *
+ * @param[in]  attr  The attribute structure.
+ * @param[in]  hdl   The peripheral device handle.
+ * @param[in]  len   The length of the data to nofity.
+ * @param[in]  data  The data to notify.
+ */
+void ble_attr_notify(
+    ble_gatt_attr_t *attr,
+    peripheral_hdl_t hdl,
+    uint16_t len,
+    const uint8_t *data
+);
+
 #endif
