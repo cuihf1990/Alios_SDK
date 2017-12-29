@@ -1,3 +1,7 @@
+/*
+ * Copyright (C) 2015-2017 Alibaba Group Holding Limited
+ */
+
 #include "internal/ble_helper_internal.h"
 
 ble_gatt_attr_t *ble_attr_add(uint16_t hdl, uint16_t val_len, const uint8_t *val)

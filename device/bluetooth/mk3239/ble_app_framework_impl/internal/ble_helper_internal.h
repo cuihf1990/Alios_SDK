@@ -1,3 +1,7 @@
+/*
+ * Copyright (C) 2015-2017 Alibaba Group Holding Limited
+ */
+
 #ifndef _BLE_HELPER_INTERNAL_H_
 #define _BLE_HELPER_INTERNAL_H_
 

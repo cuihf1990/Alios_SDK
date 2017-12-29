@@ -1,3 +1,7 @@
+/*
+ * Copyright (C) 2015-2017 Alibaba Group Holding Limited
+ */
+
 #ifndef _BLE_APP_FRAMEWORK_H_
 #define _BLE_APP_FRAMEWORK_H_
 
