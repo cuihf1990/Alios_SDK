@@ -73,7 +73,7 @@ kstat_t ringbuf_push(k_ringbuf_t *p_ringbuf, void *data, size_t len)
             p_ringbuf->tail = p_ringbuf->buf;
         }
 
-        memcpy(p_ringbuf->tail, data, len);
+        memcpy(p_ringbuf->tail, data, p_ringbuf->blk_size);
         p_ringbuf->tail += len;
         p_ringbuf->freesize -= len;
     } else {
