@@ -301,6 +301,10 @@ int sensor_init(void){
     drv_acc_bosch_bma253_init();
 #endif /* AOS_SENSOR_ACC_BOSCH_BMA253 */
 
+#ifdef AOS_SENSOR_BARO_BOSCH_BMP280  
+    drv_baro_bosch_bmp280_init();
+#endif /* AOS_SENSOR_BARO_BOSCH_BMP280 */
+
     ret = sensor_hal_register();
     if(ret != 0){
         return -1;
