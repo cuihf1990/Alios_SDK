@@ -1,4 +1,4 @@
-import os, sys, time, serial, subprocess, traceback
+import glob, serial, traceback
 
 def list_devices(os):
     return glob.glob('/dev/emulator-*')
@@ -8,6 +8,7 @@ def new_device(port):
         ser = serial.Serial(port, 115200, timeout = 0.02)
     except:
         ser = None
+        traceback.print_exc()
         print 'emulator: open {0} error'.format(port)
     return ser
 
