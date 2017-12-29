@@ -258,7 +258,7 @@ static bool neighbor_is_alive(hal_context_t *hal, neighbor_t *nbr)
 
 #ifdef CONFIG_AOS_MESH_LOWPOWER
     if ((umesh_get_mode() & MODE_RX_ON) == 0 || (nbr->mode & MODE_RX_ON) == 0) {
-        threshold = SLOT_INTERVAL * SLOTS_SIZE * LINK_ESTIMATE_SENT_THRESHOLD;
+        threshold = SCHEDULE_SLOT_INTERVAL * SCHEDULE_SLOTS_SIZE * LINK_ESTIMATE_SENT_THRESHOLD;
     } else
 #endif
     {

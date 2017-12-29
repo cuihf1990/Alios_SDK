@@ -9,10 +9,6 @@
 #include "umesh_utils.h"
 
 enum {
-    MAX_NEIGHBORS_NUM = 32,
-};
-
-enum {
     BCAST_NETID       = 0xffff,
     BCAST_SUB_NETID   = 0xff,
     INVALID_NETID     = 0xfffe,
