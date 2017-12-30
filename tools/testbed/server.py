@@ -4,7 +4,7 @@ import TBframe
 
 MAX_MSG_LENTH = 2000
 ENCRYPT_CLIENT = True
-ENCRYPT_TERMINAL = False
+ENCRYPT_TERMINAL = True
 DEBUG = True
 
 def signal_handler(sig, frame):

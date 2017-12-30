@@ -1,8 +1,26 @@
 ifneq ($(filter $(HOST_ARCH), armhflinux),)
 
-PATH    := $(PATH):/bin:/usr/bin:/usr/local/bin
-TOOLCHAIN_PATH :=
+TOOLCHAIN_PATH ?=
 TOOLCHAIN_PREFIX := arm-linux-gnueabihf-
+
+SYSTEM_TOOLCHAIN_PATH :=
+ifneq (,$(filter $(HOST_OS),Linux32 Linux64 OSX))
+SYSTEM_GCC_PATH = $(shell which $(TOOLCHAIN_PREFIX)gcc)
+ifneq (,$(findstring $(TOOLCHAIN_PREFIX)gcc,$(SYSTEM_GCC_PATH)))
+SYSTEM_TOOLCHAIN_PATH := $(subst $(TOOLCHAIN_PREFIX)gcc,,$(SYSTEM_GCC_PATH))
+endif
+else #Linux32 Linux64 OSX
+$(error unsupport OS $(HOST_OS))
+endif #Linux32 Linux64 OSX
+
+ifeq (,$(TOOLCHAIN_PATH))
+ifneq (,$(SYSTEM_TOOLCHAIN_PATH))
+TOOLCHAIN_PATH := $(SYSTEM_TOOLCHAIN_PATH)
+else
+$(error can not find compiler toolchain, please install gcc-arm-linux-gnueabihf toolchain first)
+endif #SYSTEM_TOOLCHAIN_PATH
+endif #TOOLCHAIN_PATH
+
 CC      := $(TOOLCHAIN_PATH)$(TOOLCHAIN_PREFIX)gcc
 CXX     := $(TOOLCHAIN_PATH)$(TOOLCHAIN_PREFIX)g++
 AS      := $(CC)
@@ -10,7 +28,6 @@ AR      := $(TOOLCHAIN_PATH)$(TOOLCHAIN_PREFIX)ar
 LD      := $(TOOLCHAIN_PATH)$(TOOLCHAIN_PREFIX)ld
 OPTIONS_IN_FILE_OPTION    := @
 
-export PATH
 ADD_COMPILER_SPECIFIC_STANDARD_CFLAGS   = $(1) $(if $(filter yes,$(MXCHIP_INTERNAL) $(TESTER)),-Werror)
 ADD_COMPILER_SPECIFIC_STANDARD_CXXFLAGS = $(1) $(if $(filter yes,$(MXCHIP_INTERNAL) $(TESTER)),-Werror)
 ADD_COMPILER_SPECIFIC_STANDARD_ADMFLAGS = $(1)
