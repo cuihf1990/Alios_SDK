@@ -57,6 +57,10 @@ kstat_t krhino_init(void)
                        idle_task, 1u);
 #endif
 
+#if (RHINO_CONFIG_WORKQUEUE > 0)
+    workqueue_init();
+#endif
+
 #if (RHINO_CONFIG_TIMER > 0)
     ktimer_init();
 #endif
@@ -82,9 +86,6 @@ kstat_t krhino_start(void)
 #else
         preferred_cpu_ready_task_get(&g_ready_queue, 0);
         g_active_task[0] = g_preferred_ready_task[0];
-#endif
-#if( RHINO_CONFIG_WORKQUEUE > 0)
-        workqueue_init();
 #endif
 
 #if (RHINO_CONFIG_USER_HOOK > 0)
