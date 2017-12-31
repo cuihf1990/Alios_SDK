@@ -74,8 +74,8 @@ kstat_t ringbuf_push(k_ringbuf_t *p_ringbuf, void *data, size_t len)
         }
 
         memcpy(p_ringbuf->tail, data, p_ringbuf->blk_size);
-        p_ringbuf->tail += len;
-        p_ringbuf->freesize -= len;
+        p_ringbuf->tail     += p_ringbuf->blk_size;
+        p_ringbuf->freesize -= p_ringbuf->blk_size;
     } else {
         len_bytes = ringbuf_headlen_compress(len, c_len);
         if (len_bytes == 0 || len_bytes > RINGBUF_LEN_MAX_SIZE ) {
