@@ -456,7 +456,7 @@ uint8_t krhino_ringbuf_is_full(k_ringbuf_t *p_ringbuf)
     NULL_PARA_CHK(p_ringbuf);
 
     RHINO_CRITICAL_ENTER();
-    full = ringbuf_is_empty(p_ringbuf);
+    full = ringbuf_is_full(p_ringbuf);
     RHINO_CRITICAL_EXIT();
 
     return full;
