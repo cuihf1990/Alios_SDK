@@ -229,15 +229,15 @@ static void task_sched_to_cpu(runqueue_t *rq, ktask_t *task, uint8_t cur_cpu_num
                     return;
                 }
             }
+
             /* find the lowest pri */
+            low_pri = g_active_task[0]->prio;
             for (i = 0; i < RHINO_CONFIG_CPU_NUM - 1; i++) {
-                if (g_active_task[i]->prio >= g_active_task[i + 1]->prio) {
-                    low_pri = g_active_task[i]->prio;
-                }
-                else {
-                    low_pri = g_active_task[i + 1]->prio;
+                if (low_pri < g_active_task[i + 1]->prio) {
+                     low_pri = g_active_task[i + 1]->prio;
                 }
             }
+
             /* which cpu run the lowest pri, just notify it */
             for (i = 0; i < RHINO_CONFIG_CPU_NUM; i++) {
                 if (low_pri == g_active_task[i]->prio) {
