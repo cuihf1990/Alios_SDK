@@ -44,10 +44,10 @@ static size_t ringbuf_headlen_compress(size_t head_len, uint8_t *cmp_buf)
 static size_t ringbuf_headlen_decompress(size_t buf_len, uint8_t *cmp_buf)
 {
     size_t   data_len = 0;
-    size_t   be_len   = 0;
+    uint32_t be_len   = 0;
     uint8_t *len_buf  = (uint8_t *)&be_len;
 
-    memcpy(&len_buf[sizeof(size_t) - buf_len], cmp_buf, buf_len);
+    memcpy(&len_buf[sizeof(uint32_t) - buf_len], cmp_buf, buf_len);
 
     if (buf_len > 1) {
         len_buf[sizeof(size_t) - buf_len] &= RINGBUF_LEN_MASK_CLEAN_TWOBIT;
