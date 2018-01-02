@@ -53,7 +53,6 @@ typedef enum
  UDATA_SERVICE_PEDOMETER,   
  UDATA_SERVICE_PDR,     
  UDATA_SERVICE_VDR,
- UDATA_SERVICE_MAX_CNT,
  
  UDATA_MAX_CNT, 
 }udata_type_e;
@@ -71,8 +70,8 @@ typedef struct _abs_cali_cb_t abs_cali_cb_t;
 struct _abs_data_pkg_t {
     sensor_tag_e              tag;
     uint8_t                   srv_cnt; /* count of the registed service base on this sensor */
-    bool                      poweron; /* count of the registed service base on this sensor */
-    uint32_t                  interval;
+    bool                      poweron; /* the power status of the registed service base on this sensor */
+    uint32_t                  interval;/* the report data interval of the sensor*/
     uint64_t                  cur_timestamp; /* the current timestamp for every sensor, the unit is ms */
     int (*calibrated_algo_process_cb)(void* pData); /* callback for calibrated algo */
     dev_sensor_full_info_t    full_info;
@@ -118,7 +117,6 @@ typedef struct _udata_pkg_t{
     udata_type_e   type;
     char           payload[DATA_SIZE];
 }udata_pkg_t; 
-//typedef _udata_pkg_t udata_pkg_t;
 
 #endif /*UDATA_OBJ_DESC_H*/
 
