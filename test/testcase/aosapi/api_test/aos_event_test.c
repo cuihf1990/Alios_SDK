@@ -17,9 +17,11 @@
 #define EVENT_FLAG_3        0x000000F0
 
 static aos_event_t  event;
+#ifdef MULTITASK_UNDER_SMP
 static aos_task_t   task1;
 static aos_task_t   task2;
 static aos_sem_t    sem;
+#endif /* MULTITASK_UNDER_SMP */
 
 static void CASE_aosapi_kernel_event_new_free()
 {
@@ -174,6 +176,8 @@ static void CASE_aosapi_kernel_event_op_orclear()
     YUNIT_ASSERT_MSG(event.hdl==NULL, "ret=%d", 0);
 }
 
+#ifdef MULTITASK_UNDER_SMP
+
 static void event_test_task1_entry(void* arg)
 {
     kstat_t  ret;
@@ -250,6 +254,8 @@ static void CASE_aosapi_kernel_event_op_multask(void)
     YUNIT_ASSERT_MSG(event.hdl==NULL, "ret=%d", 0);
 }
 
+#endif /* MULTITASK_UNDER_SMP */
+
 void aosapi_kernel_event_test_entry(yunit_test_suite_t *suite)
 {
     yunit_add_test_case(suite, "kernel.event.new_free",     CASE_aosapi_kernel_event_new_free);
@@ -257,7 +263,9 @@ void aosapi_kernel_event_test_entry(yunit_test_suite_t *suite)
     yunit_add_test_case(suite, "kernel.event.op_andclear",  CASE_aosapi_kernel_event_op_andclear);
     yunit_add_test_case(suite, "kernel.event.op_or",        CASE_aosapi_kernel_event_op_or);
     yunit_add_test_case(suite, "kernel.event.op_orclear",   CASE_aosapi_kernel_event_op_orclear);
+#ifdef MULTITASK_UNDER_SMP    
     yunit_add_test_case(suite, "kernel.event.op_multask",   CASE_aosapi_kernel_event_op_multask);
+#endif
 }
 
 
