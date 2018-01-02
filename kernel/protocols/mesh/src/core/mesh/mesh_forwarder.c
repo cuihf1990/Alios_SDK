@@ -493,7 +493,6 @@ static ur_error_t send_fragment(network_context_t *network, message_t *message)
         if (header_length == 0) {
             return UR_ERROR_DROP;
         }
-        header_length = info->header_ies_offset;
     } else {
         header_length = info->header_ies_offset;
         message_copy_to(message, message->frag_offset,
