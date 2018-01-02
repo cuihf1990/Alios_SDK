@@ -76,7 +76,7 @@
 #define MBEDTLS_PK_ALT
 #define MBEDTLS_AES_ALT
 
-#define MBEDTLS_SSL_MAX_CONTENT_LEN    (4 * 1024)    /* Size of the input / output buffer */
+#define MBEDTLS_SSL_MAX_CONTENT_LEN    (8 * 1024)    /* Size of the input / output buffer */
 
 #include "mbedtls/check_config.h"
 
