@@ -14,6 +14,7 @@
 static uData_service_t* g_service_db[UDATA_MAX_CNT];
 static uint32_t g_service_cnt = 0;
 static udata_pkg_t g_pkg_buf;
+
 static uData_service_t* uData_get_service_obj(sensor_tag_e tag)
 {
     int index = 0;
@@ -213,7 +214,7 @@ static int uData_service_process(sensor_tag_e tag, void* pdata)
     for(index = 0; index < g_service_cnt; index++){    
         if((g_service_db[index]->tag == tag) && (g_service_db[index]->service_process_cb != NULL)){
             len = g_service_db[index]->service_process_cb(tag, pdata);
-            if((len != 0)||(g_service_db[index]->subscribe == true)){
+            if((len != 0) && (g_service_db[index]->subscribe == true)){
                 ret = uData_install_report_pkg(index, pdata, len);
                 if(unlikely(ret)){
                     return -1;
