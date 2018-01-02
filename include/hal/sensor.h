@@ -115,20 +115,17 @@ typedef enum {
 	DEV_INT,
 	DEV_DATA_READY,
 	DEV_FIFO,
-	DEV_DMA,
 } work_mode_e;
-
-typedef enum {
-	phsical_data = 0,
-	virtual_data,
-} data_type_e;
 
 typedef enum {
 	mg = 0,
 	uGauss,
-	rad_s,
+	udps,
+	lux,
+	cm,
 	pa,
 	pecent,
+	bpm,
 } value_unit_e;
 
 typedef struct _dev_accel_data_t {
@@ -219,14 +216,13 @@ typedef struct _sensor_list_t{
 }sensor_list_t;
 
 struct _dev_sensor_info_t {
-    data_type_e		        type;
     vendor_id_e             vendor;
     char*                   model;
     value_unit_e            unit;
     uint32_t                range_max;
     uint32_t                range_min;
     dev_health_state_e	    health;
-    sensor_list_t           list;
+    //sensor_list_t           list;
 }__attribute__ ((packed));
 typedef struct _dev_sensor_info_t  dev_sensor_info_t;
 
@@ -241,6 +237,7 @@ struct _dev_sensor_data_t {
     int32_t     data[3];
 }__attribute__ ((packed));
 typedef struct _dev_sensor_data_t  dev_sensor_data_t;
+
 struct _dev_sensor_pkg_t {
     sensor_tag_e             tag;
     union{
