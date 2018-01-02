@@ -13,30 +13,30 @@ fi
 for target in $@; do
     if [ "${target}" = "in_server" ]; then
         echo -e "publish and restart server\n"
-        scp *.py ${server}:/home/lc122798/testbed/
-        scp -r board ${server}:/home/lc122798/testbed/
-        scp server_*.pem ${server}:/home/lc122798/testbed/
-        ssh ${server} 'tbserver_start'
+        scp *.py ${in_server}:/home/lc122798/testbed/
+        scp -r board ${in_server}:/home/lc122798/testbed/
+        scp server_*.pem ${in_server}:/home/lc122798/testbed/
+        ssh ${in_server} 'tbserver_start'
         sleep 2
     elif [ "${target}" = "out_server" ]; then
         echo -e "publish and restart server\n"
         scp *.py ${out_server}:/home/iot/testbed/
         scp -r board ${out_server}:/home/iot/testbed/
         scp server_*.pem ${out_server}:/home/iot/testbed/
-        ssh ${server} 'tbserver_start'
+        ssh ${out_server} 'tbserver_start'
         sleep 2
     elif [[ ${target} == lab* ]]; then
         echo -e "\npublish and restart client at aos${target}\n"
         scp *.py ${target}:/home/iot/testbed/
         scp -r board ${target}:/home/iot/testbed/
-        scp server_cert.pem ${server}:/home/lc122798/testbed/
+        scp server_cert.pem ${target}:/home/iot/testbed/
         ssh ${target} 'tbclient_start'
         sleep 2
     elif [[ ${target} == Pi* ]]; then
         echo -e "\npublish and restart client at ${target}\n"
         scp *.py ${target}:/home/pi/testbed/
         scp -r board ${target}:/home/pi/testbed/
-        scp server_cert.pem ${server}:/home/lc122798/testbed/
+        scp server_cert.pem ${target}:/home/pi/testbed/
         ssh ${target} 'tbclient_start'
         sleep 2
     else

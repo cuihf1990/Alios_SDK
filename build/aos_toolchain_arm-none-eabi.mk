@@ -32,7 +32,7 @@ ifeq ($(HOST_OS),Win32)
 
 ifeq (,$(TOOLCHAIN_PATH))
 SYSTEM_GCC_PATH = $(shell where $(TOOLCHAIN_PREFIX)gcc.exe)
-ifneq (,$(findstring $(TOOLCHAIN_PREFIX)gcc.exe,$(SYSTEM_GCC_PATH))
+ifneq (,$(findstring $(TOOLCHAIN_PREFIX)gcc.exe,$(SYSTEM_GCC_PATH)))
 SYSTEM_TOOLCHAIN_PATH = $(subst $(TOOLCHAIN_PREFIX)gcc.exe,,$(SYSTEM_GCC_PATH))
 TOOLCHAIN_PATH := $(SYSTEM_TOOLCHAIN_PATH)
 else
