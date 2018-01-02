@@ -50,7 +50,7 @@ static size_t ringbuf_headlen_decompress(size_t buf_len, uint8_t *cmp_buf)
     memcpy(&len_buf[sizeof(uint32_t) - buf_len], cmp_buf, buf_len);
 
     if (buf_len > 1) {
-        len_buf[sizeof(size_t) - buf_len] &= RINGBUF_LEN_MASK_CLEAN_TWOBIT;
+        len_buf[sizeof(uint32_t) - buf_len] &= RINGBUF_LEN_MASK_CLEAN_TWOBIT;
     }
 
     data_len = krhino_ntohl(be_len);
