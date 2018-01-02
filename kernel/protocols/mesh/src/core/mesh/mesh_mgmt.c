@@ -502,7 +502,6 @@ static uint8_t get_tv_value(network_context_t *network,
             length += set_mm_timestamp_tv(data, umesh_get_timestamp());
             break;
         default:
-            assert(0);
             break;
     }
     return length;
