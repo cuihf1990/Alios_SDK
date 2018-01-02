@@ -27,10 +27,12 @@ class Server:
         self.special_purpose_set['mk3060-alink'] += ['DN02QRKQ', 'DN02RDVL', 'DN02RDVT', 'DN02RDVV']
         self.special_purpose_set['mk3060-alink'] += ['DN02X2ZO', 'DN02X2ZS', 'DN02X2ZX', 'DN02X2ZZ']
         self.special_purpose_set['mk3060-alink'] += ['DN02X303', 'DN02X304', 'DN02X30B', 'DN02X30H']
+        self.special_purpose_set['mk3060-mesh'] = self.special_purpose_set['mk3060-alink']
         #esp32
         self.special_purpose_set['esp32-alink'] += ['espif-3.1.1', 'espif-3.1.2', 'espif-3.1.3', 'espif-3.1.4']
         self.special_purpose_set['esp32-alink'] += ['espif-3.2.1', 'espif-3.2.2', 'espif-3.2.3', 'espif-3.2.4']
         self.special_purpose_set['esp32-alink'] += ['espif-3.3.1', 'espif-3.3.2', 'espif-3.3.3', 'espif-3.3.4']
+        self.special_purpose_set['esp32-mesh'] = self.special_purpose_set['esp32-alink']
 
     def construct_dev_list(self):
         l = []
@@ -150,6 +152,7 @@ class Server:
                             file.pop(port)
                         self.send_device_list_to_all()
                     elif type == TBframe.DEVICE_LOG:
+                        port = value.split(':')[0]
                         #forwad log to subscribed devices
                         if client['devices'][port]['log_subscribe'] != [] and \
                            ('tag' not in client or client['tag'] not in value):
@@ -162,7 +165,6 @@ class Server:
                                     continue
 
                         #save log to files
-                        port = value.split(':')[0]
                         try:
                             logtime = value.split(':')[1]
                             logstr = value[len(port) + 1 + len(logtime):]
