@@ -345,6 +345,7 @@ static void cmd_proc(k_timer_queue_cb *cb, uint8_t cmd)
             timer->obj_type = RHINO_OBJ_TYPE_NONE;
             TRACE_TIMER_DEL(krhino_cur_task_get(), timer);
             break;
+#if (RHINO_CONFIG_KOBJ_DYN_ALLOC > 0)
         case TIMER_CMD_DYN_DEL:
             if (timer->obj_type != RHINO_TIMER_OBJ_TYPE) {
                 break;
@@ -362,6 +363,7 @@ static void cmd_proc(k_timer_queue_cb *cb, uint8_t cmd)
             TRACE_TIMER_DEL(krhino_cur_task_get(), timer);
             krhino_mm_free(timer);
             break;
+#endif
         default:
             k_err_proc(RHINO_SYS_FATAL_ERR);
             break;
