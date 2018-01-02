@@ -5,9 +5,6 @@
 #include <k_api.h>
 
 #if (RHINO_CONFIG_WORKQUEUE > 0)
-extern kworkqueue_t g_workqueue_default;
-extern cpu_stack_t  g_workqueue_stack[RHINO_CONFIG_WORKQUEUE_STACK_SIZE];
-
 static kstat_t workqueue_is_exist(kworkqueue_t *workqueue)
 {
     CPSR_ALLOC();
