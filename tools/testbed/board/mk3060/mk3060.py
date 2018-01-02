@@ -25,7 +25,7 @@ def program(port, address, file):
         script += [port]
         script += [address]
         script += [file]
-        #script += ['--hardreset']
+        script += ['--hardreset']
         ret = subprocess.call(script)
         if ret == 0:
             error =  'success'

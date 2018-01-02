@@ -124,7 +124,7 @@ class Client:
                     queue_safeput(pcmd_queue, ['uuid', 1, 0.2])
                     queue_safeput(pcmd_queue, ['umesh status', 11, 0.2])
                     queue_safeput(pcmd_queue, ['umesh extnetid', 1, 0.2])
-                    queue_safeput(pcmd_queue, ['umesh nbrs', 33, 0.3])
+                    queue_safeput(pcmd_queue, ['umesh nbrs', 35, 0.3])
 
                 block=True
                 timeout=0

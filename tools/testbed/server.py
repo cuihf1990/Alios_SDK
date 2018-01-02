@@ -19,6 +19,7 @@ class Server:
         self.terminal_socket = 0
         self.client_list = []
         self.terminal_list = []
+        self.conn_timeout = {}
         self.keep_running = True
         self.log_preserve_period = (7 * 24 * 3600) * 3 #save log for 3 weeks
         self.allocated = {'lock':threading.Lock(), 'devices':[], 'timeout':0}
@@ -27,10 +28,12 @@ class Server:
         self.special_purpose_set['mk3060-alink'] += ['DN02QRKQ', 'DN02RDVL', 'DN02RDVT', 'DN02RDVV']
         self.special_purpose_set['mk3060-alink'] += ['DN02X2ZO', 'DN02X2ZS', 'DN02X2ZX', 'DN02X2ZZ']
         self.special_purpose_set['mk3060-alink'] += ['DN02X303', 'DN02X304', 'DN02X30B', 'DN02X30H']
+        self.special_purpose_set['mk3060-mesh'] = self.special_purpose_set['mk3060-alink']
         #esp32
         self.special_purpose_set['esp32-alink'] += ['espif-3.1.1', 'espif-3.1.2', 'espif-3.1.3', 'espif-3.1.4']
         self.special_purpose_set['esp32-alink'] += ['espif-3.2.1', 'espif-3.2.2', 'espif-3.2.3', 'espif-3.2.4']
         self.special_purpose_set['esp32-alink'] += ['espif-3.3.1', 'espif-3.3.2', 'espif-3.3.3', 'espif-3.3.4']
+        self.special_purpose_set['esp32-mesh'] = self.special_purpose_set['esp32-alink']
 
     def construct_dev_list(self):
         l = []
@@ -61,20 +64,12 @@ class Server:
                 continue
 
     def client_serve_thread(self, conn, addr):
-        conn.settimeout(1)
-        heartbeat_timeout = time.time() + 30
         file = {}
         msg = ''
         client = None
+        self.conn_timeout[conn] = {'type':'client', 'addr': addr, 'timeout': time.time() + 30}
         while self.keep_running:
             try:
-                if time.time() > heartbeat_timeout:
-                    if client != None:
-                        print "client {0} @ {1} heartbeat timeout".format(client['uuid'], addr)
-                    else:
-                        print "client @ {0} heartbeat timeout".format(addr)
-                    break
-
                 new_msg = conn.recv(MAX_MSG_LENTH)
                 if new_msg == '':
                     break
@@ -85,7 +80,7 @@ class Server:
                     if type == TBframe.TYPE_NONE:
                         break
 
-                    heartbeat_timeout = time.time() + 30
+                    self.conn_timeout[conn]['timeout'] = time.time() + 30
                     if client == None:
                         if type != TBframe.CLIENT_UUID:
                             data = TBframe.construct(TBframe.CLIENT_UUID, 'give me your uuid first')
@@ -150,6 +145,7 @@ class Server:
                             file.pop(port)
                         self.send_device_list_to_all()
                     elif type == TBframe.DEVICE_LOG:
+                        port = value.split(':')[0]
                         #forwad log to subscribed devices
                         if client['devices'][port]['log_subscribe'] != [] and \
                            ('tag' not in client or client['tag'] not in value):
@@ -162,7 +158,6 @@ class Server:
                                     continue
 
                         #save log to files
-                        port = value.split(':')[0]
                         try:
                             logtime = value.split(':')[1]
                             logstr = value[len(port) + 1 + len(logtime):]
@@ -227,14 +222,6 @@ class Server:
                     elif type == TBframe.CLIENT_TAG:
                         client['tag'] = value
                         print 'client {0} tag: {1}'.format(client['uuid'],repr(value))
-            except (socket.timeout, ssl.SSLError) as e:
-                if ENCRYPT_CLIENT == True and e.message == 'The read operation timed out':
-                    continue
-                elif ENCRYPT_CLIENT == False and e.message == 'timed out':
-                    continue
-                else:
-                    if DEBUG: traceback.print_exc()
-                    break
             except:
                 if DEBUG: traceback.print_exc()
                 break
@@ -388,18 +375,15 @@ class Server:
                 using_list.append([client['uuid'], port])
                 self.send_device_list_to_all()
 
-    def terminal_serve_thread(self, terminal):
-        self.send_device_list_to_terminal(terminal)
+    def terminal_serve_thread(self, conn, addr):
+        terminal = {'socket':conn, 'addr':addr}
+        self.terminal_list.append(terminal)
         using_list = []
-        terminal['socket'].settimeout(1)
-        heartbeat_timeout = time.time() + 30
         msg = ''
+        self.conn_timeout[conn] = {'type': 'terminal', 'addr': addr, 'timeout': time.time() + 30}
+        self.send_device_list_to_terminal(terminal)
         while self.keep_running:
             try:
-                if time.time() > heartbeat_timeout:
-                    print "terminal {0} heartbeat timeout".format(terminal['addr'])
-                    break
-
                 new_msg = terminal['socket'].recv(MAX_MSG_LENTH);
                 if new_msg == '':
                     break
@@ -410,7 +394,7 @@ class Server:
                     if type == TBframe.TYPE_NONE:
                         break
 
-                    heartbeat_timeout = time.time() + 30
+                    self.conn_timeout[conn]['timeout'] = time.time() + 30
                     if type == TBframe.FILE_BEGIN or type == TBframe.FILE_DATA or type == TBframe.FILE_END:
                         dev_str = value.split(':')[0]
                         uuid = dev_str.split(',')[0]
@@ -508,14 +492,6 @@ class Server:
                         terminal['socket'].send(data)
                         print "terminal {0}:{1}".format(terminal['addr'][0], terminal['addr'][1]),
                         print "downloading log of device {0}:{1} ... succeed".format(uuid, port)
-            except (socket.timeout, ssl.SSLError) as e:
-                if ENCRYPT_TERMINAL == True and e.message == 'The read operation timed out':
-                    continue
-                elif ENCRYPT_TERMINAL == False and e.message == 'timed out':
-                    continue
-                else:
-                    if DEBUG: traceback.print_exc()
-                    break
             except:
                 if DEBUG: traceback.print_exc()
                 break
@@ -561,9 +537,7 @@ class Server:
         while self.keep_running:
             try:
                 (conn, addr) = self.terminal_socket.accept()
-                terminal = {'socket':conn, 'addr':addr}
-                self.terminal_list.append(terminal)
-                thread.start_new_thread(self.terminal_serve_thread, (terminal,))
+                thread.start_new_thread(self.terminal_serve_thread, (conn, addr,))
                 print "terminal ", addr," connected"
             except:
                 traceback.print_exc()
@@ -607,6 +581,15 @@ class Server:
                         continue
                     shutil.rmtree('server/' + fname)
                 datestr = time.strftime("%Y-%m-%d")
+
+            #disconnect timeout connections
+            now = time.time()
+            for conn in list(self.conn_timeout):
+                if now <= self.conn_timeout[conn]['timeout']:
+                    continue
+                conn.close()
+                print self.conn_timeout[conn]['type'], self.conn_timeout[conn]['addr'], 'timeout'
+                self.conn_timeout.pop(conn)
 
             #generate and save statistics data
             client_cnt = 0

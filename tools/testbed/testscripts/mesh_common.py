@@ -6,7 +6,7 @@ def allocate_devices(at, model, number, timeout):
     if not model or model.lower() not in models:
         print "error: unsupported model {0}".format(repr(model))
         return []
-    allocated = at.device_allocate(model, number, timeout)
+    allocated = at.device_allocate(model, number, timeout, 'mesh')
     if len(allocated) != number:
         print "error: request device allocation failed"
         return []
