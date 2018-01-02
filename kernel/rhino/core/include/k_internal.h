@@ -85,6 +85,8 @@ extern klist_t      g_res_list;
 #if (RHINO_CONFIG_WORKQUEUE > 0)
 extern klist_t       g_workqueue_list_head;
 extern kmutex_t      g_workqueue_mutex;
+extern kworkqueue_t  g_workqueue_default;
+extern cpu_stack_t   g_workqueue_stack[RHINO_CONFIG_WORKQUEUE_STACK_SIZE];
 #endif
 
 #if (RHINO_CONFIG_MM_TLF > 0)
