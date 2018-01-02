@@ -276,7 +276,7 @@ static int drv_acc_bosch_bma253_set_power_mode(i2c_dev_t* drv, dev_power_mode_e 
     return 0;
 }
 
-static int drv_acc_bosch_bma253_set_odr(i2c_dev_t* drv, uint32_t odr)
+static int drv_acc_bosch_bma253_set_range(i2c_dev_t* drv, uint32_t range)
 {
     int ret = 0;
     uint8_t value = 0x00;
@@ -286,8 +286,7 @@ static int drv_acc_bosch_bma253_set_odr(i2c_dev_t* drv, uint32_t odr)
         return ret;
     }
 
-    switch (odr){
-        
+    switch (range){
         case ACC_RANGE_2G:{
             value  = BMA253_SET_BITSLICE(value,BMA253_RANGE_SELECT,BMA253_RANGE_2G);
         }break;
@@ -438,7 +437,7 @@ int drv_acc_bosch_bma253_init(void){
         return -1;
     }
 
-    ret = drv_acc_bosch_bma253_set_odr(&bma253_ctx, ACC_RANGE_8G);
+    ret = drv_acc_bosch_bma253_set_range(&bma253_ctx, ACC_RANGE_8G);
     if(unlikely(ret)){
         return -1;
     }
