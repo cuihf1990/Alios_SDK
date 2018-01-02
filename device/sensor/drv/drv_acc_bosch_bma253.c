@@ -286,8 +286,7 @@ static int drv_acc_bosch_bma253_set_range(i2c_dev_t* drv, uint32_t range)
         return ret;
     }
 
-    switch (uint32_t ){
-        
+    switch (range){
         case ACC_RANGE_2G:{
             value  = BMA253_SET_BITSLICE(value,BMA253_RANGE_SELECT,BMA253_RANGE_2G);
         }break;
