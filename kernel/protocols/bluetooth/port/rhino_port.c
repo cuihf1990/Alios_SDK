@@ -16,7 +16,42 @@
 #define BT_DBG_ENABLED IS_ENABLED(CONFIG_BLUETOOTH_DEBUG_CORE)
 
 #include <bluetooth/log.h>
-#include <k_api.h>
+#include <stddef.h>
+#include <stdint.h>
+#include <string.h>
+#include <k_config.h>
+#include <k_default_config.h>
+#include <k_types.h>
+#include <k_err.h>
+#include <k_critical.h>
+#include <k_sys.h>
+#include <k_bitmap.h>
+#include <k_list.h>
+#include <k_obj.h>
+#include <k_sched.h>
+#include <k_task.h>
+#include <k_ringbuf.h>
+#include <k_queue.h>
+#include <k_buf_queue.h>
+#include <k_sem.h>
+#include <k_task_sem.h>
+#include <k_mutex.h>
+#include <k_timer.h>
+#include <k_time.h>
+#include <k_event.h>
+#include <k_obj_set.h>
+#include <k_stats.h>
+#include <k_mm_debug.h>
+#include <k_mm_blk.h>
+#include <k_mm_region.h>
+#include <k_mm.h>
+#include <k_workqueue.h>
+#include <k_internal.h>
+#include <k_trace.h>
+#include <k_soc.h>
+#include <k_hook.h>
+#include <port.h>
+#include <k_endian.h>
 #include "atomic.h"
 
 extern kstat_t krhino_queue_dyn_create(kqueue_t **queue, const name_t *name, size_t msg_num);

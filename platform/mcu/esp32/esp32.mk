@@ -102,7 +102,10 @@ endif
 
 ble := 0
 ifneq ($(ble),0)
+$(NAME)_COMPONENTS += protocols.bluetooth
 GLOBAL_INCLUDES += $(ESP_INC_PATH)/bt/include
+$(NAME)_INCLUDES += ../../../kernel/protocols/bluetooth/core/include
+$(NAME)_SOURCES  += hal/hci_driver.c
 $(NAME)_PREBUILT_LIBRARY += lib/libbt.a
 $(NAME)_PREBUILT_LIBRARY += lib/libbtdm_app.a
 GLOBAL_DEFINES   += CONFIG_ESP32_WITH_BLE
