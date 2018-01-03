@@ -266,7 +266,7 @@ static void uData_service_dispatcher(input_event_t *event, void *priv_data)
         return -1;
     }
     
-    switch(event->code ){
+    switch(event->code){
         case CODE_UDATA_DEV_READ:{
             memset(service->payload, 0, DATA_SIZE);
             ret = abs_data_read(event->value, service->payload, DATA_SIZE);

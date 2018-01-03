@@ -64,7 +64,7 @@ typedef enum
 struct _abs_cali_cb_t {
     sensor_tag_e tag;
     int (*calibrated_algo_process_cb)(sensor_tag_e tag, void* pData); /* callback for calibrated algo */
-}__attribute__ ((packed));
+};
 typedef struct _abs_cali_cb_t abs_cali_cb_t;
 
 struct _abs_data_pkg_t {
@@ -75,7 +75,7 @@ struct _abs_data_pkg_t {
     uint64_t                  cur_timestamp; /* the current timestamp for every sensor, the unit is ms */
     int (*calibrated_algo_process_cb)(void* pData); /* callback for calibrated algo */
     dev_sensor_full_info_t    full_info;
-}__attribute__ ((packed));
+};
 typedef struct _abs_data_pkg_t  abs_data_pkg_t;
 
 /* sensor service manager layer*/
@@ -88,14 +88,14 @@ struct _uData_service_t {
     uint8_t                    payload[DATA_SIZE];
     size_t(*service_process_cb)(sensor_tag_e tag, void* pdata);   /* process callback for udata service handle */
     int(*service_ioctl_cb)(udata_type_e type, sensor_tag_e tag); /* ioclt callback for udata service handle */
-}__attribute__ ((packed));
+};
 typedef struct _uData_service_t uData_service_t;
 
 struct _sensor_msg_pkg_t {
     sensor_tag_e        tag;
     uint8_t             cmd;
     dev_sensor_config_t config;
-}__attribute__ ((packed));
+};
 typedef struct _sensor_msg_pkg_t  sensor_msg_pkg_t;
 
 /* define the udata serivce struct here, please aline with aliyun side
