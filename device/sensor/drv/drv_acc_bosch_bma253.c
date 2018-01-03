@@ -177,6 +177,10 @@
 
 #define BMA253_DEFAULT_ODR_100HZ          (100)
 
+//bma253 sensitivity factor table, the unit is LSB/g
+static uint32_t bma253_factor[4] = { 128, 256, 512, 1024 };
+static uint32_t current_factor = 0;
+
 #define BMA253_GET_BITSLICE(regvar, bitname)\
 ((regvar & bitname##_MSK) >> bitname##_POS)
 
@@ -331,6 +335,7 @@ static int drv_acc_bosch_bma253_set_odr(i2c_dev_t* drv, uint32_t odr)
     if(unlikely(ret)){
         return ret;
     }
+    return 0;    
 }
 
 static int drv_acc_bosch_bma253_set_range(i2c_dev_t* drv, uint32_t range)
@@ -368,6 +373,12 @@ static int drv_acc_bosch_bma253_set_range(i2c_dev_t* drv, uint32_t range)
     if(unlikely(ret)){
         return ret;
     }
+    
+    if((range >= ACC_RANGE_2G)&&(range <= ACC_RANGE_16G)){
+        current_factor = bma253_factor[range];
+    }
+    
+    return 0;
 }
 
 
@@ -425,7 +436,12 @@ static int drv_acc_bosch_bma253_read(void *buf, size_t len)
     accel->data[DATA_AXIS_Z] = (int16_t)((((int32_t)((int8_t)reg[5]))<< BMA253_SHIFT_EIGHT_BITS)|(reg[4]&BMA253_12_BIT_SHIFT));
     accel->data[DATA_AXIS_Z] = accel->data[DATA_AXIS_Z] >> BMA253_SHIFT_FOUR_BITS;
 
-
+    if(current_factor != 0){
+        // the unit of acc is mg, 1000 mg = 1 g.
+        accel->data[DATA_AXIS_X] = accel->data[DATA_AXIS_X] * ACCELEROMETER_UNIT_FACTOR / current_factor;
+        accel->data[DATA_AXIS_Y] = accel->data[DATA_AXIS_Y] * ACCELEROMETER_UNIT_FACTOR / current_factor;
+        accel->data[DATA_AXIS_Z] = accel->data[DATA_AXIS_Z] * ACCELEROMETER_UNIT_FACTOR / current_factor;
+    }
     accel->timestamp = aos_now_ms();
     len = sizeof(accel_data_t);
     return 0;

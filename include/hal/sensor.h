@@ -58,6 +58,10 @@
 #define SENSOR_STR  "sensor: "   /* sensor debug header */
 #define ERROR_LINE  "error on line is "   
 
+#define ACCELEROMETER_UNIT_FACTOR    1000    //mg
+#define MAGNETOMETER_UNIT_FACTOR     1000    //mGauss
+#define GYROSCOPE_UNIT_FACTOR        1000000 //uDPS
+
 /* add the new sensor type into the last postion  */
 typedef enum{
     TAG_DEV_ACC = 0,	/* Accelerometer */
