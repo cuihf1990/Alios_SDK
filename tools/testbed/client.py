@@ -1,4 +1,4 @@
-import os, sys, time, platform, json, traceback, random, re
+import os, sys, time, platform, json, traceback, random, re, uuid
 import socket, ssl, thread, threading, subprocess, signal, Queue, importlib
 import TBframe
 
@@ -19,7 +19,7 @@ if platform.system() == 'Windows':
 else:
     import glob
 
-MAX_MSG_LENTH = 2000
+MAX_MSG_LENTH = 10240
 
 def signal_handler(sig, frame):
     print "received SIGINT"
@@ -46,14 +46,14 @@ class Client:
             self.poll_str += '{0:02x}'.format(ord(byte))
         self.poll_str += 'm'
         self.poll_interval = 60
-        self.uuid = ''
+        self.uuid = '{0:012x}'.format(uuid.getnode())
         self.model_interface = {}
         self.mesh_changed = [re.compile('become leader'),
                              re.compile('become detached'),
                              re.compile('allocate sid 0x[0-9a-f]{4}, become [0-9] in net [0-9a-f]{4}')]
         self.neighbor_changed = [re.compile('sid [0-9a-f]{4} mac [0-9a-f]{16} is replaced'),
                                  re.compile('[0-9a-f]{1,4} neighbor [0-9a-f]{16} become inactive')]
-        self.uuid_changed = ["ACCS: connected",
+        self.device_uuid_changed = ["ACCS: connected",
                              "ACCS: disconnected",
                              'GATEWAY: connect to server succeed']
 
@@ -304,7 +304,7 @@ class Client:
             #print "device {0} neighbors changed".format(port)
             queue_safeput(pcmd_queue, ['umesh nbrs', 33, 0.3])
             return
-        for flog in self.uuid_changed:
+        for flog in self.device_uuid_changed:
             if flog not in log:
                 continue
             #print log
@@ -598,24 +598,6 @@ class Client:
 
         if os.path.exists('client') == False:
             os.mkdir('client')
-        if os.path.exists('client/.uuid') == True:
-            try:
-                file = open('client/.uuid','rb')
-                self.uuid = json.load(file)
-                file.close()
-            except:
-                print "read uuid from file failed"
-        if not self.uuid:
-            bytes = os.urandom(6)
-            self.uuid = ''
-            for byte in bytes:
-                self.uuid += '{0:02x}'.format(ord(byte))
-            try:
-                file = open('client/.uuid','w')
-                file.write(json.dumps(self.uuid))
-                file.close()
-            except:
-                print "save uuid to file failed"
         signal.signal(signal.SIGINT, signal_handler)
 
         self.send_packet(TBframe.CLIENT_UUID, self.uuid)

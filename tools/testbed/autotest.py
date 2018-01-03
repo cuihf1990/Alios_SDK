@@ -5,7 +5,7 @@ import subprocess, thread, threading, random, re
 from operator import itemgetter
 import TBframe
 
-MAX_MSG_LENTH = 2000
+MAX_MSG_LENTH = 10240
 ENCRYPT = True
 DEBUG = True
 

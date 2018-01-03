@@ -2,7 +2,7 @@ import os, sys, time, socket, ssl, signal, re
 import thread, threading, json, traceback, shutil
 import TBframe
 
-MAX_MSG_LENTH = 2000
+MAX_MSG_LENTH = 10240
 ENCRYPT_CLIENT = True
 ENCRYPT_TERMINAL = True
 DEBUG = True
