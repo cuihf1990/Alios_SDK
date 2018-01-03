@@ -12,5 +12,5 @@ $(NAME)_TYPE := kernel
 endif
 endif
 
-$(NAME)_PREBUILT_LIBRARY := lib/$(HOST_ARCH)/plat_gen.a
+$(NAME)_PREBUILT_LIBRARY := lib/$(HOST_ARCH)/libplat_gen.a
 
