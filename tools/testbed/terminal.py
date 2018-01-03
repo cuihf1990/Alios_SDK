@@ -5,7 +5,7 @@ import subprocess, thread, threading, pickle
 from operator import itemgetter
 import TBframe
 
-MAX_MSG_LENTH = 2000
+MAX_MSG_LENTH = 10240
 CMD_WINDOW_HEIGHT = 2
 DEV_WINDOW_WIDTH  = 36
 LOG_WINDOW_HEIGHT = 30

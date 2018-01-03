@@ -19,7 +19,7 @@ if platform.system() == 'Windows':
 else:
     import glob
 
-MAX_MSG_LENTH = 2000
+MAX_MSG_LENTH = 10240
 
 def signal_handler(sig, frame):
     print "received SIGINT"
