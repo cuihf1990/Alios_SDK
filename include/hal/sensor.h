@@ -215,7 +215,7 @@ typedef struct _sensor_list_t{
     uint8_t     list[TAG_DEV_SENSOR_NUM_MAX];
 }sensor_list_t;
 
-struct _dev_sensor_info_t {
+typedef struct _dev_sensor_info_t {
     vendor_id_e             vendor;
     char*                   model;
     value_unit_e            unit;
@@ -223,33 +223,28 @@ struct _dev_sensor_info_t {
     uint32_t                range_min;
     dev_health_state_e	    health;
     //sensor_list_t           list;
-}__attribute__ ((packed));
-typedef struct _dev_sensor_info_t  dev_sensor_info_t;
+}dev_sensor_info_t;
 
-struct _dev_sensor_full_info_t {
+typedef struct _dev_sensor_full_info_t {
     dev_sensor_info_t        info;
     dev_sensor_config_t      config;
-}__attribute__ ((packed));
-typedef struct _dev_sensor_full_info_t  dev_sensor_full_info_t;
+}dev_sensor_full_info_t;
 
-struct _dev_sensor_data_t {
+typedef struct _dev_sensor_data_t {
     uint64_t    timestamp;
     int32_t     data[3];
-}__attribute__ ((packed));
-typedef struct _dev_sensor_data_t  dev_sensor_data_t;
+}dev_sensor_data_t;
 
-struct _dev_sensor_pkg_t {
+typedef struct _dev_sensor_pkg_t {
     sensor_tag_e             tag;
     union{
         dev_sensor_info_t    info;
         dev_sensor_config_t  config;
         dev_sensor_data_t    data;
     }allocator;
-}__attribute__ ((packed));
-typedef struct _dev_sensor_pkg_t  dev_sensor_pkg_t;
+}dev_sensor_pkg_t;
 
-
-struct _sensor_obj_t {
+typedef struct _sensor_obj_t {
     char*                    path;
     sensor_tag_e             tag;
     dev_io_port_e            io_port;
@@ -265,8 +260,7 @@ struct _sensor_obj_t {
     int (*write)(const void *buf, size_t len);
     int (*ioctl)(int cmd, unsigned long arg);
     void(*irq_handle)(void);
-}__attribute__ ((packed));
-typedef struct _sensor_obj_t sensor_obj_t;
+}sensor_obj_t;
 
 typedef struct _sensor_node_t{
 	sensor_tag_e  tag;
@@ -280,6 +274,15 @@ typedef enum{
     ACC_RANGE_8G,
     ACC_RANGE_16G,
 }acc_range_e;
+
+typedef enum{
+    GYRO_RANGE_125DPS,
+    GYRO_RANGE_250DPS,
+    GYRO_RANGE_500DPS,
+    GYRO_RANGE_1000DPS,
+    GYRO_RANGE_2000DPS
+}gyro_range_e;
+
     
 #endif /* HAL_SENSOR_H */
 

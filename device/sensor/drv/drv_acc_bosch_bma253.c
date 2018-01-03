@@ -129,6 +129,14 @@
 #define BMA253_RANGE_8G                    (8)
 #define BMA253_RANGE_16G                   (12)
 
+#define BMA253_BW_15_63                    (15)
+#define BMA253_BW_31_25                    (31)
+#define BMA253_BW_62_5                     (62)
+#define BMA253_BW_125                      (125)
+#define BMA253_BW_250                      (250)
+#define BMA253_BW_500                      (500)
+#define BMA253_BW_1000                     (1000)
+
 #define BMA253_BW_7_81HZ                   (0x08)
 #define BMA253_BW_15_63HZ                  (0x09)
 #define BMA253_BW_31_25HZ                  (0x0A)
@@ -137,6 +145,7 @@
 #define BMA253_BW_250HZ                    (0x0D)
 #define BMA253_BW_500HZ                    (0x0E)
 #define BMA253_BW_1000HZ                   (0x0F)
+#define BMA253_BW_BIT_MASK                 (0x0F)
 
 #define BMA253_SLEEP_DURN_0_5MS            (0x05)
 #define BMA253_SLEEP_DURN_1MS              (0x06)
@@ -165,6 +174,8 @@
 #define BMA253_LOW_POWER_MODE_LEN          (1)
 #define BMA253_LOW_POWER_MODE_MSK          (0x40)
 #define BMA253_LOW_POWER_MODE_REG          BMA253_LOW_NOISE_CTRL_ADDR
+
+#define BMA253_DEFAULT_ODR_100HZ          (100)
 
 #define BMA253_GET_BITSLICE(regvar, bitname)\
 ((regvar & bitname##_MSK) >> bitname##_POS)
@@ -276,6 +287,52 @@ static int drv_acc_bosch_bma253_set_power_mode(i2c_dev_t* drv, dev_power_mode_e 
     return 0;
 }
 
+static int drv_acc_bosch_bma253_set_odr(i2c_dev_t* drv, uint32_t odr)
+{
+    int ret = 0;
+    uint8_t value = 0x00;
+    uint32_t bw = odr/2;
+
+    ret = sensor_i2c_read(drv, BMA253_BW_SELECT_ADDR, &value, I2C_DATA_LEN, I2C_OP_RETRIES);
+    if(unlikely(ret)){
+        return ret;
+    }
+
+    if(bw >= BMA253_BW_1000){
+        value &= BMA253_BW_BIT_MASK; 
+        value |= BMA253_BW_1000HZ;
+    }
+    else if(bw >= BMA253_BW_500){
+        value &= BMA253_BW_BIT_MASK; 
+        value |= BMA253_BW_500HZ;
+    }
+    else if(bw >= BMA253_BW_250){
+        value &= BMA253_BW_BIT_MASK; 
+        value |= BMA253_BW_250HZ;
+    }
+    else if(bw >= BMA253_BW_125){
+        value &= BMA253_BW_BIT_MASK; 
+        value |= BMA253_BW_125HZ;
+    }
+    else if(bw >= BMA253_BW_62_5){
+        value &= BMA253_BW_BIT_MASK; 
+        value |= BMA253_BW_62_50HZ;
+    }
+    else if(bw >= BMA253_BW_31_25){
+        value &= BMA253_BW_BIT_MASK; 
+        value |= BMA253_BW_31_25HZ;
+    }
+    else{
+        value &= BMA253_BW_BIT_MASK; 
+        value |= BMA253_BW_15_63HZ;
+    }
+    
+    ret = sensor_i2c_write(drv, BMA253_BW_SELECT_ADDR, &value, I2C_DATA_LEN, I2C_OP_RETRIES);
+    if(unlikely(ret)){
+        return ret;
+    }
+}
+
 static int drv_acc_bosch_bma253_set_range(i2c_dev_t* drv, uint32_t range)
 {
     int ret = 0;
@@ -385,6 +442,12 @@ static int drv_acc_bosch_bma253_ioctl(int cmd, unsigned long arg)
                 return -1;
             }
         }break;
+        case SENSOR_IOCTL_RANGE_SET:{
+            ret = drv_acc_bosch_bma253_set_range(&bma253_ctx, arg);
+            if(unlikely(ret)){
+                return -1;
+            }
+        }break;
         case SENSOR_IOCTL_SET_POWER:{
             ret = drv_acc_bosch_bma253_set_power_mode(&bma253_ctx, arg);
             if(unlikely(ret)){
@@ -442,6 +505,16 @@ int drv_acc_bosch_bma253_init(void){
         return -1;
     }
 
+    //set odr is 100hz, and will update
+    ret = drv_acc_bosch_bma253_set_odr(&bma253_ctx, BMA253_DEFAULT_ODR_100HZ);
+    if(unlikely(ret)){
+        return -1;
+    }
+    
+    ret = drv_acc_bosch_bma253_set_power_mode(&bma253_ctx, DEV_POWER_OFF);
+    if(unlikely(ret)){
+        return -1;
+    }
 
     /* update the phy sensor info to sensor hal */
     LOG("%s %s successfully \n", SENSOR_STR, __func__);
