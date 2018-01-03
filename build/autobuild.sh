@@ -121,7 +121,7 @@ aos make clean > /dev/null 2>&1
 for target in ${mk3060_targets}; do
     for platform in ${mk3060_platforms}; do
         for bins in ${bins_type}; do
-            if [ "${target}" = "tls" ] || [ "${target}" = "meshapp" ] || [ "${target}" = "uDataapp" ]; then
+            if [ "${target}" = "tls" ] || [ "${target}" = "meshapp" ]; then
                 continue
             fi
             if [ "${DEBUG}" != "no" ]; then

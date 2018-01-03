@@ -1,6 +1,6 @@
 NAME := sensor
 
-#$(NAME)_TYPE := kernel
+$(NAME)_TYPE := kernel
 
 $(NAME)_SOURCES += \
         hal/sensor_hal.c \
