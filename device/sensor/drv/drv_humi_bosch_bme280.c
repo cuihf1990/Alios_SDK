@@ -109,8 +109,8 @@
 #define BME280_FILTER_MSK                   (0x1C)
 #define BME280_FILTER_POS		            (0x02)
 
-#define BME280_STANDBY_MSK		            (0xE0)
-#define BME280_STANDBY_POS		            (0x05)
+#define BME280_STANDBY_MSK                  (0xE0)
+#define BME280_STANDBY_POS                  (0x05)
 
 #define BME280_SHIFT_BY_01_BITS             (1)
 #define BME280_SHIFT_BY_02_BITS             (2)

@@ -77,9 +77,9 @@
 #define BMP280_SHIFT_BY_47_BITS                         (47)
 
 
-#define	BMP280_PRESSURE_TEMPERATURE_CALIB_DATA_LENGTH   (24)
-#define	BMP280_GEN_READ_WRITE_DATA_LENGTH               (1)
-#define BMP280_REGISTER_READ_DELAY				        (1)
+#define BMP280_PRESSURE_TEMPERATURE_CALIB_DATA_LENGTH   (24)
+#define BMP280_GEN_READ_WRITE_DATA_LENGTH               (1)
+#define BMP280_REGISTER_READ_DELAY                      (1)
 #define	BMP280_TEMPERATURE_DATA_LENGTH				    (3)
 #define	BMP280_PRESSURE_DATA_LENGTH				        (3)
 #define	BMP280_ALL_DATA_FRAME_LENGTH				    (6)
@@ -97,8 +97,8 @@
 #define	BMP280_DATA_FRAME_SIZE                          (6)
 #define	BMP280_CALIB_DATA_SIZE                          (24)
 
-#define	BMP280_TEMPERATURE_MSB_DATA		                (0)
-#define	BMP280_TEMPERATURE_LSB_DATA		                (1)
+#define BMP280_TEMPERATURE_MSB_DATA                     (0)
+#define BMP280_TEMPERATURE_LSB_DATA                     (1)
 #define	BMP280_TEMPERATURE_XLSB_DATA                    (2)
 
 
@@ -139,7 +139,7 @@
 
 
 #define BMP280_ULTRA_LOW_POWER_MODE                     (0x00)
-#define BMP280_LOW_POWER_MODE	                        (0x01)
+#define BMP280_LOW_POWER_MODE                           (0x01)
 #define BMP280_STANDARD_RESOLUTION_MODE                 (0x02)
 #define BMP280_HIGH_RESOLUTION_MODE                     (0x03)
 #define BMP280_ULTRA_HIGH_RESOLUTION_MODE               (0x04)
@@ -215,46 +215,45 @@
 #define BMP280_TEMPERATURE_XLSB_REG_DATA__LEN           (4)
 #define BMP280_TEMPERATURE_XLSB_REG_DATA__REG           (BMP280_TEMPERATURE_XLSB_REG)
 
-#define	BMP280_TEMPERATURE_MSB_DATA		                (0)
-#define	BMP280_TEMPERATURE_LSB_DATA		                (1)
-#define	BMP280_TEMPERATURE_XLSB_DATA		            (2)
+#define BMP280_TEMPERATURE_MSB_DATA                     (0)
+#define BMP280_TEMPERATURE_LSB_DATA                     (1)
+#define BMP280_TEMPERATURE_XLSB_DATA                    (2)
 
-#define	BMP280_PRESSURE_MSB_DATA		                (0)
-#define	BMP280_PRESSURE_LSB_DATA		                (1)
-#define	BMP280_PRESSURE_XLSB_DATA		                (2)
+#define BMP280_PRESSURE_MSB_DATA                        (0)
+#define BMP280_PRESSURE_LSB_DATA                        (1)
+#define BMP280_PRESSURE_XLSB_DATA                       (2)
 
-#define	BMP280_DATA_FRAME_PRESSURE_MSB_BYTE	            (0)
-#define	BMP280_DATA_FRAME_PRESSURE_LSB_BYTE	            (1)
-#define	BMP280_DATA_FRAME_PRESSURE_XLSB_BYTE	        (2)
-#define	BMP280_DATA_FRAME_TEMPERATURE_MSB_BYTE	        (3)
-#define	BMP280_DATA_FRAME_TEMPERATURE_LSB_BYTE	        (4)
-#define	BMP280_DATA_FRAME_TEMPERATURE_XLSB_BYTE	        (5)
+#define BMP280_DATA_FRAME_PRESSURE_MSB_BYTE	            (0)
+#define BMP280_DATA_FRAME_PRESSURE_LSB_BYTE	            (1)
+#define BMP280_DATA_FRAME_PRESSURE_XLSB_BYTE	        (2)
+#define BMP280_DATA_FRAME_TEMPERATURE_MSB_BYTE	        (3)
+#define BMP280_DATA_FRAME_TEMPERATURE_LSB_BYTE	        (4)
+#define BMP280_DATA_FRAME_TEMPERATURE_XLSB_BYTE	        (5) 
 
-
-#define	BMP280_TEMPERATURE_CALIB_DIG_T1_LSB	            (0)
-#define	BMP280_TEMPERATURE_CALIB_DIG_T1_MSB	            (1)
-#define	BMP280_TEMPERATURE_CALIB_DIG_T2_LSB	            (2)
-#define	BMP280_TEMPERATURE_CALIB_DIG_T2_MSB	            (3)
-#define	BMP280_TEMPERATURE_CALIB_DIG_T3_LSB	            (4)
-#define	BMP280_TEMPERATURE_CALIB_DIG_T3_MSB             (5)
-#define	BMP280_PRESSURE_CALIB_DIG_P1_LSB	            (6)
-#define	BMP280_PRESSURE_CALIB_DIG_P1_MSB	            (7)
-#define	BMP280_PRESSURE_CALIB_DIG_P2_LSB	            (8)
-#define	BMP280_PRESSURE_CALIB_DIG_P2_MSB	            (9)
-#define	BMP280_PRESSURE_CALIB_DIG_P3_LSB	            (10)
-#define	BMP280_PRESSURE_CALIB_DIG_P3_MSB	            (11)
-#define	BMP280_PRESSURE_CALIB_DIG_P4_LSB	            (12)
-#define	BMP280_PRESSURE_CALIB_DIG_P4_MSB	            (13)
-#define	BMP280_PRESSURE_CALIB_DIG_P5_LSB	            (14)
-#define	BMP280_PRESSURE_CALIB_DIG_P5_MSB	            (15)
-#define	BMP280_PRESSURE_CALIB_DIG_P6_LSB	            (16)
-#define	BMP280_PRESSURE_CALIB_DIG_P6_MSB	            (17)
-#define	BMP280_PRESSURE_CALIB_DIG_P7_LSB	            (18)
-#define	BMP280_PRESSURE_CALIB_DIG_P7_MSB	            (19)
-#define	BMP280_PRESSURE_CALIB_DIG_P8_LSB	            (20)
-#define	BMP280_PRESSURE_CALIB_DIG_P8_MSB	            (21)
-#define	BMP280_PRESSURE_CALIB_DIG_P9_LSB	            (22)
-#define	BMP280_PRESSURE_CALIB_DIG_P9_MSB	            (23)
+#define BMP280_TEMPERATURE_CALIB_DIG_T1_LSB	            (0)
+#define BMP280_TEMPERATURE_CALIB_DIG_T1_MSB	            (1)
+#define BMP280_TEMPERATURE_CALIB_DIG_T2_LSB	            (2)
+#define BMP280_TEMPERATURE_CALIB_DIG_T2_MSB	            (3)
+#define BMP280_TEMPERATURE_CALIB_DIG_T3_LSB	            (4)
+#define BMP280_TEMPERATURE_CALIB_DIG_T3_MSB             (5)
+#define BMP280_PRESSURE_CALIB_DIG_P1_LSB                (6)
+#define BMP280_PRESSURE_CALIB_DIG_P1_MSB	            (7)
+#define BMP280_PRESSURE_CALIB_DIG_P2_LSB	            (8)
+#define BMP280_PRESSURE_CALIB_DIG_P2_MSB	            (9)
+#define BMP280_PRESSURE_CALIB_DIG_P3_LSB	            (10)
+#define BMP280_PRESSURE_CALIB_DIG_P3_MSB	            (11)
+#define BMP280_PRESSURE_CALIB_DIG_P4_LSB	            (12)
+#define BMP280_PRESSURE_CALIB_DIG_P4_MSB	            (13)
+#define BMP280_PRESSURE_CALIB_DIG_P5_LSB	            (14)
+#define BMP280_PRESSURE_CALIB_DIG_P5_MSB	            (15)
+#define BMP280_PRESSURE_CALIB_DIG_P6_LSB	            (16)
+#define BMP280_PRESSURE_CALIB_DIG_P6_MSB	            (17)
+#define BMP280_PRESSURE_CALIB_DIG_P7_LSB	            (18)
+#define BMP280_PRESSURE_CALIB_DIG_P7_MSB	            (19)
+#define BMP280_PRESSURE_CALIB_DIG_P8_LSB	            (20)
+#define BMP280_PRESSURE_CALIB_DIG_P8_MSB	            (21)
+#define BMP280_PRESSURE_CALIB_DIG_P9_LSB	            (22)
+#define BMP280_PRESSURE_CALIB_DIG_P9_MSB	            (23)
 
 #define BMP280_SOFT_RESRT_VALUE                         (0XB6)
 
@@ -361,7 +360,6 @@ static int drv_baro_bosch_bmp280_validate_id(i2c_dev_t* drv, uint8_t id_value)
         return -1;
     }
     
-    ret = sensor_i2c_read(drv, BMP280_CHIP_ID_REG, &value, I2C_DATA_LEN, I2C_OP_RETRIES);
     ret = sensor_i2c_read(drv, BMP280_CHIP_ID_REG, &value, I2C_DATA_LEN, I2C_OP_RETRIES);
     if(unlikely(ret)){
         return ret;
