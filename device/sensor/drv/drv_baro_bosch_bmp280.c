@@ -506,7 +506,7 @@ static int  drv_baro_bosch_bmp280_soft_reset(i2c_dev_t* drv)
     int     ret = 0;
     uint8_t v_data_u8 = BMP280_SOFT_RESRT_VALUE;
     
-    ret = sensor_i2c_write(drv,BMP280_CONFIG_REG_STANDBY_DURN__REG,
+    ret = sensor_i2c_write(drv,BMP280_RST_REG,
                             &v_data_u8,I2C_DATA_LEN,I2C_OP_RETRIES);
     if(unlikely(ret)){
         return ret;
