@@ -27,14 +27,14 @@ void ble_sample(void)
     };
     int err;
 
-    uint8_t uuid_data[] = { 0x1, 0x6 };
-    char *adv_name = "AOS-ESP-BLE-HELLO";
+    uint8_t data[] = { 0x6 };  // LE General Discoverable and BR/EDR not supported
+    char *adv_name = "AOS-BLE-HELLO";
     const struct bt_data adv_data[] = {
-        BT_DATA(BT_DATA_UUID16_SOME, uuid_data, 2),
+        BT_DATA(BT_DATA_FLAGS, data, 1),
         BT_DATA(BT_DATA_NAME_COMPLETE, adv_name, strlen(adv_name))
     };
 
-    printf("Starting Scanner/Advertiser Demo\n");
+    printf("Starting Advertiser Demo\n");
 
     hci_driver_init();
     err = bt_enable(NULL);
