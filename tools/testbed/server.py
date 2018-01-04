@@ -2,7 +2,7 @@ import os, sys, time, socket, ssl, signal, re
 import thread, threading, json, traceback, shutil
 import TBframe
 
-MAX_MSG_LENTH = 10240
+MAX_MSG_LENTH = 8192
 ENCRYPT_CLIENT = True
 ENCRYPT_TERMINAL = True
 DEBUG = True
@@ -146,6 +146,8 @@ class Server:
                         self.send_device_list_to_all()
                     elif type == TBframe.DEVICE_LOG:
                         port = value.split(':')[0]
+                        if port not in client['devices']:
+                            continue
                         #forwad log to subscribed devices
                         if client['devices'][port]['log_subscribe'] != [] and \
                            ('tag' not in client or client['tag'] not in value):
@@ -226,6 +228,7 @@ class Server:
                 if DEBUG: traceback.print_exc()
                 break
         conn.close()
+        self.conn_timeout.pop(conn)
         if client:
             for port in client['devices']:
                 if client['devices'][port]['valid'] == False:
@@ -515,6 +518,7 @@ class Server:
                     if client['devices'][port]['using'] > 0:
                         client['devices'][port]['using'] -= 1
         terminal['socket'].close()
+        self.conn_timeout.pop(conn)
         print "terminal ", terminal['addr'], "disconnected"
         self.terminal_list.remove(terminal)
         self.send_device_list_to_all()

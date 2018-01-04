@@ -1,7 +1,8 @@
-import os, sys, time, platform, json, traceback, random, re, uuid
+import os, sys, time, platform, json, traceback, random, re, glob, uuid
 import socket, ssl, thread, threading, subprocess, signal, Queue, importlib
 import TBframe
 
+MAX_MSG_LENTH = 8192
 ENCRYPT = True
 DEBUG = True
 LOCALLOG = False
@@ -13,13 +14,6 @@ except:
     print 'intall@ubuntu: sudo apt-get install python-pip'
     print '               sudo pip install pyserial'
     sys.exit(1)
-
-if platform.system() == 'Windows':
-    import serial.tools.list_ports
-else:
-    import glob
-
-MAX_MSG_LENTH = 10240
 
 def signal_handler(sig, frame):
     print "received SIGINT"
