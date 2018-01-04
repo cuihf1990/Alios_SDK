@@ -725,12 +725,13 @@ int drv_humi_bosch_bme280_init(void){
         return -1;
     }
 
-    ret = drv_humi_bosch_bme280_get_cali_parm(&bme280_ctx);
+
+    ret = drv_humi_bosch_bme280_set_default_config(&bme280_ctx);
     if(unlikely(ret)){
         return -1;
     }
     
-    ret = drv_humi_bosch_bme280_set_default_config(&bme280_ctx);
+    ret = drv_humi_bosch_bme280_get_cali_parm(&bme280_ctx);
     if(unlikely(ret)){
         return -1;
     }

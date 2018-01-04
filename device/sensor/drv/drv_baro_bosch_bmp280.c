@@ -828,12 +828,12 @@ int drv_baro_bosch_bmp280_init(void)
         return -1;
     }
 
-    ret = drv_baro_bosch_bmp280_get_calib_param(&bmp280_ctx);
+    ret = drv_baro_bosch_bmp280_set_default_config(&bmp280_ctx);
     if(unlikely(ret)){
         return -1;
     }
-
-    ret = drv_baro_bosch_bmp280_set_default_config(&bmp280_ctx);
+    
+    ret = drv_baro_bosch_bmp280_get_calib_param(&bmp280_ctx);
     if(unlikely(ret)){
         return -1;
     }
