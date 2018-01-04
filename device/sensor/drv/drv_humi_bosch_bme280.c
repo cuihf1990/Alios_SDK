@@ -147,33 +147,33 @@
 
 
 typedef struct _bme280_cali_table_t {
-	uint16_t dig_T1;
-	int16_t  dig_T2;
-	int16_t  dig_T3;
-	uint16_t dig_P1;
-	int16_t  dig_P2;
-	int16_t  dig_P3;
-	int16_t  dig_P4;
-	int16_t  dig_P5;
-	int16_t  dig_P6;
-	int16_t  dig_P7;
-	int16_t  dig_P8;
-	int16_t  dig_P9;
-	uint8_t  dig_H1;
-	int16_t  dig_H2;
-	uint8_t  dig_H3;
-	int16_t  dig_H4;
-	int16_t  dig_H5;
-	int8_t   dig_H6;
-	int32_t  t_fine;
+    uint16_t dig_T1;
+    int16_t  dig_T2;
+    int16_t  dig_T3;
+    uint16_t dig_P1;
+    int16_t  dig_P2;
+    int16_t  dig_P3;
+    int16_t  dig_P4;
+    int16_t  dig_P5;
+    int16_t  dig_P6;
+    int16_t  dig_P7;
+    int16_t  dig_P8;
+    int16_t  dig_P9;
+    uint8_t  dig_H1;
+    int16_t  dig_H2;
+    uint8_t  dig_H3;
+    int16_t  dig_H4;
+    int16_t  dig_H5;
+    int8_t   dig_H6;
+    int32_t  t_fine;
 }bme280_cali_table_t;
 
 typedef struct _bme280_config_t {
-	uint8_t osr_p;
-	uint8_t osr_t;
-	uint8_t osr_h;
-	uint8_t filter;
-	uint8_t standby_time;
+    uint8_t osr_p;
+    uint8_t osr_t;
+    uint8_t osr_h;
+    uint8_t filter;
+    uint8_t standby_time;
 }bme280_config_t;
 
 static bme280_cali_table_t g_cali_table;
@@ -196,19 +196,19 @@ static int drv_humi_bosch_bme280_get_cali_temp(i2c_dev_t* drv)
         return ret;
     }
     
-	g_cali_table.dig_T1 = BME280_CONCAT_BYTES(calib_data[1], calib_data[0]);
-	g_cali_table.dig_T2 = (int16_t)BME280_CONCAT_BYTES(calib_data[3], calib_data[2]);
-	g_cali_table.dig_T3 = (int16_t)BME280_CONCAT_BYTES(calib_data[5], calib_data[4]);
-	g_cali_table.dig_P1 = BME280_CONCAT_BYTES(calib_data[7], calib_data[6]);
-	g_cali_table.dig_P2 = (int16_t)BME280_CONCAT_BYTES(calib_data[9], calib_data[8]);
-	g_cali_table.dig_P3 = (int16_t)BME280_CONCAT_BYTES(calib_data[11], calib_data[10]);
-	g_cali_table.dig_P4 = (int16_t)BME280_CONCAT_BYTES(calib_data[13], calib_data[12]);
-	g_cali_table.dig_P5 = (int16_t)BME280_CONCAT_BYTES(calib_data[15], calib_data[14]);
-	g_cali_table.dig_P6 = (int16_t)BME280_CONCAT_BYTES(calib_data[17], calib_data[16]);
-	g_cali_table.dig_P7 = (int16_t)BME280_CONCAT_BYTES(calib_data[19], calib_data[18]);
-	g_cali_table.dig_P8 = (int16_t)BME280_CONCAT_BYTES(calib_data[21], calib_data[20]);
-	g_cali_table.dig_P9 = (int16_t)BME280_CONCAT_BYTES(calib_data[23], calib_data[22]);
-	g_cali_table.dig_H1 = calib_data[25];
+    g_cali_table.dig_T1 = BME280_CONCAT_BYTES(calib_data[1], calib_data[0]);
+    g_cali_table.dig_T2 = (int16_t)BME280_CONCAT_BYTES(calib_data[3], calib_data[2]);
+    g_cali_table.dig_T3 = (int16_t)BME280_CONCAT_BYTES(calib_data[5], calib_data[4]);
+    g_cali_table.dig_P1 = BME280_CONCAT_BYTES(calib_data[7], calib_data[6]);
+    g_cali_table.dig_P2 = (int16_t)BME280_CONCAT_BYTES(calib_data[9], calib_data[8]);
+    g_cali_table.dig_P3 = (int16_t)BME280_CONCAT_BYTES(calib_data[11], calib_data[10]);
+    g_cali_table.dig_P4 = (int16_t)BME280_CONCAT_BYTES(calib_data[13], calib_data[12]);
+    g_cali_table.dig_P5 = (int16_t)BME280_CONCAT_BYTES(calib_data[15], calib_data[14]);
+    g_cali_table.dig_P6 = (int16_t)BME280_CONCAT_BYTES(calib_data[17], calib_data[16]);
+    g_cali_table.dig_P7 = (int16_t)BME280_CONCAT_BYTES(calib_data[19], calib_data[18]);
+    g_cali_table.dig_P8 = (int16_t)BME280_CONCAT_BYTES(calib_data[21], calib_data[20]);
+    g_cali_table.dig_P9 = (int16_t)BME280_CONCAT_BYTES(calib_data[23], calib_data[22]);
+    g_cali_table.dig_H1 = calib_data[25];
 
     return 0;
 }
@@ -216,28 +216,28 @@ static int drv_humi_bosch_bme280_get_cali_temp(i2c_dev_t* drv)
 static int drv_humi_bosch_bme280_get_cali_humi(i2c_dev_t* drv)
 {
     int ret = 0;
-	int16_t dig_H4_lsb;
-	int16_t dig_H4_msb;
-	int16_t dig_H5_lsb;
-	int16_t dig_H5_msb;
+    int16_t dig_H4_lsb;
+    int16_t dig_H4_msb;
+    int16_t dig_H5_lsb;
+    int16_t dig_H5_msb;
     
-	uint8_t table[BME280_HUMIDITY_CALIB_DATA_LEN] = {0};
+    uint8_t table[BME280_HUMIDITY_CALIB_DATA_LEN] = {0};
     ret = sensor_i2c_read(drv, BME280_HUMIDITY_CALIB_DATA_ADDR, table, BME280_HUMIDITY_CALIB_DATA_LEN, I2C_OP_RETRIES);
     if(unlikely(ret)){
         return -1;
     }
 
-	g_cali_table.dig_H2 = (int16_t)BME280_CONCAT_BYTES(table[1], table[0]);
-	g_cali_table.dig_H3 = table[2];
+    g_cali_table.dig_H2 = (int16_t)BME280_CONCAT_BYTES(table[1], table[0]);
+    g_cali_table.dig_H3 = table[2];
 
-	dig_H4_msb = (int16_t)(int8_t)table[3] * 16;
-	dig_H4_lsb = (int16_t)(table[4] & 0x0F);
-	g_cali_table.dig_H4 = dig_H4_msb | dig_H4_lsb;
+    dig_H4_msb = (int16_t)(int8_t)table[3] * 16;
+    dig_H4_lsb = (int16_t)(table[4] & 0x0F);
+    g_cali_table.dig_H4 = dig_H4_msb | dig_H4_lsb;
 
-	dig_H5_msb = (int16_t)(int8_t)table[5] * 16;
-	dig_H5_lsb = (int16_t)(table[4] >> 4);
-	g_cali_table.dig_H5 = dig_H5_msb | dig_H5_lsb;
-	g_cali_table.dig_H6 = (int8_t)table[6];
+    dig_H5_msb = (int16_t)(int8_t)table[5] * 16;
+    dig_H5_lsb = (int16_t)(table[4] >> 4);
+    g_cali_table.dig_H5 = dig_H5_msb | dig_H5_lsb;
+    g_cali_table.dig_H6 = (int8_t)table[6];
 
     return 0;
 }
@@ -245,7 +245,7 @@ static int drv_humi_bosch_bme280_get_cali_humi(i2c_dev_t* drv)
 static int drv_humi_bosch_bme280_get_cali_parm(i2c_dev_t* drv)
 {
     int ret = 0;
-	uint8_t table[BME280_HUMIDITY_CALIB_DATA_LEN] = {0};
+    uint8_t table[BME280_HUMIDITY_CALIB_DATA_LEN] = {0};
     
     ret = drv_humi_bosch_bme280_get_cali_temp(drv);
     if(unlikely(ret)){
@@ -295,10 +295,10 @@ static int drv_humi_bosch_bme280_validate_id(i2c_dev_t* drv,  uint8_t id_addr, u
 static int drv_humi_bosch_bme280_enter_sleep_mode(i2c_dev_t* drv)
 {
     int ret = 0;
-	uint8_t ctrl_hum;
-	uint8_t ctrl_meas;
+    uint8_t ctrl_hum;
+    uint8_t ctrl_meas;
     uint8_t data[4];
-	uint8_t reg_addr = BME280_CTRL_HUM_ADDR;
+    uint8_t reg_addr = BME280_CTRL_HUM_ADDR;
     if(drv == NULL){
         return -1;
     }
@@ -308,11 +308,11 @@ static int drv_humi_bosch_bme280_enter_sleep_mode(i2c_dev_t* drv)
         return ret;
     }
 
-	g_bme280_config.osr_h = BME280_GET_BITS_POS_0(data[0], BME280_CTRL_HUM);
-	g_bme280_config.osr_p = BME280_GET_BITS(data[2], BME280_CTRL_PRESS);
-	g_bme280_config.osr_t = BME280_GET_BITS(data[2], BME280_CTRL_TEMP);
-	g_bme280_config.filter = BME280_GET_BITS(data[3], BME280_FILTER);
-	g_bme280_config.standby_time = BME280_GET_BITS(data[3], BME280_STANDBY);
+    g_bme280_config.osr_h = BME280_GET_BITS_POS_0(data[0], BME280_CTRL_HUM);
+    g_bme280_config.osr_p = BME280_GET_BITS(data[2], BME280_CTRL_PRESS);
+    g_bme280_config.osr_t = BME280_GET_BITS(data[2], BME280_CTRL_TEMP);
+    g_bme280_config.filter = BME280_GET_BITS(data[3], BME280_FILTER);
+    g_bme280_config.standby_time = BME280_GET_BITS(data[3], BME280_STANDBY);
     
     ret = drv_humi_bosch_bme280_soft_reset(&bme280_ctx);
     if(unlikely(ret)){
@@ -456,22 +456,22 @@ static uint8_t drv_humi_bosch_bme280_hz2odr(int hz)
 
 static int drv_humi_bosch_bme280_set_odr(i2c_dev_t* drv, uint8_t odr)
 {
-	int     ret = 0;
-	uint8_t v_data_u8 = 0;
+    int     ret = 0;
+    uint8_t v_data_u8 = 0;
 
     ret = sensor_i2c_read(drv,BME280_CONFIG_ADDR,&v_data_u8,I2C_DATA_LEN,I2C_OP_RETRIES);
     if(unlikely(ret)){
         return ret;
     }
 
-	v_data_u8 = BME280_SET_BITS(v_data_u8,BME280_STANDBY,odr);
-	ret = sensor_i2c_write(drv,BME280_CONFIG_ADDR,
+    v_data_u8 = BME280_SET_BITS(v_data_u8,BME280_STANDBY,odr);
+    ret = sensor_i2c_write(drv,BME280_CONFIG_ADDR,
                             &v_data_u8,I2C_DATA_LEN,I2C_OP_RETRIES);
     if(unlikely(ret)){
         return ret;
     }
     
-	return ret;
+    return ret;
 }
 
 
@@ -495,60 +495,60 @@ static int drv_humi_bosch_bme280_set_default_config(i2c_dev_t* drv)
 
 static int drv_humi_bosch_bme280_comp_temp(temperature_data_t *uncomp_data)
 {
-	int32_t var1;
-	int32_t var2;
-	int32_t temperature;
-	int32_t temperature_min = -4000;
-	int32_t temperature_max = 8500;
+    int32_t var1;
+    int32_t var2;
+    int32_t temperature;
+    int32_t temperature_min = -4000;
+    int32_t temperature_max = 8500;
 
-	var1 = (int32_t)((uncomp_data->t / 8) - ((int32_t)g_cali_table.dig_T1 * 2));
-	var1 = (var1 * ((int32_t)g_cali_table.dig_T2)) / 2048;
-	var2 = (int32_t)((uncomp_data->t / 16) - ((int32_t)g_cali_table.dig_T1));
-	var2 = (((var2 * var2) / 4096) * ((int32_t)g_cali_table.dig_T3)) / 16384;
-	g_cali_table.t_fine = var1 + var2;
-	temperature = (g_cali_table.t_fine * 5 + 128) / 256;
+    var1 = (int32_t)((uncomp_data->t / 8) - ((int32_t)g_cali_table.dig_T1 * 2));
+    var1 = (var1 * ((int32_t)g_cali_table.dig_T2)) / 2048;
+    var2 = (int32_t)((uncomp_data->t / 16) - ((int32_t)g_cali_table.dig_T1));
+    var2 = (((var2 * var2) / 4096) * ((int32_t)g_cali_table.dig_T3)) / 16384;
+    g_cali_table.t_fine = var1 + var2;
+    temperature = (g_cali_table.t_fine * 5 + 128) / 256;
 
-	if (temperature < temperature_min)
-		temperature = temperature_min;
-	else if (temperature > temperature_max)
-		temperature = temperature_max;
+    if (temperature < temperature_min)
+        temperature = temperature_min;
+    else if (temperature > temperature_max)
+        temperature = temperature_max;
     
     uncomp_data->t = temperature;
 
-	return 0;
+    return 0;
 }
 
 
 static int drv_humi_bosch_bme280_comp_humi(humidity_data_t* pdata)
 {
-	int32_t var1 = 0;
-	int32_t var2 = 0;
-	int32_t var3 = 0;
-	int32_t var4 = 0;
-	int32_t var5 = 0;
-	uint32_t humidity = 0;
-	uint32_t humidity_max = 100000;
+    int32_t var1 = 0;
+    int32_t var2 = 0;
+    int32_t var3 = 0;
+    int32_t var4 = 0;
+    int32_t var5 = 0;
+    uint32_t humidity = 0;
+    uint32_t humidity_max = 100000;
 
-	var1 = g_cali_table.t_fine - ((int32_t)76800);
-	var2 = (int32_t)((pdata->h) * 16384);
-	var3 = (int32_t)(((int32_t)g_cali_table.dig_H4) * 1048576);
-	var4 = ((int32_t)g_cali_table.dig_H5) * var1;
-	var5 = (((var2 - var3) - var4) + (int32_t)16384) / 32768;
-	var2 = (var1 * ((int32_t)g_cali_table.dig_H6)) / 1024;
-	var3 = (var1 * ((int32_t)g_cali_table.dig_H3)) / 2048;
-	var4 = ((var2 * (var3 + (int32_t)32768)) / 1024) + (int32_t)2097152;
-	var2 = ((var4 * ((int32_t)g_cali_table.dig_H2)) + 8192) / 16384;
-	var3 = var5 * var2;
-	var4 = ((var3 / 32768) * (var3 / 32768)) / 128;
-	var5 = var3 - ((var4 * ((int32_t)g_cali_table.dig_H1)) / 16);
-	var5 = (var5 < 0 ? 0 : var5);
-	var5 = (var5 > 419430400 ? 419430400 : var5);
-	humidity = (uint32_t)(var5 / 4096);
+    var1 = g_cali_table.t_fine - ((int32_t)76800);
+    var2 = (int32_t)((pdata->h) * 16384);
+    var3 = (int32_t)(((int32_t)g_cali_table.dig_H4) * 1048576);
+    var4 = ((int32_t)g_cali_table.dig_H5) * var1;
+    var5 = (((var2 - var3) - var4) + (int32_t)16384) / 32768;
+    var2 = (var1 * ((int32_t)g_cali_table.dig_H6)) / 1024;
+    var3 = (var1 * ((int32_t)g_cali_table.dig_H3)) / 2048;
+    var4 = ((var2 * (var3 + (int32_t)32768)) / 1024) + (int32_t)2097152;
+    var2 = ((var4 * ((int32_t)g_cali_table.dig_H2)) + 8192) / 16384;
+    var3 = var5 * var2;
+    var4 = ((var3 / 32768) * (var3 / 32768)) / 128;
+    var5 = var3 - ((var4 * ((int32_t)g_cali_table.dig_H1)) / 16);
+    var5 = (var5 < 0 ? 0 : var5);
+    var5 = (var5 > 419430400 ? 419430400 : var5);
+    humidity = (uint32_t)(var5 / 4096);
 
-	if (humidity > humidity_max){
-		humidity = humidity_max;
+    if (humidity > humidity_max){
+        humidity = humidity_max;
     }
-	pdata->h = humidity;
+    pdata->h = humidity;
     return 0;
 }
 
@@ -580,7 +580,7 @@ static int drv_humi_bosch_bme280_read_humi(humidity_data_t* pdata)
     int ret = 0;
     uint8_t data[BME280_HUMI_DATA_LEN] = {0};
     uint32_t data_lsb;
-	uint32_t data_msb;
+    uint32_t data_msb;
 
     ret  = sensor_i2c_read(&bme280_ctx, BME280_HUMI_DATA_ADDR, data, BME280_HUMI_DATA_LEN, I2C_OP_RETRIES);
     if(unlikely(ret)){
@@ -634,8 +634,8 @@ static int drv_humi_bosch_bme280_read(void *buf, size_t len)
 {
     int ret = 0;
     uint8_t data[BME280_TEMP_DATA_LEN] = {0};
-	uint32_t data_lsb;
-	uint32_t data_msb;
+    uint32_t data_lsb;
+    uint32_t data_msb;
 
     humidity_data_t*   pdata = (humidity_data_t*)buf;
     if(buf == NULL){

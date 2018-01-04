@@ -147,8 +147,8 @@
 #define BMP280_ULTRALOWPOWER_OVERSAMP_PRESSURE          BMP280_OVERSAMP_1X
 #define BMP280_ULTRALOWPOWER_OVERSAMP_TEMPERATURE       BMP280_OVERSAMP_1X
 
-#define BMP280_LOWPOWER_OVERSAMP_PRESSURE	            BMP280_OVERSAMP_2X
-#define BMP280_LOWPOWER_OVERSAMP_TEMPERATURE	        BMP280_OVERSAMP_1X
+#define BMP280_LOWPOWER_OVERSAMP_PRESSURE                BMP280_OVERSAMP_2X
+#define BMP280_LOWPOWER_OVERSAMP_TEMPERATURE            BMP280_OVERSAMP_1X
 
 #define BMP280_STANDARDRESOLUTION_OVERSAMP_PRESSURE     BMP280_OVERSAMP_4X
 #define BMP280_STANDARDRESOLUTION_OVERSAMP_TEMPERATURE  BMP280_OVERSAMP_1X
@@ -253,7 +253,7 @@
 #define BMP280_PRESSURE_CALIB_DIG_P8_LSB                (20)
 #define BMP280_PRESSURE_CALIB_DIG_P8_MSB                (21)
 #define BMP280_PRESSURE_CALIB_DIG_P9_LSB                (22)
-#define BMP280_PRESSURE_CALIB_DIG_P9_MSB	            (23)
+#define BMP280_PRESSURE_CALIB_DIG_P9_MSB                (23)
 
 #define BMP280_SOFT_RESRT_VALUE                         (0XB6)
 
@@ -273,19 +273,19 @@
 
 
 typedef struct bmp280_calib_param_t {
-	uint16_t    dig_T1;
-	int16_t     dig_T2;
-	int16_t     dig_T3;
-	uint16_t    dig_P1;
-	int16_t     dig_P2;
-	int16_t     dig_P3;
-	int16_t     dig_P4;
-	int16_t     dig_P5;
-	int16_t     dig_P6;
-	int16_t     dig_P7;
-	int16_t     dig_P8;
-	int16_t     dig_P9;
-	int         t_fine;
+    uint16_t    dig_T1;
+    int16_t     dig_T2;
+    int16_t     dig_T3;
+    uint16_t    dig_P1;
+    int16_t     dig_P2;
+    int16_t     dig_P3;
+    int16_t     dig_P4;
+    int16_t     dig_P5;
+    int16_t     dig_P6;
+    int16_t     dig_P7;
+    int16_t     dig_P8;
+    int16_t     dig_P9;
+    int         t_fine;
 }bmp280_calib_param_t;
 
 typedef struct bmp280_device_cfg_t {
@@ -294,8 +294,8 @@ typedef struct bmp280_device_cfg_t {
     uint8_t         mode_baro;
     uint8_t         mode_temp;
     uint8_t         mode_power;
-	uint8_t         oversamp_temp;
-	uint8_t         oversamp_baro;
+    uint8_t         oversamp_temp;
+    uint8_t         oversamp_baro;
 }bmp280_device_cfg_t;
 
 
@@ -481,8 +481,8 @@ static uint8_t drv_baro_bosch_bmp280_hz2odr(int hz)
 
 static int drv_baro_bosch_bmp280_set_odr(i2c_dev_t* drv, uint8_t odr)
 {
-	int     ret = 0;
-	uint8_t v_data_u8 = 0;
+    int     ret = 0;
+    uint8_t v_data_u8 = 0;
 
     ret = sensor_i2c_read(drv,BMP280_CONFIG_REG_STANDBY_DURN__REG,
                             &v_data_u8,I2C_DATA_LEN,I2C_OP_RETRIES);
@@ -490,8 +490,8 @@ static int drv_baro_bosch_bmp280_set_odr(i2c_dev_t* drv, uint8_t odr)
         return ret;
     }
 
-	v_data_u8 = BMP280_SET_BITSLICE(v_data_u8,BMP280_CONFIG_REG_STANDBY_DURN,odr);
-	ret = sensor_i2c_write(drv,BMP280_CONFIG_REG_STANDBY_DURN__REG,
+    v_data_u8 = BMP280_SET_BITSLICE(v_data_u8,BMP280_CONFIG_REG_STANDBY_DURN,odr);
+    ret = sensor_i2c_write(drv,BMP280_CONFIG_REG_STANDBY_DURN__REG,
                             &v_data_u8,I2C_DATA_LEN,I2C_OP_RETRIES);
     if(unlikely(ret)){
         return ret;
@@ -503,16 +503,16 @@ static int drv_baro_bosch_bmp280_set_odr(i2c_dev_t* drv, uint8_t odr)
 
 static int  drv_baro_bosch_bmp280_soft_reset(i2c_dev_t* drv)
 {
-	int     ret = 0;
-	uint8_t v_data_u8 = BMP280_SOFT_RESRT_VALUE;
+    int     ret = 0;
+    uint8_t v_data_u8 = BMP280_SOFT_RESRT_VALUE;
     
-	ret = sensor_i2c_write(drv,BMP280_CONFIG_REG_STANDBY_DURN__REG,
+    ret = sensor_i2c_write(drv,BMP280_CONFIG_REG_STANDBY_DURN__REG,
                             &v_data_u8,I2C_DATA_LEN,I2C_OP_RETRIES);
     if(unlikely(ret)){
         return ret;
     }
     
-	return ret;
+    return ret;
 }
 
 static int drv_baro_bosch_bmp280_set_default_config(i2c_dev_t* drv)
@@ -535,92 +535,92 @@ static int drv_baro_bosch_bmp280_set_default_config(i2c_dev_t* drv)
 
 static int drv_baro_bosch_bmp280_read_uncomp_baro(i2c_dev_t* drv, barometer_data_t* pdata)
 {
-	int     ret = 0;
-	uint8_t data[BMP280_PRESSURE_DATA_SIZE] = {0};
+    int     ret = 0;
+    uint8_t data[BMP280_PRESSURE_DATA_SIZE] = {0};
 
     ret = sensor_i2c_read(drv, BMP280_PRESSURE_MSB_REG, data, BMP280_PRESSURE_DATA_SIZE, I2C_OP_RETRIES);
     if(unlikely(ret)){
         return ret;
     }
     
-	pdata->p = (int)((((uint32_t)(data[BMP280_PRESSURE_MSB_DATA]))<< BMP280_SHIFT_BY_12_BITS)
-			| (((uint32_t)(data[BMP280_PRESSURE_LSB_DATA]))<< BMP280_SHIFT_BY_04_BITS)
-			| ((uint32_t)data[BMP280_PRESSURE_XLSB_DATA]>> BMP280_SHIFT_BY_04_BITS));
-	return ret;
+    pdata->p = (int)((((uint32_t)(data[BMP280_PRESSURE_MSB_DATA]))<< BMP280_SHIFT_BY_12_BITS)
+            | (((uint32_t)(data[BMP280_PRESSURE_LSB_DATA]))<< BMP280_SHIFT_BY_04_BITS)
+            | ((uint32_t)data[BMP280_PRESSURE_XLSB_DATA]>> BMP280_SHIFT_BY_04_BITS));
+    return ret;
 }
 
 
 static int drv_baro_bosch_bmp280_compensate_baro( barometer_data_t* pdata)
 {
-	int      v_x1_u32r = 0;
-	int      v_x2_u32r = 0;
-	uint32_t comp_baro = 0;
+    int      v_x1_u32r = 0;
+    int      v_x2_u32r = 0;
+    uint32_t comp_baro = 0;
     
-	v_x1_u32r = (((int)g_bmp280_calib_table.t_fine)
+    v_x1_u32r = (((int)g_bmp280_calib_table.t_fine)
             >>BMP280_SHIFT_BY_01_BIT) - (int)64000;
 
-	v_x2_u32r = (((v_x1_u32r >> BMP280_SHIFT_BY_02_BITS)
-			* (v_x1_u32r >> BMP280_SHIFT_BY_02_BITS))
-			>> BMP280_SHIFT_BY_11_BITS)
-			* ((int)g_bmp280_calib_table.dig_P6);
-	v_x2_u32r = v_x2_u32r + ((v_x1_u32r *
-			((int)g_bmp280_calib_table.dig_P5))
-			<< BMP280_SHIFT_BY_01_BIT);
-	v_x2_u32r = (v_x2_u32r >> BMP280_SHIFT_BY_02_BITS)
-			+ (((int)g_bmp280_calib_table.dig_P4)
-			<< BMP280_SHIFT_BY_16_BITS);
+    v_x2_u32r = (((v_x1_u32r >> BMP280_SHIFT_BY_02_BITS)
+            * (v_x1_u32r >> BMP280_SHIFT_BY_02_BITS))
+            >> BMP280_SHIFT_BY_11_BITS)
+            * ((int)g_bmp280_calib_table.dig_P6);
+    v_x2_u32r = v_x2_u32r + ((v_x1_u32r *
+            ((int)g_bmp280_calib_table.dig_P5))
+            << BMP280_SHIFT_BY_01_BIT);
+    v_x2_u32r = (v_x2_u32r >> BMP280_SHIFT_BY_02_BITS)
+            + (((int)g_bmp280_calib_table.dig_P4)
+            << BMP280_SHIFT_BY_16_BITS);
 
-	v_x1_u32r = (((g_bmp280_calib_table.dig_P3
-			* (((v_x1_u32r
-			>> BMP280_SHIFT_BY_02_BITS) * (v_x1_u32r
-			>> BMP280_SHIFT_BY_02_BITS))
-			>> BMP280_SHIFT_BY_13_BITS))
-			>> BMP280_SHIFT_BY_03_BITS)
-			+ ((((int)g_bmp280_calib_table.dig_P2)
-			* v_x1_u32r)
-			>> BMP280_SHIFT_BY_01_BIT))
-			>> BMP280_SHIFT_BY_18_BITS;
-	v_x1_u32r = ((((32768 + v_x1_u32r))
-			* ((int)g_bmp280_calib_table.dig_P1))
-			>> BMP280_SHIFT_BY_15_BITS);
+    v_x1_u32r = (((g_bmp280_calib_table.dig_P3
+            * (((v_x1_u32r
+            >> BMP280_SHIFT_BY_02_BITS) * (v_x1_u32r
+            >> BMP280_SHIFT_BY_02_BITS))
+            >> BMP280_SHIFT_BY_13_BITS))
+            >> BMP280_SHIFT_BY_03_BITS)
+            + ((((int)g_bmp280_calib_table.dig_P2)
+            * v_x1_u32r)
+            >> BMP280_SHIFT_BY_01_BIT))
+            >> BMP280_SHIFT_BY_18_BITS;
+    v_x1_u32r = ((((32768 + v_x1_u32r))
+            * ((int)g_bmp280_calib_table.dig_P1))
+            >> BMP280_SHIFT_BY_15_BITS);
 
-	comp_baro = (((uint32_t)(((int)1048576) - pdata->p)
-			- (v_x2_u32r >> BMP280_SHIFT_BY_12_BITS)))
-			* 3125;
+    comp_baro = (((uint32_t)(((int)1048576) - pdata->p)
+            - (v_x2_u32r >> BMP280_SHIFT_BY_12_BITS)))
+            * 3125;
 
-	if (comp_baro < 0x80000000){
-		if (v_x1_u32r != 0){
-			comp_baro = (comp_baro
-					<< BMP280_SHIFT_BY_01_BIT)
-					/ ((uint32_t)v_x1_u32r);
+    if (comp_baro < 0x80000000){
+        if (v_x1_u32r != 0){
+            comp_baro = (comp_baro
+                    << BMP280_SHIFT_BY_01_BIT)
+                    / ((uint32_t)v_x1_u32r);
         }
-		else{
-			return -1;
+        else{
+            return -1;
         }
     }
-	else if (v_x1_u32r != 0){
-		comp_baro = (comp_baro / (uint32_t)v_x1_u32r) * 2;
+    else if (v_x1_u32r != 0){
+        comp_baro = (comp_baro / (uint32_t)v_x1_u32r) * 2;
    }
-	else{
-		return -1;
+    else{
+        return -1;
    }
-	v_x1_u32r = (((int)g_bmp280_calib_table.dig_P9) * ((int)(
-			((comp_baro >> BMP280_SHIFT_BY_03_BITS)
-			* (comp_baro >> BMP280_SHIFT_BY_03_BITS))
-			>> BMP280_SHIFT_BY_13_BITS)))
-			>> BMP280_SHIFT_BY_12_BITS;
+    v_x1_u32r = (((int)g_bmp280_calib_table.dig_P9) * ((int)(
+            ((comp_baro >> BMP280_SHIFT_BY_03_BITS)
+            * (comp_baro >> BMP280_SHIFT_BY_03_BITS))
+            >> BMP280_SHIFT_BY_13_BITS)))
+            >> BMP280_SHIFT_BY_12_BITS;
 
-	v_x2_u32r = (((int)(comp_baro >>
-			BMP280_SHIFT_BY_02_BITS))
-			* ((int)g_bmp280_calib_table.dig_P8))
-			>> BMP280_SHIFT_BY_13_BITS;
+    v_x2_u32r = (((int)(comp_baro >>
+            BMP280_SHIFT_BY_02_BITS))
+            * ((int)g_bmp280_calib_table.dig_P8))
+            >> BMP280_SHIFT_BY_13_BITS;
 
-	comp_baro = (uint32_t)((int)comp_baro + ((v_x1_u32r + v_x2_u32r
-			+ g_bmp280_calib_table.dig_P7)
-			>> BMP280_SHIFT_BY_04_BITS));
+    comp_baro = (uint32_t)((int)comp_baro + ((v_x1_u32r + v_x2_u32r
+            + g_bmp280_calib_table.dig_P7)
+            >> BMP280_SHIFT_BY_04_BITS));
 
     pdata->p = comp_baro;
-	return 0;
+    return 0;
 }
 
 
@@ -638,31 +638,31 @@ static int drv_baro_bosch_bmp280_read_baro(i2c_dev_t* drv, barometer_data_t* pda
         return ret;
     }
 
-	return 0;
+    return 0;
 }
 
 static int drv_baro_bosch_bmp280_comp_temp(temperature_data_t* pdata)
 {
-	int v_x1_u32r = 0;
-	int v_x2_u32r = 0;
-	v_x1_u32r = ((((pdata->t >> BMP280_SHIFT_BY_03_BITS)
-			- ((int)g_bmp280_calib_table.dig_T1
-			<< BMP280_SHIFT_BY_01_BIT)))
-			* ((int)g_bmp280_calib_table.dig_T2))
-			>> BMP280_SHIFT_BY_11_BITS;
+    int v_x1_u32r = 0;
+    int v_x2_u32r = 0;
+    v_x1_u32r = ((((pdata->t >> BMP280_SHIFT_BY_03_BITS)
+            - ((int)g_bmp280_calib_table.dig_T1
+            << BMP280_SHIFT_BY_01_BIT)))
+            * ((int)g_bmp280_calib_table.dig_T2))
+            >> BMP280_SHIFT_BY_11_BITS;
 
-	v_x2_u32r = (((((pdata->t >> BMP280_SHIFT_BY_04_BITS)
-			- ((int)g_bmp280_calib_table.dig_T1))
-			* ((pdata->t >> BMP280_SHIFT_BY_04_BITS)
-			- ((int)g_bmp280_calib_table.dig_T1)))
-			>> BMP280_SHIFT_BY_12_BITS)
-			* ((int)g_bmp280_calib_table.dig_T3))
-			>> BMP280_SHIFT_BY_14_BITS;
+    v_x2_u32r = (((((pdata->t >> BMP280_SHIFT_BY_04_BITS)
+            - ((int)g_bmp280_calib_table.dig_T1))
+            * ((pdata->t >> BMP280_SHIFT_BY_04_BITS)
+            - ((int)g_bmp280_calib_table.dig_T1)))
+            >> BMP280_SHIFT_BY_12_BITS)
+            * ((int)g_bmp280_calib_table.dig_T3))
+            >> BMP280_SHIFT_BY_14_BITS;
     
-	g_bmp280_calib_table.t_fine = v_x1_u32r + v_x2_u32r;
+    g_bmp280_calib_table.t_fine = v_x1_u32r + v_x2_u32r;
 
-	pdata->t = (g_bmp280_calib_table.t_fine * 5 + 128) >> BMP280_SHIFT_BY_08_BITS;
-	return 0;
+    pdata->t = (g_bmp280_calib_table.t_fine * 5 + 128) >> BMP280_SHIFT_BY_08_BITS;
+    return 0;
 }
 
 
@@ -679,8 +679,8 @@ static int drv_baro_bosch_bmp280_cali_temp(i2c_dev_t* drv)
     }
 
     temp.t = (int)((((uint32_t)(data[BMP280_TEMPERATURE_MSB_DATA]))<< BMP280_SHIFT_BY_12_BITS)
-			| (((uint32_t)(data[BMP280_TEMPERATURE_LSB_DATA]))<< BMP280_SHIFT_BY_04_BITS)
-			| ((uint32_t)data[BMP280_TEMPERATURE_XLSB_DATA]>> BMP280_SHIFT_BY_04_BITS)); 
+            | (((uint32_t)(data[BMP280_TEMPERATURE_LSB_DATA]))<< BMP280_SHIFT_BY_04_BITS)
+            | ((uint32_t)data[BMP280_TEMPERATURE_XLSB_DATA]>> BMP280_SHIFT_BY_04_BITS)); 
 
 
     ret = drv_baro_bosch_bmp280_comp_temp(&temp);
