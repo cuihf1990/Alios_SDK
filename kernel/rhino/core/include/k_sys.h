@@ -14,7 +14,7 @@
 
 #define MAX_TIMER_TICKS ((tick_t)-1 >> 1)
 
-#if (RHINO_CONFIG_COMPILER_64_BIT > 0)
+#if (RHINO_CONFIG_64_BIT_TYPE > 0)
 #define RHINO_WAIT_FOREVER ((uint64_t)-1)
 typedef uint64_t        sys_time_t;
 typedef int64_t         sys_time_i_t;
