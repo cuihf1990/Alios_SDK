@@ -1,120 +1,152 @@
-import sys, socket, ssl, asyncore, signal
+import sys, time, socket, ssl, signal, select, thread
 import TBframe
 
-MAX_MSG_LENTH = 10240
-ENCRYPT = True
+CONFIG_TIMEOUT = 30
+CONFIG_MAXMSG_LENTH = 8192
+CONFIG_ENCRYPT = True
 
 def signal_handler(sig, frame):
     print "received SIGINT"
     raise KeyboardInterrupt
 
-class ServiceHandler(asyncore.dispatcher):
-    def __init__(self, sock, addr, clients, servers, terminals):
-        self.addr = addr
-        self.buffer = ''
-        self.msg = ''
-        self.mode = None
-        self.clients = clients
-        self.servers = servers
-        self.terminals = terminals
-        asyncore.dispatcher.__init__(self, sock)
+class selector():
+    EVENT_READ = 0
+    EVENT_WRITE = 1
+    EVENT_ERROR = 2
+    def __init__(self):
+        self.read_map = {}
+        self.write_map = {}
+        self.error_map = {}
 
-    def writable(self):
-        return (self.buffer != '')
-
-    def handle_read(self):
-        new_msg = self.recv(8192)
-        if new_msg == '':
+    def register(self, fd, type, callback):
+        types = {self.EVENT_READ:self.read_map, self.EVENT_WRITE:self.write_map, self.EVENT_ERROR: self.error_map}
+        if type not in types:
             return
-        print new_msg
-        self.msg += new_msg
-        while self.msg != '':
-            type, length, value, self.msg = TBframe.parse(self.msg)
-            if type == TBframe.TYPE_NONE:
-                break
-            print type, value
-            if self.mode == None:
-                self.login_message_process(type, value)
-            elif self.mode == 'client':
-                self.client_message_process(type, value)
-            elif self.mode == 'server':
-                self.server_message_process(type, value)
-            elif self.mode == 'terminal':
-                self.terminal_message_process(type, value)
+        map = types[type]
+        map[fd] = callback
 
-    def handle_write(self):
-        sent = self.send(self.buffer)
-        self.buffer = self.buffer[sent:]
-
-    def send_data(self, data):
-        self.buffer += data
-
-    def login_message_process(self, type, value):
-        print 'login_process'
-        if type not in [TBframe.CLIENT_LOGIN, TBframe.SERVER_LOGIN, TBframe.TERMINAL_LOGIN]:
-            content = TBframe.construct(TBframe.REQUEST_LOGIN, 'please login')
-            self.buffer += content
+    def unregister(self, fd, type):
+        types = {self.EVENT_READ:self.read_map, self.EVENT_WRITE:self.write_map, self.EVENT_ERROR: self.error_map}
+        if type not in types:
             return
+        map = types[type]
+        if fd in map: map.pop(fd)
 
-        if type == TBframe.CLIENT_LOGIN:
-            self.clients[self.addr] = {'socket':self.socket}
-            self.mode = 'client'
-            return
-        if type == TBframe.SERVER_LOGIN:
-            self.servers[self.addr] = {'socket':self.socket}
-            self.mode = 'server'
-            return
-        if type == TBframe.TERMINAL_LOGIN:
-            self.terminals[self.addr] = {'socket':self.socket}
-            self.mode = 'terminal'
-            return
+    def select(self):
+        ret = []
+        r, w, e = select.select(list(self.read_map), list(self.write_map), list(self.error_map))
+        for fd in r:
+            ret.append([fd, self.read_map[fd]])
+        for fd in w:
+            ret.append([fd, self.write_map[fd]])
+        for fd in e:
+            ret.append([fd, self.error_map[fd]])
+        return ret
 
-    def client_message_process(self, type, value):
-        print 'client_process'
-        print type, value
 
-    def server_message_process(self, type, value):
-        print 'server_process'
-        print type, value
-
-    def terminal_message_process(self, type, value):
-        print 'terminal_process'
-        print type, value
-
-class Controller(asyncore.dispatcher):
+class Controller():
     def __init__(self, host, port):
+        self.host = host
+        self.port = port
         self.clients = {}
         self.servers = {}
         self.terminals = {}
+        self.timeouts = {}
         self.keyfile = 'server_key.pem'
         self.certfile = 'server_cert.pem'
-        asyncore.dispatcher.__init__(self)
-        self.create_socket(socket.AF_INET, socket.SOCK_STREAM, ENCRYPT)
-        self.set_reuse_addr()
-        self.bind((host, port))
-        self.listen(5)
 
-    def create_socket(self, family, type, encrypt):
-        self.family_and_type = family, type
-        sock = socket.socket(family, type)
-        if encrypt:
+    def accept(self, sel, sock, type):
+        funcs = {'client':self.client_serve, 'server':self.server_serve, 'terminal':self.terminal_serve}
+        clist = {'client':self.clients, 'server':self.servers, 'terminal':self.terminals}
+        conn, addr = sock.accept()
+        if type not in funcs:
+            print "error: unsupported type {0}".format(type)
+            conn.close()
+            return
+        print('{0} {1} connected'.format(type, addr))
+        conn.setblocking(False)
+        sel.register(conn, selector.EVENT_READ, funcs[type])
+        self.timeouts[sel][conn] = time.time() + CONFIG_TIMEOUT
+        clist[type][conn] = {}
+
+    def client_serve(self, sel, sock, type):
+        data = sock.recv(CONFIG_MAXMSG_LENTH)
+        if not data:
+            print("client {0} disconnect".format(sock.getpeername()))
+            sel.unregister(sock, selector.EVENT_READ)
+            sock.close()
+            self.timeouts[sel].pop(sock)
+            self.clients.pop(sock)
+            return
+        self.timeouts[sel][sock] = time.time() + CONFIG_TIMEOUT
+        print type, data
+
+    def server_serve(self, sel, sock, type):
+        data = sock.recv(CONFIG_MAXMSG_LENTH)
+        if not data:
+            print("server {0} disconnect".format(sock.getpeername()))
+            sel.unregister(sock, selector.EVENT_READ)
+            sock.close()
+            self.timeouts[sel].pop(sock)
+            self.servers.pop(sock)
+            return
+        self.timeouts[sel][sock] = time.time() + CONFIG_TIMEOUT
+        print type, data
+
+    def terminal_serve(self, sel, sock, type):
+        data = sock.recv(CONFIG_MAXMSG_LENTH)
+        if not data:
+            print("terminal {0} disconnect".format(sock.getpeername()))
+            sel.unregister(sock, selector.EVENT_READ)
+            sock.close()
+            self.timeouts[sel].pop(sock)
+            self.terminals.pop(sock)
+            return
+        self.timeouts[sel][sock] = time.time() + CONFIG_TIMEOUT
+        print type, data
+
+    def service_thread(self, port, type):
+        types = {'client':self.clients, 'server':self.servers, 'terminal':self.terminals}
+        if type not in types:
+            return
+        sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        sock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+        sock.setblocking(False)
+        sock.bind((self.host, port))
+        if CONFIG_ENCRYPT:
             sock = ssl.wrap_socket(sock, self.keyfile, self.certfile, True)
-        sock.setblocking(0)
-        self.set_socket(sock)
+        sock.listen(100)
+        sel = selector()
+        sel.register(sock, selector.EVENT_READ, self.accept)
+        self.timeouts[sel] = {}
+        while self.keep_running:
+            events = sel.select()
+            for [sock, callback] in events:
+                callback(sel, sock, type)
 
-    def handle_accept(self):
-        pair = self.accept()
-        if pair is not None:
-            sock, addr = pair
-            print('Incoming connection from {0}'.format(addr))
-            ServiceHandler(sock, addr, self.clients, self.servers, self.terminals)
+            #close timeout connections
+            now = time.time()
+            conlist = types[type]
+            for conn in list(self.timeouts[sel]):
+                if now < self.timeouts[sel][conn]:
+                    continue
+                sel.unregister(conn, selector.EVENT_READ)
+                conn.close()
+                self.timeouts[sel].pop(conn)
+                conlist.pop(conn)
 
     def run(self):
         signal.signal(signal.SIGINT, signal_handler)
-        try:
-            asyncore.loop()
-        except:
-            pass
+        self.keep_running = True
+        thread.start_new_thread(self.service_thread, (self.port, 'client',))
+        thread.start_new_thread(self.service_thread, (self.port + 2, 'server',))
+        thread.start_new_thread(self.service_thread, (self.port + 1, 'terminal',))
+        while True:
+            try:
+                time.sleep(1)
+            except:
+                self.keep_running = False
+                break
 
 if __name__ == '__main__':
     host = ''
