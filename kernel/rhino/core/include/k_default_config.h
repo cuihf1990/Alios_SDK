@@ -5,8 +5,9 @@
 #ifndef K_DEFAULT_CONFIG_H
 #define K_DEFAULT_CONFIG_H
 
-#ifndef RHINO_CONFIG_COMPILER_64_BIT
-#define RHINO_CONFIG_COMPILER_64_BIT         1
+/* leave this option as default unless your compiler does not support 64 bit data such as uint64_t */
+#ifndef RHINO_CONFIG_64_BIT_TYPE
+#define RHINO_CONFIG_64_BIT_TYPE             1
 #endif
 
 /* chip level conf */
