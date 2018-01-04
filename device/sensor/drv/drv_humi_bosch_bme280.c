@@ -21,27 +21,27 @@
 #define BME280_CHIP_ID                      (0x60)
 #define BME280_SOFT_RESET                   (0xB6)
 
-#define BME280_CHIP_ID_ADDR					(0xD0)
-#define BME280_RESET_ADDR					(0xE0)
+#define BME280_CHIP_ID_ADDR                 (0xD0)
+#define BME280_RESET_ADDR                   (0xE0)
 #define BME280_TEMP_PRESS_CALIB_DATA_ADDR   (0x88)
-#define BME280_HUMIDITY_CALIB_DATA_ADDR		(0xE1)
-#define BME280_PWR_CTRL_ADDR				(0xF4)
-#define BME280_CTRL_HUM_ADDR				(0xF2)
-#define BME280_CTRL_MEAS_ADDR				(0xF4)
-#define BME280_CONFIG_ADDR					(0xF5)
-#define BME280_TEMP_DATA_ADDR				(0xFA)
-#define BME280_HUMI_DATA_ADDR				(0xFD)
+#define BME280_HUMIDITY_CALIB_DATA_ADDR     (0xE1)
+#define BME280_PWR_CTRL_ADDR                (0xF4)
+#define BME280_CTRL_HUM_ADDR                (0xF2)
+#define BME280_CTRL_MEAS_ADDR               (0xF4)
+#define BME280_CONFIG_ADDR                  (0xF5)
+#define BME280_TEMP_DATA_ADDR               (0xFA)
+#define BME280_HUMI_DATA_ADDR               (0xFD)
 
-#define BME280_TEMP_PRESS_CALIB_DATA_LEN	(26)
-#define BME280_HUMIDITY_CALIB_DATA_LEN		(7)
-#define BME280_HUMI_DATA_LEN				(2)
-#define BME280_TEMP_DATA_LEN				(3)
+#define BME280_TEMP_PRESS_CALIB_DATA_LEN    (26)
+#define BME280_HUMIDITY_CALIB_DATA_LEN      (7)
+#define BME280_HUMI_DATA_LEN                (2)
+#define BME280_TEMP_DATA_LEN                (3)
 
 
-#define	BME280_SLEEP_MODE		            (0x00)
-#define	BME280_FORCED_MODE		            (0x01)
-#define	BME280_NORMAL_MODE		            (0x03)
-#define	BME280_POWER_BIT_MASK	            (0x03)
+#define BME280_SLEEP_MODE                   (0x00)
+#define BME280_FORCED_MODE                  (0x01)
+#define BME280_NORMAL_MODE                  (0x03)
+#define BME280_POWER_BIT_MASK	            (0x03)
 
 #define BME280_PRESS                        (1)
 #define BME280_TEMP                         (1 << 1)
@@ -107,7 +107,7 @@
 #define BME280_CTRL_TEMP_POS                (0x05)
 
 #define BME280_FILTER_MSK                   (0x1C)
-#define BME280_FILTER_POS		            (0x02)
+#define BME280_FILTER_POS                   (0x02)
 
 #define BME280_STANDBY_MSK                  (0xE0)
 #define BME280_STANDBY_POS                  (0x05)
@@ -139,11 +139,11 @@
 #define BME280_I2C_ADDR                     BME280_I2C_ADDR_TRANS(BME280_I2C_SLAVE_ADDR_LOW)
 #define BME280_CONCAT_BYTES(msb, lsb)       (((uint16_t)msb << 8) | (uint16_t)lsb)
 
-#define BME280_SET_BITS(reg_data, bitname, data)  		((reg_data & ~(bitname##_MSK)) | ((data << bitname##_POS) & bitname##_MSK))
-#define BME280_SET_BITS_POS_0(reg_data, bitname, data)	((reg_data & ~(bitname##_MSK)) | (data & bitname##_MSK))
+#define BME280_SET_BITS(reg_data, bitname, data)        ((reg_data & ~(bitname##_MSK)) | ((data << bitname##_POS) & bitname##_MSK))
+#define BME280_SET_BITS_POS_0(reg_data, bitname, data)  ((reg_data & ~(bitname##_MSK)) | (data & bitname##_MSK))
 
-#define BME280_GET_BITS(reg_data, bitname)          	((reg_data & (bitname##_MSK)) >> (bitname##_POS))
-#define BME280_GET_BITS_POS_0(reg_data, bitname)    	(reg_data & (bitname##_MSK))
+#define BME280_GET_BITS(reg_data, bitname)              ((reg_data & (bitname##_MSK)) >> (bitname##_POS))
+#define BME280_GET_BITS_POS_0(reg_data, bitname)        (reg_data & (bitname##_MSK))
 
 
 typedef struct _bme280_cali_table_t {
