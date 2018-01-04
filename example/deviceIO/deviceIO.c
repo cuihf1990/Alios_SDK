@@ -21,9 +21,12 @@ cpu_stack_t demo_task_buf[DEMO_TASK_STACKSIZE];
 extern uart_dev_t uart_dev_com1;
 extern gpio_dev_t gpio_dev_GPIOB_PIN13;
 char readbuf[UART_DATA_BYTES] = {0};
+extern timer_dev_t dev_timer3;
 
 void demo_task(void *arg)
-{   
+{
+    hal_timer_start(&dev_timer3);
+
     while (1)
     {
         hal_uart_test();

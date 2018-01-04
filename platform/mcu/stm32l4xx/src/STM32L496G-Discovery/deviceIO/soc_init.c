@@ -43,6 +43,7 @@
 #include "hal.h"
 #include "hal_gpio_stm32l4.h"
 #include "hal_uart_stm32l4.h"
+#include "hal_timer_stm32l4.h"
 
 #if defined (__CC_ARM) && defined(__MICROLIB)
 void __aeabi_assert(const char *expr, const char *file, int line)
@@ -70,10 +71,10 @@ void __aeabi_assert(const char *expr, const char *file, int line)
 /* USER CODE END Includes */
 
 /* Private variables ---------------------------------------------------------*/
-UART_HandleTypeDef huart2;
+extern UART_HandleTypeDef uart1_handle;
 uart_dev_t uart_dev_com1;
 gpio_dev_t gpio_dev_GPIOB_PIN13;
-
+timer_dev_t dev_timer3;
 /* USER CODE BEGIN PV */
 /* Private variables ---------------------------------------------------------*/
 
@@ -83,11 +84,12 @@ gpio_dev_t gpio_dev_GPIOB_PIN13;
 void SystemClock_Config(void);
 static void uart_init(void);
 static void gpio_init(void);
+static void timer3_init(void);
 void MX_GPIO_Init(void);
 void MX_USART2_UART_Init(void);
 /* USER CODE BEGIN PFP */
 /* Private function prototypes -----------------------------------------------*/
-
+void test_timer3(void *arg);
 /* USER CODE END PFP */
 
 /* USER CODE BEGIN 0 */
@@ -115,7 +117,8 @@ void stm32_soc_init(void)
 
   /* USER CODE BEGIN SysInit */
   uart_init();
-  gpio_init();	
+  gpio_init();
+  timer3_init();
   /* USER CODE END SysInit */
 }
 
@@ -209,25 +212,19 @@ static void gpio_init(void)
     hal_gpio_init(&gpio_dev_GPIOB_PIN13);
 }
 
-/* USART2 init function */
-static void MX_USART2_UART_Init(void)
+static void timer3_init(void)
 {
+  dev_timer3.config.reload_mode = TIMER_RELOAD_AUTO;
+  dev_timer3.config.period = 1000000;
+  dev_timer3.config.cb = &test_timer3;
+  dev_timer3.port = PORT_TIMER3;
 
-  huart2.Instance = USART2;
-  huart2.Init.BaudRate = 115200;
-  huart2.Init.WordLength = UART_WORDLENGTH_8B;
-  huart2.Init.StopBits = UART_STOPBITS_1;
-  huart2.Init.Parity = UART_PARITY_NONE;
-  huart2.Init.Mode = UART_MODE_TX_RX;
-  huart2.Init.HwFlowCtl = UART_HWCONTROL_NONE;
-  huart2.Init.OverSampling = UART_OVERSAMPLING_16;
-  huart2.Init.OneBitSampling = UART_ONE_BIT_SAMPLE_DISABLE;
-  huart2.AdvancedInit.AdvFeatureInit = UART_ADVFEATURE_NO_INIT;
-  if (HAL_UART_Init(&huart2) != HAL_OK)
-  {
-    _Error_Handler(__FILE__, __LINE__);
-  }
+  hal_timer_init(&dev_timer3);
+}
 
+void test_timer3(void *arg)
+{
+	 printf("timer3 is running !");
 }
 
 /** Configure pins as 
@@ -780,9 +777,9 @@ PUTCHAR_PROTOTYPE
 {
   if (ch == '\n') {
     //hal_uart_send(&console_uart, (void *)"\r", 1, 30000);
-    HAL_UART_Transmit(&huart2, (void *)"\r", 1,30000);
+    HAL_UART_Transmit(&uart1_handle, (void *)"\r", 1,30000);
   }
-  HAL_UART_Transmit(&huart2, (uint8_t *)&ch, 1, 0xFFFF);
+  HAL_UART_Transmit(&uart1_handle, (uint8_t *)&ch, 1, 0xFFFF);
   return ch;
 }
 
@@ -797,7 +794,7 @@ GETCHAR_PROTOTYPE
   /* e.g. readwrite a character to the USART2 and Loop until the end of transmission */
   uint8_t ch = 0;
   //uint32_t recv_size;
-  HAL_UART_Receive(&huart2, &ch, 1,30000);
+  HAL_UART_Receive(&uart1_handle, &ch, 1,30000);
   return ch;
 }
 

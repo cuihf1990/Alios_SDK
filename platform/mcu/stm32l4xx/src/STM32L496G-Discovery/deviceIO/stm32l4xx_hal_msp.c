@@ -141,6 +141,30 @@ void HAL_UART_MspDeInit(UART_HandleTypeDef* huart)
 
 }
 
+/**
+  * @brief TIM MSP Initialization
+  *        This function configures the hardware resources used in this example:
+  *           - Peripheral's clock enable
+  * @param htim: TIM handle pointer
+  * @retval None
+  */
+void HAL_TIM_Base_MspInit(TIM_HandleTypeDef *htim)
+{
+  if (htim->Instance == TIM3)
+  {
+    /*##-1- Enable peripheral clock #################################*/
+    /* TIMx Peripheral clock enable */
+    __HAL_RCC_TIM3_CLK_ENABLE();
+  
+    /*##-2- Configure the NVIC for TIMx ########################################*/
+    /* Set the TIMx priority */
+    HAL_NVIC_SetPriority(TIM3_IRQn, 3, 0);
+
+    /* Enable the TIMx global Interrupt */
+    HAL_NVIC_EnableIRQ(TIM3_IRQn);
+	}
+}
+
 /* USER CODE BEGIN 1 */
 
 /* USER CODE END 1 */
