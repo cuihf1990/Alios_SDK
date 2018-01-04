@@ -208,7 +208,7 @@ void reset_network_context(void)
     slist_for_each_entry(networks, network, network_context_t, next) {
         network->state = INTERFACE_DOWN;
         ur_stop_timer(&network->advertisement_timer, network);
-        network->meshnetid = INVALID_NETID;
+        network->meshnetid = BCAST_NETID;
     }
 }
 

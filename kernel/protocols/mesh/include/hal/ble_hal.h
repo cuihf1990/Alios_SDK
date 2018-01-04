@@ -10,8 +10,6 @@ enum {
     BLE_AUTH_REQUEST_TIMEOUT        = 10000,  /* ms */
     BLE_AUTH_RELAY_TIMEOUT          = 10000,  /* ms */
     BLE_AUTH_RESPONSE_TIMEOUT       = 10000,  /* ms */
-    BLE_ATTACH_REQUEST_TIMEOUT      = 10000,  /* ms */
-    BLE_SID_REQUEST_TIMEOUT         = 30000,  /* ms */
     BLE_LINK_QUALITY_MOBILE_TIMEOUT = 3000,   /* ms */
     BLE_LINK_QUALITY_TIMEOUT        = 30000,  /* ms */
     BLE_ADVERTISEMENT_TIMEOUT       = 20000,  /* ms, 20 seconds */

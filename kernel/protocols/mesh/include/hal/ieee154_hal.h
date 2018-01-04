@@ -10,8 +10,6 @@ enum {
     IEEE154_AUTH_REQUEST_TIMEOUT        = 3000,   /* ms */
     IEEE154_AUTH_RELAY_TIMEOUT          = 3000,   /* ms */
     IEEE154_AUTH_RESPONSE_TIMEOUT       = 3000,   /* ms */
-    IEEE154_ATTACH_REQUEST_TIMEOUT      = 1000,   /* ms */
-    IEEE154_SID_REQUEST_TIMEOUT         = 3000,   /* ms */
     IEEE154_LINK_QUALITY_MOBILE_TIMEOUT = 1000,   /* ms */
     IEEE154_LINK_QUALITY_TIMEOUT        = 30000,  /* ms */
     IEEE154_ADVERTISEMENT_TIMEOUT       = 20000,  /* ms, 20 seconds */

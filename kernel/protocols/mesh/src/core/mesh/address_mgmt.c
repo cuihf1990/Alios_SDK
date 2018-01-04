@@ -222,7 +222,7 @@ ur_error_t address_resolve(message_t *message)
         return UR_ERROR_DROP;
     }
 
-    get_leader_addr(&dest);
+    set_mesh_short_addr(&dest, get_main_netid(umesh_get_meshnetid()), LEADER_SID);
     switch (cache->state) {
         case AQ_STATE_INVALID:
             memcpy(cache->uuid, target.uuid, sizeof(cache->uuid));
@@ -560,7 +560,7 @@ static ur_error_t send_address_notification(void)
                                data_orig, length, ADDRESS_MGMT_3);
     if (message) {
         info = message->info;
-        get_leader_addr(&info->dest);
+        set_mesh_short_addr(&info->dest, get_main_netid(umesh_get_meshnetid()), LEADER_SID);
         error = mf_send_message(message);
     }
     ur_mem_free(data_orig, length);
@@ -618,7 +618,7 @@ ur_error_t handle_address_notification(message_t *message)
     uint8_t *tlvs;
     uint16_t tlvs_length;
     ur_node_id_t target;
-    ur_node_id_t attach;
+    ur_node_id_t attach = {.meshnetid = INVALID_NETID, .sid = INVALID_SID};
 
     if (umesh_mm_get_device_state() != DEVICE_STATE_LEADER &&
         umesh_mm_get_device_state() != DEVICE_STATE_SUPER_ROUTER) {
@@ -632,14 +632,10 @@ ur_error_t handle_address_notification(message_t *message)
     }
     message_copy_to(message, sizeof(mm_header_t), tlvs, tlvs_length);
 
-    attach_node = (mm_node_id_tv_t *)umesh_mm_get_tv(tlvs, tlvs_length,
-                                                     TYPE_ATTACH_NODE_ID);
-    target_node = (mm_node_id_tv_t *)umesh_mm_get_tv(tlvs, tlvs_length,
-                                                     TYPE_NODE_ID);
-    target_uuid = (mm_uuid_tv_t *)umesh_mm_get_tv(tlvs, tlvs_length,
-                                                  TYPE_TARGET_UUID);
-    hal_type = (mm_hal_type_tv_t *)umesh_mm_get_tv(tlvs, tlvs_length,
-                                                   TYPE_DEF_HAL_TYPE);
+    attach_node = (mm_node_id_tv_t *)umesh_mm_get_tv(tlvs, tlvs_length, TYPE_ATTACH_NODE_ID);
+    target_node = (mm_node_id_tv_t *)umesh_mm_get_tv(tlvs, tlvs_length, TYPE_NODE_ID);
+    target_uuid = (mm_uuid_tv_t *)umesh_mm_get_tv(tlvs, tlvs_length, TYPE_TARGET_UUID);
+    hal_type = (mm_hal_type_tv_t *)umesh_mm_get_tv(tlvs, tlvs_length, TYPE_DEF_HAL_TYPE);
 
     if (target_node == NULL || target_uuid == NULL || hal_type == NULL) {
         goto exit;
@@ -650,9 +646,6 @@ ur_error_t handle_address_notification(message_t *message)
     if (attach_node) {
         attach.sid = attach_node->sid;
         attach.meshnetid = attach_node->meshnetid;
-    } else {
-        attach.sid = INVALID_SID;
-        attach.meshnetid = INVALID_NETID;
     }
     memcpy(&target.uuid, target_uuid->uuid, sizeof(target.uuid));
     error = update_address_cache(hal_type->type, &target, &attach);
