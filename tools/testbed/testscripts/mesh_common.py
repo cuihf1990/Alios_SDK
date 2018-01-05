@@ -1,12 +1,12 @@
 import os, time
 
 #allocate devices
-def allocate_devices(at, model, number, timeout):
+def allocate_devices(at, model, number, timeout, purpose='mesh'):
     models=['mk3060', 'esp32']
     if not model or model.lower() not in models:
         print "error: unsupported model {0}".format(repr(model))
         return []
-    allocated = at.device_allocate(model, number, timeout, 'mesh')
+    allocated = at.device_allocate(model, number, timeout, purpose)
     if len(allocated) != number:
         print "error: request device allocation failed"
         return []

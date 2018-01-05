@@ -47,9 +47,9 @@ if [ -f ${esp32firmware} ]; then
     sleep 30
     python alink_testrun.py --testname=${prefix}2pps --firmware=${esp32firmware} --model=${model} > ~/${model}_2pps.txt 2>&1 &
     esp32_2pps_pid=$!
-    python alink_testrun.py --testname=${prefix}5pps --firmware=${esp32firmware} --model=${model} > ~/${model}_mesh_5pps.txt 2>&1 &
+    python alink_mesh_testrun.py --testname=${prefix}5pps --firmware=${esp32firmware} --model=${model} > ~/${model}_mesh_5pps.txt 2>&1 &
     esp32_mesh_5pps_pid=$!
-    python alink_testrun.py --testname=${prefix}2pps --firmware=${esp32firmware} --model=${model} > ~/${model}_mesh_2pps.txt 2>&1 &
+    python alink_mesh_testrun.py --testname=${prefix}2pps --firmware=${esp32firmware} --model=${model} > ~/${model}_mesh_2pps.txt 2>&1 &
     esp32_mesh_2pps_pid=$!
     python stability_test.py --firmware=${esp32firmware} --model=${model} --withalink=1 > ~/${model}_stability_alink.txt 2>&1 &
     esp32_stability_alink_pid=$!
