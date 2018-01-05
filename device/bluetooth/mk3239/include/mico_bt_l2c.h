@@ -1,12 +1,3 @@
-/**
- *  UNPUBLISHED PROPRIETARY SOURCE CODE
- *  Copyright (c) 2016 MXCHIP Inc.
- *
- *  The contents of this file may not be disclosed to third parties, copied or
- *  duplicated in any form, in whole or in part, without the prior written
- *  permission of MXCHIP Corporation.
- *
- */
 
 /** @file
  *
@@ -145,8 +136,7 @@ typedef uint8_t mico_bt_l2cap_chnl_data_rate_t;
 
 /** Structure for Enhanced Retransmission Mode Options
  *  Refer to Volume 3, Part A, section 5.4 of BT Core specification for details */
-typedef struct
-{
+typedef struct {
 #define L2CAP_FCR_BASIC_MODE    0x00
 #define L2CAP_FCR_ERTM_MODE     0x03
 #define L2CAP_FCR_STREAM_MODE   0x04
@@ -164,8 +154,7 @@ typedef struct
 *   use to signify its presence or absence.
  *  Refer to Volume 3, Part A, section 5.4 of BT Core specification for details
 */
-typedef struct
-{
+typedef struct {
     uint16_t        result;                 /**< Only used in confirm messages */
     mico_bool_t    mtu_present;            /**< TRUE if MTU option present */
     uint16_t        mtu;                    /**< Maximum transmission unit size */
@@ -194,8 +183,7 @@ typedef uint16_t mico_bt_l2cap_ch_cfg_bits_t;
 /** Structure that applications use to create or accept
 *   connections with enhanced retransmission mode.
 */
-typedef struct
-{
+typedef struct {
     uint8_t       preferred_mode;     /**< Preferred mode: ERTM, Streaming, or Basic */
     uint8_t       allowed_modes;      /**< Bitmask for allowed modes */
     uint8_t       user_rx_pool_id;    /**< TODO */
@@ -222,7 +210,8 @@ typedef struct
  *
  *  @return void
 */
-typedef void (mico_bt_l2cap_connected_cback_t) (void *context, mico_bt_device_address_t bd_addr, uint16_t local_cid, uint16_t peer_mtu);
+typedef void (mico_bt_l2cap_connected_cback_t) (void *context, mico_bt_device_address_t bd_addr, uint16_t local_cid,
+                                                uint16_t peer_mtu);
 
 /**
  *  Disconnect indication callback prototype.
@@ -255,7 +244,8 @@ typedef void (mico_bt_l2cap_disconnect_confirm_cback_t) (void *context, uint16_t
  *
  *  @return void
 */
-typedef void (mico_bt_l2cap_data_indication_cback_t) (void *context, uint16_t local_cid, uint8_t *p_buff, uint16_t buf_len);
+typedef void (mico_bt_l2cap_data_indication_cback_t) (void *context, uint16_t local_cid, uint8_t *p_buff,
+                                                      uint16_t buf_len);
 
 /**
  *  Congestion status callback protype. This callback is optional. If
@@ -304,8 +294,7 @@ typedef void (mico_bt_l2cap_tx_complete_cback_t) (void *context, uint16_t local_
  *  Additionally, if registering client for dynamic PSM, connect_ind_cb() must
  *  be NULL since dynamic PSMs use this as a flag for "virtual PSM".
 */
-typedef struct
-{
+typedef struct {
     mico_bt_l2cap_connected_cback_t             *connected_cback;              /**< BR/EDR connected event */
     mico_bt_l2cap_disconnect_indication_cback_t *disconnect_indication_cback;  /**< BR/EDR disconnect indication event */
     mico_bt_l2cap_disconnect_confirm_cback_t    *disconnect_confirm_cback;     /**< BR/EDR disconnect confirmation event */
@@ -342,7 +331,7 @@ typedef struct
  *  @return void
 */
 typedef void (mico_bt_l2cap_fixed_chnl_cback_t) (mico_bt_device_address_t bd_addr, mico_bool_t connected,
-    uint16_t reason, tBT_TRANSPORT transport);
+                                                 uint16_t reason, tBT_TRANSPORT transport);
 
 /**
  *  Signalling data received.
@@ -369,8 +358,7 @@ typedef void (mico_bt_l2cap_fixed_congestion_status_cback_t) (mico_bt_device_add
 /**
  *  Fixed channel registration info (the callback addresses and channel config)
 */
-typedef struct
-{
+typedef struct {
     mico_bt_l2cap_fixed_chnl_cback_t               *fixed_conn_cback;  /**< TODO */
     mico_bt_l2cap_fixed_data_cback_t               *fixed_data_cback;  /**< TODO */
     mico_bt_l2cap_fixed_congestion_status_cback_t  *fixed_cong_cback;  /**< TODO */
@@ -391,7 +379,7 @@ typedef struct
  *  @return void
 */
 typedef void (mico_bt_l2cap_le_connect_indication_cback_t) (void *context, mico_bt_device_address_t bd_addr,
-    uint16_t local_cid, uint16_t psm, uint8_t id, uint16_t mtu_peer);
+                                                            uint16_t local_cid, uint16_t psm, uint8_t id, uint16_t mtu_peer);
 
 
 /**
@@ -405,7 +393,7 @@ typedef void (mico_bt_l2cap_le_connect_indication_cback_t) (void *context, mico_
  *  @return void
 */
 typedef void (mico_bt_l2cap_le_connect_confirm_cback_t) (void *context, uint16_t local_cid,
-    uint16_t result, uint16_t mtu_peer);
+                                                         uint16_t result, uint16_t mtu_peer);
 
 
 #if (L2CAP_LE_COC_CONFORMANCE_TESTING == TRUE)
@@ -426,8 +414,7 @@ typedef void (mico_bt_l2cap_le_conformance_test_cback_t) (uint16_t);
  *  Additionally, if registering client for dynamic PSM, connect_ind_cb() must
  *  be NULL since dynamic PSMs use this as a flag for "virtual PSM".
 */
-typedef struct
-{
+typedef struct {
     mico_bt_l2cap_le_connect_indication_cback_t  *le_connect_indication_cback; /**< LE connect indication event */
     mico_bt_l2cap_le_connect_confirm_cback_t     *le_connect_confirm_cback;    /**< LE connect confirm event */
     mico_bt_l2cap_disconnect_indication_cback_t  *disconnect_indication_cback; /**< LE disconnect indication event */
@@ -505,7 +492,7 @@ mico_bool_t mico_bt_l2cap_connect_fixed_chnl (uint16_t fixed_cid, mico_bt_device
  *
  */
 uint16_t mico_bt_l2cap_send_fixed_chnl_data (uint16_t fixed_cid, mico_bt_device_address_t rem_bda,
-                                            uint8_t *p_buf, uint16_t buf_len);
+                                             uint8_t *p_buf, uint16_t buf_len);
 
 
 
@@ -546,7 +533,8 @@ mico_bool_t mico_bt_l2cap_remove_fixed_chnl (uint16_t fixed_cid, mico_bt_device_
  *  @return         TRUE if command succeeded, FALSE if failed
  *
  */
-mico_bool_t mico_bt_l2cap_set_fixed_channel_timeout (mico_bt_device_address_t rem_bda, uint16_t fixed_cid, uint16_t idle_timeout);
+mico_bool_t mico_bt_l2cap_set_fixed_channel_timeout (mico_bt_device_address_t rem_bda, uint16_t fixed_cid,
+                                                     uint16_t idle_timeout);
 
 
 #endif /* (L2CAP_NUM_FIXED_CHNLS > 0) */
@@ -567,8 +555,8 @@ mico_bool_t mico_bt_l2cap_set_fixed_channel_timeout (mico_bt_device_address_t re
  *
  */
 mico_bool_t mico_bt_l2cap_get_current_config (uint16_t lcid,
-    mico_bt_l2cap_cfg_information_t **pp_our_cfg,  mico_bt_l2cap_ch_cfg_bits_t *p_our_cfg_bits,
-    mico_bt_l2cap_cfg_information_t **pp_peer_cfg, mico_bt_l2cap_ch_cfg_bits_t *p_peer_cfg_bits);
+                                              mico_bt_l2cap_cfg_information_t **pp_our_cfg,  mico_bt_l2cap_ch_cfg_bits_t *p_our_cfg_bits,
+                                              mico_bt_l2cap_cfg_information_t **pp_peer_cfg, mico_bt_l2cap_ch_cfg_bits_t *p_peer_cfg_bits);
 
 
 /**
@@ -636,7 +624,8 @@ uint16_t mico_bt_l2cap_allocate_psm (void);
  *  @return         the CID of the connection, or 0 if it failed to start
  *
  */
-uint16_t mico_bt_l2cap_connect_req (uint16_t psm, mico_bt_device_address_t p_bd_addr, mico_bt_l2cap_ertm_information_t *p_ertm_information);
+uint16_t mico_bt_l2cap_connect_req (uint16_t psm, mico_bt_device_address_t p_bd_addr,
+                                    mico_bt_l2cap_ertm_information_t *p_ertm_information);
 
 
 /**
@@ -674,7 +663,7 @@ void mico_bt_l2cap_ertm_enable (void);
  *
  */
 uint16_t mico_bt_l2cap_ertm_connect_req (uint16_t psm, mico_bt_device_address_t p_bd_addr,
-    mico_bt_l2cap_ertm_information_t *p_ertm_information);
+                                         mico_bt_l2cap_ertm_information_t *p_ertm_information);
 
 
 /**
@@ -745,7 +734,7 @@ uint8_t mico_bt_l2cap_data_write (uint16_t cid, uint8_t *p_buf, uint16_t buf_len
  *
  */
 mico_bool_t mico_bt_l2cap_set_idle_timeout (uint16_t cid, uint16_t timeout,
-    mico_bool_t is_global);
+                                            mico_bool_t is_global);
 
 
 /**
@@ -771,7 +760,7 @@ mico_bool_t mico_bt_l2cap_set_idle_timeout (uint16_t cid, uint16_t timeout,
  *                  ACL link.
  */
 mico_bool_t mico_bt_l2cap_set_idle_timeout_by_bd_addr (mico_bt_device_address_t bd_addr, uint16_t timeout,
-                                                  tBT_TRANSPORT transport);
+                                                       tBT_TRANSPORT transport);
 
 /**
  *
@@ -963,7 +952,8 @@ mico_bool_t mico_bt_l2cap_set_chnl_flushability (uint16_t cid, mico_bool_t is_fl
  *  @return:    TRUE if peer is connected
  *
  */
-mico_bool_t mico_bt_l2cap_get_peer_features (mico_bt_device_address_t bd_addr, uint32_t *p_ext_feat, uint8_t *p_chnl_mask);
+mico_bool_t mico_bt_l2cap_get_peer_features (mico_bt_device_address_t bd_addr, uint32_t *p_ext_feat,
+                                             uint8_t *p_chnl_mask);
 
 
 /**
@@ -1024,7 +1014,8 @@ mico_bool_t mico_bt_l2cap_cancel_ble_connect_req (mico_bt_device_address_t rem_b
  *  @return:   TRUE if update started
  *
  */
-mico_bool_t mico_bt_l2cap_update_ble_conn_params (mico_bt_device_address_t rem_bdRa, uint16_t min_int, uint16_t max_int, uint16_t latency, uint16_t timeout);
+mico_bool_t mico_bt_l2cap_update_ble_conn_params (mico_bt_device_address_t rem_bdRa, uint16_t min_int, uint16_t max_int,
+                                                  uint16_t latency, uint16_t timeout);
 
 
 /**
@@ -1088,7 +1079,8 @@ uint16_t mico_bt_l2cap_get_disconnect_reason (mico_bt_device_address_t remote_bd
  *                  in the calls to mico_bt_l2cap_le_connect_req() and mico_bt_l2cap_le_deregister().
  *
  */
-uint16_t mico_bt_l2cap_le_register (uint16_t le_psm, mico_bt_l2cap_le_appl_information_t *p_cb_information, void *context);
+uint16_t mico_bt_l2cap_le_register (uint16_t le_psm, mico_bt_l2cap_le_appl_information_t *p_cb_information,
+                                    void *context);
 
 
 /**
@@ -1129,10 +1121,10 @@ mico_bool_t mico_bt_l2cap_le_deregister (uint16_t le_psm);
  *
  */
 uint16_t mico_bt_l2cap_le_connect_req (uint16_t le_psm, mico_bt_device_address_t p_bd_addr,
-    mico_bt_ble_address_type_t bd_addr_type,
-    mico_bt_ble_conn_mode_t conn_mode,
-    uint16_t rx_mtu, uint8_t rx_sdu_pool_id,
-    uint8_t req_security, uint8_t req_encr_key_size);
+                                       mico_bt_ble_address_type_t bd_addr_type,
+                                       mico_bt_ble_conn_mode_t conn_mode,
+                                       uint16_t rx_mtu, uint8_t rx_sdu_pool_id,
+                                       uint8_t req_security, uint8_t req_encr_key_size);
 
 
 /**
@@ -1154,7 +1146,7 @@ uint16_t mico_bt_l2cap_le_connect_req (uint16_t le_psm, mico_bt_device_address_t
  *
  */
 mico_bool_t  mico_bt_l2cap_le_connect_rsp (mico_bt_device_address_t p_bd_addr, uint8_t id, uint16_t lcid,
-    uint16_t result, uint16_t rx_mtu, uint8_t rx_sdu_pool_id);
+                                           uint16_t result, uint16_t rx_mtu, uint8_t rx_sdu_pool_id);
 
 
 /**
@@ -1254,7 +1246,8 @@ uint16_t mico_bt_l2cap_le_get_peer_mtu (uint16_t lcid);
  *                  L2CAP_CONN_NO_RESOURCES.
  *
  */
-uint16_t mico_bt_l2cap_le_determ_secur_rsp (mico_bt_device_address_t bd_addr, uint8_t req_secur, uint8_t req_encr_key_size);
+uint16_t mico_bt_l2cap_le_determ_secur_rsp (mico_bt_device_address_t bd_addr, uint8_t req_secur,
+                                            uint8_t req_encr_key_size);
 
 
 /**@} l2cap_api_functions */

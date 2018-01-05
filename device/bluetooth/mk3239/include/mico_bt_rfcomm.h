@@ -1,12 +1,3 @@
-/**
- *  UNPUBLISHED PROPRIETARY SOURCE CODE
- *  Copyright (c) 2016 MXCHIP Inc.
- *
- *  The contents of this file may not be disclosed to third parties, copied or
- *  duplicated in any form, in whole or in part, without the prior written
- *  permission of MXCHIP Corporation.
- *
- */
 
 
 /** @file
@@ -24,8 +15,7 @@
  ******************************************************/
 
 /** RFCOMM Port Event Masks */
-typedef enum mico_bt_rfcomm_port_event_e
-{
+typedef enum mico_bt_rfcomm_port_event_e {
     MICO_BT_RFCOMM_EV_RXCHAR          = 0x00000001,         /**< Any Character received */
     MICO_BT_RFCOMM_EV_RXFLAG          = 0x00000002,         /**< Received certain character */
     MICO_BT_RFCOMM_EV_TXEMPTY         = 0x00000004,         /**< Transmitt Queue Empty */
@@ -56,8 +46,7 @@ typedef enum mico_bt_rfcomm_port_event_e
 
 
 /** RFCOMM Result Codes */
-enum mico_bt_rfcomm_result_e
-{
+enum mico_bt_rfcomm_result_e {
     MICO_BT_RFCOMM_SUCCESS,                                        /**< Success */
     MICO_BT_RFCOMM_ERROR,                                          /**< Error */
     MICO_BT_RFCOMM_ALREADY_OPENED,                                 /**< Already Opened */
@@ -88,9 +77,8 @@ enum mico_bt_rfcomm_result_e
 typedef int mico_bt_rfcomm_result_t;                           /**< RFCOMM result code (see #mico_bt_rfcomm_result_e) */
 
 /** RFCOMM Signals */
-enum mico_bt_rfcomm_signal_e
-{
-    MICO_BT_RFCOMM_SET_DTRDSR=0x01,   /** DTRDSR set */
+enum mico_bt_rfcomm_signal_e {
+    MICO_BT_RFCOMM_SET_DTRDSR = 0x01, /** DTRDSR set */
     MICO_BT_RFCOMM_CLR_DTRDSR,        /** DTRDSR clear */
     MICO_BT_RFCOMM_SET_CTSRTS,        /** CTSRTS set */
     MICO_BT_RFCOMM_CLR_CTSRTS,        /** CTSRTS clear */
@@ -177,10 +165,10 @@ extern "C"
  *              <b> MICO_BT_RFCOMM_INVALID_SCN </b>    : If Server Channel Number(SCN) is out of in range 1...30
  */
 mico_bt_rfcomm_result_t mico_bt_rfcomm_create_connection (uint16_t uuid, uint8_t scn,
-                                            mico_bool_t is_server, uint16_t mtu,
-                                            mico_bt_device_address_t bd_addr,
-                                            uint16_t *p_handle,
-                                            mico_bt_port_mgmt_cback_t *p_mgmt_cb);
+                                                          mico_bool_t is_server, uint16_t mtu,
+                                                          mico_bt_device_address_t bd_addr,
+                                                          uint16_t *p_handle,
+                                                          mico_bt_port_mgmt_cback_t *p_mgmt_cb);
 
 /**
  *  Close the specified connection.

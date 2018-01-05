@@ -1,19 +1,10 @@
-/**
- *  UNPUBLISHED PROPRIETARY SOURCE CODE
- *  Copyright (c) 2016 MXCHIP Inc.
- *
- *  The contents of this file may not be disclosed to third parties, copied or
- *  duplicated in any form, in whole or in part, without the prior written
- *  permission of MXCHIP Corporation.
- *
- */
 
 /*******************************************************************************
 **  Name:       unv.h
 **
 **  Description:
 **
-**  This file contains NV definitions from WIDCOMM's Universal Embedded 
+**  This file contains NV definitions from WIDCOMM's Universal Embedded
 **  Drivers API.
 **
 *******************************************************************************/
@@ -52,12 +43,12 @@ typedef void  (tUNV_DEFAULT_FUNC)(void);
 extern "C" {
 #endif
 
-#ifndef UDRV_API 
+#ifndef UDRV_API
 #define UDRV_API
 #endif
 
 UDRV_API extern void        UNV_Init(void *);
-UDRV_API extern BOOLEAN     UNV_MapBlock(UINT16, tUNV_STORAGE_PREF, UINT16, 
+UDRV_API extern BOOLEAN     UNV_MapBlock(UINT16, tUNV_STORAGE_PREF, UINT16,
                                          UINT16, UINT16 *, void *);
 UDRV_API extern BOOLEAN     UNV_ReadMap(UINT16, tUNV_STORAGE_PREF *, UINT16 *,
                                         UINT16 *, UINT16 *);

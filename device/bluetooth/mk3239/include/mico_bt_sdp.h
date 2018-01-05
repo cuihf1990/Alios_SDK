@@ -1,12 +1,3 @@
-/**
- *  UNPUBLISHED PROPRIETARY SOURCE CODE
- *  Copyright (c) 2016 MXCHIP Inc.
- *
- *  The contents of this file may not be disclosed to third parties, copied or
- *  duplicated in any form, in whole or in part, without the prior written
- *  permission of MXCHIP Corporation.
- *
- */
 
 /** @file
  *
@@ -23,8 +14,7 @@
  ****************************************************************************/
 
 /** SDP result - Success code and error codes */
-enum mico_bt_sdp_result_t
-{
+enum mico_bt_sdp_result_t {
     MICO_BT_SDP_SUCCESS              = MICO_BT_SUCCESS,   /**< SDP - Result: Success */
     MICO_BT_SDP_INVALID_VERSION                = 0x0001,   /**< SDP - invalid version */
     MICO_BT_SDP_INVALID_SERV_REC_HDL           = 0x0002,   /**< SDP - invalid service record */
@@ -83,10 +73,8 @@ enum mico_bt_sdp_result_t
 typedef void (mico_bt_sdp_discovery_complete_cback_t) (uint16_t sdp_result);
 
 /** Attribute value */
-typedef struct
-{
-    union
-    {
+typedef struct {
+    union {
         uint8_t                 u8;                 /**< 8-bit integer            */
         uint16_t                u16;                /**< 16-bit integer           */
         uint32_t                u32;                /**< 32-bit integer           */
@@ -96,8 +84,7 @@ typedef struct
 } mico_bt_sdp_discovery_attribute_value_t;
 
 /** SDP Attribute */
-typedef struct t_sdp_discovery_attr
-{
+typedef struct t_sdp_discovery_attr {
     struct t_sdp_disc_attr                      *p_next_attr;   /**< Addr of next linked attr     */
     uint16_t                                    attr_id;        /**< Attribute ID                 */
     uint16_t                                    attr_len_type;  /**< Length and type fields       */
@@ -105,8 +92,7 @@ typedef struct t_sdp_discovery_attr
 } mico_bt_sdp_discovery_attribute_t;
 
 /** Discovery record from SDP search result */
-typedef struct sdp_discovery_record_t
-{
+typedef struct sdp_discovery_record_t {
     mico_bt_sdp_discovery_attribute_t      *p_first_attr;      /**< First attribute of record    */
     struct sdp_discovery_record_t           *p_next_rec;        /**< Addr of next linked record   */
     uint32_t                                time_read;          /**< The time the record was read */
@@ -114,8 +100,7 @@ typedef struct sdp_discovery_record_t
 } mico_bt_sdp_discovery_record_t;
 
 /** Discovery database (used for performing service searches and holding search results) */
-typedef struct
-{
+typedef struct {
     uint32_t                                mem_size;                           /**< Memory size of the DB        */
     uint32_t                                mem_free;                           /**< Memory still available       */
     mico_bt_sdp_discovery_record_t         *p_first_rec;                       /**< Addr of first record in DB   */
@@ -124,11 +109,10 @@ typedef struct
     uint16_t                                num_attr_filters;                   /**< Number of attribute filters  */
     uint16_t                                attr_filters[SDP_MAX_ATTR_FILTERS]; /**< Attributes to filter         */
     uint8_t                                 *p_free_mem;                        /**< Pointer to free memory       */
-}mico_bt_sdp_discovery_db_t;
+} mico_bt_sdp_discovery_db_t;
 
 /** This structure is used to add protocol lists and find protocol elements */
-typedef struct
-{
+typedef struct {
     uint16_t      protocol_uuid;                        /**< The protocol uuid                  */
     uint16_t      num_params;                           /**< Number of parameters               */
     uint16_t      params[SDP_MAX_PROTOCOL_PARAMS];      /**< Contents of protocol parameters    */
@@ -184,7 +168,7 @@ typedef struct
 #define SDP_ATTR_CLASS_ID128(x1, x2, x3, x4, x5, x6, x7, x8, x9, x10, x11, x12, x13, x14, x15, x16)  \
     SDP_ATTR_ID(ATTR_ID_SERVICE_CLASS_ID_LIST), SDP_ATTR_SEQUENCE_1(17), \
         SDP_ATTR_UUID128(x1, x2, x3, x4, x5, x6, x7, x8, x9, x10, x11, x12, x13, x14, x15, x16)
-        
+
 /* Service Record State 0x0002 */
 #define SDP_ATTR_SERVICE_RECORD_STATE(state)                            \
         SDP_ATTR_UINT4(ATTR_ID_SERVICE_RECORD_STATE, state)
@@ -334,10 +318,10 @@ mico_bool_t mico_bt_sdp_db_init (uint8_t *p_sdp_db, uint16_t size);
  *
  **/
 mico_bool_t mico_bt_sdp_init_discovery_db (mico_bt_sdp_discovery_db_t *p_db, uint32_t len,
-                                            uint16_t num_uuid,
-                                            mico_bt_uuid_t *p_uuid_list,
-                                            uint16_t num_attr,
-                                            uint16_t *p_attr_list);
+                                           uint16_t num_uuid,
+                                           mico_bt_uuid_t *p_uuid_list,
+                                           uint16_t num_attr,
+                                           uint16_t *p_attr_list);
 
 /**
  *
@@ -366,8 +350,8 @@ mico_bool_t mico_bt_sdp_cancel_service_search (mico_bt_sdp_discovery_db_t *p_db)
  *
  **/
 mico_bool_t mico_bt_sdp_service_search_request (uint8_t *p_bd_addr,
-                                                 mico_bt_sdp_discovery_db_t *p_db,
-                                                 mico_bt_sdp_discovery_complete_cback_t *p_cb);
+                                                mico_bt_sdp_discovery_db_t *p_db,
+                                                mico_bt_sdp_discovery_complete_cback_t *p_cb);
 
 
 /**
@@ -406,8 +390,8 @@ mico_bool_t mico_bt_sdp_service_search_attribute_request (uint8_t *p_bd_addr,
  *
  **/
 mico_bt_sdp_discovery_record_t *mico_bt_sdp_find_attribute_in_db (mico_bt_sdp_discovery_db_t *p_db,
-                                                     uint16_t attr_id,
-                                                     mico_bt_sdp_discovery_record_t *p_start_rec);
+                                                                  uint16_t attr_id,
+                                                                  mico_bt_sdp_discovery_record_t *p_start_rec);
 
 
 /**
@@ -423,7 +407,7 @@ mico_bt_sdp_discovery_record_t *mico_bt_sdp_find_attribute_in_db (mico_bt_sdp_di
  *
  **/
 mico_bt_sdp_discovery_attribute_t *mico_bt_sdp_find_attribute_in_rec (mico_bt_sdp_discovery_record_t *p_rec,
-                                                       uint16_t attr_id);
+                                                                      uint16_t attr_id);
 
 
 /**
@@ -441,8 +425,8 @@ mico_bt_sdp_discovery_attribute_t *mico_bt_sdp_find_attribute_in_rec (mico_bt_sd
  *
  **/
 mico_bt_sdp_discovery_record_t *mico_bt_sdp_find_service_in_db (mico_bt_sdp_discovery_db_t *p_db,
-                                                   uint16_t service_uuid,
-                                                   mico_bt_sdp_discovery_record_t *p_start_rec);
+                                                                uint16_t service_uuid,
+                                                                mico_bt_sdp_discovery_record_t *p_start_rec);
 
 
 /**
@@ -460,8 +444,8 @@ mico_bt_sdp_discovery_record_t *mico_bt_sdp_find_service_in_db (mico_bt_sdp_disc
  *
  **/
 mico_bt_sdp_discovery_record_t *mico_bt_sdp_find_service_uuid_in_db (mico_bt_sdp_discovery_db_t *p_db,
-                                                       mico_bt_uuid_t *p_uuid,
-                                                       mico_bt_sdp_discovery_record_t *p_start_rec);
+                                                                     mico_bt_uuid_t *p_uuid,
+                                                                     mico_bt_sdp_discovery_record_t *p_start_rec);
 
 
 /**
@@ -478,8 +462,8 @@ mico_bt_sdp_discovery_record_t *mico_bt_sdp_find_service_uuid_in_db (mico_bt_sdp
  *
  **/
 mico_bool_t mico_bt_sdp_find_protocol_list_elem_in_rec (mico_bt_sdp_discovery_record_t *p_rec,
-                                                      uint16_t layer_uuid,
-                                                      mico_bt_sdp_protocol_elem_t *p_elem);
+                                                        uint16_t layer_uuid,
+                                                        mico_bt_sdp_protocol_elem_t *p_elem);
 
 /**
  *
@@ -495,8 +479,8 @@ mico_bool_t mico_bt_sdp_find_protocol_list_elem_in_rec (mico_bt_sdp_discovery_re
  *
  **/
 mico_bool_t mico_bt_sdp_find_protocol_lists_elem_in_rec (mico_bt_sdp_discovery_record_t *p_rec,
-                                                       uint16_t layer_uuid,
-                                                       mico_bt_sdp_protocol_elem_t *p_elem);
+                                                         uint16_t layer_uuid,
+                                                         mico_bt_sdp_protocol_elem_t *p_elem);
 
 /**
  *
@@ -512,8 +496,8 @@ mico_bool_t mico_bt_sdp_find_protocol_lists_elem_in_rec (mico_bt_sdp_discovery_r
  *
  **/
 mico_bool_t mico_bt_sdp_find_profile_version_in_rec (mico_bt_sdp_discovery_record_t *p_rec,
-                                                    uint16_t profile_uuid,
-                                                    uint16_t *p_version);
+                                                     uint16_t profile_uuid,
+                                                     uint16_t *p_version);
 
 /**
  *

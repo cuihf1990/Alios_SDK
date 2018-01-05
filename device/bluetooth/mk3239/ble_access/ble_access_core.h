@@ -1,42 +1,3 @@
-/*
- ******************************************************************************
- * @file    ble_access_core.h
- * @author  Jian Zhang
- * @version V1.2.1
- * @date    26-Dec-2016
- * @file    BLE ACCESS Protocol Components
- * ******************************************************************************
- *
- *  The MIT License
- *  Copyright (c) 2014 MXCHIP Inc.
- *
- *  Permission is hereby granted, free of charge, to any person obtaining a copy
- *  of this software and associated documentation files (the "Software"), to deal
- *  in the Software without restriction, including without limitation the rights
- *  to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
- *  copies of the Software, and to permit persons to whom the Software is furnished
- *  to do so, subject to the following conditions:
- *
- *  The above copyright notice and this permission notice shall be included in
- *  all copies or substantial portions of the Software.
- *
- *  THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
- *  IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
- *  FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
- *  AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY,
- *  WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR
- *  IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
- *
- ******************************************************************************
- *  BLE Vendor Specific Device
- *
- * Features demonstrated
- *  - Implement BLE_ACCESS Center Protocol developed by MXCHIP on MiCOKit-3239.
- *  - You should see details about this protocol on mico.io. 
- *
- ******************************************************************************
- **/
-
 #ifndef __BLE_ACCESS_CORE_H__
 #define __BLE_ACCESS_CORE_H__
 
@@ -47,7 +8,7 @@ extern "C" {
 /*
  *-------------------------------------------------------------------------------------------------
  *
- *  Configurations & Constants 
+ *  Configurations & Constants
  *
  *-------------------------------------------------------------------------------------------------
  */
@@ -57,7 +18,7 @@ extern "C" {
 #define BLE_ACCESS_PREFIX_D0BAE4            "\xD0\xBA\xE4"
 #define BLE_ACCESS_PREFIX_C89346            "\xC8\x93\x46"
 
-/* The maximum length of a Bluetooth Device Name */ 
+/* The maximum length of a Bluetooth Device Name */
 #define BLE_ACCESS_DEVICE_NAME_MAX_LEN      16
 
 /* Advertisement PACKET type */
@@ -143,7 +104,7 @@ typedef struct {
         uint32_t    uuid32;         /* 32-bit UUID */
         uint8_t     uuid128[16];    /* 128-bit UUID */
     } uu;
-} ble_access_uuid_t;    
+} ble_access_uuid_t;
 
 #pragma pack(1)
 
@@ -273,46 +234,46 @@ typedef struct {
  */
 typedef struct {
     void               *next;               // Not used.
-    uint16_t            handle;             // attribute handle  
+    uint16_t            handle;             // attribute handle
     ble_access_uuid_t   type;               // attribute type
     uint8_t             permission;         // attribute permissions
     uint32_t            value_length;       // length of the attribute value. If no value, this equals 0
-    uint32_t            value_struct_size;  // size of the value structure 
+    uint32_t            value_struct_size;  // size of the value structure
 
     /* Union of attribute values. Use the right format based on Attribute Type */
     union {
         /* Not support Long Value                                                             */
-        uint8_t                               value[512]; 
+        uint8_t                               value[512];
         /* Attribute Value for Service                                                         */
-        ble_access_attr_val_serv_t            service;                                
+        ble_access_attr_val_serv_t            service;
         /* Attribute Value for Include                                                         */
-        ble_access_attr_val_inc_t             include;                                
+        ble_access_attr_val_inc_t             include;
         /* Attribute Value for Characteristic                                                  */
-        ble_access_attr_val_char_t            characteristic;                         
+        ble_access_attr_val_char_t            characteristic;
         /* Attribute Value for Characteristic Value                                            */
-        ble_access_attr_val_char_val_t        characteristic_value;                   
+        ble_access_attr_val_char_val_t        characteristic_value;
         /* Attribute Value for Descriptor: Characteristic Extended Properties                  */
-        ble_access_attr_val_ext_prop_t        extended_properties;                    
+        ble_access_attr_val_ext_prop_t        extended_properties;
         /* Attribute Value for Descriptor: Characteristic User_Description                     */
-        ble_access_attr_val_usr_desc_t        user_description;                       
+        ble_access_attr_val_usr_desc_t        user_description;
         /* Attribute Value for Descriptor: Client Characteristic Configuration                 */
-        ble_access_attr_val_cli_cfg_t         client_config;                         
-        /* Attribute Value for Descriptor: Server Characteristic Configuration                 */ 
-        ble_access_attr_val_srv_cfg_t         server_config;                         
+        ble_access_attr_val_cli_cfg_t         client_config;
+        /* Attribute Value for Descriptor: Server Characteristic Configuration                 */
+        ble_access_attr_val_srv_cfg_t         server_config;
         /* Attribute Value for Descriptor: Characteristic Presentation Format                  */
-        ble_access_attr_val_pres_format_t     presentation_format;                    
+        ble_access_attr_val_pres_format_t     presentation_format;
         /* Attribute Value for Descriptor: Characteristic Aggregate Format                     */
-        ble_access_attr_val_aggre_format_t    aggregate_format;                       
+        ble_access_attr_val_aggre_format_t    aggregate_format;
         /* Attribute Value for Characteristic Type: Device Name                                */
-        ble_access_attr_val_dev_name_t        device_name;                            
+        ble_access_attr_val_dev_name_t        device_name;
         /* Attribute Value for Characteristic Type: Appearance                                 */
-        ble_access_attr_val_appear_t          appearance;                             
+        ble_access_attr_val_appear_t          appearance;
         /* Attribute Value for Characteristic Type: Peripheral Privacy Flag                    */
-        ble_access_attr_val_privacy_flag_t    periph_privacy_flag;                    
+        ble_access_attr_val_privacy_flag_t    periph_privacy_flag;
         /* Attribute Value for Characteristic Type: Reconnection Address                       */
-        ble_access_attr_val_reconn_addr_t     reconn_address;                         
+        ble_access_attr_val_reconn_addr_t     reconn_address;
         /* Attribute Value for Characteristic Type: Peripheral Preferred Connection Parameters */
-        ble_access_attr_val_conn_parms_t      periph_preferred_conn_params;           
+        ble_access_attr_val_conn_parms_t      periph_preferred_conn_params;
     } value;
 } ble_access_attribute_t;
 
@@ -386,70 +347,70 @@ extern OSStatus ble_access_bluetooth_start(ble_access_event_callback_t callback)
 extern OSStatus ble_access_bluetooth_stop(void);
 
 /* Send a command to Bluetooth Interface. */
-extern OSStatus ble_access_bluetooth_request(uint8_t request, 
+extern OSStatus ble_access_bluetooth_request(uint8_t request,
                                              const ble_access_cmd_parms_t *parms);
 
-/* 
- * Get an attribute of Characteristic with the UUID provided from the local attribute database. 
- * 
+/*
+ * Get an attribute of Characteristic with the UUID provided from the local attribute database.
+ *
  * @param dev_id[in]    The Peer Device ID.
  * @param serv[in]      The GATT Service Handle Structure. (used start_handle & end_handle)
  * @param uuid[in]      The Characteristic UUID.
  * @param attr[inout]    This function calling result in attr->characteristic.
  */
-extern OSStatus ble_access_get_characteritic_by_uuid(uint32_t dev_id, 
-                                                      const ble_access_serv_t *serv, 
-                                                      const ble_access_uuid_t *uuid,
-                                                      ble_access_attribute_t *attr);
+extern OSStatus ble_access_get_characteritic_by_uuid(uint32_t dev_id,
+                                                     const ble_access_serv_t *serv,
+                                                     const ble_access_uuid_t *uuid,
+                                                     ble_access_attribute_t *attr);
 
-/* 
- * Find all characteristics for 'serv' from the local attribute database and generate 
+/*
+ * Find all characteristics for 'serv' from the local attribute database and generate
  * several EVENT 'BLE_ACCESS_EVENT_CHAR' and 'BLE_ACCESS_EVENT_CHAR_CMPL' to user application.
- * 
+ *
  * @param dev_id[in]    The Peer Device ID.
  * @param serv[in]      The GATT Service Handle Structure. (used start_handle & end_handle)
  */
-extern OSStatus ble_access_get_characteristics(uint32_t dev_id, 
-                                                const ble_access_serv_t *serv);
+extern OSStatus ble_access_get_characteristics(uint32_t dev_id,
+                                               const ble_access_serv_t *serv);
 
-/* 
+/*
  * Find and read attribute with the Handle provided from the Attribute Cache
- * 
+ *
  * @param dev_id[in]    The Peer Device ID.
  * @param handle[in]    The Attribute Handle Value
- * @param attr[out]     This function calling result. And user should make sure its is a valid pointer. 
- * @param size[in]      The 'attr' buffer size in bytes.  
+ * @param attr[out]     This function calling result. And user should make sure its is a valid pointer.
+ * @param size[in]      The 'attr' buffer size in bytes.
  */
-extern OSStatus ble_access_get_attribute_by_handle(uint32_t dev_id, 
-                                                   uint16_t handle, 
+extern OSStatus ble_access_get_attribute_by_handle(uint32_t dev_id,
+                                                   uint16_t handle,
                                                    ble_access_attribute_t *attr);
 
-/* 
- * Update Characteristic Value in the Attribute To the server 
- * 
- * @param dev_id[in]    The Peer device ID 
+/*
+ * Update Characteristic Value in the Attribute To the server
+ *
+ * @param dev_id[in]    The Peer device ID
  * @param handle[in]    The characteristic value handle.
  * @param length[in]    The lenght of Data to update characteristic value.
  * @param data[in]      Point to the data to update characteristic value.
  */
 extern OSStatus ble_access_update_characteristic_value(uint32_t dev_id, uint16_t handle, uint8_t length, uint8_t *data);
 
-/* 
- * Enable Characteristic Client Configuration Indication or Notification with the 
+/*
+ * Enable Characteristic Client Configuration Indication or Notification with the
  * attribute provided from the Attribute Cache
- * 
+ *
  * @param dev_id[in]    The Peer Device ID.
- * @param attr[int]     This function calling result. And user should make sure its is a valid pointer. 
+ * @param attr[int]     This function calling result. And user should make sure its is a valid pointer.
  * @param notify[in]    Notification(YES) or Indication(FALSE)
  */
-extern OSStatus ble_access_enable_notification(uint32_t dev_id, 
-                                                const ble_access_attribute_t *attr, 
-                                                mico_bool_t notify);
+extern OSStatus ble_access_enable_notification(uint32_t dev_id,
+                                               const ble_access_attribute_t *attr,
+                                               mico_bool_t notify);
 
 /*
- * Compare two UUID type. 
+ * Compare two UUID type.
  *
- * @param uuid1[in] 
+ * @param uuid1[in]
  * @param uuid2[in]
  *
  * @return 0 if they are equal, otherwise non-zero.
@@ -466,7 +427,7 @@ extern mico_bool_t ble_access_uuid_compare(const ble_access_uuid_t *uuid1, const
 extern uint32_t ble_access_calculate_device_id(const mico_bt_device_address_t addr);
 
 /*
- * Generate a device address by device ID 
+ * Generate a device address by device ID
  *
  * @param addr[out]     device address
  * @param device_id[in] device ID

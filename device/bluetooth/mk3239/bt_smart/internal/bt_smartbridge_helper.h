@@ -1,13 +1,3 @@
-/**
- *  UNPUBLISHED PROPRIETARY SOURCE CODE
- *  Copyright (c) 2016 MXCHIP Inc.
- *
- *  The contents of this file may not be disclosed to third parties, copied or
- *  duplicated in any form, in whole or in part, without the prior written
- *  permission of MXCHIP Corporation.
- *
- */
-
 #pragma once
 
 /** @file
@@ -33,7 +23,7 @@ extern "C" {
 
 //#define bt_peripheral_log(M, ...) custom_log("Peripheral", M, ##__VA_ARGS__)
 #define bt_peripheral_log(M, ...)
-  
+
 //#define bt_manager_log(M, ...) custom_log("Manager", M, ##__VA_ARGS__)
 #define bt_manager_log(M, ...)
 
@@ -56,8 +46,7 @@ extern "C" {
  ******************************************************/
 
 /* GATT Feature Sub-Procedures (SPEC v4.0 Part G Section 4) */
-typedef enum
-{
+typedef enum {
     GATT_SUBPROCEDURE_NONE,                         /* Default Value                                       */
     GATT_EXCHANGE_MTU,                              /* GATT Feature: Server Configuration                  */
     GATT_DISCOVER_ALL_PRIMARY_SERVICES,             /* GATT Feature: Primary Service Discovery             */
@@ -91,15 +80,14 @@ typedef enum
  *                    Structures
  ******************************************************/
 
-typedef struct
-{
+typedef struct {
     bt_smart_gatt_subprocedure_t subprocedure;
     mico_mutex_t                 mutex;
     mico_semaphore_t             done_semaphore;
     OSStatus                     result;
     mico_bt_uuid_t               uuid;
-    mico_bt_smart_attribute_t*  attr_head;
-    mico_bt_smart_attribute_t*  attr_tail;
+    mico_bt_smart_attribute_t  *attr_head;
+    mico_bt_smart_attribute_t  *attr_tail;
     uint32_t                     attr_count;
     uint16_t                     server_mtu;
     uint16_t                     start_handle;
@@ -110,8 +98,7 @@ typedef struct
     uint16_t                     connection_handle;
 } gatt_subprocedure_t;
 
-typedef struct 
-{
+typedef struct {
     mico_timer_t        timer;      // MiCO timer object
     mico_bool_t         is_started; // is it started?
     mico_bool_t         one_shot;   // one-shot?
@@ -127,28 +114,38 @@ typedef struct
  ******************************************************/
 
 OSStatus  smartbridge_helper_delete_scan_result_list          ( void );
-OSStatus  smartbridge_helper_add_scan_result_to_list          ( mico_bt_smart_scan_result_t* result );
-OSStatus  smartbridge_helper_find_device_in_scan_result_list  ( mico_bt_device_address_t* address, mico_bt_smart_address_type_t type,  mico_bt_smart_scan_result_t** result );
-OSStatus  smartbridge_helper_get_scan_results                 ( mico_bt_smart_scan_result_t** result_list, uint32_t* count );
+OSStatus  smartbridge_helper_add_scan_result_to_list          ( mico_bt_smart_scan_result_t *result );
+OSStatus  smartbridge_helper_find_device_in_scan_result_list  ( mico_bt_device_address_t *address,
+                                                                mico_bt_smart_address_type_t type,  mico_bt_smart_scan_result_t **result );
+OSStatus  smartbridge_helper_get_scan_results                 ( mico_bt_smart_scan_result_t **result_list,
+                                                                uint32_t *count );
 
-mico_bool_t    smartbridge_helper_socket_check_actions_enabled      ( mico_bt_smartbridge_socket_t* socket, uint8_t action_bits );
-mico_bool_t    smartbridge_helper_socket_check_actions_disabled     ( mico_bt_smartbridge_socket_t* socket, uint8_t action_bits );
-void           smartbridge_helper_socket_set_actions               ( mico_bt_smartbridge_socket_t* socket, uint8_t action_bits );
-void           smartbridge_helper_socket_clear_actions             ( mico_bt_smartbridge_socket_t* socket, uint8_t action_bits );
+mico_bool_t    smartbridge_helper_socket_check_actions_enabled      ( mico_bt_smartbridge_socket_t *socket,
+                                                                      uint8_t action_bits );
+mico_bool_t    smartbridge_helper_socket_check_actions_disabled     ( mico_bt_smartbridge_socket_t *socket,
+                                                                      uint8_t action_bits );
+void           smartbridge_helper_socket_set_actions               ( mico_bt_smartbridge_socket_t *socket,
+                                                                     uint8_t action_bits );
+void           smartbridge_helper_socket_clear_actions             ( mico_bt_smartbridge_socket_t *socket,
+                                                                     uint8_t action_bits );
 
 
 
-mico_bool_t    peripheral_helper_socket_check_actions_enabled      ( mico_bt_peripheral_socket_t* socket, uint8_t action_bits );
-mico_bool_t    peripheral_helper_socket_check_actions_disabled     ( mico_bt_peripheral_socket_t* socket, uint8_t action_bits );
-void           peripheral_helper_socket_set_actions                ( mico_bt_peripheral_socket_t* socket, uint8_t action_bits );
-void           peripheral_helper_socket_clear_actions              ( mico_bt_peripheral_socket_t* socket, uint8_t action_bits );
+mico_bool_t    peripheral_helper_socket_check_actions_enabled      ( mico_bt_peripheral_socket_t *socket,
+                                                                     uint8_t action_bits );
+mico_bool_t    peripheral_helper_socket_check_actions_disabled     ( mico_bt_peripheral_socket_t *socket,
+                                                                     uint8_t action_bits );
+void           peripheral_helper_socket_set_actions                ( mico_bt_peripheral_socket_t *socket,
+                                                                     uint8_t action_bits );
+void           peripheral_helper_socket_clear_actions              ( mico_bt_peripheral_socket_t *socket,
+                                                                     uint8_t action_bits );
 
-OSStatus  subprocedure_notify_complete               ( gatt_subprocedure_t* subprocedure );
-OSStatus  subprocedure_unlock                        ( gatt_subprocedure_t* subprocedure );
-OSStatus  subprocedure_lock                          ( gatt_subprocedure_t* subprocedure );
-OSStatus  subprocedure_reset                         ( gatt_subprocedure_t* subprocedure );
-OSStatus  subprocedure_wait_for_completion           ( gatt_subprocedure_t* subprocedure );
-OSStatus  subprocedure_wait_clear_semaphore          ( gatt_subprocedure_t* subprocedure );
+OSStatus  subprocedure_notify_complete               ( gatt_subprocedure_t *subprocedure );
+OSStatus  subprocedure_unlock                        ( gatt_subprocedure_t *subprocedure );
+OSStatus  subprocedure_lock                          ( gatt_subprocedure_t *subprocedure );
+OSStatus  subprocedure_reset                         ( gatt_subprocedure_t *subprocedure );
+OSStatus  subprocedure_wait_for_completion           ( gatt_subprocedure_t *subprocedure );
+OSStatus  subprocedure_wait_clear_semaphore          ( gatt_subprocedure_t *subprocedure );
 
 /* This function is used to stop a active timer.
  * return MICO_TRUE if successful, otherwise, return MICO_FALSE
@@ -158,7 +155,8 @@ mico_bool_t smartbridge_helper_timer_stop(smartbridge_helper_timer_t *timer);
 /* This function is used to start or restart a timer.
  * The 'timer' will be restarted if it is active.
  */
-mico_bool_t smartbridge_helper_timer_start(smartbridge_helper_timer_t *timer, mico_bool_t one_shot, uint32_t ms, timer_handler_t handler, void *arg);
+mico_bool_t smartbridge_helper_timer_start(smartbridge_helper_timer_t *timer, mico_bool_t one_shot, uint32_t ms,
+                                           timer_handler_t handler, void *arg);
 
 #ifdef __cplusplus
 } /* extern "C" */

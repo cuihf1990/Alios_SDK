@@ -1,21 +1,12 @@
-/**
- *  UNPUBLISHED PROPRIETARY SOURCE CODE
- *  Copyright (c) 2016 MXCHIP Inc.
- *
- *  The contents of this file may not be disclosed to third parties, copied or
- *  duplicated in any form, in whole or in part, without the prior written
- *  permission of MXCHIP Corporation.
- *
- */
 /** @file
  *
  * Bluetooth Synchronous Connection Oriented Channel Application Programming Interface
  *
  */
 
-#ifdef SCO_ENABLE											//oscar for mindray
+#ifdef SCO_ENABLE                                           //oscar for mindray
 
- 
+
 #pragma once
 
 #include "mico.h"
@@ -29,8 +20,7 @@
  ******************************************************/
 /* Subset for the enhanced setup/accept synchronous connection paramters
  * See BT 4.1 or later HCI spec for details */
-typedef struct
-{
+typedef struct {
     uint16_t max_latency;                   /**< Maximum latency (0x4-0xFFFE in msecs) */
     uint16_t packet_types;                  /**< Packet Types */
     uint8_t retrans_effort;                 /**< 0x00-0x02, 0xFF don't care */
@@ -73,8 +63,8 @@ extern "C"
  *              <b> BTM_CMD_STARTED </b>            : Create connection successfully, "p_sco_index" is returned
  */
 mico_bt_dev_status_t mico_bt_sco_create_as_initiator (mico_bt_device_address_t bd_addr,
-                                                        uint16_t *p_sco_index,
-                                                        mico_bt_sco_params_t *p_params);
+                                                      uint16_t *p_sco_index,
+                                                      mico_bt_sco_params_t *p_params);
 
 /**
  * Function         mico_bt_sco_create_as_acceptor
@@ -126,7 +116,7 @@ mico_bt_dev_status_t mico_bt_sco_remove (uint16_t sco_index);
  *
  */
 void mico_bt_sco_accept_connection (uint16_t sco_index, uint8_t hci_status,
-                                     mico_bt_sco_params_t *p_params);
+                                    mico_bt_sco_params_t *p_params);
 
 #ifdef __cplusplus
 }

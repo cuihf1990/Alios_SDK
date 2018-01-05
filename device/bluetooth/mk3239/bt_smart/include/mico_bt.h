@@ -1,13 +1,3 @@
-/**
- *  UNPUBLISHED PROPRIETARY SOURCE CODE
- *  Copyright (c) 2016 MXCHIP Inc.
- *
- *  The contents of this file may not be disclosed to third parties, copied or
- *  duplicated in any form, in whole or in part, without the prior written
- *  permission of MXCHIP Corporation.
- *
- */
-
 /** @file
  *  Defines functions for using the MICO Bluetooth Framework
  */
@@ -37,8 +27,7 @@ extern "C" {
 
 /** MICO Bluetooth Framework mode of operation
  */
-typedef enum
-{
+typedef enum {
     MICO_BT_MPAF_MODE, /**< The framework uses Multi-Profile Application Framework (MPAF). The entire Bluetooth stack runs on the controller. The host controls the controller using remote procedure calls (RPC) */
     MICO_BT_HCI_MODE,  /**< The framework uses standard Host Controller Interface (HCI). The upper stack runs on the host and the lower stack runs on the controller                                                         */
 } mico_bt_mode_t;
@@ -103,13 +92,13 @@ extern mico_worker_thread_t mico_bt_evt_worker_thread;
  * @param device_name : A user-friendly name of the local Bluetooth device. A
  *                      name longer than 21 characters will be truncated.
  * @param client_links :  Max cocurrent connections as a BLE client
- * @param server_links : 
+ * @param server_links :
  *
  * @return    MICO_SUCCESS : on success;
  *            MICO_ERROR   : if an error occurred
  */
 
-OSStatus mico_bt_init( mico_bt_mode_t mode, const char* device_name, uint8_t client_links, uint8_t server_links );
+OSStatus mico_bt_init( mico_bt_mode_t mode, const char *device_name, uint8_t client_links, uint8_t server_links );
 
 /** Deinitialise the MICO Bluetooth Framework
  *
@@ -137,7 +126,7 @@ OSStatus mico_bt_deinit( void );
  * @return    MICO_SUCCESS : on success;
  *            MICO_ERROR   : if an error occurred
  */
-OSStatus mico_bt_init_address( const mico_bt_device_address_t* address, const mico_bt_device_address_t* mask );
+OSStatus mico_bt_init_address( const mico_bt_device_address_t *address, const mico_bt_device_address_t *mask );
 
 
 /** Start manufacturing test mode
@@ -147,7 +136,7 @@ OSStatus mico_bt_init_address( const mico_bt_device_address_t* address, const mi
  * @return    MICO_SUCCESS : on success;
  *            MICO_ERROR   : if an error occurred
  */
-OSStatus mico_bt_start_mfgtest_mode( const mico_uart_config_t* config );
+OSStatus mico_bt_start_mfgtest_mode( const mico_uart_config_t *config );
 
 /** @} */
 
@@ -169,13 +158,13 @@ OSStatus mico_bt_start_mfgtest_mode( const mico_uart_config_t* config );
  * @return    MICO_TRUE  : is device address successfully retrieved;
  *            MICO_FALSE : if not or if an error occurred
  */
-OSStatus mico_bt_device_get_address( mico_bt_device_address_t* address );
+OSStatus mico_bt_device_get_address( mico_bt_device_address_t *address );
 
 /** Retrieve the user-friendly name of the local Bluetooth device
  *
  * @return pointer to the device name string
  */
-const char*    mico_bt_device_get_name( void );
+const char    *mico_bt_device_get_name( void );
 
 /** Check if the local Bluetooth device is powered
  *
@@ -215,35 +204,36 @@ mico_bool_t   mico_bt_device_is_discoverable( void );
 /** Start a MiCO bluetooth LE pairing procedure
  *
  *
- * @param address 	: The remote device address
- * @param type 		: The remote device address type
- * @param settings 	: Security settings used in pairing procedure
+ * @param address   : The remote device address
+ * @param type      : The remote device address type
+ * @param settings  : Security settings used in pairing procedure
  *
- * @return 	MICO_BT_PENDING if successfully initiated,
+ * @return  MICO_BT_PENDING if successfully initiated,
  *          MICO_BT_SUCCESS if already paired to the device, else
  *          error code
  */
-OSStatus mico_bt_start_pairing( mico_bt_device_address_t address, mico_bt_smart_address_type_t type, const mico_bt_smart_security_settings_t* settings );
+OSStatus mico_bt_start_pairing( mico_bt_device_address_t address, mico_bt_smart_address_type_t type,
+                                const mico_bt_smart_security_settings_t *settings );
 
 /** Stop a MiCO bluetooth LE pairing procedure
  *
- * @param address 	: The remote device address
+ * @param address   : The remote device address
  *
- * @return 	 MICO_BT_PENDING if cancel initiated,
+ * @return   MICO_BT_PENDING if cancel initiated,
  *           MICO_BT_SUCCESS if cancel has completed already, else error code.
  */
 OSStatus mico_bt_stop_pairing( mico_bt_device_address_t address );
 
 /** Satrt a MiCO bluetooth LE encryption procedure
  *
- * @param address 	: The remote device address
+ * @param address   : The remote device address
  *
- * @return 	 MICO_BT_SUCCESS            : already encrypted
+ * @return   MICO_BT_SUCCESS            : already encrypted
  *           MICO_BT_PENDING            : command will be returned in the callback
  *           MICO_BT_WRONG_MODE         : connection not up.
  *           MICO_BT_BUSY               : security procedures are currently active
  */
-OSStatus mico_bt_start_encryption( mico_bt_device_address_t* address );
+OSStatus mico_bt_start_encryption( mico_bt_device_address_t *address );
 
 /** @} */
 
@@ -269,7 +259,7 @@ OSStatus mico_bt_start_encryption( mico_bt_device_address_t* address );
  *            MICO_BADARG  : if bad argument(s) are inserted;
  *            MICO_ERROR   : if an error occurred.
  */
-OSStatus mico_bt_packet_delete( mico_bt_packet_t* packet );
+OSStatus mico_bt_packet_delete( mico_bt_packet_t *packet );
 
 /** Get a pointer to the packet data
  *
@@ -289,7 +279,8 @@ OSStatus mico_bt_packet_delete( mico_bt_packet_t* packet );
  *            MICO_BADARG  : if bad argument(s) are inserted;
  *            MICO_ERROR   : if an error occurred.
  */
-OSStatus mico_bt_packet_get_data( const mico_bt_packet_t* packet, uint8_t** data, uint32_t* current_data_size, uint32_t* available_space );
+OSStatus mico_bt_packet_get_data( const mico_bt_packet_t *packet, uint8_t **data, uint32_t *current_data_size,
+                                  uint32_t *available_space );
 
 /** Set the end of the packet data
  *
@@ -303,7 +294,7 @@ OSStatus mico_bt_packet_get_data( const mico_bt_packet_t* packet, uint8_t** data
  *            MICO_BADARG  : if bad argument(s) are inserted;
  *            MICO_ERROR   : if an error occurred
  */
-OSStatus mico_bt_packet_set_data_end( mico_bt_packet_t* packet, const uint8_t* data_end );
+OSStatus mico_bt_packet_set_data_end( mico_bt_packet_t *packet, const uint8_t *data_end );
 
 /** @} */
 
@@ -330,7 +321,7 @@ OSStatus mico_bt_packet_set_data_end( mico_bt_packet_t* packet, const uint8_t* d
  *
  * @return @ref OSStatus
  */
-OSStatus mico_bt_get_whitelist_capability( uint8_t* size );
+OSStatus mico_bt_get_whitelist_capability( uint8_t *size );
 
 
 /** Clear the whitelist

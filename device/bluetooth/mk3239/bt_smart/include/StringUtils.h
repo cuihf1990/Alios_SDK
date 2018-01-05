@@ -1,33 +1,3 @@
-/**
- ******************************************************************************
- * @file    StringUtils.h
- * @author  William Xu
- * @version V1.0.0
- * @date    05-May-2014
- * @brief   This header contains function prototypes for manipulating strings..
- ******************************************************************************
- *
- *  The MIT License
- *  Copyright (c) 2014 MXCHIP Inc.
- *
- *  Permission is hereby granted, free of charge, to any person obtaining a copy
- *  of this software and associated documentation files (the "Software"), to deal
- *  in the Software without restriction, including without limitation the rights
- *  to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
- *  copies of the Software, and to permit persons to whom the Software is furnished
- *  to do so, subject to the following conditions:
- *
- *  The above copyright notice and this permission notice shall be included in
- *  all copies or substantial portions of the Software.
- *
- *  THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
- *  IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
- *  FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
- *  AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY,
- *  WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR
- *  IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
- ******************************************************************************
- */
 
 #ifndef __StringUtils_h__
 #define __StringUtils_h__
@@ -58,10 +28,10 @@
 */
 #define kSizeCString ( (size_t) -1 )
 
-// ==== MAC String Tools ====   
+// ==== MAC String Tools ====
 void formatMACAddr(char *destAddr, char *srcAddr);
 
-/* @brief  transform src string to hex mode 
+/* @brief  transform src string to hex mode
 *          Example: "aabbccddee" => 0xaabbccddee
 *          each char in the string must 0~9 a~f A~F, otherwise return 0
 *          return the real obuf length
@@ -82,7 +52,7 @@ unsigned int str2hex(unsigned char *ibuf, unsigned char *obuf, unsigned int olen
   *
   * @retval None
   */
-void Int2Str(uint8_t* str, int32_t intnum);
+void Int2Str(uint8_t *str, int32_t intnum);
 
 
 /**
@@ -101,7 +71,7 @@ uint32_t Str2Int(uint8_t *inputstr, int32_t *intnum);
   * @brief  Allocate a memory to store the string
   *
   * @param  src: ?
-  * 
+  *
   * @retval ?
   */
 char *__strdup(const char *src);
@@ -112,7 +82,7 @@ char *__strdup(const char *src);
   * @brief  Allocate a memory to store the string, and transfer '.' to '\.'
   *
   * @param  src: ?
-  * 
+  *
   * @retval ?
   */
 char *__strdup_trans_dot(char *src);
@@ -128,7 +98,7 @@ char *__strdup_trans_dot(char *src);
   * @param  inTextSize: ?
   * @param  inAddrSize: ?
   * @param  outAddr   : ?
-  * 
+  *
   * @retval ?
   */
 int TextToHardwareAddress( const void *inText, size_t inTextSize, size_t inAddrSize, void *outAddr );
@@ -139,14 +109,14 @@ unsigned int str2hex(unsigned char *ibuf, unsigned char *obuf, unsigned int olen
 
 // ==== BYTE BUFFER TO STRING CONVERSION UTILS ====
 /**
-  * @brief  
+  * @brief
   *
   * @param  inBuf   :?
   * @param  inBufLen:?
-  * 
+  *
   * @retval ?
   */
-char* DataToCString( const uint8_t *inBuf, size_t inBufLen );
+char *DataToCString( const uint8_t *inBuf, size_t inBufLen );
 
 
 /**
@@ -154,10 +124,10 @@ char* DataToCString( const uint8_t *inBuf, size_t inBufLen );
   *
   * @param  inBuf   :?
   * @param  inBufLen:?
-  * 
+  *
   * @retval ?
   */
-char* DataToHexString( const uint8_t *inBuf, size_t inBufLen );
+char *DataToHexString( const uint8_t *inBuf, size_t inBufLen );
 
 
 /**
@@ -165,10 +135,10 @@ char* DataToHexString( const uint8_t *inBuf, size_t inBufLen );
   *
   * @param  inBuf   :?
   * @param  inBufLen:?
-  * 
+  *
   * @retval ?
   */
-char* DataToHexStringWithSpaces( const uint8_t *inBuf, size_t inBufLen );
+char *DataToHexStringWithSpaces( const uint8_t *inBuf, size_t inBufLen );
 
 
 /**
@@ -176,10 +146,10 @@ char* DataToHexStringWithSpaces( const uint8_t *inBuf, size_t inBufLen );
   *
   * @param  inBuf   :?
   * @param  inBufLen:?
-  * 
+  *
   * @retval ?
   */
-char* DataToHexStringWithColons( const uint8_t *inBuf, size_t inBufLen );
+char *DataToHexStringWithColons( const uint8_t *inBuf, size_t inBufLen );
 
 // ==== STRING COMPARE UTILS ====
 /**
@@ -188,7 +158,7 @@ char* DataToHexStringWithColons( const uint8_t *inBuf, size_t inBufLen );
   * @param  inStr   :?
   * @param  inMaxLen:?
   * @param  inSuffix:?
-  * 
+  *
   * @retval ?
   */
 int strnicmp_suffix( const void *inStr, size_t inMaxLen, const char *inSuffix );
@@ -201,7 +171,7 @@ int strnicmp_suffix( const void *inStr, size_t inMaxLen, const char *inSuffix );
   * @param  inS1   :?
   * @param  inS2   :?
   * @param  inMax  :?
-  * 
+  *
   * @retval ?
   */
 int strnicmp( const char *inS1, const char *inS2, size_t inMax );
@@ -213,7 +183,7 @@ int strnicmp( const char *inS1, const char *inS2, size_t inMax );
   * @param  inS1   :?
   * @param  inN    :?
   * @param  inS2   :?
-  * 
+  *
   * @retval ?
   */
 int strnicmpx( const void *inS1, size_t inN, const char *inS2 );
@@ -225,10 +195,10 @@ int strnicmpx( const void *inS1, size_t inN, const char *inS2 );
   * @param  inStr   :?
   * @param  inMaxLen:?
   * @param  inSuffix:?
-  * 
+  *
   * @retval ?
   */
-char * strnstr_suffix( const char *inStr, size_t inMaxLen, const char *inSuffix);
+char *strnstr_suffix( const char *inStr, size_t inMaxLen, const char *inSuffix);
 
 
 /**
@@ -237,7 +207,7 @@ char * strnstr_suffix( const char *inStr, size_t inMaxLen, const char *inSuffix)
   * @param  inStr   :  ?
   * @param  inMaxLen:   ?
   * @param  inSuffix:  ?
-  * 
+  *
   * @retval ?
   */
 int VSNScanF( const void *inString, size_t inSize, const char *inFormat, va_list inArgs );
@@ -249,10 +219,10 @@ int VSNScanF( const void *inString, size_t inSize, const char *inFormat, va_list
   * @param  output:   ?
   * @param  min_length:  ?
   * @param  max_length:  ?
-  * 
+  *
   * @retval ?
   */
-uint8_t unsigned_to_hex_string( uint32_t value, char* output, uint8_t min_length, uint8_t max_length );
+uint8_t unsigned_to_hex_string( uint32_t value, char *output, uint8_t min_length, uint8_t max_length );
 
 /**
   * @brief  ?
@@ -261,10 +231,10 @@ uint8_t unsigned_to_hex_string( uint32_t value, char* output, uint8_t min_length
   * @param  str_length:   ?
   * @param  value_out:  ?
   * @param  is_hex:  ?
-  * 
+  *
   * @retval ?
   */
-uint8_t string_to_unsigned( const char* string, uint8_t str_length, uint32_t* value_out, uint8_t is_hex );
+uint8_t string_to_unsigned( const char *string, uint8_t str_length, uint32_t *value_out, uint8_t is_hex );
 
 
 /**
@@ -274,12 +244,12 @@ uint8_t string_to_unsigned( const char* string, uint8_t str_length, uint32_t* va
   * @param  s_len   :?
   * @param  find    :?
   * @param  f_len   :?
-  * 
+  *
   * @retval none
   */
 void *memmem(void *start, unsigned int s_len, void *find, unsigned int f_len);
 
-uint8_t unsigned_to_decimal_string( uint32_t value, char* output, uint8_t min_length, uint8_t max_length );
+uint8_t unsigned_to_decimal_string( uint32_t value, char *output, uint8_t min_length, uint8_t max_length );
 
 #if defined (__CC_ARM)
 #define strdup __strdup
@@ -289,7 +259,7 @@ uint8_t unsigned_to_decimal_string( uint32_t value, char* output, uint8_t min_le
   *
   * @param  s       :
   * @param  count   :
-  * 
+  *
   * @retval ?
   */
 size_t strnlen(const char *s, size_t count);

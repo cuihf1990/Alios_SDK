@@ -1,13 +1,3 @@
-/**
- *  UNPUBLISHED PROPRIETARY SOURCE CODE
- *  Copyright (c) 2016 MXCHIP Inc.
- *
- *  The contents of this file may not be disclosed to third parties, copied or
- *  duplicated in any form, in whole or in part, without the prior written
- *  permission of MXCHIP Corporation.
- *
- */
-
 /** @file
  *  Defines structures and functions for Bluetooth Smart Attribute abstraction
  */
@@ -58,8 +48,7 @@ extern "C" {
 /**
  * Bluetooth Smart Attribute type
  */
-typedef enum
-{
+typedef enum {
     MICO_ATTRIBUTE_TYPE_NO_VALUE,                                        /**< Attribute with no value                         */
     MICO_ATTRIBUTE_TYPE_LONG_VALUE,                                      /**< Attribute with long value                       */
     MICO_ATTRIBUTE_TYPE_PRIMARY_SERVICE,                                 /**< Primary service                                 */
@@ -92,8 +81,7 @@ typedef enum
 /**
  * 3.1 Attribute Value of Service Definition
  */
-typedef struct
-{
+typedef struct {
     uint16_t        start_handle; /**< Starting handle */
     uint16_t        end_handle;   /**< Ending handle   */
     mico_bt_uuid_t  uuid;         /**< UUID            */
@@ -102,8 +90,7 @@ typedef struct
 /**
  * 3.2 Attribute Value of Include Definition
  */
-typedef struct
-{
+typedef struct {
     uint16_t        included_service_handle; /**< Included service handle */
     uint16_t        end_group_handle;        /**< End group handle        */
     mico_bt_uuid_t  uuid;                    /**< UUID                    */
@@ -112,8 +99,7 @@ typedef struct
 /**
  * 3.3.1 Attribute Value of Characteristic Declaration
  */
-typedef struct
-{
+typedef struct {
     uint8_t         properties;              /**< Properties   */
     uint16_t        value_handle;            /**< Value handle */
     mico_bt_uuid_t  uuid;                    /**< UUID         */
@@ -125,48 +111,42 @@ typedef struct
 /**
  * 3.3.2 Attribute Value of Characteristic Value Declaration
  */
-typedef struct
-{
+typedef struct {
     uint8_t         value[1]; /**< Start of value */
 } attr_val_characteristic_value_t;
 
 /**
  * 3.3.3.1 Attribute Value of Characteristic Extended Properties
  */
-typedef struct
-{
+typedef struct {
     uint8_t         properties; /**< Properties */
 } attr_val_extended_properties_t;
 
 /**
  * 3.3.3.2 Attribute Value of Characteristic User Description
  */
-typedef struct
-{
+typedef struct {
     char            string[1]; /**< User description string */
 } attr_val_user_description_t;
 
 /**
  * 3.3.3.3 Attribute Value of Client Characteristic Configuration
  */
-typedef struct
-{
+typedef struct {
     uint16_t        config_bits; /**< Configuration bits */
 } attr_val_client_config_t;
 
 /**
  * 3.3.3.4 Attribute Value of Server Characteristic Configuration
  */
-typedef struct
-{
+typedef struct {
     uint16_t        config_bits; /**< Configuration bits */
 } attr_val_server_config_t;
 
 /**
  * 3.3.3.5 Attribute Value of Characteristic Presentation Format
  */
-typedef struct
-{
+typedef struct {
     uint8_t         format;      /**< Format      */
     uint8_t         exponent;    /**< Exponent    */
     uint16_t        unit;        /**< Unit        */
@@ -177,48 +157,42 @@ typedef struct
 /**
  * 3.3.3.6 Attribute Value of Characteristic Aggregate Format
  */
-typedef struct
-{
+typedef struct {
     uint16_t        handle_list[1]; /**< Handle list */
 } attr_val_aggregate_format_t;
 
 /**
  * Vol 3 Part C 12.1 Attribute Value of Device Name Characteristic
  */
-typedef struct
-{
+typedef struct {
     char            device_name[1]; /**< Maximum length is 248 bytes */
 } attr_val_device_name_t;
 
 /**
  * Vol 3 Part C 12.2 Attribute Value of Appearance Characteristic
  */
-typedef struct
-{
+typedef struct {
     uint16_t        appearance; /**< Enumerated value defined in "Assigned Numbers" */
 } attr_val_appearance_t;
 
 /**
  * Vol 3 Part C 12.3 Attribute Value of Peripheral Privacy Flag Characteristic
  */
-typedef struct
-{
+typedef struct {
     uint8_t         periph_privacy_flag; /**< Peripheral privacy flag: 0 if disabled; 1 if enabled */
 } attr_val_periph_privacy_flag_t;
 
 /**
  * Vol 3 Part C 12.4 Attribute Value of Reconnection Address Characteristic
  */
-typedef struct
-{
+typedef struct {
     uint8_t         reconn_address[6]; /**< Network-order reconnection address */
 } attr_val_reconnection_address_t;
 
 /**
  * Vol 3 Part C 12.5 Attribute Value of Peripheral Preferred Connection Parameters Characteristic
  */
-typedef struct
-{
+typedef struct {
     uint16_t        min_conn_interval;                   /**< Minimum connection interval               */
     uint16_t        max_conn_interval;                   /**< Maximum connection interval               */
     uint16_t        slave_latency;                       /**< Slave latency                             */
@@ -228,34 +202,54 @@ typedef struct
 /**
  * Attribute Structure
  */
-typedef struct mico_bt_attribute
-{
-    struct mico_bt_attribute*                   next;              /**< Pointer to the next attribute in the list. NULL if not a list */
-    uint16_t                                    handle;            /**< Attribute Handle                                              */
-    mico_bt_uuid_t                              type;              /**< Attribute Type (UUID)                                         */
-    uint8_t                                     permission;        /**< Attribute Permission(s). Unused in GATT client                */
-    uint32_t                                    value_length;      /**< Length of the Attribute Value. If no value, this equals 0     */
-    uint32_t                                    value_struct_size; /**< Size of the value structure                                   */
+typedef struct mico_bt_attribute {
+    struct mico_bt_attribute
+        *next;              /**< Pointer to the next attribute in the list. NULL if not a list */
+    uint16_t
+    handle;            /**< Attribute Handle                                              */
+    mico_bt_uuid_t
+    type;              /**< Attribute Type (UUID)                                         */
+    uint8_t
+    permission;        /**< Attribute Permission(s). Unused in GATT client                */
+    uint32_t
+    value_length;      /**< Length of the Attribute Value. If no value, this equals 0     */
+    uint32_t
+    value_struct_size; /**< Size of the value structure                                   */
 
     /* Union of Attribute Values. Use the right format based on Attribute Type */
-    union
-    {
-        uint8_t                                 value[MAX_CHARACTERISTIC_VALUE_LENGTH]; /**< Long Value                                                                          */
-        attr_val_service_t                      service;                                /**< Attribute Value for Service                                                         */
-        attr_val_include_t                      include;                                /**< Attribute Value for Include                                                         */
-        attr_val_characteristic_t               characteristic;                         /**< Attribute Value for Characteristic                                                  */
-        attr_val_characteristic_value_t         characteristic_value;                   /**< Attribute Value for Characteristic Value                                            */
-        attr_val_extended_properties_t          extended_properties;                    /**< Attribute Value for Descriptor: Characteristic Extended Properties                  */
-        attr_val_user_description_t             user_description;                       /**< Attribute Value for Descriptor: Characteristic User_Description                     */
-        attr_val_client_config_t                client_config;                          /**< Attribute Value for Descriptor: Client Characteristic Configuration                 */
-        attr_val_server_config_t                server_config;                          /**< Attribute Value for Descriptor: Server Characteristic Configuration                 */
-        attr_val_presentation_format_t          presentation_format;                    /**< Attribute Value for Descriptor: Characteristic Presentation Format                  */
-        attr_val_aggregate_format_t             aggregate_format;                       /**< Attribute Value for Descriptor: Characteristic Aggregate Format                     */
-        attr_val_device_name_t                  device_name;                            /**< Attribute Value for Characteristic Type: Device Name                                */
-        attr_val_appearance_t                   appearance;                             /**< Attribute Value for Characteristic Type: Appearance                                 */
-        attr_val_periph_privacy_flag_t          periph_privacy_flag;                    /**< Attribute Value for Characteristic Type: Peripheral Privacy Flag                    */
-        attr_val_reconnection_address_t         reconn_address;                         /**< Attribute Value for Characteristic Type: Reconnection Address                       */
-        attr_val_periph_preferred_conn_params_t periph_preferred_conn_params;           /**< Attribute Value for Characteristic Type: Peripheral Preferred Connection Parameters */
+    union {
+        uint8_t
+        value[MAX_CHARACTERISTIC_VALUE_LENGTH]; /**< Long Value                                                                          */
+        attr_val_service_t
+        service;                                /**< Attribute Value for Service                                                         */
+        attr_val_include_t
+        include;                                /**< Attribute Value for Include                                                         */
+        attr_val_characteristic_t
+        characteristic;                         /**< Attribute Value for Characteristic                                                  */
+        attr_val_characteristic_value_t
+        characteristic_value;                   /**< Attribute Value for Characteristic Value                                            */
+        attr_val_extended_properties_t
+        extended_properties;                    /**< Attribute Value for Descriptor: Characteristic Extended Properties                  */
+        attr_val_user_description_t
+        user_description;                       /**< Attribute Value for Descriptor: Characteristic User_Description                     */
+        attr_val_client_config_t
+        client_config;                          /**< Attribute Value for Descriptor: Client Characteristic Configuration                 */
+        attr_val_server_config_t
+        server_config;                          /**< Attribute Value for Descriptor: Server Characteristic Configuration                 */
+        attr_val_presentation_format_t
+        presentation_format;                    /**< Attribute Value for Descriptor: Characteristic Presentation Format                  */
+        attr_val_aggregate_format_t
+        aggregate_format;                       /**< Attribute Value for Descriptor: Characteristic Aggregate Format                     */
+        attr_val_device_name_t
+        device_name;                            /**< Attribute Value for Characteristic Type: Device Name                                */
+        attr_val_appearance_t
+        appearance;                             /**< Attribute Value for Characteristic Type: Appearance                                 */
+        attr_val_periph_privacy_flag_t
+        periph_privacy_flag;                    /**< Attribute Value for Characteristic Type: Peripheral Privacy Flag                    */
+        attr_val_reconnection_address_t
+        reconn_address;                         /**< Attribute Value for Characteristic Type: Reconnection Address                       */
+        attr_val_periph_preferred_conn_params_t
+        periph_preferred_conn_params;           /**< Attribute Value for Characteristic Type: Peripheral Preferred Connection Parameters */
     } value; /**< Union of Attribute Values. Use the right format based on Attribute Type */
 
 } mico_bt_smart_attribute_t;
@@ -263,10 +257,9 @@ typedef struct mico_bt_attribute
 /**
  * Attribute List Structure
  */
-typedef struct
-{
+typedef struct {
     uint32_t                    count; /**< Attribute count                  */
-    mico_bt_smart_attribute_t*  list;  /**< Pointer to attribute linked-list */
+    mico_bt_smart_attribute_t  *list;  /**< Pointer to attribute linked-list */
 } mico_bt_smart_attribute_list_t;
 
 #pragma pack()
@@ -300,7 +293,8 @@ typedef struct
  *
  * @return MICO_BT_SUCCESS：success，MICO_BT_BADARG：input argument error
  */
-OSStatus mico_bt_smart_attribute_create( mico_bt_smart_attribute_t** attribute, mico_bt_smart_attribute_type_t type, uint16_t variable_length );
+OSStatus mico_bt_smart_attribute_create( mico_bt_smart_attribute_t **attribute, mico_bt_smart_attribute_type_t type,
+                                         uint16_t variable_length );
 
 /** Delete a Bluetooth Smart Attribute structure
  *
@@ -308,7 +302,7 @@ OSStatus mico_bt_smart_attribute_create( mico_bt_smart_attribute_t** attribute, 
  *
  * @return MICO_BT_SUCCESS：success，MICO_BT_BADARG：input argument error
  */
-OSStatus mico_bt_smart_attribute_delete( mico_bt_smart_attribute_t* attribute );
+OSStatus mico_bt_smart_attribute_delete( mico_bt_smart_attribute_t *attribute );
 
 /** Initialise a list of Bluetooth Smart Attributes
  *
@@ -316,7 +310,7 @@ OSStatus mico_bt_smart_attribute_delete( mico_bt_smart_attribute_t* attribute );
  *
  * @return MICO_BT_SUCCESS：success，MICO_BT_BADARG：input argument error
  */
-OSStatus mico_bt_smart_attribute_create_list( mico_bt_smart_attribute_list_t* list );
+OSStatus mico_bt_smart_attribute_create_list( mico_bt_smart_attribute_list_t *list );
 
 /** Deinitialise a list of Bluetooth Smart Attributes
  *
@@ -324,7 +318,7 @@ OSStatus mico_bt_smart_attribute_create_list( mico_bt_smart_attribute_list_t* li
  *
  * @return @ref OSStatus
  */
-OSStatus mico_bt_smart_attribute_delete_list( mico_bt_smart_attribute_list_t* list );
+OSStatus mico_bt_smart_attribute_delete_list( mico_bt_smart_attribute_list_t *list );
 
 /** Add a Bluetooth Smart Attribute to a list
  *
@@ -333,7 +327,8 @@ OSStatus mico_bt_smart_attribute_delete_list( mico_bt_smart_attribute_list_t* li
  *
  * @return @ref OSStatus
  */
-OSStatus mico_bt_smart_attribute_add_to_list( mico_bt_smart_attribute_list_t* list, mico_bt_smart_attribute_t* attribute );
+OSStatus mico_bt_smart_attribute_add_to_list( mico_bt_smart_attribute_list_t *list,
+                                              mico_bt_smart_attribute_t *attribute );
 
 /** Remove a Bluetooth Smart Attribute with the given handle from a list
  *
@@ -342,7 +337,7 @@ OSStatus mico_bt_smart_attribute_add_to_list( mico_bt_smart_attribute_list_t* li
  *
  * @return @ref OSStatus
  */
-OSStatus mico_bt_smart_attribute_remove_from_list( mico_bt_smart_attribute_list_t* list, uint16_t handle );
+OSStatus mico_bt_smart_attribute_remove_from_list( mico_bt_smart_attribute_list_t *list, uint16_t handle );
 
 /** Find a Bluetooth Smart Attribute with the given handle from a list
  *
@@ -352,7 +347,8 @@ OSStatus mico_bt_smart_attribute_remove_from_list( mico_bt_smart_attribute_list_
  *
  * @return @ref OSStatus
  */
-OSStatus mico_bt_smart_attribute_search_list_by_handle( const mico_bt_smart_attribute_list_t* list, uint16_t handle, mico_bt_smart_attribute_t** attribute );
+OSStatus mico_bt_smart_attribute_search_list_by_handle( const mico_bt_smart_attribute_list_t *list, uint16_t handle,
+                                                        mico_bt_smart_attribute_t **attribute );
 
 /** Find a Bluetooth Smart Attribute with the given handle from a list
  *
@@ -364,7 +360,8 @@ OSStatus mico_bt_smart_attribute_search_list_by_handle( const mico_bt_smart_attr
  *
  * @return @ref OSStatus
  */
-OSStatus mico_bt_smart_attribute_search_list_by_uuid( const mico_bt_smart_attribute_list_t* list, const mico_bt_uuid_t* uuid, uint16_t starting_handle,  uint16_t ending_handle, mico_bt_smart_attribute_t** attribute );
+OSStatus mico_bt_smart_attribute_search_list_by_uuid( const mico_bt_smart_attribute_list_t *list,
+                                                      const mico_bt_uuid_t *uuid, uint16_t starting_handle,  uint16_t ending_handle, mico_bt_smart_attribute_t **attribute );
 
 /** Merge two Bluetooth Smart Attribute lists
  *
@@ -373,7 +370,8 @@ OSStatus mico_bt_smart_attribute_search_list_by_uuid( const mico_bt_smart_attrib
  *
  * @return @ref OSStatus
  */
-OSStatus mico_bt_smart_attribute_merge_lists( mico_bt_smart_attribute_list_t* trunk_list, mico_bt_smart_attribute_list_t* branch_list );
+OSStatus mico_bt_smart_attribute_merge_lists( mico_bt_smart_attribute_list_t *trunk_list,
+                                              mico_bt_smart_attribute_list_t *branch_list );
 
 /** Print attribute contents
  *
@@ -381,7 +379,7 @@ OSStatus mico_bt_smart_attribute_merge_lists( mico_bt_smart_attribute_list_t* tr
  *
  * @return @ref OSStatus
  */
-OSStatus mico_bt_smart_attribute_print( const mico_bt_smart_attribute_t* attribute );
+OSStatus mico_bt_smart_attribute_print( const mico_bt_smart_attribute_t *attribute );
 
 /** Print the contents of all attributes in a list
  *
@@ -389,7 +387,7 @@ OSStatus mico_bt_smart_attribute_print( const mico_bt_smart_attribute_t* attribu
  *
  * @return @ref OSStatus
  */
-OSStatus mico_bt_smart_attribute_print_list( const mico_bt_smart_attribute_list_t* list );
+OSStatus mico_bt_smart_attribute_print_list( const mico_bt_smart_attribute_list_t *list );
 
 /** Get attribute list head
  *
@@ -398,7 +396,8 @@ OSStatus mico_bt_smart_attribute_print_list( const mico_bt_smart_attribute_list_
  *
  * @return @ref OSStatus
  */
-OSStatus mico_bt_smart_attribute_get_list_head( const mico_bt_smart_attribute_list_t* list, mico_bt_smart_attribute_t** head );
+OSStatus mico_bt_smart_attribute_get_list_head( const mico_bt_smart_attribute_list_t *list,
+                                                mico_bt_smart_attribute_t **head );
 
 
 /** Get attribute list count
@@ -408,7 +407,7 @@ OSStatus mico_bt_smart_attribute_get_list_head( const mico_bt_smart_attribute_li
  *
  * @return @ref OSStatus
  */
-OSStatus mico_bt_smart_attribute_get_list_count( const mico_bt_smart_attribute_list_t* list, uint32_t* count );
+OSStatus mico_bt_smart_attribute_get_list_count( const mico_bt_smart_attribute_list_t *list, uint32_t *count );
 
 /** @} */
 

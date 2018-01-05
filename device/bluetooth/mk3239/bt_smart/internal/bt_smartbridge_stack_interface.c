@@ -1,12 +1,3 @@
-/**
- *  UNPUBLISHED PROPRIETARY SOURCE CODE
- *  Copyright (c) 2016 MXCHIP Inc.
- *
- *  The contents of this file may not be disclosed to third parties, copied or
- *  duplicated in any form, in whole or in part, without the prior written
- *  permission of MXCHIP Corporation.
- *
- */
 
 /** @file
  *
@@ -60,18 +51,18 @@ extern mico_bt_cfg_settings_t                mico_bt_cfg_settings;
 mico_bt_smart_scan_complete_callback_t      app_scan_complete_callback;
 mico_bt_smart_advertising_report_callback_t app_scan_report_callback;
 
-mico_bt_dev_ble_io_caps_req_t  default_io_caps_ble  =
-{
+mico_bt_dev_ble_io_caps_req_t  default_io_caps_ble  = {
     .bd_addr      = { 0 },
     .local_io_cap = BTM_IO_CAPABILITIES_NONE,
     .oob_data     = 0,
-    .auth_req     = BTM_LE_AUTH_REQ_BOND|BTM_LE_AUTH_REQ_MITM, /* BTM_LE_AUTH_REQ_SC_MITM_BOND */
+    .auth_req     = BTM_LE_AUTH_REQ_BOND | BTM_LE_AUTH_REQ_MITM, /* BTM_LE_AUTH_REQ_SC_MITM_BOND */
     .max_key_size = 16,
-    .init_keys    = (BTM_LE_KEY_PENC|BTM_LE_KEY_PID|BTM_LE_KEY_PCSRK|BTM_LE_KEY_PLK), // init_keys - Keys to be distributed, bit mask
-    .resp_keys    = (BTM_LE_KEY_PENC|BTM_LE_KEY_PID|BTM_LE_KEY_PCSRK|BTM_LE_KEY_PLK)  // resp_keys - Keys to be distributed, bit mask
+    .init_keys    = (BTM_LE_KEY_PENC | BTM_LE_KEY_PID | BTM_LE_KEY_PCSRK | BTM_LE_KEY_PLK), // init_keys - Keys to be distributed, bit mask
+    .resp_keys    = (BTM_LE_KEY_PENC | BTM_LE_KEY_PID | BTM_LE_KEY_PCSRK | BTM_LE_KEY_PLK) // resp_keys - Keys to be distributed, bit mask
 };
 
-extern mico_bt_gatt_status_t   smartbridge_gatt_callback                   ( mico_bt_gatt_evt_t event,        mico_bt_gatt_event_data_t *p_event_data );
+extern mico_bt_gatt_status_t   smartbridge_gatt_callback                   ( mico_bt_gatt_evt_t event,
+                                                                             mico_bt_gatt_event_data_t *p_event_data );
 
 /******************************************************
  *               Function Definitions
@@ -84,15 +75,13 @@ OSStatus smartbridge_bt_interface_initialize( void )
     bt_smartbridge_log( "Initializing Bluetooth Interface..." );
 
     result = mico_rtos_init_mutex( &smartbridge_subprocedure.mutex );
-    if ( result  != MICO_BT_SUCCESS )
-    {
+    if ( result  != MICO_BT_SUCCESS ) {
         bt_smartbridge_log( "Error creating mutex" );
         return result;
     }
 
     result = mico_rtos_init_semaphore( &smartbridge_subprocedure.done_semaphore, 1 );
-    if ( result != MICO_BT_SUCCESS )
-    {
+    if ( result != MICO_BT_SUCCESS ) {
         bt_smartbridge_log( "Error creating semaphore" );
         return result;
     }
@@ -113,7 +102,8 @@ OSStatus smartbridge_bt_interface_deinitialize( void )
     return MICO_BT_SUCCESS;
 }
 
-OSStatus smartbridge_bt_interface_discover_all_primary_services( uint16_t connection_handle, mico_bt_smart_attribute_list_t* service_list )
+OSStatus smartbridge_bt_interface_discover_all_primary_services( uint16_t connection_handle,
+                                                                 mico_bt_smart_attribute_list_t *service_list )
 {
     mico_bt_gatt_discovery_param_t parameter;
     bt_smartbridge_log( "Discover all Primary Services" );
@@ -135,13 +125,10 @@ OSStatus smartbridge_bt_interface_discover_all_primary_services( uint16_t connec
 
     subprocedure_wait_for_completion( &smartbridge_subprocedure );
 
-    if ( smartbridge_subprocedure.result == MICO_BT_SUCCESS )
-    {
+    if ( smartbridge_subprocedure.result == MICO_BT_SUCCESS ) {
         service_list->count = smartbridge_subprocedure.attr_count;
         service_list->list  = smartbridge_subprocedure.attr_head;
-    }
-    else
-    {
+    } else {
         /* Clean up */
         mico_bt_smart_attribute_list_t list;
 
@@ -156,7 +143,8 @@ OSStatus smartbridge_bt_interface_discover_all_primary_services( uint16_t connec
     return smartbridge_subprocedure.result;
 }
 
-OSStatus smartbridge_bt_interface_discover_primary_services_by_uuid( uint16_t connection_handle, const mico_bt_uuid_t* uuid, mico_bt_smart_attribute_list_t* service_list )
+OSStatus smartbridge_bt_interface_discover_primary_services_by_uuid( uint16_t connection_handle,
+                                                                     const mico_bt_uuid_t *uuid, mico_bt_smart_attribute_list_t *service_list )
 {
     mico_bt_gatt_discovery_param_t parameter;
     bt_smartbridge_log( "Discover all Primary Services(By-UUID)" );
@@ -176,13 +164,10 @@ OSStatus smartbridge_bt_interface_discover_primary_services_by_uuid( uint16_t co
 
     subprocedure_wait_for_completion( &smartbridge_subprocedure );
 
-    if ( smartbridge_subprocedure.result == MICO_BT_SUCCESS )
-    {
+    if ( smartbridge_subprocedure.result == MICO_BT_SUCCESS ) {
         service_list->count = smartbridge_subprocedure.attr_count;
         service_list->list  = smartbridge_subprocedure.attr_head;
-    }
-    else
-    {
+    } else {
         /* Clean up */
         mico_bt_smart_attribute_list_t list;
 
@@ -197,7 +182,8 @@ OSStatus smartbridge_bt_interface_discover_primary_services_by_uuid( uint16_t co
     return smartbridge_subprocedure.result;
 }
 
-OSStatus smartbridge_bt_interface_find_included_services( uint16_t connection_handle, uint16_t start_handle, uint16_t end_handle, mico_bt_smart_attribute_list_t* include_list )
+OSStatus smartbridge_bt_interface_find_included_services( uint16_t connection_handle, uint16_t start_handle,
+                                                          uint16_t end_handle, mico_bt_smart_attribute_list_t *include_list )
 {
 
     mico_bt_gatt_discovery_param_t parameter;
@@ -218,13 +204,10 @@ OSStatus smartbridge_bt_interface_find_included_services( uint16_t connection_ha
 
     subprocedure_wait_for_completion( &smartbridge_subprocedure );
 
-    if ( smartbridge_subprocedure.result == MICO_BT_SUCCESS )
-    {
+    if ( smartbridge_subprocedure.result == MICO_BT_SUCCESS ) {
         include_list->count = smartbridge_subprocedure.attr_count;
         include_list->list  = smartbridge_subprocedure.attr_head;
-    }
-    else
-    {
+    } else {
         /* Clean up */
         mico_bt_smart_attribute_list_t list;
 
@@ -239,12 +222,13 @@ OSStatus smartbridge_bt_interface_find_included_services( uint16_t connection_ha
     return smartbridge_subprocedure.result;
 }
 
-OSStatus smartbridge_bt_interface_discover_all_characteristics_in_a_service( uint16_t connection_handle, uint16_t start_handle, uint16_t end_handle, mico_bt_smart_attribute_list_t* characteristic_list )
+OSStatus smartbridge_bt_interface_discover_all_characteristics_in_a_service( uint16_t connection_handle,
+                                                                             uint16_t start_handle, uint16_t end_handle, mico_bt_smart_attribute_list_t *characteristic_list )
 {
     mico_bt_gatt_discovery_param_t parameter;
 
     subprocedure_lock( &smartbridge_subprocedure );
-    bt_smartbridge_log( "Discover Characteristics by Service[%x %x]",start_handle, end_handle );
+    bt_smartbridge_log( "Discover Characteristics by Service[%x %x]", start_handle, end_handle );
 
     subprocedure_reset( &smartbridge_subprocedure );
     smartbridge_subprocedure.attr_count = 0;
@@ -261,13 +245,10 @@ OSStatus smartbridge_bt_interface_discover_all_characteristics_in_a_service( uin
     subprocedure_wait_for_completion( &smartbridge_subprocedure );
 
 
-    if ( smartbridge_subprocedure.result == MICO_BT_SUCCESS )
-    {
+    if ( smartbridge_subprocedure.result == MICO_BT_SUCCESS ) {
         characteristic_list->count = smartbridge_subprocedure.attr_count;
         characteristic_list->list  = smartbridge_subprocedure.attr_head;
-    }
-    else
-    {
+    } else {
         /* Clean up */
         mico_bt_smart_attribute_list_t list;
 
@@ -282,13 +263,15 @@ OSStatus smartbridge_bt_interface_discover_all_characteristics_in_a_service( uin
     return smartbridge_subprocedure.result;
 }
 
-OSStatus smartbridge_bt_interface_discover_characteristic_by_uuid( uint16_t connection_handle, const mico_bt_uuid_t* uuid, uint16_t start_handle, uint16_t end_handle, mico_bt_smart_attribute_list_t* characteristic_list )
+OSStatus smartbridge_bt_interface_discover_characteristic_by_uuid( uint16_t connection_handle,
+                                                                   const mico_bt_uuid_t *uuid, uint16_t start_handle, uint16_t end_handle,
+                                                                   mico_bt_smart_attribute_list_t *characteristic_list )
 {
     UNUSED_PARAMETER(characteristic_list);
     mico_bt_gatt_discovery_param_t parameter;
 
     subprocedure_lock( &smartbridge_subprocedure );
-    bt_smartbridge_log( "Discover Characteristics by UUID [%x %x]",start_handle, end_handle );
+    bt_smartbridge_log( "Discover Characteristics by UUID [%x %x]", start_handle, end_handle );
 
     subprocedure_reset( &smartbridge_subprocedure );
     smartbridge_subprocedure.attr_count = 0;
@@ -303,13 +286,10 @@ OSStatus smartbridge_bt_interface_discover_characteristic_by_uuid( uint16_t conn
     subprocedure_wait_for_completion( &smartbridge_subprocedure );
 
 
-    if ( smartbridge_subprocedure.result == MICO_BT_SUCCESS )
-    {
+    if ( smartbridge_subprocedure.result == MICO_BT_SUCCESS ) {
         characteristic_list->count = smartbridge_subprocedure.attr_count;
         characteristic_list->list  = smartbridge_subprocedure.attr_head;
-    }
-    else
-    {
+    } else {
         /* Clean up */
         mico_bt_smart_attribute_list_t list;
 
@@ -324,11 +304,12 @@ OSStatus smartbridge_bt_interface_discover_characteristic_by_uuid( uint16_t conn
     return smartbridge_subprocedure.result;
 }
 
-OSStatus smartbridge_bt_interface_discover_all_characteristic_descriptors( uint16_t connection_handle, uint16_t start_handle, uint16_t end_handle, mico_bt_smart_attribute_list_t* no_value_descriptor_list )
+OSStatus smartbridge_bt_interface_discover_all_characteristic_descriptors( uint16_t connection_handle,
+                                                                           uint16_t start_handle, uint16_t end_handle, mico_bt_smart_attribute_list_t *no_value_descriptor_list )
 {
 
     mico_bt_gatt_discovery_param_t parameter;
-    bt_smartbridge_log( "Discover all Characteristic Descriptors[%x %x]",start_handle, end_handle );
+    bt_smartbridge_log( "Discover all Characteristic Descriptors[%x %x]", start_handle, end_handle );
     subprocedure_lock( &smartbridge_subprocedure );
     subprocedure_reset( &smartbridge_subprocedure );
 
@@ -347,13 +328,10 @@ OSStatus smartbridge_bt_interface_discover_all_characteristic_descriptors( uint1
 
     bt_smartbridge_log( "Discover complete: %d", smartbridge_subprocedure.result );
 
-    if ( smartbridge_subprocedure.result == MICO_BT_SUCCESS )
-    {
+    if ( smartbridge_subprocedure.result == MICO_BT_SUCCESS ) {
         no_value_descriptor_list->count = smartbridge_subprocedure.attr_count;
         no_value_descriptor_list->list  = smartbridge_subprocedure.attr_head;
-    }
-    else
-    {
+    } else {
         /* Clean up */
         mico_bt_smart_attribute_list_t list;
 
@@ -368,7 +346,8 @@ OSStatus smartbridge_bt_interface_discover_all_characteristic_descriptors( uint1
 
 }
 
-OSStatus smartbridge_bt_interface_read_characteristic_descriptor( uint16_t connection_handle, uint16_t handle, const mico_bt_uuid_t* uuid, mico_bt_smart_attribute_t** descriptor )
+OSStatus smartbridge_bt_interface_read_characteristic_descriptor( uint16_t connection_handle, uint16_t handle,
+                                                                  const mico_bt_uuid_t *uuid, mico_bt_smart_attribute_t **descriptor )
 {
     mico_bt_gatt_read_param_t parameter;
     bt_smartbridge_log( "Read Characteristic Descriptor" );
@@ -386,13 +365,11 @@ OSStatus smartbridge_bt_interface_read_characteristic_descriptor( uint16_t conne
     smartbridge_subprocedure.uuid.len       = uuid->len;
     smartbridge_subprocedure.connection_handle = connection_handle;
 
-    if( uuid->len == UUID_16BIT )
-    {
+    if ( uuid->len == UUID_16BIT ) {
         smartbridge_subprocedure.uuid.uu.uuid16 = uuid->uu.uuid16;
     }
 
-    else if( uuid->len == UUID_128BIT )
-    {
+    else if ( uuid->len == UUID_128BIT ) {
         memcpy( smartbridge_subprocedure.uuid.uu.uuid128, uuid->uu.uuid128,  UUID_128BIT );
     }
 
@@ -400,12 +377,9 @@ OSStatus smartbridge_bt_interface_read_characteristic_descriptor( uint16_t conne
 
     subprocedure_wait_for_completion( &smartbridge_subprocedure );
 
-    if ( smartbridge_subprocedure.result == MICO_BT_SUCCESS )
-    {
+    if ( smartbridge_subprocedure.result == MICO_BT_SUCCESS ) {
         *descriptor = smartbridge_subprocedure.attr_head;
-    }
-    else
-    {
+    } else {
         /* Clean up */
         mico_bt_smart_attribute_delete( smartbridge_subprocedure.attr_head );
     }
@@ -414,7 +388,8 @@ OSStatus smartbridge_bt_interface_read_characteristic_descriptor( uint16_t conne
     return smartbridge_subprocedure.result;
 }
 
-OSStatus smartbridge_bt_interface_read_characteristic_value( uint16_t connection_handle, uint16_t handle, const mico_bt_uuid_t* type, mico_bt_smart_attribute_t** characteristic_value )
+OSStatus smartbridge_bt_interface_read_characteristic_value( uint16_t connection_handle, uint16_t handle,
+                                                             const mico_bt_uuid_t *type, mico_bt_smart_attribute_t **characteristic_value )
 {
     mico_bt_gatt_read_param_t parameter;
     bt_smartbridge_log( "Read Characteristic Value" );
@@ -431,12 +406,9 @@ OSStatus smartbridge_bt_interface_read_characteristic_value( uint16_t connection
     smartbridge_subprocedure.uuid.len           = type->len;
     smartbridge_subprocedure.connection_handle  = connection_handle;
 
-    if( type->len == UUID_16BIT )
-    {
+    if ( type->len == UUID_16BIT ) {
         smartbridge_subprocedure.uuid.uu.uuid16 = type->uu.uuid16;
-    }
-    else if( type->len == UUID_128BIT )
-    {
+    } else if ( type->len == UUID_128BIT ) {
         memcpy( (uint8_t *)smartbridge_subprocedure.uuid.uu.uuid128, (uint8_t *)type->uu.uuid128,  UUID_128BIT );
     }
 
@@ -444,12 +416,9 @@ OSStatus smartbridge_bt_interface_read_characteristic_value( uint16_t connection
 
     subprocedure_wait_for_completion( &smartbridge_subprocedure );
 
-    if ( smartbridge_subprocedure.result == MICO_BT_SUCCESS )
-    {
+    if ( smartbridge_subprocedure.result == MICO_BT_SUCCESS ) {
         *characteristic_value = smartbridge_subprocedure.attr_head;
-    }
-    else
-    {
+    } else {
         /* Clean up */
         mico_bt_smart_attribute_delete( smartbridge_subprocedure.attr_head );
     }
@@ -459,7 +428,8 @@ OSStatus smartbridge_bt_interface_read_characteristic_value( uint16_t connection
     return smartbridge_subprocedure.result;
 }
 
-OSStatus smartbridge_bt_interface_read_characteristic_values_using_uuid( uint16_t connection_handle, const mico_bt_uuid_t* uuid, mico_bt_smart_attribute_list_t* characteristic_value_list )
+OSStatus smartbridge_bt_interface_read_characteristic_values_using_uuid( uint16_t connection_handle,
+                                                                         const mico_bt_uuid_t *uuid, mico_bt_smart_attribute_list_t *characteristic_value_list )
 {
     mico_bt_gatt_read_param_t parameter;
     bt_smartbridge_log( "Read Characteristic Value" );
@@ -478,12 +448,9 @@ OSStatus smartbridge_bt_interface_read_characteristic_values_using_uuid( uint16_
     smartbridge_subprocedure.uuid.len           = uuid->len;
     smartbridge_subprocedure.connection_handle  = connection_handle;
 
-    if( uuid->len == UUID_16BIT )
-    {
+    if ( uuid->len == UUID_16BIT ) {
         smartbridge_subprocedure.uuid.uu.uuid16 = uuid->uu.uuid16;
-    }
-    else if( uuid->len == UUID_128BIT )
-    {
+    } else if ( uuid->len == UUID_128BIT ) {
         memcpy( smartbridge_subprocedure.uuid.uu.uuid128, uuid->uu.uuid128,  UUID_128BIT );
     }
 
@@ -491,13 +458,10 @@ OSStatus smartbridge_bt_interface_read_characteristic_values_using_uuid( uint16_
 
     subprocedure_wait_for_completion( &smartbridge_subprocedure );
 
-    if ( smartbridge_subprocedure.result == MICO_BT_SUCCESS )
-    {
+    if ( smartbridge_subprocedure.result == MICO_BT_SUCCESS ) {
         characteristic_value_list->count = smartbridge_subprocedure.attr_count;
         characteristic_value_list->list  = smartbridge_subprocedure.attr_head;
-    }
-    else
-    {
+    } else {
         /* Clean up */
         mico_bt_smart_attribute_delete( smartbridge_subprocedure.attr_head );
     }
@@ -509,7 +473,8 @@ OSStatus smartbridge_bt_interface_read_characteristic_values_using_uuid( uint16_
     return smartbridge_subprocedure.result;
 }
 
-OSStatus smartbridge_bt_interface_read_long_characteristic_value( uint16_t connection_handle, uint16_t handle, const mico_bt_uuid_t* type, mico_bt_smart_attribute_t** characteristic_value )
+OSStatus smartbridge_bt_interface_read_long_characteristic_value( uint16_t connection_handle, uint16_t handle,
+                                                                  const mico_bt_uuid_t *type, mico_bt_smart_attribute_t **characteristic_value )
 {
     mico_bt_gatt_read_param_t parameter;
     bt_smartbridge_log( "Read Long Characteristic Value" );
@@ -527,12 +492,9 @@ OSStatus smartbridge_bt_interface_read_long_characteristic_value( uint16_t conne
     smartbridge_subprocedure.uuid.len           = type->len;
     smartbridge_subprocedure.connection_handle  = connection_handle;
 
-    if( type->len == UUID_16BIT )
-    {
+    if ( type->len == UUID_16BIT ) {
         smartbridge_subprocedure.uuid.uu.uuid16 = type->uu.uuid16;
-    }
-    else if( type->len == UUID_128BIT )
-    {
+    } else if ( type->len == UUID_128BIT ) {
         memcpy( smartbridge_subprocedure.uuid.uu.uuid128, type->uu.uuid128,  UUID_128BIT );
     }
 
@@ -540,12 +502,9 @@ OSStatus smartbridge_bt_interface_read_long_characteristic_value( uint16_t conne
 
     subprocedure_wait_for_completion( &smartbridge_subprocedure );
 
-    if ( smartbridge_subprocedure.result == MICO_BT_SUCCESS )
-    {
+    if ( smartbridge_subprocedure.result == MICO_BT_SUCCESS ) {
         *characteristic_value = smartbridge_subprocedure.attr_head;
-    }
-    else
-    {
+    } else {
         /* Clean up */
         mico_bt_smart_attribute_delete( smartbridge_subprocedure.attr_head );
     }
@@ -555,7 +514,8 @@ OSStatus smartbridge_bt_interface_read_long_characteristic_value( uint16_t conne
     return smartbridge_subprocedure.result;
 }
 
-OSStatus smartbridge_bt_interface_read_long_characteristic_descriptor( uint16_t connection_handle, uint16_t handle, const mico_bt_uuid_t* uuid, mico_bt_smart_attribute_t** descriptor )
+OSStatus smartbridge_bt_interface_read_long_characteristic_descriptor( uint16_t connection_handle, uint16_t handle,
+                                                                       const mico_bt_uuid_t *uuid, mico_bt_smart_attribute_t **descriptor )
 {
 
     UNUSED_PARAMETER(connection_handle);
@@ -565,15 +525,15 @@ OSStatus smartbridge_bt_interface_read_long_characteristic_descriptor( uint16_t 
     return MICO_BT_UNSUPPORTED;
 }
 
-OSStatus smartbridge_bt_interface_write_characteristic_descriptor(  uint16_t connection_handle, mico_bt_smart_attribute_t* attribute )
+OSStatus smartbridge_bt_interface_write_characteristic_descriptor(  uint16_t connection_handle,
+                                                                    mico_bt_smart_attribute_t *attribute )
 {
     uint8_t                buffer[100] = { 0 };
-    mico_bt_gatt_value_t*  write_value = (mico_bt_gatt_value_t*)buffer;
+    mico_bt_gatt_value_t  *write_value = (mico_bt_gatt_value_t *)buffer;
 
     bt_smartbridge_log( "Write Characteristic Descriptor" );
 #if 0
-    if ( attribute->value_length > LEATT_ATT_MTU - sizeof(LEATT_PDU_WRITE_HDR) )
-    {
+    if ( attribute->value_length > LEATT_ATT_MTU - sizeof(LEATT_PDU_WRITE_HDR) ) {
         BT_DEBUG_PRINT( ( "[GATT] Write Characteristic Value: value too long\n" ) );
         return MICO_BT_ATTRIBUTE_VALUE_TOO_LONG;
     }
@@ -599,11 +559,12 @@ OSStatus smartbridge_bt_interface_write_characteristic_descriptor(  uint16_t con
     return smartbridge_subprocedure.result;
 }
 
-OSStatus smartbridge_bt_interface_write_characteristic_value( uint16_t connection_handle, mico_bt_smart_attribute_t* attribute )
+OSStatus smartbridge_bt_interface_write_characteristic_value( uint16_t connection_handle,
+                                                              mico_bt_smart_attribute_t *attribute )
 {
     OSStatus               err = kNoErr;
     uint8_t                buffer[100] = { 0 };
-    mico_bt_gatt_value_t*  write_value = (mico_bt_gatt_value_t*)buffer;
+    mico_bt_gatt_value_t  *write_value = (mico_bt_gatt_value_t *)buffer;
 
     bt_smartbridge_log( "Write Characteristic value" );
 
@@ -621,7 +582,7 @@ OSStatus smartbridge_bt_interface_write_characteristic_value( uint16_t connectio
     err = mico_bt_gatt_send_write( connection_handle, GATT_WRITE, write_value );
     require_noerr(err, exit);
 
-     subprocedure_wait_for_completion( &smartbridge_subprocedure );
+    subprocedure_wait_for_completion( &smartbridge_subprocedure );
 
     err = smartbridge_subprocedure.result;
 
@@ -630,14 +591,16 @@ exit:
     return err;
 }
 
-OSStatus smartbridge_bt_interface_write_long_characteristic_value( uint16_t connection_handle, mico_bt_smart_attribute_t* attribute )
+OSStatus smartbridge_bt_interface_write_long_characteristic_value( uint16_t connection_handle,
+                                                                   mico_bt_smart_attribute_t *attribute )
 {
     UNUSED_PARAMETER(connection_handle);
     UNUSED_PARAMETER(attribute);
     return MICO_BT_UNSUPPORTED;
 }
 
-OSStatus smartbridge_bt_interface_write_long_characteristic_descriptor( uint16_t connection_handle, const mico_bt_smart_attribute_t* descriptor )
+OSStatus smartbridge_bt_interface_write_long_characteristic_descriptor( uint16_t connection_handle,
+                                                                        const mico_bt_smart_attribute_t *descriptor )
 {
 
     UNUSED_PARAMETER( connection_handle );
@@ -648,10 +611,9 @@ OSStatus smartbridge_bt_interface_write_long_characteristic_descriptor( uint16_t
 
 static void smartbridge_scan_result_callback( mico_bt_ble_scan_results_t *p_scan_result, uint8_t *p_adv_data )
 {
-    if( p_scan_result )
-    {
+    if ( p_scan_result ) {
         mico_bt_smart_advertising_report_t advertising_report;
-        mico_bt_smart_scan_result_t*       current_scan_result = NULL;
+        mico_bt_smart_scan_result_t       *current_scan_result = NULL;
 
         uint8_t         adv_data_length;
         uint8_t         *p = p_adv_data;
@@ -673,19 +635,19 @@ static void smartbridge_scan_result_callback( mico_bt_ble_scan_results_t *p_scan
         advertising_report.eir_data_length = 0;
 
         bt_smartbridge_log( "address:%x %x %x %x %x %x rssi:%d bdaddrtype:%d event_type:%x length:%u",
-                    p_scan_result->remote_bd_addr[0], p_scan_result->remote_bd_addr[1], p_scan_result->remote_bd_addr[2],
-                    p_scan_result->remote_bd_addr[3], p_scan_result->remote_bd_addr[4], p_scan_result->remote_bd_addr[5],
-                    p_scan_result->rssi, p_scan_result->ble_addr_type, p_scan_result->ble_evt_type, p_scan_result->length );
+                            p_scan_result->remote_bd_addr[0], p_scan_result->remote_bd_addr[1], p_scan_result->remote_bd_addr[2],
+                            p_scan_result->remote_bd_addr[3], p_scan_result->remote_bd_addr[4], p_scan_result->remote_bd_addr[5],
+                            p_scan_result->rssi, p_scan_result->ble_addr_type, p_scan_result->ble_evt_type, p_scan_result->length );
 
-        if(p_scan_result->ble_evt_type > 4)
+        if (p_scan_result->ble_evt_type > 4) {
             return;
+        }
 
-        if ( smartbridge_helper_find_device_in_scan_result_list( &advertising_report.remote_device.address, advertising_report.remote_device.address_type, &current_scan_result ) == MICO_BT_ITEM_NOT_IN_LIST )
-        {
+        if ( smartbridge_helper_find_device_in_scan_result_list( &advertising_report.remote_device.address,
+                                                                 advertising_report.remote_device.address_type, &current_scan_result ) == MICO_BT_ITEM_NOT_IN_LIST ) {
             /* This is a new result. Create new result object and add to the list */
-            current_scan_result = (mico_bt_smart_scan_result_t*)malloc_named( "scanres", sizeof( *current_scan_result ) );
-            if( !current_scan_result )
-            {
+            current_scan_result = (mico_bt_smart_scan_result_t *)malloc_named( "scanres", sizeof( *current_scan_result ) );
+            if ( !current_scan_result ) {
                 bt_smartbridge_log( "Failed to alloc memory for scan-list" );
                 return;
             }
@@ -707,20 +669,16 @@ static void smartbridge_scan_result_callback( mico_bt_ble_scan_results_t *p_scan
 
         current_scan_result->signal_strength  = p_scan_result->rssi;
 
-        if ( p_scan_result->length > 0 ) 
-        {
+        if ( p_scan_result->length > 0 ) {
             STREAM_TO_UINT8( adv_data_length, p );
-            while( adv_data_length && (p - p_adv_data <= p_scan_result->length ) )
-            {
+            while ( adv_data_length && (p - p_adv_data <= p_scan_result->length ) ) {
                 advertising_report.eir_data_length += ( adv_data_length + 1 );
-                
+
                 STREAM_TO_UINT8( adv_type, p );
 
-                if( adv_type == 0x09 || adv_type == 0x08 )
-                {
+                if ( adv_type == 0x09 || adv_type == 0x08 ) {
                     uint8_t j;
-                    for( i = 0, j=0; i < ( adv_data_length-1 ) && j <= p_scan_result->length; i++, j++ )
-                    {
+                    for ( i = 0, j = 0; i < ( adv_data_length - 1 ) && j <= p_scan_result->length; i++, j++ ) {
                         advertising_report.remote_device.name[j] = p[i];
                         current_scan_result->remote_device.name[j] = p[i];
                     }
@@ -733,37 +691,33 @@ static void smartbridge_scan_result_callback( mico_bt_ble_scan_results_t *p_scan
         }
         memcpy(advertising_report.eir_data, p_adv_data, advertising_report.eir_data_length);
 
-        if( p_scan_result->ble_evt_type == BT_SMART_SCAN_RESPONSE_EVENT )
-        {
+        if ( p_scan_result->ble_evt_type == BT_SMART_SCAN_RESPONSE_EVENT ) {
             bt_smartbridge_log( "Received SCAN_RSP\r\n" );
-            memcpy( &current_scan_result->last_scan_response_received, &advertising_report, sizeof(mico_bt_smart_advertising_report_t) );
-            if( app_scan_report_callback != NULL )
-            {
+            memcpy( &current_scan_result->last_scan_response_received, &advertising_report,
+                    sizeof(mico_bt_smart_advertising_report_t) );
+            if ( app_scan_report_callback != NULL ) {
                 bt_smartbridge_log( "advertising callback reported" );
-                mico_rtos_send_asynchronous_event( MICO_BT_EVT_WORKER_THREAD, 
-                                                   (event_handler_t)app_scan_report_callback, 
+                mico_rtos_send_asynchronous_event( MICO_BT_EVT_WORKER_THREAD,
+                                                   (event_handler_t)app_scan_report_callback,
                                                    &current_scan_result->last_scan_response_received );
             }
-        }
-        else
-        {
-            bt_smartbridge_log( "Received ADV[%lu], %d\r\n", (uint32_t)p_scan_result->ble_evt_type,  advertising_report.eir_data_length );
-            memcpy( &current_scan_result->last_advertising_event_received, &advertising_report, sizeof(mico_bt_smart_advertising_report_t) );
-            if( app_scan_report_callback != NULL )
-            {
+        } else {
+            bt_smartbridge_log( "Received ADV[%lu], %d\r\n", (uint32_t)p_scan_result->ble_evt_type,
+                                advertising_report.eir_data_length );
+            memcpy( &current_scan_result->last_advertising_event_received, &advertising_report,
+                    sizeof(mico_bt_smart_advertising_report_t) );
+            if ( app_scan_report_callback != NULL ) {
                 bt_smartbridge_log( "advertising callback reported" );
-                mico_rtos_send_asynchronous_event( MICO_BT_EVT_WORKER_THREAD, 
-                                                   (event_handler_t)app_scan_report_callback, 
+                mico_rtos_send_asynchronous_event( MICO_BT_EVT_WORKER_THREAD,
+                                                   (event_handler_t)app_scan_report_callback,
                                                    &current_scan_result->last_advertising_event_received );
             }
         }
     }
 
-    else
-    {
+    else {
         bt_smartbridge_log( "LE scan completed." );
-        if( app_scan_complete_callback != NULL )
-        {
+        if ( app_scan_complete_callback != NULL ) {
             mico_rtos_send_asynchronous_event( MICO_BT_EVT_WORKER_THREAD, app_scan_complete_callback, NULL );
         }
     }
@@ -775,21 +729,20 @@ OSStatus smartbridge_bt_interface_set_attribute_timeout( uint32_t timeout_second
     return MICO_BT_UNSUPPORTED;
 }
 
-OSStatus smartbridge_bt_interface_update_background_connection_device( mico_bool_t add, mico_bt_device_address_t device_address )
+OSStatus smartbridge_bt_interface_update_background_connection_device( mico_bool_t add,
+                                                                       mico_bt_device_address_t device_address )
 {
-    if ( device_address == 0 ) 
-    {
+    if ( device_address == 0 ) {
         return kParamErr;
     }
-    if ( add ) 
-    {
-        if ( mico_bt_ble_update_background_connection_device( MICO_TRUE, device_address ) != TRUE )
+    if ( add ) {
+        if ( mico_bt_ble_update_background_connection_device( MICO_TRUE, device_address ) != TRUE ) {
             return kGeneralErr;
-    } 
-    else 
-    {
-        if ( mico_bt_ble_update_background_connection_device( MICO_FALSE, device_address ) != TRUE )
+        }
+    } else {
+        if ( mico_bt_ble_update_background_connection_device( MICO_FALSE, device_address ) != TRUE ) {
             return kGeneralErr;
+        }
     }
     return kNoErr;
 }
@@ -797,31 +750,30 @@ OSStatus smartbridge_bt_interface_update_background_connection_device( mico_bool
 OSStatus smartbridge_bt_interface_get_background_connection_device_size( uint8_t *size )
 {
     OSStatus status = kNoErr;
-    if (TRUE != mico_bt_ble_get_background_connection_device_size(size)) 
-    {
+    if (TRUE != mico_bt_ble_get_background_connection_device_size(size)) {
         status = kGeneralErr;
     }
     return status;
 }
 
-OSStatus smartbridge_bt_interface_set_background_connection_type(mico_bt_smartbridge_auto_connection_type_t type, const mico_bt_smart_scan_settings_t* settings, mico_bt_smartbridge_auto_connection_parms_cback_t p_select_cback)
+OSStatus smartbridge_bt_interface_set_background_connection_type(mico_bt_smartbridge_auto_connection_type_t type,
+                                                                 const mico_bt_smart_scan_settings_t *settings, mico_bt_smartbridge_auto_connection_parms_cback_t p_select_cback)
 {
     OSStatus status = kNoErr;
     mico_bt_ble_conn_type_t conn_type;
-    
-    switch (type) 
-    {
-    case SMARTBRIDGE_CONN_AUTO:
-        conn_type = BTM_BLE_CONN_AUTO;
-        break;
-    case SMARTBRIDGE_CONN_SELECTIVE:
-        conn_type = BTM_BLE_CONN_SELECTIVE;
-        break;
-    case SMARTBRIDGE_CONN_NONE:
-        conn_type = BTM_BLE_CONN_NONE;
-        break;
-    default:
-        return kParamErr;
+
+    switch (type) {
+        case SMARTBRIDGE_CONN_AUTO:
+            conn_type = BTM_BLE_CONN_AUTO;
+            break;
+        case SMARTBRIDGE_CONN_SELECTIVE:
+            conn_type = BTM_BLE_CONN_SELECTIVE;
+            break;
+        case SMARTBRIDGE_CONN_NONE:
+            conn_type = BTM_BLE_CONN_NONE;
+            break;
+        default:
+            return kParamErr;
     }
 
     /* fill with the settings provided by the smartbridge-application */
@@ -833,8 +785,9 @@ OSStatus smartbridge_bt_interface_set_background_connection_type(mico_bt_smartbr
         /* Used the default. */
     }
 
-    if (!mico_bt_ble_set_background_connection_type(conn_type, *(mico_bt_ble_selective_conn_cback_t *)p_select_cback)) 
+    if (!mico_bt_ble_set_background_connection_type(conn_type, *(mico_bt_ble_selective_conn_cback_t *)p_select_cback)) {
         status = kGeneralErr;
+    }
     return status;
 }
 
@@ -854,8 +807,7 @@ mico_bool_t smartbridge_bt_interface_is_scanning( void )
 
     scan_type = mico_bt_ble_get_current_scan_state();
 
-    if ( scan_type != BTM_BLE_SCAN_TYPE_NONE )
-    {
+    if ( scan_type != BTM_BLE_SCAN_TYPE_NONE ) {
         return MICO_TRUE;
     }
 
@@ -878,7 +830,9 @@ OSStatus smartbridge_bt_interface_stop_scan( )
     return mico_bt_ble_scan( BTM_BLE_SCAN_TYPE_NONE, MICO_TRUE, smartbridge_scan_result_callback );
 }
 
-OSStatus smartbridge_bt_interface_start_scan( const mico_bt_smart_scan_settings_t* settings, mico_bt_smart_scan_complete_callback_t complete_callback, mico_bt_smart_advertising_report_callback_t advertising_report_callback )
+OSStatus smartbridge_bt_interface_start_scan( const mico_bt_smart_scan_settings_t *settings,
+                                              mico_bt_smart_scan_complete_callback_t complete_callback,
+                                              mico_bt_smart_advertising_report_callback_t advertising_report_callback )
 {
     mico_bool_t duplicate_filter_enabled = MICO_FALSE;
 
@@ -899,7 +853,10 @@ OSStatus smartbridge_bt_interface_start_scan( const mico_bt_smart_scan_settings_
     return mico_bt_ble_scan( BTM_BLE_SCAN_TYPE_HIGH_DUTY, duplicate_filter_enabled, smartbridge_scan_result_callback );
 }
 
-OSStatus smartbridge_bt_interface_connect( const mico_bt_smart_device_t* remote_device, const mico_bt_smart_connection_settings_t* settings, mico_bt_smartbridge_disconnection_callback_t disconnection_callback, mico_bt_smartbridge_notification_callback_t notification_callback )
+OSStatus smartbridge_bt_interface_connect( const mico_bt_smart_device_t *remote_device,
+                                           const mico_bt_smart_connection_settings_t *settings,
+                                           mico_bt_smartbridge_disconnection_callback_t disconnection_callback,
+                                           mico_bt_smartbridge_notification_callback_t notification_callback )
 {
     mico_bool_t gatt_connect_result;
 
@@ -913,7 +870,8 @@ OSStatus smartbridge_bt_interface_connect( const mico_bt_smart_device_t* remote_
     mico_bt_cfg_settings.ble_scan_cfg.conn_supervision_timeout = settings->supervision_timeout;
 
     /* Send connection request */
-    gatt_connect_result = mico_bt_gatt_le_connect( (uint8_t *)remote_device->address, remote_device->address_type, BLE_CONN_MODE_HIGH_DUTY, MICO_TRUE);
+    gatt_connect_result = mico_bt_gatt_le_connect( (uint8_t *)remote_device->address, remote_device->address_type,
+                                                   BLE_CONN_MODE_HIGH_DUTY, MICO_TRUE);
 
     bt_smartbridge_log( "LE-connect, result:%d", gatt_connect_result );
 

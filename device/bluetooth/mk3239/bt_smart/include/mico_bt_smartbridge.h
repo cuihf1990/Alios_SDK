@@ -1,12 +1,3 @@
-/**
- *  UNPUBLISHED PROPRIETARY SOURCE CODE
- *  Copyright (c) 2016 MXCHIP Inc.
- *
- *  The contents of this file may not be disclosed to third parties, copied or
- *  duplicated in any form, in whole or in part, without the prior written
- *  permission of MXCHIP Corporation.
- *
- */
 
 #pragma once
 
@@ -32,8 +23,7 @@ extern "C" {
 /**
  * SmartBridge socket status
  */
-typedef enum
-{
+typedef enum {
     SMARTBRIDGE_SOCKET_DISCONNECTED, /**< Socket is disconnected                   */
     SMARTBRIDGE_SOCKET_CONNECTING,   /**< Socket is in connecting state            */
     SMARTBRIDGE_SOCKET_CONNECTED,    /**< Socket is connected with a remote device */
@@ -49,29 +39,31 @@ typedef enum
 typedef struct mico_bt_smartbridge_socket mico_bt_smartbridge_socket_t;
 
 /**
- * Auto connection callback parameters 
+ * Auto connection callback parameters
  */
 typedef struct mico_bt_smartbridge_auto_conn_cback_parm mico_bt_smartbridge_auto_conn_cback_parms_t;
 
 /**
  * Socket disconnection callback
  */
-typedef OSStatus (*mico_bt_smartbridge_disconnection_callback_t)       ( mico_bt_smartbridge_socket_t* socket );
+typedef OSStatus (*mico_bt_smartbridge_disconnection_callback_t)       ( mico_bt_smartbridge_socket_t *socket );
 
 /**
  * Socket GATT notification callback
  */
-typedef OSStatus (*mico_bt_smartbridge_notification_callback_t)        ( mico_bt_smartbridge_socket_t* socket, uint16_t attribute_handle );
+typedef OSStatus (*mico_bt_smartbridge_notification_callback_t)        ( mico_bt_smartbridge_socket_t *socket,
+                                                                         uint16_t attribute_handle );
 
 /**
- * BLE Auto connection callback 
+ * BLE Auto connection callback
  */
 typedef OSStatus (*mico_bt_smartbridge_auto_connection_callback_t)     ( mico_bt_smartbridge_socket_t *socket );
 
 /**
  * BLE Auto connection parameters callback -- auto connection procedure callback
  */
-typedef OSStatus (*mico_bt_smartbridge_auto_connection_parms_cback_t)   ( const mico_bt_device_address_t random_bda, const char *name, const uint8_t *p_data, uint8_t len, mico_bt_smartbridge_auto_conn_cback_parms_t *parm );
+typedef OSStatus (*mico_bt_smartbridge_auto_connection_parms_cback_t)   ( const mico_bt_device_address_t random_bda,
+                                                                          const char *name, const uint8_t *p_data, uint8_t len, mico_bt_smartbridge_auto_conn_cback_parms_t *parm );
 
 
 /******************************************************
@@ -84,36 +76,56 @@ typedef OSStatus (*mico_bt_smartbridge_auto_connection_parms_cback_t)   ( const 
  * the content of this structure is prohibited. Please use the Bluetooth SmartBridge
  * API to retrieve socket information.
  */
-struct mico_bt_smartbridge_socket
-{
-    linked_list_node_t                             node;                           /**< Socket list node                                              */
-    mico_bt_smart_device_t                         remote_device;                  /**< Remote Bluetooth device MICO is connected with (bridging)    */
-    uint16_t                                       connection_handle;              /**< Connection handle                                             */
-    uint16_t                                       last_notified_attribute_handle; /**< Last notified attribute handle                                */
-    uint8_t                                        state;                          /**< Internal state                                                */
-    uint8_t                                        actions;                        /**< Internal socket actions                                       */
+struct mico_bt_smartbridge_socket {
+    linked_list_node_t
+    node;                           /**< Socket list node                                              */
+    mico_bt_smart_device_t
+    remote_device;                  /**< Remote Bluetooth device MICO is connected with (bridging)    */
+    uint16_t
+    connection_handle;              /**< Connection handle                                             */
+    uint16_t
+    last_notified_attribute_handle; /**< Last notified attribute handle                                */
+    uint8_t
+    state;                          /**< Internal state                                                */
+    uint8_t
+    actions;                        /**< Internal socket actions                                       */
 
-    mico_bt_smartbridge_auto_connection_callback_t auto_connection_callback;       /**< Callback for handing connection event by Auto Connection      */
-    mico_bt_smartbridge_disconnection_callback_t   disconnection_callback;         /**< Callback for handling disconnection event by remote device    */
-    mico_bt_smart_bonding_callback_t               bonding_callback;               /**< Callback for handling pairing/bonding successful event        */
-    mico_bt_smartbridge_notification_callback_t    notification_callback;          /**< Callback for handling GATT notification from remote device    */
-    mico_bt_smart_connection_settings_t            connection_settings;            /**< Connection settings                                           */
-    mico_bt_smart_security_settings_t              security_settings;              /**< Security settings                                             */
-    mico_bt_smart_bond_info_t                      bond_info;                      /**< Bond Info                                                     */
-    mico_bt_smart_bond_request_t                   bond_req;                       /**< Bond Request Structure                                        */
-    void*                                          att_cache;                      /**< Pointer to Attribute Cache                                    */
-    mico_semaphore_t                               semaphore;                      /**< Semaphore                                                     */
+    mico_bt_smartbridge_auto_connection_callback_t
+    auto_connection_callback;       /**< Callback for handing connection event by Auto Connection      */
+    mico_bt_smartbridge_disconnection_callback_t
+    disconnection_callback;         /**< Callback for handling disconnection event by remote device    */
+    mico_bt_smart_bonding_callback_t
+    bonding_callback;               /**< Callback for handling pairing/bonding successful event        */
+    mico_bt_smartbridge_notification_callback_t
+    notification_callback;          /**< Callback for handling GATT notification from remote device    */
+    mico_bt_smart_connection_settings_t
+    connection_settings;            /**< Connection settings                                           */
+    mico_bt_smart_security_settings_t
+    security_settings;              /**< Security settings                                             */
+    mico_bt_smart_bond_info_t
+    bond_info;                      /**< Bond Info                                                     */
+    mico_bt_smart_bond_request_t
+    bond_req;                       /**< Bond Request Structure                                        */
+    void
+    *att_cache;                      /**< Pointer to Attribute Cache                                    */
+    mico_semaphore_t
+    semaphore;                      /**< Semaphore                                                     */
 };
 
-struct mico_bt_smartbridge_auto_conn_cback_parm
-{
-    mico_bt_smartbridge_socket_t*                  socket;                         /**< A socket associated with the auto connection */
-    mico_bt_smart_connection_settings_t            conn_settings;                  /**< The connection settings associated with a socket */
-    mico_bt_smart_security_settings_t              security_settings;              /**< Security settings                                */
-    
-    mico_bt_smartbridge_auto_connection_callback_t auto_connection_callback;       /**< Callback for handing connection event by Auto connection */
-    mico_bt_smartbridge_disconnection_callback_t   auto_disconn_callback;          /**< Callback for handing disconnection event */
-    mico_bt_smartbridge_notification_callback_t    notification_callback;          /**< Callback for handing GATT notification from a remote device */
+struct mico_bt_smartbridge_auto_conn_cback_parm {
+    mico_bt_smartbridge_socket_t
+    *socket;                         /**< A socket associated with the auto connection */
+    mico_bt_smart_connection_settings_t
+    conn_settings;                  /**< The connection settings associated with a socket */
+    mico_bt_smart_security_settings_t
+    security_settings;              /**< Security settings                                */
+
+    mico_bt_smartbridge_auto_connection_callback_t
+    auto_connection_callback;       /**< Callback for handing connection event by Auto connection */
+    mico_bt_smartbridge_disconnection_callback_t
+    auto_disconn_callback;          /**< Callback for handing disconnection event */
+    mico_bt_smartbridge_notification_callback_t
+    notification_callback;          /**< Callback for handing GATT notification from a remote device */
 };
 
 /******************************************************
@@ -187,18 +199,19 @@ OSStatus mico_bt_smartbridge_deinit( void );
  * the cache. If not found, SmartBridge  discovers server's Attribute
  * information and adds the information to the cache when completed. If SmartBridge
  * runs out of cache space, the first non-active cache in the list is replaced.
- * 
- * Specified services can be used in ATT cache generation, it makes MICO SmartBridge 
+ *
+ * Specified services can be used in ATT cache generation, it makes MICO SmartBridge
  * only cache the services that application can support and operate.
  *
  * @param[in]  cache_count    : the number of caches that will be supported by MICO SmartBridge
  * @param[in]  cache_services : define service list to generate caches
- * @param[in]  service_count  : the number of services to generate caches, pass 0 to generate 
+ * @param[in]  service_count  : the number of services to generate caches, pass 0 to generate
  *                              all primary services
  *
  * @return @ref OSStatus
  */
-OSStatus mico_bt_smartbridge_enable_attribute_cache( uint32_t cache_count, mico_bt_uuid_t cache_services[], uint32_t service_count );
+OSStatus mico_bt_smartbridge_enable_attribute_cache( uint32_t cache_count, mico_bt_uuid_t cache_services[],
+                                                     uint32_t service_count );
 
 
 /** Disable Attribute Cache
@@ -262,9 +275,9 @@ mico_bool_t   mico_bt_smartbridge_is_scanning( void );
  *
  * @return @ref OSStatus
  */
-OSStatus mico_bt_smartbridge_start_scan( const mico_bt_smart_scan_settings_t*        settings,
-                                                mico_bt_smart_scan_complete_callback_t      complete_callback,
-                                                mico_bt_smart_advertising_report_callback_t advertising_report_callback );
+OSStatus mico_bt_smartbridge_start_scan( const mico_bt_smart_scan_settings_t        *settings,
+                                         mico_bt_smart_scan_complete_callback_t      complete_callback,
+                                         mico_bt_smart_advertising_report_callback_t advertising_report_callback );
 
 
 /** Stop the ongoing scan process
@@ -290,7 +303,7 @@ OSStatus mico_bt_smartbridge_stop_scan( void );
  *
  * @return @ref OSStatus
  */
-OSStatus mico_bt_smartbridge_get_scan_result_list( mico_bt_smart_scan_result_t** result_list, uint32_t* count );
+OSStatus mico_bt_smartbridge_get_scan_result_list( mico_bt_smart_scan_result_t **result_list, uint32_t *count );
 
 /** @} */
 
@@ -318,25 +331,27 @@ OSStatus mico_bt_smartbridge_get_scan_result_list( mico_bt_smart_scan_result_t**
  */
 OSStatus mico_bt_smartbridge_get_background_connection_devices_size( uint8_t *size );
 
-/** Set auto connection action - start or stop. 
+/** Set auto connection action - start or stop.
  *
- * @param[in] start_stop        : Start or stop auto connection establishment procedure by 
+ * @param[in] start_stop        : Start or stop auto connection establishment procedure by
  *                                the White List.
  * @param[in] scan_settings     : Used to set up Scanning Parameters during Auto Connection
- *                                Procedure when the 'start_stop' is BT_TRUE. 
- *                                And 'scan_settings.interval', 'scan_settings.window' 
- *                                and 'scan_settings.duration_second' are only used. 
+ *                                Procedure when the 'start_stop' is BT_TRUE.
+ *                                And 'scan_settings.interval', 'scan_settings.window'
+ *                                and 'scan_settings.duration_second' are only used.
  *                                If 'duration_second' is 0xFFFF, it will be forever until recalling
  *                                this function by "start_stop = FALSE".
- * @param[in] p_auto_conn_cback : Callback function called when a auto connection 
+ * @param[in] p_auto_conn_cback : Callback function called when a auto connection
  *                                will be established. It is used to query
  *                                user some information and configuration by lower
- *                                stack. Users should fill a socket entity, 
+ *                                stack. Users should fill a socket entity,
  *                                connection settings and callback function.
  *
  * @return @ref OSStatus
  */
-OSStatus mico_bt_smartbridge_set_auto_connection_action( mico_bool_t start_stop, const mico_bt_smart_scan_settings_t *scan_settings, mico_bt_smartbridge_auto_connection_parms_cback_t p_auto_conn_cback );
+OSStatus mico_bt_smartbridge_set_auto_connection_action( mico_bool_t start_stop,
+                                                         const mico_bt_smart_scan_settings_t *scan_settings,
+                                                         mico_bt_smartbridge_auto_connection_parms_cback_t p_auto_conn_cback );
 
 
 /** @} */
@@ -372,7 +387,8 @@ mico_bool_t   mico_bt_smartbridge_is_ready_to_connect( void );
  *
  * @return @ref OSStatus
  */
-OSStatus mico_bt_smartbridge_get_socket_status( mico_bt_smartbridge_socket_t* socket, mico_bt_smartbridge_socket_status_t* status );
+OSStatus mico_bt_smartbridge_get_socket_status( mico_bt_smartbridge_socket_t *socket,
+                                                mico_bt_smartbridge_socket_status_t *status );
 
 
 /** Create a SmartBridge socket
@@ -386,7 +402,7 @@ OSStatus mico_bt_smartbridge_get_socket_status( mico_bt_smartbridge_socket_t* so
  *
  * @return @ref OSStatus
  */
-OSStatus mico_bt_smartbridge_create_socket( mico_bt_smartbridge_socket_t* socket );
+OSStatus mico_bt_smartbridge_create_socket( mico_bt_smartbridge_socket_t *socket );
 
 
 /** Delete a SmartBridge socket
@@ -398,7 +414,7 @@ OSStatus mico_bt_smartbridge_create_socket( mico_bt_smartbridge_socket_t* socket
  *
  * @return @ref OSStatus
  */
-OSStatus mico_bt_smartbridge_delete_socket( mico_bt_smartbridge_socket_t* socket );
+OSStatus mico_bt_smartbridge_delete_socket( mico_bt_smartbridge_socket_t *socket );
 
 
 /** Initiate a SmartBridge connection with a remote Bluetooth Smart device
@@ -436,11 +452,11 @@ OSStatus mico_bt_smartbridge_delete_socket( mico_bt_smartbridge_socket_t* socket
  *
  * @return @ref OSStatus
  */
-OSStatus mico_bt_smartbridge_connect( mico_bt_smartbridge_socket_t*                socket,
-                                       const mico_bt_smart_device_t*                remote_device,
-                                       const mico_bt_smart_connection_settings_t*   settings,
-                                       mico_bt_smartbridge_disconnection_callback_t disconnection_callback,
-                                       mico_bt_smartbridge_notification_callback_t  notification_callback );
+OSStatus mico_bt_smartbridge_connect( mico_bt_smartbridge_socket_t                *socket,
+                                      const mico_bt_smart_device_t                *remote_device,
+                                      const mico_bt_smart_connection_settings_t   *settings,
+                                      mico_bt_smartbridge_disconnection_callback_t disconnection_callback,
+                                      mico_bt_smartbridge_notification_callback_t  notification_callback );
 
 
 /** Disconnect a SmartBridge connection
@@ -453,7 +469,7 @@ OSStatus mico_bt_smartbridge_connect( mico_bt_smartbridge_socket_t*             
  *
  * @return @ref OSStatus
  */
-OSStatus mico_bt_smartbridge_disconnect( mico_bt_smartbridge_socket_t* socket, mico_bool_t remove_it_from_whitelist );
+OSStatus mico_bt_smartbridge_disconnect( mico_bt_smartbridge_socket_t *socket, mico_bool_t remove_it_from_whitelist );
 
 
 /** Set transmit power during connection
@@ -466,7 +482,7 @@ OSStatus mico_bt_smartbridge_disconnect( mico_bt_smartbridge_socket_t* socket, m
  *
  * @return @ref OSStatus
  */
-OSStatus mico_bt_smartbridge_set_transmit_power( mico_bt_smartbridge_socket_t* socket, int8_t transmit_power_dbm );
+OSStatus mico_bt_smartbridge_set_transmit_power( mico_bt_smartbridge_socket_t *socket, int8_t transmit_power_dbm );
 
 /** @} */
 
@@ -498,9 +514,9 @@ OSStatus mico_bt_smartbridge_set_transmit_power( mico_bt_smartbridge_socket_t* s
  *
  * @return @ref OSStatus
  */
-OSStatus mico_bt_smartbridge_set_bond_info( mico_bt_smartbridge_socket_t*            socket,
-                                             const mico_bt_smart_security_settings_t* settings,
-                                             const mico_bt_smart_bond_info_t*         bond_info );
+OSStatus mico_bt_smartbridge_set_bond_info( mico_bt_smartbridge_socket_t            *socket,
+                                            const mico_bt_smart_security_settings_t *settings,
+                                            const mico_bt_smart_bond_info_t         *bond_info );
 
 
 /** Reset the bond information stored in the socket
@@ -512,7 +528,7 @@ OSStatus mico_bt_smartbridge_set_bond_info( mico_bt_smartbridge_socket_t*       
  *
  * @return @ref OSStatus
  */
-OSStatus mico_bt_smartbridge_clear_bond_info( mico_bt_smartbridge_socket_t* socket );
+OSStatus mico_bt_smartbridge_clear_bond_info( mico_bt_smartbridge_socket_t *socket );
 
 
 /** Force a SmartBridge socket to initiate Pairing Request with a Bluetooth Smart device
@@ -535,9 +551,9 @@ OSStatus mico_bt_smartbridge_clear_bond_info( mico_bt_smartbridge_socket_t* sock
  *
  * @return @ref OSStatus
  */
-OSStatus mico_bt_smartbridge_enable_pairing( mico_bt_smartbridge_socket_t*             socket,
-                                              const mico_bt_smart_security_settings_t* settings,
-                                              mico_bt_smart_bonding_callback_t         bonding_callback );
+OSStatus mico_bt_smartbridge_enable_pairing( mico_bt_smartbridge_socket_t             *socket,
+                                             const mico_bt_smart_security_settings_t *settings,
+                                             mico_bt_smart_bonding_callback_t         bonding_callback );
 
 
 /** Set a SmartBridge socket to disable pairing with a remote device
@@ -549,7 +565,7 @@ OSStatus mico_bt_smartbridge_enable_pairing( mico_bt_smartbridge_socket_t*      
  *
  * @return @ref OSStatus
  */
-OSStatus mico_bt_smartbridge_disable_pairing( mico_bt_smartbridge_socket_t* socket );
+OSStatus mico_bt_smartbridge_disable_pairing( mico_bt_smartbridge_socket_t *socket );
 
 /** @} */
 
@@ -578,7 +594,8 @@ OSStatus mico_bt_smartbridge_disable_pairing( mico_bt_smartbridge_socket_t* sock
  *
  * @return @ref OSStatus
  */
-OSStatus mico_bt_smartbridge_enable_attribute_cache_notification( mico_bt_smartbridge_socket_t* socket, mico_bool_t is_notification_or_indication );
+OSStatus mico_bt_smartbridge_enable_attribute_cache_notification( mico_bt_smartbridge_socket_t *socket,
+                                                                  mico_bool_t is_notification_or_indication );
 
 
 /** Disable all GATT notifications supported by the server
@@ -593,7 +610,7 @@ OSStatus mico_bt_smartbridge_enable_attribute_cache_notification( mico_bt_smartb
  *
  * @return @ref OSStatus
  */
-OSStatus mico_bt_smartbridge_disable_attribute_cache_notification( mico_bt_smartbridge_socket_t* socket );
+OSStatus mico_bt_smartbridge_disable_attribute_cache_notification( mico_bt_smartbridge_socket_t *socket );
 
 /** Release attribute cache data
  *
@@ -606,7 +623,7 @@ OSStatus mico_bt_smartbridge_disable_attribute_cache_notification( mico_bt_smart
  *
  * @return @ref OSStatus
  */
-OSStatus mico_bt_smartbridge_remove_attribute_cache( mico_bt_smartbridge_socket_t* socket );
+OSStatus mico_bt_smartbridge_remove_attribute_cache( mico_bt_smartbridge_socket_t *socket );
 
 /** Retrieve the list of cached Attributes
  *
@@ -620,7 +637,8 @@ OSStatus mico_bt_smartbridge_remove_attribute_cache( mico_bt_smartbridge_socket_
  *
  * @return @ref OSStatus
  */
-OSStatus mico_bt_smartbridge_get_attribute_cache_list( mico_bt_smartbridge_socket_t* socket, mico_bt_smart_attribute_list_t** att_cache_list );
+OSStatus mico_bt_smartbridge_get_attribute_cache_list( mico_bt_smartbridge_socket_t *socket,
+                                                       mico_bt_smart_attribute_list_t **att_cache_list );
 
 
 /** Find and read attribute with the handle provided from the Attribute Cache
@@ -638,7 +656,8 @@ OSStatus mico_bt_smartbridge_get_attribute_cache_list( mico_bt_smartbridge_socke
  *
  * @return @ref OSStatus
  */
-OSStatus mico_bt_smartbridge_get_attribute_cache_by_handle( mico_bt_smartbridge_socket_t* socket, uint16_t handle, mico_bt_smart_attribute_t* attribute, uint16_t size );
+OSStatus mico_bt_smartbridge_get_attribute_cache_by_handle( mico_bt_smartbridge_socket_t *socket, uint16_t handle,
+                                                            mico_bt_smart_attribute_t *attribute, uint16_t size );
 
 
 /** Find and read attribute with the UUID provided from the local attribute database
@@ -658,9 +677,15 @@ OSStatus mico_bt_smartbridge_get_attribute_cache_by_handle( mico_bt_smartbridge_
  *
  * @return @ref OSStatus
  */
-OSStatus mico_bt_smartbridge_get_attribute_cache_by_uuid( mico_bt_smartbridge_socket_t* socket, const mico_bt_uuid_t* uuid, uint16_t starting_handle, uint16_t ending_handle, mico_bt_smart_attribute_t* attribute, uint32_t size );
-OSStatus mico_bt_smartbridge_get_service_from_attribute_cache_by_uuid( mico_bt_smartbridge_socket_t* socket, const mico_bt_uuid_t* uuid, uint16_t starting_handle, uint16_t ending_handle, mico_bt_smart_attribute_t* attribute, uint32_t size );
-OSStatus mico_bt_smartbridge_get_characteritics_from_attribute_cache_by_uuid( mico_bt_smartbridge_socket_t* socket, const mico_bt_uuid_t* uuid, uint16_t starting_handle, uint16_t ending_handle, mico_bt_smart_attribute_t* attribute, uint32_t size );
+OSStatus mico_bt_smartbridge_get_attribute_cache_by_uuid( mico_bt_smartbridge_socket_t *socket,
+                                                          const mico_bt_uuid_t *uuid, uint16_t starting_handle, uint16_t ending_handle, mico_bt_smart_attribute_t *attribute,
+                                                          uint32_t size );
+OSStatus mico_bt_smartbridge_get_service_from_attribute_cache_by_uuid( mico_bt_smartbridge_socket_t *socket,
+                                                                       const mico_bt_uuid_t *uuid, uint16_t starting_handle, uint16_t ending_handle, mico_bt_smart_attribute_t *attribute,
+                                                                       uint32_t size );
+OSStatus mico_bt_smartbridge_get_characteritics_from_attribute_cache_by_uuid( mico_bt_smartbridge_socket_t *socket,
+                                                                              const mico_bt_uuid_t *uuid, uint16_t starting_handle, uint16_t ending_handle, mico_bt_smart_attribute_t *attribute,
+                                                                              uint32_t size );
 
 
 /** Find and refresh Characteristic Value with the given handle in the Attribute Cache
@@ -676,7 +701,8 @@ OSStatus mico_bt_smartbridge_get_characteritics_from_attribute_cache_by_uuid( mi
  *
  * @return OSStatus
  */
-OSStatus mico_bt_smartbridge_refresh_attribute_cache_characteristic_value( mico_bt_smartbridge_socket_t* socket, uint16_t handle );
+OSStatus mico_bt_smartbridge_refresh_attribute_cache_characteristic_value( mico_bt_smartbridge_socket_t *socket,
+                                                                           uint16_t handle );
 
 
 /** Write Characteristic Value in the Attribute Cache to the server
@@ -692,7 +718,8 @@ OSStatus mico_bt_smartbridge_refresh_attribute_cache_characteristic_value( mico_
  *
  * @return OSStatus
  */
-OSStatus mico_bt_smartbridge_write_attribute_cache_characteristic_value( mico_bt_smartbridge_socket_t* socket, const mico_bt_smart_attribute_t* characteristic_value );
+OSStatus mico_bt_smartbridge_write_attribute_cache_characteristic_value( mico_bt_smartbridge_socket_t *socket,
+                                                                         const mico_bt_smart_attribute_t *characteristic_value );
 
 /** @} */
 

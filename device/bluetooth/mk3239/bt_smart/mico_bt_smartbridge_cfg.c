@@ -1,13 +1,3 @@
-/**
- *  UNPUBLISHED PROPRIETARY SOURCE CODE
- *  Copyright (c) 2016 MXCHIP Inc.
- *
- *  The contents of this file may not be disclosed to third parties, copied or
- *  duplicated in any form, in whole or in part, without the prior written
- *  permission of MXCHIP Corporation.
- *
- */
-
 /** @file
  *
  * Runtime Bluetooth stack configuration parameters
@@ -18,9 +8,8 @@
 /*****************************************************************************
  * BTE stack configuration
  ****************************************************************************/
-mico_bt_cfg_settings_t mico_bt_cfg_settings =
-{
-    .device_name               = (uint8_t*)"MiCO BT Gateway", /**< Local device name (NULL terminated) */
+mico_bt_cfg_settings_t mico_bt_cfg_settings = {
+    .device_name               = (uint8_t *)"MiCO BT Gateway", /**< Local device name (NULL terminated) */
     .device_class              = { 0x00, 0x00, 0x00 },        /**< Local device class */
     .security_requirement_mask = BTM_SEC_NONE,                /**< Security requirements mask (BTM_SEC_NONE, or combination of BTM_SEC_IN_AUTHENTICATE, BTM_SEC_OUT_AUTHENTICATE, BTM_SEC_ENCRYPT (see #mico_bt_sec_level_e)) */
     .max_simultaneous_links    = 3,                           /**< Maximum number simultaneous links to different devices */
@@ -38,7 +27,7 @@ mico_bt_cfg_settings_t mico_bt_cfg_settings =
     .ble_scan_cfg =                    /**< BLE scan settings */
     {
         .scan_mode                    = BTM_BLE_SCAN_MODE_PASSIVE,                         /**< BLE scan mode (BTM_BLE_SCAN_MODE_PASSIVE, BTM_BLE_SCAN_MODE_ACTIVE) */
-        .scan_filter_policy           = BTM_BLE_SCAN_FILTER_POLICY_NONE,    
+        .scan_filter_policy           = BTM_BLE_SCAN_FILTER_POLICY_NONE,
         .high_duty_scan_interval      = MICO_BT_CFG_DEFAULT_HIGH_DUTY_SCAN_INTERVAL,      /**< High duty scan interval (default: MICO_BT_CFG_DEFAULT_HIGH_DUTY_SCAN_INTERVAL) */
         .high_duty_scan_window        = MICO_BT_CFG_DEFAULT_HIGH_DUTY_SCAN_WINDOW,        /**< High duty scan window (default: MICO_BT_CFG_DEFAULT_HIGH_DUTY_SCAN_WINDOW) */
         .high_duty_scan_duration      = 3,                                                 /**< High duty scan duration in seconds (0 for infinite) */
@@ -81,42 +70,42 @@ mico_bt_cfg_settings_t mico_bt_cfg_settings =
     /* GATT configuration */
     .gatt_cfg =                       /**< GATT settings */
     {
-         .appearance       = APPEARANCE_GENERIC_TAG, /**< GATT appearance (see #gatt_appearance_e) */
-         .client_max_links = 3,   /**< Client config: maximum number of servers that local client can connect to  */
-         .server_max_links = 0,   /**< Server config: maximum number of remote clients connections allowed by the local */
-         .max_attr_len     = 360, /**< Maximum attribute length; gki_cfg must have a corresponding buffer pool that can hold this length */
+        .appearance       = APPEARANCE_GENERIC_TAG, /**< GATT appearance (see #gatt_appearance_e) */
+        .client_max_links = 3,   /**< Client config: maximum number of servers that local client can connect to  */
+        .server_max_links = 0,   /**< Server config: maximum number of remote clients connections allowed by the local */
+        .max_attr_len     = 360, /**< Maximum attribute length; gki_cfg must have a corresponding buffer pool that can hold this length */
     },
-     /* Application managed l2cap protocol configuration */
+    /* Application managed l2cap protocol configuration */
     .rfcomm_cfg =
     {
         .max_links = 0,  /**< Maximum number of simultaneous connected remote devices*/
         .max_ports = 0   /**< Maximum number of simultaneous RFCOMM ports */
     },
     .l2cap_application =
-     {
-         .max_links       = 0, /**< Maximum number of application-managed l2cap links (BR/EDR and LE) */
-         /* BR EDR l2cap configuration */
-         .max_psm         = 0, /**< Maximum number of application-managed BR/EDR PSMs */
-         .max_channels    = 0, /**< Maximum number of application-managed BR/EDR channels  */
+    {
+        .max_links       = 0, /**< Maximum number of application-managed l2cap links (BR/EDR and LE) */
+        /* BR EDR l2cap configuration */
+        .max_psm         = 0, /**< Maximum number of application-managed BR/EDR PSMs */
+        .max_channels    = 0, /**< Maximum number of application-managed BR/EDR channels  */
 
-         /* LE L2cap connection-oriented channels configuration */
-         .max_le_psm      = 3, /**< Maximum number of application-managed LE PSMs */
-         .max_le_channels = 3, /**< Maximum number of application-managed LE channels */
-     },
-     /* Audio/Video Distribution configuration */
-     .avdt_cfg =
-     {
-         .max_links = 0, /**< Maximum simultaneous audio/video links */
-     },
+        /* LE L2cap connection-oriented channels configuration */
+        .max_le_psm      = 3, /**< Maximum number of application-managed LE PSMs */
+        .max_le_channels = 3, /**< Maximum number of application-managed LE channels */
+    },
+    /* Audio/Video Distribution configuration */
+    .avdt_cfg =
+    {
+        .max_links = 0, /**< Maximum simultaneous audio/video links */
+    },
 
-     /* Audio/Video Remote Control configuration */
-     .avrc_cfg =
-     {
-         .roles     = 0, /**< Mask of local roles supported (AVRC_CONN_INITIATOR|AVRC_CONN_ACCEPTOR) */
-         .max_links = 0  /**< Maximum simultaneous remote control links */
-     },
-     
-     .addr_resolution_db_size = 20,
+    /* Audio/Video Remote Control configuration */
+    .avrc_cfg =
+    {
+        .roles     = 0, /**< Mask of local roles supported (AVRC_CONN_INITIATOR|AVRC_CONN_ACCEPTOR) */
+        .max_links = 0  /**< Maximum simultaneous remote control links */
+    },
+
+    .addr_resolution_db_size = 20,
 };
 
 
@@ -128,9 +117,8 @@ mico_bt_cfg_settings_t mico_bt_cfg_settings =
  * Pools must be ordered in increasing buf_size.
  * If a pool runs out of buffers, the next  pool will be used
  *****************************************************************************/
-const mico_bt_cfg_buf_pool_t mico_bt_cfg_buf_pools[MICO_BT_CFG_NUM_BUF_POOLS] =
-{
-/*  { buf_size, buf_count } */
+const mico_bt_cfg_buf_pool_t mico_bt_cfg_buf_pools[MICO_BT_CFG_NUM_BUF_POOLS] = {
+    /*  { buf_size, buf_count } */
     { 64,  4  }, /* Small Buffer Pool */
     { 360, 4  }, /* Medium Buffer Pool (used for HCI & RFCOMM control messages, min recommended size is 360) */
     { 360, 12 }, /* Large Buffer Pool  (used for HCI ACL messages) */

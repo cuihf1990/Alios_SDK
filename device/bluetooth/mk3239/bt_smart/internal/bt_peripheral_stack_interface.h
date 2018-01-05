@@ -1,13 +1,3 @@
-/**
- *  UNPUBLISHED PROPRIETARY SOURCE CODE
- *  Copyright (c) 2016 MXCHIP Inc.
- *
- *  The contents of this file may not be disclosed to third parties, copied or
- *  duplicated in any form, in whole or in part, without the prior written
- *  permission of MXCHIP Corporation.
- *
- */
-
 #pragma once
 
 /** @file
@@ -62,17 +52,21 @@ OSStatus peripheral_bt_interface_cancel_last_connect( mico_bt_device_address_t a
 
 OSStatus peripheral_bt_interface_disconnect( uint16_t connection_handle );
 
-OSStatus peripheral_bt_interface_set_security_settings( const mico_bt_smart_security_settings_t* settings );
+OSStatus peripheral_bt_interface_set_security_settings( const mico_bt_smart_security_settings_t *settings );
 
-OSStatus peripheral_bt_interface_start_advertisements( mico_bt_smart_advertising_settings_t* settings, mico_bt_smart_advertising_complete_callback_t complete_callback );
+OSStatus peripheral_bt_interface_start_advertisements( mico_bt_smart_advertising_settings_t *settings,
+                                                       mico_bt_smart_advertising_complete_callback_t complete_callback );
 
 OSStatus peripheral_bt_interface_stop_advertisements( void );
 
-OSStatus peripheral_bt_interface_indicate_attribute_value ( uint16_t connection_handle, const mico_bt_ext_attribute_value_t* attribute );
+OSStatus peripheral_bt_interface_indicate_attribute_value ( uint16_t connection_handle,
+                                                            const mico_bt_ext_attribute_value_t *attribute );
 
-OSStatus peripheral_bt_interface_notify_attribute_value( uint16_t connection_handle, const mico_bt_ext_attribute_value_t* attribute );
+OSStatus peripheral_bt_interface_notify_attribute_value( uint16_t connection_handle,
+                                                         const mico_bt_ext_attribute_value_t *attribute );
 
-OSStatus peripheral_bt_interface_update_advertisements_white_list( mico_bool_t add, mico_bt_device_address_t device_address );
+OSStatus peripheral_bt_interface_update_advertisements_white_list( mico_bool_t add,
+                                                                   mico_bt_device_address_t device_address );
 
 OSStatus peripheral_bt_interface_get_advertisements_white_list_size( uint8_t *size );
 

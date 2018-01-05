@@ -57,7 +57,7 @@
 #define  ATTR_ID_HCRP_1284ID                    0x0300
 
 #define  ATTR_ID_SUPPORTED_DATA_STORES          0x0301
-#define  ATTR_ID_NETWORK				        0x0301
+#define  ATTR_ID_NETWORK                        0x0301
 #define  ATTR_ID_EXTERNAL_NETWORK               0x0301
 #define  ATTR_ID_FAX_CLASS_1_SUPPORT            0x0302
 #define  ATTR_ID_REMOTE_AUDIO_VOLUME_CONTROL    0x0302
