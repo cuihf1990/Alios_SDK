@@ -26,6 +26,10 @@ $(NAME)_SOURCES := core/atomic_c.c \
                    host/att.c \
                    host/gatt.c \
                    host/smp_null.c \
+                   host/smp.c \
+                   host/keys.c \
+                   core/tinycrypt/source/cmac_mode.c \
+                   core/tinycrypt/source/aes_encrypt.c \
                    core/work.c \
                    port/rhino_port.c
 
