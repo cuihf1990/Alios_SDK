@@ -75,19 +75,11 @@ enum {
 };
 #define BT_MOD  "ZEPHYRBT"
 
-#ifdef CONFIG_AOS_RHINO
-#define SYS_LOG_DBG(fmt,...) ESP_LOGD(BT_MOD,"%s:"fmt,__FUNCTION__,##__VA_ARGS__)
-#define SYS_LOG_INF(fmt,...) ESP_LOGI(BT_MOD,"%s:"fmt,__FUNCTION__,##__VA_ARGS__)
-#define SYS_LOG_WRN(fmt,...) ESP_LOGW(BT_MOD,"%s:"fmt,__FUNCTION__,##__VA_ARGS__)
-#define SYS_LOG_ERR(fmt,...) ESP_LOGE(BT_MOD,"%s:"fmt,__FUNCTION__,##__VA_ARGS__)
-#define SYS_LOG_FAT(fmt,...) ESP_LOGF(BT_MOD,"%s:"fmt,__FUNCTION__,##__VA_ARGS__)
-#else
 #define SYS_LOG_DBG(...) LOGD(BT_MOD,##__VA_ARGS__)
 #define SYS_LOG_INF(...) LOGI(BT_MOD,##__VA_ARGS__)
 #define SYS_LOG_WRN(...) LOGW(BT_MOD,##__VA_ARGS__)
 #define SYS_LOG_ERR(...) LOGE(BT_MOD,##__VA_ARGS__)
 #define SYS_LOG_FAT(...) LOGF(BT_MOD,##__VA_ARGS__)
-#endif
 
 #define LIFO_DEBUG 0
 #define FIFO_DEBUG 0
