@@ -1,17 +1,7 @@
-/**
- *  UNPUBLISHED PROPRIETARY SOURCE CODE
- *  Copyright (c) 2016 MXCHIP Inc.
- *
- *  The contents of this file may not be disclosed to third parties, copied or
- *  duplicated in any form, in whole or in part, without the prior written
- *  permission of MXCHIP Corporation.
- *
- */
-
 /*****************************************************************************
-** 
+**
 **  Name    upio.h
-** 
+**
 **  Description
 **      Definitions for UPIO driver
 **
@@ -24,8 +14,7 @@
 /* Enumeration of UPIO features                                         */
 /* Not all features enumerated here are supported by the hardware.      */
 /* Use UPIO_Feature() to determine support of a particular feature.     */
-enum
-{
+enum {
     /* LEDs */
     UPIO_FEAT_LED1,
     UPIO_FEAT_LED2,
@@ -118,8 +107,7 @@ typedef UINT8 tUPIO_FEATURE;
 
 
 /* Enumeration of UPIO configurations */
-enum
-{
+enum {
     UPIO_OUT,
     UPIO_IN,
     UPIO_IN_EDGE,
@@ -130,8 +118,7 @@ typedef UINT8 tUPIO_CONFIG;
 
 
 /* Enumeration of UPIO types */
-enum
-{
+enum {
     UPIO_LED,                   /* LED */
     UPIO_SWITCH,                /* Switch */
     UPIO_JUMPER,                /* Jumper */
@@ -144,8 +131,7 @@ typedef UINT8 tUPIO_TYPE;
 
 
 /* Enumeration of UPIO states */
-enum
-{
+enum {
     UPIO_OFF,
     UPIO_ON,
     UPIO_TOGGLE
@@ -153,8 +139,7 @@ enum
 typedef UINT8 tUPIO_STATE;
 
 
-enum
-{
+enum {
     UPIO_SW_BANK2,
     UPIO_SW_BANK3
 };
@@ -266,7 +251,7 @@ extern "C" {
 **
 ** Description
 **      Initialize the GPIO service.
-**      This function is typically called once upon system startup.  
+**      This function is typically called once upon system startup.
 **
 ** Returns          nothing
 **
@@ -309,7 +294,7 @@ UDRV_API void UPIO_Set(tUPIO_TYPE type, tUPIO pio, tUPIO_STATE state);
 **      cannot be masked together.
 **
 ** Input Parameters:
-**      Type:	The type of device.
+**      Type:   The type of device.
 **      pio:    Indicates the particular GUPIO.
 **
 ** Output Parameter:
@@ -351,7 +336,7 @@ UDRV_API void UPIO_Config(tUPIO_TYPE type, tUPIO pio, tUPIO_CONFIG config, tUPIO
 **
 ** Function         UPIO_Feature
 **
-** Description 
+** Description
 **      Checks whether a feature of the pio API is supported
 **
 ** Input Parameter:

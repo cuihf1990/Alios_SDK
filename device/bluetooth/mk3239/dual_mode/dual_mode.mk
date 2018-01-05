@@ -1,8 +1,3 @@
-#
-# Copyright 2016, MXCHIP Corporation
-# All Rights Reserved.
-#
-
 NAME := lib_ble_dual_mode
 
 BTE_PLATFORM_DIR := ../BTE_platform

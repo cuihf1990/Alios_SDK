@@ -61,7 +61,9 @@ static void start_advertisements(peripheral_hdl_t hdl,
 
     for (; p; p = p->next) {
         printf("%d iterate on hdl (%d)\r\n", __LINE__, p->hdl);
-        if (p->hdl == hdl) break;
+        if (p->hdl == hdl) {
+            break;
+        }
     }
 
     if (!p) {
@@ -79,7 +81,7 @@ static void start_advertisements(peripheral_hdl_t hdl,
 
     /* Start advertisements */
     status = mico_bt_peripheral_start_advertisements( &advertising_settings,
-                                                     advertisement_complete_handle );
+                                                      advertisement_complete_handle );
 
     /* LOG */
     printf("");

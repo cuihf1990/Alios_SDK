@@ -1,19 +1,9 @@
-/**
- *  UNPUBLISHED PROPRIETARY SOURCE CODE
- *  Copyright (c) 2016 MXCHIP Inc.
- *
- *  The contents of this file may not be disclosed to third parties, copied or
- *  duplicated in any form, in whole or in part, without the prior written
- *  permission of MXCHIP Corporation.
- *
- */
-
 /*******************************************************************************
 **  Name:       utimer.h
 **
 **  Description:
 **
-**  This file contains timer definitions from WIDCOMM's Universal Embedded 
+**  This file contains timer definitions from WIDCOMM's Universal Embedded
 **  Drivers API.
 **
 *******************************************************************************/
@@ -51,8 +41,7 @@ typedef UINT32 tUTIMER_TIME;
 
 /**** Timer configuration ****/
 
-typedef struct 
-{
+typedef struct {
     tUTIMER_TIME period;
     tUTIMER_TYPE type;
 } tUTIMER_CFG;

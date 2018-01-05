@@ -1,13 +1,3 @@
-/**
- *  UNPUBLISHED PROPRIETARY SOURCE CODE
- *  Copyright (c) 2016 MXCHIP Inc.
- *
- *  The contents of this file may not be disclosed to third parties, copied or
- *  duplicated in any form, in whole or in part, without the prior written
- *  permission of MXCHIP Corporation.
- *
- */
-
 /*****************************************************************************
  **
  **  Name    upio_bby.c
@@ -75,15 +65,13 @@ UDRV_API void UPIO_Init( void *p_cfg )
  *****************************************************************************/
 UDRV_API void UPIO_Set( tUPIO_TYPE type, tUPIO pio, tUPIO_STATE state )
 {
-	//DRV_TRACE_DEBUG2("UPIO_Set %d, %s", pio, UPIO_OFF == state ? "UPIO_OFF" : "UPIO_ON");
+    //DRV_TRACE_DEBUG2("UPIO_Set %d, %s", pio, UPIO_OFF == state ? "UPIO_OFF" : "UPIO_ON");
 #if HCILP_INCLUDED
-	if(UPIO_OFF == state)
-	{
-		platform_gpio_output_low( mico_bt_control_pins[MICO_BT_PIN_DEVICE_WAKE] );
-	}else
-	{
-		platform_gpio_output_high( mico_bt_control_pins[MICO_BT_PIN_DEVICE_WAKE] );
-	}
+    if (UPIO_OFF == state) {
+        platform_gpio_output_low( mico_bt_control_pins[MICO_BT_PIN_DEVICE_WAKE] );
+    } else {
+        platform_gpio_output_high( mico_bt_control_pins[MICO_BT_PIN_DEVICE_WAKE] );
+    }
 #endif
 }
 
@@ -97,7 +85,7 @@ UDRV_API void UPIO_Set( tUPIO_TYPE type, tUPIO pio, tUPIO_STATE state )
  **      cannot be masked together.
  **
  ** Input Parameters:
- **      Type:	The type of device.
+ **      Type:  The type of device.
  **      pio:    Indicates the particular GUPIO.
  **
  ** Output Parameter:
@@ -110,8 +98,8 @@ UDRV_API void UPIO_Set( tUPIO_TYPE type, tUPIO pio, tUPIO_STATE state )
 UDRV_API tUPIO_STATE UPIO_Read( tUPIO_TYPE type, tUPIO pio )
 {
 #if HCILP_INCLUDED
-	//DRV_TRACE_DEBUG1("UPIO_Read %d", pio);
-	return platform_gpio_input_get(mico_bt_control_pins[MICO_BT_PIN_HOST_WAKE]) ? UPIO_ON : UPIO_OFF;
+    //DRV_TRACE_DEBUG1("UPIO_Read %d", pio);
+    return platform_gpio_input_get(mico_bt_control_pins[MICO_BT_PIN_HOST_WAKE]) ? UPIO_ON : UPIO_OFF;
 #else
     return UPIO_OFF;
 #endif
@@ -140,6 +128,7 @@ UDRV_API void UPIO_Config( tUPIO_TYPE type, tUPIO pio, tUPIO_CONFIG config, tUPI
 #if 0
 mico_bool_t bt_bus_is_ready( void )
 {
-    return ( bus_initialised == MICO_FALSE ) ? MICO_FALSE : ( ( mico_gpio_input_get( BLUETOOTH_GPIO_CTS_PIN ) == MICO_TRUE ) ? MICO_FALSE : MICO_TRUE );
+    return ( bus_initialised == MICO_FALSE ) ? MICO_FALSE : ( ( mico_gpio_input_get( BLUETOOTH_GPIO_CTS_PIN ) == MICO_TRUE )
+                                                              ? MICO_FALSE : MICO_TRUE );
 }
 #endif

@@ -1,12 +1,3 @@
-/**
- *  UNPUBLISHED PROPRIETARY SOURCE CODE
- *  Copyright (c) 2016 MXCHIP Inc.
- *
- *  The contents of this file may not be disclosed to third parties, copied or
- *  duplicated in any form, in whole or in part, without the prior written
- *  permission of MXCHIP Corporation.
- *
- */
 
 #pragma once
 
@@ -69,7 +60,8 @@ extern "C" {
  *
  * @return @ref OSStatus
  */
-OSStatus mico_bt_smartbridge_gatt_discover_all_primary_services( const mico_bt_smartbridge_socket_t* socket, mico_bt_smart_attribute_list_t* service_list );
+OSStatus mico_bt_smartbridge_gatt_discover_all_primary_services( const mico_bt_smartbridge_socket_t *socket,
+                                                                 mico_bt_smart_attribute_list_t *service_list );
 
 
 /** Discover Primary Services by the given UUID
@@ -81,7 +73,8 @@ OSStatus mico_bt_smartbridge_gatt_discover_all_primary_services( const mico_bt_s
  *
  * @return @ref OSStatus
  */
-OSStatus mico_bt_smartbridge_gatt_discover_primary_services_by_uuid( const mico_bt_smartbridge_socket_t* socket, const mico_bt_uuid_t* uuid, mico_bt_smart_attribute_list_t* service_list );
+OSStatus mico_bt_smartbridge_gatt_discover_primary_services_by_uuid( const mico_bt_smartbridge_socket_t *socket,
+                                                                     const mico_bt_uuid_t *uuid, mico_bt_smart_attribute_list_t *service_list );
 
 
 /** Find Included Services
@@ -96,7 +89,8 @@ OSStatus mico_bt_smartbridge_gatt_discover_primary_services_by_uuid( const mico_
  *
  * @return @ref OSStatus
  */
-OSStatus mico_bt_smartbridge_gatt_find_included_services( const mico_bt_smartbridge_socket_t* socket, uint16_t start_handle, uint16_t end_handle, mico_bt_smart_attribute_list_t* include_list );
+OSStatus mico_bt_smartbridge_gatt_find_included_services( const mico_bt_smartbridge_socket_t *socket,
+                                                          uint16_t start_handle, uint16_t end_handle, mico_bt_smart_attribute_list_t *include_list );
 
 
 /** Discover All Characterisitics in a Service
@@ -111,7 +105,8 @@ OSStatus mico_bt_smartbridge_gatt_find_included_services( const mico_bt_smartbri
  *
  * @return @ref OSStatus
  */
-OSStatus mico_bt_smartbridge_gatt_discover_all_characteristics_in_a_service( const mico_bt_smartbridge_socket_t* socket, uint16_t start_handle, uint16_t end_handle, mico_bt_smart_attribute_list_t* characteristic_list );
+OSStatus mico_bt_smartbridge_gatt_discover_all_characteristics_in_a_service( const mico_bt_smartbridge_socket_t *socket,
+                                                                             uint16_t start_handle, uint16_t end_handle, mico_bt_smart_attribute_list_t *characteristic_list );
 
 
 /** Discover Characterisitics by the given UUID
@@ -127,7 +122,9 @@ OSStatus mico_bt_smartbridge_gatt_discover_all_characteristics_in_a_service( con
  *
  * @return @ref OSStatus
  */
-OSStatus mico_bt_smartbridge_gatt_discover_characteristic_by_uuid( const mico_bt_smartbridge_socket_t* socket, const mico_bt_uuid_t* uuid, uint16_t start_handle, uint16_t end_handle, mico_bt_smart_attribute_list_t* characteristic_list );
+OSStatus mico_bt_smartbridge_gatt_discover_characteristic_by_uuid( const mico_bt_smartbridge_socket_t *socket,
+                                                                   const mico_bt_uuid_t *uuid, uint16_t start_handle, uint16_t end_handle,
+                                                                   mico_bt_smart_attribute_list_t *characteristic_list );
 
 
 /** Discover Attribute Handle and Type of all Characteristic Descriptors
@@ -146,7 +143,9 @@ OSStatus mico_bt_smartbridge_gatt_discover_characteristic_by_uuid( const mico_bt
  *
  * @return @ref OSStatus
  */
-OSStatus mico_bt_smartbridge_gatt_discover_handle_and_type_of_all_characteristic_descriptors( const mico_bt_smartbridge_socket_t* socket, uint16_t start_handle, uint16_t end_handle, mico_bt_smart_attribute_list_t* descriptor_list );
+OSStatus mico_bt_smartbridge_gatt_discover_handle_and_type_of_all_characteristic_descriptors(
+    const mico_bt_smartbridge_socket_t *socket, uint16_t start_handle, uint16_t end_handle,
+    mico_bt_smart_attribute_list_t *descriptor_list );
 
 
 /** Read Characteristic Descriptor
@@ -159,7 +158,8 @@ OSStatus mico_bt_smartbridge_gatt_discover_handle_and_type_of_all_characteristic
  *
  * @return @ref OSStatus
  */
-OSStatus mico_bt_smartbridge_gatt_read_characteristic_descriptor( const mico_bt_smartbridge_socket_t* socket, uint16_t handle, const mico_bt_uuid_t* uuid, mico_bt_smart_attribute_t** descriptor );
+OSStatus mico_bt_smartbridge_gatt_read_characteristic_descriptor( const mico_bt_smartbridge_socket_t *socket,
+                                                                  uint16_t handle, const mico_bt_uuid_t *uuid, mico_bt_smart_attribute_t **descriptor );
 
 
 /** Read Long Characteristic Descriptor
@@ -172,7 +172,8 @@ OSStatus mico_bt_smartbridge_gatt_read_characteristic_descriptor( const mico_bt_
  *
  * @return @ref OSStatus
  */
-OSStatus mico_bt_smartbridge_gatt_read_long_characteristic_descriptor( const mico_bt_smartbridge_socket_t* socket, uint16_t handle, const mico_bt_uuid_t* uuid, mico_bt_smart_attribute_t** descriptor );
+OSStatus mico_bt_smartbridge_gatt_read_long_characteristic_descriptor( const mico_bt_smartbridge_socket_t *socket,
+                                                                       uint16_t handle, const mico_bt_uuid_t *uuid, mico_bt_smart_attribute_t **descriptor );
 
 
 /** Write Characteristic Descriptor
@@ -183,7 +184,8 @@ OSStatus mico_bt_smartbridge_gatt_read_long_characteristic_descriptor( const mic
  *
  * @return @ref OSStatus
  */
-OSStatus mico_bt_smartbridge_gatt_write_characteristic_descriptor( const mico_bt_smartbridge_socket_t* socket, const mico_bt_smart_attribute_t* descriptor );
+OSStatus mico_bt_smartbridge_gatt_write_characteristic_descriptor( const mico_bt_smartbridge_socket_t *socket,
+                                                                   const mico_bt_smart_attribute_t *descriptor );
 
 
 /** Write Long Characteristic Descriptor
@@ -194,7 +196,8 @@ OSStatus mico_bt_smartbridge_gatt_write_characteristic_descriptor( const mico_bt
  *
  * @return @ref OSStatus
  */
-OSStatus mico_bt_smartbridge_gatt_write_long_characteristic_descriptor( const mico_bt_smartbridge_socket_t* socket, const mico_bt_smart_attribute_t* descriptor );
+OSStatus mico_bt_smartbridge_gatt_write_long_characteristic_descriptor( const mico_bt_smartbridge_socket_t *socket,
+                                                                        const mico_bt_smart_attribute_t *descriptor );
 
 
 /** Read Characteristic Value
@@ -207,7 +210,8 @@ OSStatus mico_bt_smartbridge_gatt_write_long_characteristic_descriptor( const mi
  *
  * @return @ref OSStatus
  */
-OSStatus mico_bt_smartbridge_gatt_read_characteristic_value( const mico_bt_smartbridge_socket_t* socket, uint16_t handle, const mico_bt_uuid_t* uuid, mico_bt_smart_attribute_t** characteristic_value );
+OSStatus mico_bt_smartbridge_gatt_read_characteristic_value( const mico_bt_smartbridge_socket_t *socket,
+                                                             uint16_t handle, const mico_bt_uuid_t *uuid, mico_bt_smart_attribute_t **characteristic_value );
 
 
 /** Read Characteristic Value
@@ -219,7 +223,8 @@ OSStatus mico_bt_smartbridge_gatt_read_characteristic_value( const mico_bt_smart
  *
  * @return @ref OSStatus
  */
-OSStatus mico_bt_smartbridge_gatt_read_characteristic_values_using_uuid( const mico_bt_smartbridge_socket_t* socket,  const mico_bt_uuid_t* uuid, mico_bt_smart_attribute_list_t* characteristic_value_list );
+OSStatus mico_bt_smartbridge_gatt_read_characteristic_values_using_uuid( const mico_bt_smartbridge_socket_t *socket,
+                                                                         const mico_bt_uuid_t *uuid, mico_bt_smart_attribute_list_t *characteristic_value_list );
 
 
 /** Read Long Characteristic Value
@@ -232,7 +237,8 @@ OSStatus mico_bt_smartbridge_gatt_read_characteristic_values_using_uuid( const m
  *
  * @return @ref OSStatus
  */
-OSStatus mico_bt_smartbridge_gatt_read_long_characteristic_value( const mico_bt_smartbridge_socket_t* socket, uint16_t handle, const mico_bt_uuid_t* uuid, mico_bt_smart_attribute_t** characteristic_value );
+OSStatus mico_bt_smartbridge_gatt_read_long_characteristic_value( const mico_bt_smartbridge_socket_t *socket,
+                                                                  uint16_t handle, const mico_bt_uuid_t *uuid, mico_bt_smart_attribute_t **characteristic_value );
 
 
 /** Write Characteristic Value
@@ -243,7 +249,8 @@ OSStatus mico_bt_smartbridge_gatt_read_long_characteristic_value( const mico_bt_
  *
  * @return @ref OSStatus
  */
-OSStatus mico_bt_smartbridge_gatt_write_characteristic_value( const mico_bt_smartbridge_socket_t* socket, const mico_bt_smart_attribute_t* characteristic_value );
+OSStatus mico_bt_smartbridge_gatt_write_characteristic_value( const mico_bt_smartbridge_socket_t *socket,
+                                                              const mico_bt_smart_attribute_t *characteristic_value );
 
 
 /** Write Long Characteristic Value
@@ -254,7 +261,8 @@ OSStatus mico_bt_smartbridge_gatt_write_characteristic_value( const mico_bt_smar
  *
  * @return @ref OSStatus
  */
-OSStatus mico_bt_smartbridge_gatt_write_long_characteristic_value( const mico_bt_smartbridge_socket_t* socket, const mico_bt_smart_attribute_t* characteristic_value );
+OSStatus mico_bt_smartbridge_gatt_write_long_characteristic_value( const mico_bt_smartbridge_socket_t *socket,
+                                                                   const mico_bt_smart_attribute_t *characteristic_value );
 
 
 /** @} */

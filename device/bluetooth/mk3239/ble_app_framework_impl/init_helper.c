@@ -23,7 +23,7 @@ peripheral_hdl_t ble_peripheral_init(peripheral_init_t *p,
                                      ble_peripheral_disconn_cb_t disc,
                                      const uint8_t *db, int db_len)
 {
-    peripheral_socket_t * s = (peripheral_socket_t *)aos_malloc((sizeof(peripheral_socket_t)));
+    peripheral_socket_t *s = (peripheral_socket_t *)aos_malloc((sizeof(peripheral_socket_t)));
 
     // mutex? <TODO>
     s->hdl = g_ble_hdl++;
@@ -50,15 +50,22 @@ void ble_peripheral_deinit(peripheral_hdl_t hdl)
     peripheral_socket_t *p, *q;
 
     for (p = g_skt_head; p; q = p, p = p->next)
-        if (p->hdl == hdl) break;
+        if (p->hdl == hdl) {
+            break;
+        }
 
     if (!p) {
         printf("%s %d no hdl found\r\n", __func__, __LINE__);
         return;
     }
 
-    if (p == g_skt_head) {g_skt_head = p->next; mico_free(p);}
-    else {q->next = p->next; mico_free(p);}
+    if (p == g_skt_head) {
+        g_skt_head = p->next;
+        mico_free(p);
+    } else {
+        q->next = p->next;
+        mico_free(p);
+    }
 
     mico_bt_peripheral_deinit();
     mico_bt_deinit();

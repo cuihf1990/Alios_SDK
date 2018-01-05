@@ -89,9 +89,8 @@ extern "C" {
 /**
  * MiCO Result Type
  */
-typedef enum
-{
-    BT_RESULT_LIST      (  MICO_BT_       )  
+typedef enum {
+    BT_RESULT_LIST      (  MICO_BT_       )
 } mico_bt_result_t;
 
 /******************************************************

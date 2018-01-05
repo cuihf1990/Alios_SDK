@@ -886,7 +886,7 @@
 */
 
 /* BLE event mask */
-#if BTM_BLE_PRIVACY_SPT == TRUE 
+#if BTM_BLE_PRIVACY_SPT == TRUE
 #define HCI_BLE_EVENT_MASK_DEF               "\x00\x00\x00\x00\x00\x00\x07\xff"
 #else
 #define HCI_BLE_EVENT_MASK_DEF "\x00\x00\x00\x00\x00\x00\x00\x7f"
@@ -1265,7 +1265,7 @@
 #define HCI_SUSPEND_PERIODIC_INQUIRIES  0x04
 
 /* Default Link Supervision timeoout */    //modified by oscar
-#ifndef HCI_DEFAULT_INACT_TOUT 
+#ifndef HCI_DEFAULT_INACT_TOUT
 #define HCI_DEFAULT_INACT_TOUT          0x7D00  /* BR/EDR (20 seconds) */
 #endif
 
@@ -1355,8 +1355,7 @@
 #define HCI_MWS_NUM_BAUD_RATES_ON_ONE_TRANSP_SUPPORTED  20  /* used for HCI_GET_MWS_TRANS_LAYER_CFG */
 
 /* Define the extended flow specification fields used by AMP */
-typedef struct
-{
+typedef struct {
     UINT8       id;
     UINT8       stype;
     UINT16      max_sdu_size;

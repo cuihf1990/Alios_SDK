@@ -1,12 +1,3 @@
-/**
- *  UNPUBLISHED PROPRIETARY SOURCE CODE
- *  Copyright (c) 2016 MXCHIP Inc.
- *
- *  The contents of this file may not be disclosed to third parties, copied or
- *  duplicated in any form, in whole or in part, without the prior written
- *  permission of MXCHIP Corporation.
- *
- */
 
 #ifndef BT_TYPES_H
 #define BT_TYPES_H
@@ -15,7 +6,7 @@
 
 #ifdef _WIN32
 #ifdef BLUESTACK_TESTER
-    #include "bte_stack_entry.h"
+#include "bte_stack_entry.h"
 #endif
 #endif
 
@@ -31,8 +22,8 @@
 */
 #define BT_EVT_MASK                 0xFF00
 #define BT_SUB_EVT_MASK             0x00FF
-                                                /* To Bluetooth Upper Layers        */
-                                                /************************************/
+/* To Bluetooth Upper Layers        */
+/************************************/
 #define BT_EVT_TO_BTU_L2C_EVT       0x0900      /* L2CAP event */
 #define BT_EVT_TO_BTU_HCI_EVT       0x1000      /* HCI Event                        */
 #define BT_EVT_TO_BTU_HCI_BR_EDR_EVT (0x0000 | BT_EVT_TO_BTU_HCI_EVT)      /* event from BR/EDR controller */
@@ -54,8 +45,8 @@
 #define BT_EVT_BTSIM                0x1B00      /* Insight BTSIM event */
 #define BT_EVT_BTISE                0x1C00      /* Insight Script Engine event */
 
-                                                /* To LM                            */
-                                                /************************************/
+/* To LM                            */
+/************************************/
 #define BT_EVT_TO_LM_HCI_CMD        0x2000      /* HCI Command                      */
 #define BT_EVT_TO_LM_HCI_ACL        0x2100      /* HCI ACL Data                     */
 #define BT_EVT_TO_LM_HCI_SCO        0x2200      /* HCI SCO Data                     */
@@ -105,7 +96,7 @@
 
 
 /* for NFC                          */
-                                                /************************************/
+/************************************/
 #define BT_EVT_TO_NFC_NCI           0x4000      /* NCI Command, Notification or Data*/
 #define BT_EVT_TO_NFC_NCI_VS        0x4200      /* Vendor specific message */
 #define BT_EVT_TO_NFC_MSGS          0x4300      /* messages between NFC and NCI task */
@@ -155,8 +146,7 @@
 
 /* Define the header of each buffer used in the Bluetooth stack.
 */
-typedef struct
-{
+typedef struct {
     UINT16          event;
     UINT16          len;
     UINT16          offset;
@@ -380,16 +370,14 @@ typedef UINT8 ACCESS_CODE[ACCESS_CODE_BYTE_LEN];
 
 /* Maximum UUID size - 16 bytes, and structure to hold any type of UUID. */
 #define MAX_UUID_SIZE              16
-typedef struct
-{
+typedef struct {
 #define LEN_UUID_16     2
 #define LEN_UUID_32     4
 #define LEN_UUID_128    16
 
     UINT16          len;
 
-    union
-    {
+    union {
         UINT16      uuid16;
         UINT32      uuid32;
         UINT8       uuid128[MAX_UUID_SIZE];
@@ -430,8 +418,8 @@ typedef struct
 #define BRCM_PROPRIETARY_UUID_BASE  0xDA, 0x23, 0x41, 0x02, 0xA3, 0xBB, 0xC1, 0x71, 0xBA, 0x09, 0x6f, 0x21
 #define BRCM_PROPRIETARY_GUID_BASE  0xda23, 0x4102, 0xa3, 0xbb, 0xc1, 0x71, 0xba, 0x09, 0x6f, 0x21
 
-#define BRCM_RESERVED_PSM_START	    0x5AE1
-#define BRCM_RESERVED_PSM_END	    0x5AFF
+#define BRCM_RESERVED_PSM_START     0x5AE1
+#define BRCM_RESERVED_PSM_END       0x5AFF
 
 #define BRCM_UTILITY_SERVICE_PSM    0x5AE1
 #define BRCM_MATCHER_PSM            0x5AE3
@@ -446,8 +434,7 @@ typedef struct
 /* These bits are used in the bIsConnected field */
 #define BT_CONNECTED_USING_BREDR   1
 
-typedef struct
-{
+typedef struct {
     UINT32   is_connected;
     INT32    rssi;
     UINT32   bytes_sent;
@@ -476,8 +463,7 @@ typedef UINT8 tBT_TRANSPORT;
 
 #define BLE_ADDR_IS_STATIC(x)   ((x[0] & 0xC0) == 0xC0)
 
-typedef struct
-{
+typedef struct {
     tBLE_ADDR_TYPE      type;
     BD_ADDR             bda;
 } tBLE_BD_ADDR;
@@ -581,7 +567,7 @@ typedef UINT8 tBT_DEVICE_TYPE;
 #define TRACE_ORG_USER_SCR          0x00000800
 #define TRACE_ORG_TESTER            0x00000900
 #define TRACE_ORG_MAX_NUM           10          /* 32-bit mask; must be < 32 */
-#define TRACE_LITE_ORG_MAX_NUM		6
+#define TRACE_LITE_ORG_MAX_NUM      6
 #define TRACE_ORG_ALL               0x03ff
 #define TRACE_ORG_RPC_TRANS         0x04
 

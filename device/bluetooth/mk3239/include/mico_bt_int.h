@@ -1,12 +1,3 @@
-/**
- *  UNPUBLISHED PROPRIETARY SOURCE CODE
- *  Copyright (c) 2016 MXCHIP Inc.
- *
- *  The contents of this file may not be disclosed to third parties, copied or
- *  duplicated in any form, in whole or in part, without the prior written
- *  permission of MXCHIP Corporation.
- *
- */
 
 #pragma once
 
@@ -17,7 +8,7 @@
 #define uint8_t         UINT8
 #define uint16_t        UINT16
 #define uint32_t        UINT32
-#define mico_bool_t    	BOOLEAN
+#define mico_bool_t     BOOLEAN
 
 #define mico_bt_dev_status_t                                   tBTM_STATUS
 #define mico_bt_management_evt_t                               tBTM_EVENT

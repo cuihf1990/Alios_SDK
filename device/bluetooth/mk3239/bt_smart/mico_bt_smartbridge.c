@@ -1,13 +1,3 @@
-/**
- *  UNPUBLISHED PROPRIETARY SOURCE CODE
- *  Copyright (c) 2016 MXCHIP Inc.
- *
- *  The contents of this file may not be disclosed to third parties, copied or
- *  duplicated in any form, in whole or in part, without the prior written
- *  permission of MXCHIP Corporation.
- *
- */
-
 /** @file
  *
  */
@@ -46,14 +36,13 @@
  ******************************************************/
 
 /* Auto-connection precedure */
-typedef enum 
-{
+typedef enum {
     /* A device is scanned and ready to report to user. */
     SMARTBRIDGE_AUTO_CONN_STATE_SCANED = 1,
     /* A device is reported to wait user action */
     SMARTBRIDGE_AUTO_CONN_STATE_REPORTED,
-    /* A device is not allowed connecting to by user and it will 
-     * be translate to FREE state. 
+    /* A device is not allowed connecting to by user and it will
+     * be translate to FREE state.
      */
     SMARTBRIDGE_AUTO_CONN_STATE_IDLE,
     /* A device is alloed connecting to by user. */
@@ -66,8 +55,7 @@ typedef enum
  *                 Type Definitions
  ******************************************************/
 
-typedef struct
-{
+typedef struct {
     uint8_t      bdaddr[6];
     uint8_t      name[16];
     uint8_t      adv_data[31];
@@ -76,24 +64,23 @@ typedef struct
 } smartbridge_auto_conn_dev_info_t;
 
 /* Local auto connection settings */
-typedef struct
-{
-    mico_bt_smartbridge_socket_t           *socket;                         /**< A socket associated with the auto connection */
-    mico_bt_smart_connection_settings_t     conn_settings;                  /**< The connection settings associated with a socket */
+typedef struct {
+    mico_bt_smartbridge_socket_t
+    *socket;                         /**< A socket associated with the auto connection */
+    mico_bt_smart_connection_settings_t
+    conn_settings;                  /**< The connection settings associated with a socket */
     smartbridge_auto_conn_dev_info_t        device_info;                    /**< The scanned device information */
 } smartbridge_auto_conn_entity_t;
 
 /* Device info ready to connect */
-typedef struct 
-{
+typedef struct {
     linked_list_node_t                  this_node;     /* Linked-list node of this device */
     mico_bt_smart_advertising_report_t  report;        /* Remote BT device */
     smartbridge_auto_conn_state_t       state;         /* Auto-connection state */
 } smartbridge_auto_conn_report_t;
 
 /* Device info ready to connect */
-typedef struct 
-{
+typedef struct {
     linked_list_t   list;
     mico_mutex_t    mutex;
 } smartbridge_auto_conn_list_t;
@@ -106,17 +93,19 @@ typedef struct
  *               Static Function Declarations
  ******************************************************/
 
-static OSStatus smartbridge_app_notification_handler             ( void* arg );
-static OSStatus smartbridge_app_disconnection_handler            ( void* arg );
+static OSStatus smartbridge_app_notification_handler             ( void *arg );
+static OSStatus smartbridge_app_disconnection_handler            ( void *arg );
 
-static void        smartbridge_gatt_auto_conn_handler            ( mico_bt_device_address_t bdaddr, uint16_t connection_handle );
-static mico_bool_t smartbridge_gap_auto_conn_user_cfg            ( const mico_bt_device_address_t device_address, const uint8_t *device_name, const uint8_t *p_data, uint8_t length );
+static void        smartbridge_gatt_auto_conn_handler            ( mico_bt_device_address_t bdaddr,
+                                                                   uint16_t connection_handle );
+static mico_bool_t smartbridge_gap_auto_conn_user_cfg            ( const mico_bt_device_address_t device_address,
+                                                                   const uint8_t *device_name, const uint8_t *p_data, uint8_t length );
 static OSStatus    smartbridge_gap_auto_conn_asyn_event_handler  ( void *arg );
 static OSStatus    smartbridge_gap_auto_conn_scan_report_handler ( const mico_bt_smart_advertising_report_t *report );
 static OSStatus    smartbridge_gap_auto_conn_scan_cmpl_handler   ( void *arg );
-static OSStatus    smartbridge_gap_auto_conn_cryption            ( void* arg );
+static OSStatus    smartbridge_gap_auto_conn_cryption            ( void *arg );
 
-static OSStatus    smartbridge_auto_conn_user_parms              ( void* arg );
+static OSStatus    smartbridge_auto_conn_user_parms              ( void *arg );
 static int8_t      smartbridge_auto_conn_dev_alloc               ( void );
 static int8_t      smartbridge_auto_conn_find_dev_by_addr        ( const mico_bt_device_address_t device_address );
 static OSStatus    smartbridge_auto_conn_list_init               ( void );
@@ -125,14 +114,16 @@ static OSStatus    smartbridge_auto_conn_list_add                ( const mico_bt
 static OSStatus    smartbridge_auto_conn_list_remove             ( mico_bt_device_address_t bdaddr );
 static OSStatus    smartbridge_auto_conn_list_clear              ( void );
 static OSStatus    smartbridge_auto_conn_list_remove_by_state    ( smartbridge_auto_conn_state_t state );
-static OSStatus    smartbridge_auto_conn_list_set_state          ( const mico_bt_device_address_t bdaddr, smartbridge_auto_conn_state_t state );
-static OSStatus    smartbridge_auto_conn_list_get_by_state       ( mico_bt_smart_advertising_report_t **report, smartbridge_auto_conn_state_t state );
+static OSStatus    smartbridge_auto_conn_list_set_state          ( const mico_bt_device_address_t bdaddr,
+                                                                   smartbridge_auto_conn_state_t state );
+static OSStatus    smartbridge_auto_conn_list_get_by_state       ( mico_bt_smart_advertising_report_t **report,
+                                                                   smartbridge_auto_conn_state_t state );
 
 /******************************************************
  *               Variable Definitions
  ******************************************************/
 
-mico_bt_smartbridge_socket_t*           connecting_socket = NULL;
+mico_bt_smartbridge_socket_t           *connecting_socket = NULL;
 static mico_bool_t                      initialised       = MICO_FALSE;
 extern mico_bool_t                      bt_initialised;
 extern mico_bt_dev_ble_io_caps_req_t    local_io_caps_ble;
@@ -173,12 +164,11 @@ static void smartbridge_gatt_auto_conn_handler( mico_bt_device_address_t bdaddr,
     mico_bt_smartbridge_socket_t            *p_socket;
 
     bt_smartbridge_log("Auto connection [%02x:%02x:%02x:%02x:%02x:%02x] established.",
-                        bdaddr[0], bdaddr[1], bdaddr[2], bdaddr[3], bdaddr[4], bdaddr[5]);
+                       bdaddr[0], bdaddr[1], bdaddr[2], bdaddr[3], bdaddr[4], bdaddr[5]);
 
     /* Check connection object */
     idx = smartbridge_auto_conn_find_dev_by_addr(bdaddr);
-    if (idx < 0)
-    {
+    if (idx < 0) {
         smartbridge_bt_interface_disconnect(connection_handle);
         bt_smartbridge_log("There is not device in the white list.");
         return;
@@ -187,8 +177,7 @@ static void smartbridge_gatt_auto_conn_handler( mico_bt_device_address_t bdaddr,
     /* Check connection state. */
     p_socket = g_auto_conn_dev_table[idx].socket;
     if (p_socket->state == SOCKET_STATE_LINK_CONNECTED
-        || p_socket->state == SOCKET_STATE_LINK_ENCRYPTED)
-    {
+        || p_socket->state == SOCKET_STATE_LINK_ENCRYPTED) {
         bt_smartbridge_log("Incredible error");
         return;
     }
@@ -196,7 +185,7 @@ static void smartbridge_gatt_auto_conn_handler( mico_bt_device_address_t bdaddr,
 
     /* Manage the socket state. */
     smartbridge_helper_socket_clear_actions(p_socket, SOCKET_ACTION_ENCRYPT_USING_BOND_INFO
-                                                      | SOCKET_ACTION_INITIATE_PAIRING);
+                                            | SOCKET_ACTION_INITIATE_PAIRING);
     p_socket->connection_handle = connection_handle;
     bt_smartbridge_socket_manager_insert_socket(p_socket);
 
@@ -208,11 +197,10 @@ static void smartbridge_gatt_disconnection_handler( uint16_t connection_handle )
 {
     bt_smartbridge_log( "GATT disconnection" );
 
-    mico_bt_smartbridge_socket_t* removed_socket = NULL;
+    mico_bt_smartbridge_socket_t *removed_socket = NULL;
 
     /* Remove socket from the connected list */
-    if ( bt_smartbridge_socket_manager_remove_socket( connection_handle, &removed_socket ) == MICO_BT_SUCCESS )
-    {
+    if ( bt_smartbridge_socket_manager_remove_socket( connection_handle, &removed_socket ) == MICO_BT_SUCCESS ) {
         /* Reset connection handle to invalid value */
         removed_socket->connection_handle = SOCKET_INVALID_CONNECTION_HANDLE;
 
@@ -220,135 +208,112 @@ static void smartbridge_gatt_disconnection_handler( uint16_t connection_handle )
         removed_socket->state = SOCKET_STATE_DISCONNECTED;
 
         /* Mark att cache as inactive and reset reference to cache */
-        bt_smartbridge_att_cache_set_active_state( (bt_smartbridge_att_cache_t*)removed_socket->att_cache, MICO_FALSE );
+        bt_smartbridge_att_cache_set_active_state( (bt_smartbridge_att_cache_t *)removed_socket->att_cache, MICO_FALSE );
         removed_socket->att_cache = NULL;
 
         /* Check if disconnection is from host or remote device */
-        if ( smartbridge_helper_socket_check_actions_enabled( removed_socket, SOCKET_ACTION_HOST_DISCONNECT ) == MICO_TRUE )
-        {
+        if ( smartbridge_helper_socket_check_actions_enabled( removed_socket, SOCKET_ACTION_HOST_DISCONNECT ) == MICO_TRUE ) {
             /* Disconnection is originated from the host. Notify app thread that disconnection is complete */
             mico_rtos_set_semaphore( &removed_socket->semaphore );
-        }
-        else
-        {
+        } else {
             /* Notify app that connection is disconnected by the remote device */
-            if ( removed_socket->disconnection_callback != NULL )
-            {
-                mico_rtos_send_asynchronous_event( MICO_BT_EVT_WORKER_THREAD, smartbridge_app_disconnection_handler, (void*)removed_socket );
+            if ( removed_socket->disconnection_callback != NULL ) {
+                mico_rtos_send_asynchronous_event( MICO_BT_EVT_WORKER_THREAD, smartbridge_app_disconnection_handler,
+                                                   (void *)removed_socket );
             }
 
             /* If disconnection happens when connection is still being established. Notify app */
-            if ( connecting_socket == removed_socket )
-            {
+            if ( connecting_socket == removed_socket ) {
                 mico_rtos_set_semaphore( &connecting_socket->semaphore );
             }
         }
-    }
-    else
-    {
+    } else {
         /* If disconnection happens when connection is still being established. Notify app */
-        if ( connecting_socket != NULL )
-        {
+        if ( connecting_socket != NULL ) {
             mico_rtos_set_semaphore( &connecting_socket->semaphore );
         }
     }
 }
 
-static void smartbridge_gatt_read_operation_complete_handler( mico_bt_gatt_data_t* response_data )
+static void smartbridge_gatt_read_operation_complete_handler( mico_bt_gatt_data_t *response_data )
 {
-    mico_bt_smart_attribute_t* attr;
+    mico_bt_smart_attribute_t *attr;
     uint8_t *data = NULL;
     /* Create a new attribute */
     mico_bt_smart_attribute_create( &attr, MICO_ATTRIBUTE_TYPE_CHARACTERISTIC_VALUE, response_data->len );
 
-    if ( attr != NULL )
-    {
+    if ( attr != NULL ) {
         attr->next         = NULL;
         attr->handle       = smartbridge_subprocedure.start_handle;
         attr->type.len     = smartbridge_subprocedure.uuid.len;
         data               = response_data->p_data;
         attr->value_length = response_data->len;
 
-        if( smartbridge_subprocedure.uuid.len == UUID_16BIT )
-        {
+        if ( smartbridge_subprocedure.uuid.len == UUID_16BIT ) {
             attr->type.uu.uuid16 = smartbridge_subprocedure.uuid.uu.uuid16;
-        }
-        else if( smartbridge_subprocedure.uuid.len == UUID_128BIT )
-        {
+        } else if ( smartbridge_subprocedure.uuid.len == UUID_128BIT ) {
             memcpy( attr->type.uu.uuid128, smartbridge_subprocedure.uuid.uu.uuid128,  UUID_128BIT );
         }
 
-        if( smartbridge_subprocedure.subprocedure == GATT_READ_CHARACTERISTIC_VALUE )
-        {
+        if ( smartbridge_subprocedure.subprocedure == GATT_READ_CHARACTERISTIC_VALUE ) {
             memcpy( attr->value.characteristic_value.value, data, attr->value_length );
-        }
-        else if ( smartbridge_subprocedure.subprocedure == GATT_READ_CHARACTERISTIC_DESCRIPTORS)
-        {
+        } else if ( smartbridge_subprocedure.subprocedure == GATT_READ_CHARACTERISTIC_DESCRIPTORS) {
             memcpy( &attr->value, data, attr->value_length );
         }
 
         //memcpy( &attr->type, &subprocedure.uuid, sizeof(mico_bt_uuid_t));
 
         /* Update temporary variables */
-        if ( smartbridge_subprocedure.attr_head == NULL )
-        {
+        if ( smartbridge_subprocedure.attr_head == NULL ) {
             smartbridge_subprocedure.attr_head = attr;
         }
         smartbridge_subprocedure.result = MICO_BT_SUCCESS;
 
         char *debug_str = NULL;
 
-        if( smartbridge_subprocedure.subprocedure == GATT_READ_CHARACTERISTIC_VALUE )
-        {
+        if ( smartbridge_subprocedure.subprocedure == GATT_READ_CHARACTERISTIC_VALUE ) {
             debug_str = DataToHexStringWithColons( attr->value.characteristic_value.value, attr->value_length );
             bt_smartbridge_log( "Read value: UUID:%x length:%d: [%s]", attr->type.uu.uuid16, attr->type.len, debug_str );
             free( debug_str );
-        }
-        else if ( smartbridge_subprocedure.subprocedure == GATT_READ_CHARACTERISTIC_DESCRIPTORS)
-        {
+        } else if ( smartbridge_subprocedure.subprocedure == GATT_READ_CHARACTERISTIC_DESCRIPTORS) {
             debug_str = DataToHexStringWithColons( attr->value.value, attr->value_length );
             bt_smartbridge_log( "Read value: UUID:%x length:%d: [%s]", attr->type.uu.uuid16, attr->type.len, debug_str );
             free( debug_str );
         }
-    }
-    else
-    {
+    } else {
         smartbridge_subprocedure.result = MICO_BT_OUT_OF_HEAP_SPACE;
     }
 
 }
 
-static OSStatus smartbridge_gatt_notification_indication_handler( mico_bt_gatt_operation_complete_t* operation_complete )
+static OSStatus smartbridge_gatt_notification_indication_handler( mico_bt_gatt_operation_complete_t
+                                                                  *operation_complete )
 {
-    mico_bt_smartbridge_socket_t* socket;
+    mico_bt_smartbridge_socket_t *socket;
     uint16_t connection_handle  = operation_complete->conn_id;
     uint16_t attribute_handle   = operation_complete->response_data.att_value.handle;
-    uint8_t* data               = operation_complete->response_data.att_value.p_data;
+    uint8_t *data               = operation_complete->response_data.att_value.p_data;
     uint8_t  length             = operation_complete->response_data.att_value.len;
 
     bt_smartbridge_log("Process peer device[0x%04x] %s...",
-                        connection_handle, 
-                        operation_complete->op == GATTC_OPTYPE_INDICATION ? "INDICATION" : "NOTIFICATION");
+                       connection_handle,
+                       operation_complete->op == GATTC_OPTYPE_INDICATION ? "INDICATION" : "NOTIFICATION");
 
     /* Send Indication ACK to peer device. */
-    if( operation_complete->op == GATTC_OPTYPE_INDICATION )
-    {
+    if ( operation_complete->op == GATTC_OPTYPE_INDICATION ) {
         bt_smartbridge_log("Confirm peer device's INDICATION");
-        if ( mico_bt_gatt_send_indication_confirm( connection_handle, attribute_handle ) != 0 ) 
-        {
+        if ( mico_bt_gatt_send_indication_confirm( connection_handle, attribute_handle ) != 0 ) {
             bt_smartbridge_log("Send INDICATION confirm failed!!!");
         }
     }
 
     /* Search for socket with indicated connection handle in the connected list */
-    if ( bt_smartbridge_socket_manager_find_socket_by_handle( connection_handle, &socket ) == MICO_BT_SUCCESS )
-    {
-        if ( bt_smartbridge_att_cache_is_enabled() == MICO_TRUE && socket->att_cache != NULL )
-        {
+    if ( bt_smartbridge_socket_manager_find_socket_by_handle( connection_handle, &socket ) == MICO_BT_SUCCESS ) {
+        if ( bt_smartbridge_att_cache_is_enabled() == MICO_TRUE && socket->att_cache != NULL ) {
 
-            bt_smartbridge_att_cache_t*      cache          = (bt_smartbridge_att_cache_t*)socket->att_cache;
-            mico_bt_smart_attribute_list_t* att_cache_list = NULL;
-            mico_bt_smart_attribute_t*      att            = NULL;
+            bt_smartbridge_att_cache_t      *cache          = (bt_smartbridge_att_cache_t *)socket->att_cache;
+            mico_bt_smart_attribute_list_t *att_cache_list = NULL;
+            mico_bt_smart_attribute_t      *att            = NULL;
 
             bt_smartbridge_att_cache_get_list( cache, &att_cache_list );
 
@@ -356,14 +321,12 @@ static OSStatus smartbridge_gatt_notification_indication_handler( mico_bt_gatt_o
             bt_smartbridge_att_cache_lock( cache );
 
             /* Search for att in the socket's att list */
-            if ( mico_bt_smart_attribute_search_list_by_handle( att_cache_list, attribute_handle, &att ) == MICO_BT_SUCCESS )
-            {
+            if ( mico_bt_smart_attribute_search_list_by_handle( att_cache_list, attribute_handle, &att ) == MICO_BT_SUCCESS ) {
                 mico_bt_uuid_t uuid       = att->type;
                 mico_bool_t    is_new_att = MICO_FALSE;
 
                 /* Check if existing att memory length is sufficient */
-                if ( length > att->value_length )
-                {
+                if ( length > att->value_length ) {
                     /* length isn't sufficient. Remove existing from the list */
                     mico_bt_smart_attribute_remove_from_list( att_cache_list, attribute_handle );
                     att = NULL;
@@ -379,8 +342,7 @@ static OSStatus smartbridge_gatt_notification_indication_handler( mico_bt_gatt_o
                 att->value_length = length;
                 memcpy( att->value.value, data, length );
 
-                if ( is_new_att == MICO_TRUE )
-                {
+                if ( is_new_att == MICO_TRUE ) {
                     /* Add newly created att to the list */
                     mico_bt_smart_attribute_add_to_list( att_cache_list, att );
                 }
@@ -393,19 +355,16 @@ static OSStatus smartbridge_gatt_notification_indication_handler( mico_bt_gatt_o
         socket->last_notified_attribute_handle = attribute_handle;
 
         /* Notification callback is called regardless of att cache is enabled or not */
-        if ( socket->notification_callback != NULL )
-        {
-            if( kNoErr != mico_rtos_send_asynchronous_event( MICO_BT_EVT_WORKER_THREAD, smartbridge_app_notification_handler, (void*)socket ) )
-            {
+        if ( socket->notification_callback != NULL ) {
+            if ( kNoErr != mico_rtos_send_asynchronous_event( MICO_BT_EVT_WORKER_THREAD, smartbridge_app_notification_handler,
+                                                              (void *)socket ) ) {
                 bt_smartbridge_log("Send asynchronous event for INDICATION/NOTIFICATION handler failed!!!");
                 return MICO_BT_ERROR;
             }
         }
 
         return MICO_BT_SUCCESS;
-    }
-    else 
-    {
+    } else {
         bt_smartbridge_log("Unknown connection handle: 0x%04x", connection_handle);
     }
 
@@ -415,55 +374,48 @@ static OSStatus smartbridge_gatt_notification_indication_handler( mico_bt_gatt_o
 static void smartbridge_gatt_discover_characteristic_descriptor_result( mico_bt_gatt_event_data_t *p_event_data )
 {
     /* Create attribute(s) based on information included in the response PDU */
-    mico_bt_smart_attribute_t* attr;
+    mico_bt_smart_attribute_t *attr;
 
     mico_bt_smart_attribute_create( &attr, MICO_ATTRIBUTE_TYPE_NO_VALUE, 0 );
 
-    if ( attr != NULL )
-    {
+    if ( attr != NULL ) {
         attr->next = NULL;
         attr->handle = GATT_DISCOVERY_RESULT_CHARACTERISTIC_DESCRIPTOR_VALUE_HANDLE(p_event_data);
         attr->type.len = GATT_DISCOVERY_RESULT_CHARACTERISTIC_DESCRIPTOR_UUID_LEN(p_event_data);
 
-        if( attr->type.len == UUID_16BIT )
-        {
+        if ( attr->type.len == UUID_16BIT ) {
             attr->type.uu.uuid16 = GATT_DISCOVERY_RESULT_CHARACTERISTIC_DESCRIPTOR_UUID16(p_event_data);
-        }
-        else if ( attr->type.len == UUID_32BIT )
-        {
+        } else if ( attr->type.len == UUID_32BIT ) {
             attr->type.uu.uuid32 = GATT_DISCOVERY_RESULT_CHARACTERISTIC_DESCRIPTOR_UUID32(p_event_data);
-        }
-        else if ( attr->type.len == UUID_128BIT )
-        {
-            memcpy( (uint8_t *)attr->type.uu.uuid128, &(GATT_DISCOVERY_RESULT_CHARACTERISTIC_DESCRIPTOR_UUID32(p_event_data)),  UUID_128BIT );
+        } else if ( attr->type.len == UUID_128BIT ) {
+            memcpy( (uint8_t *)attr->type.uu.uuid128, &(GATT_DISCOVERY_RESULT_CHARACTERISTIC_DESCRIPTOR_UUID32(p_event_data)),
+                    UUID_128BIT );
         }
 
-        if ( smartbridge_subprocedure.attr_head == NULL )
-        {
+        if ( smartbridge_subprocedure.attr_head == NULL ) {
             smartbridge_subprocedure.attr_head = attr;
         }
 
-        if ( smartbridge_subprocedure.attr_tail != NULL )
-        {
+        if ( smartbridge_subprocedure.attr_tail != NULL ) {
             smartbridge_subprocedure.attr_tail->next = attr;
         }
 
         smartbridge_subprocedure.attr_tail = attr;
         smartbridge_subprocedure.attr_count++;
 
-        bt_smartbridge_log( "Characteristic Descriptor handle:%x uuid:%x list-count:%u", attr->handle, attr->type.uu.uuid16, (unsigned int)smartbridge_subprocedure.attr_count );
+        bt_smartbridge_log( "Characteristic Descriptor handle:%x uuid:%x list-count:%u", attr->handle, attr->type.uu.uuid16,
+                            (unsigned int)smartbridge_subprocedure.attr_count );
     }
 }
 
 static void smartbridge_gatt_discover_services_result( mico_bt_gatt_event_data_t *p_event_data )
 {
     /* Create attribute(s) based on information included in the response PDU */
-    mico_bt_smart_attribute_t* attr;
+    mico_bt_smart_attribute_t *attr;
 
     mico_bt_smart_attribute_create( &attr, MICO_ATTRIBUTE_TYPE_PRIMARY_SERVICE, 0 );
 
-    if ( attr != NULL )
-    {
+    if ( attr != NULL ) {
         attr->next                          = NULL;
         attr->type.len                      = UUID_16BIT;
         attr->type.uu.uuid16                = GATT_UUID_PRI_SERVICE;
@@ -472,15 +424,14 @@ static void smartbridge_gatt_discover_services_result( mico_bt_gatt_event_data_t
         attr->value.service.start_handle    = attr->handle;
         attr->value.service.end_handle      = p_event_data->discovery_result.discovery_data.group_value.e_handle;
 
-        memcpy( &attr->value.service.uuid, &p_event_data->discovery_result.discovery_data.group_value.service_type, sizeof(mico_bt_uuid_t) );
+        memcpy( &attr->value.service.uuid, &p_event_data->discovery_result.discovery_data.group_value.service_type,
+                sizeof(mico_bt_uuid_t) );
 
-        if ( smartbridge_subprocedure.attr_head == NULL )
-        {
+        if ( smartbridge_subprocedure.attr_head == NULL ) {
             smartbridge_subprocedure.attr_head = attr;
         }
 
-        if ( smartbridge_subprocedure.attr_tail != NULL )
-        {
+        if ( smartbridge_subprocedure.attr_tail != NULL ) {
             smartbridge_subprocedure.attr_tail->next = attr;
         }
 
@@ -488,38 +439,39 @@ static void smartbridge_gatt_discover_services_result( mico_bt_gatt_event_data_t
 
         smartbridge_subprocedure.attr_count++;
 
-        bt_smartbridge_log( "Service [Start %x - End %x] uuid:%x len:%d list-count:%u", attr->handle, attr->value.service.end_handle, attr->value.service.uuid.uu.uuid16, attr->value.service.uuid.len, (unsigned int)smartbridge_subprocedure.attr_count );
+        bt_smartbridge_log( "Service [Start %x - End %x] uuid:%x len:%d list-count:%u", attr->handle,
+                            attr->value.service.end_handle, attr->value.service.uuid.uu.uuid16, attr->value.service.uuid.len,
+                            (unsigned int)smartbridge_subprocedure.attr_count );
     }
 }
 
 static void smartbridge_gatt_discover_included_services_result( mico_bt_gatt_event_data_t *p_event_data )
 {
     /* Create attribute(s) based on information included in the response PDU */
-    mico_bt_smart_attribute_t* attr;
+    mico_bt_smart_attribute_t *attr;
     //uint16_t start_handle = 0x0;
 
     mico_bt_smart_attribute_create( &attr, MICO_ATTRIBUTE_TYPE_INCLUDE, 0 );
 
-    if ( attr != NULL )
-    {
+    if ( attr != NULL ) {
         attr->next                                      = NULL;
         attr->type.len                                  = UUID_16BIT;
         attr->type.uu.uuid16                            = GATT_UUID_INCLUDE_SERVICE;
         attr->value_length                              = 2;
         attr->handle                                    = p_event_data->discovery_result.discovery_data.included_service.handle;
         attr->value.include.included_service_handle     = p_event_data->discovery_result.discovery_data.included_service.handle;
-        attr->value.include.end_group_handle            = p_event_data->discovery_result.discovery_data.included_service.e_handle;
+        attr->value.include.end_group_handle            =
+            p_event_data->discovery_result.discovery_data.included_service.e_handle;
         //start_handle                                    = p_event_data->discovery_result.discovery_data.included_service.s_handle;
 
-        memcpy( &attr->value.include.uuid, &p_event_data->discovery_result.discovery_data.included_service.service_type, sizeof(mico_bt_uuid_t) );
+        memcpy( &attr->value.include.uuid, &p_event_data->discovery_result.discovery_data.included_service.service_type,
+                sizeof(mico_bt_uuid_t) );
 
-        if ( smartbridge_subprocedure.attr_head == NULL )
-        {
+        if ( smartbridge_subprocedure.attr_head == NULL ) {
             smartbridge_subprocedure.attr_head = attr;
         }
 
-        if ( smartbridge_subprocedure.attr_tail != NULL )
-        {
+        if ( smartbridge_subprocedure.attr_tail != NULL ) {
             smartbridge_subprocedure.attr_tail->next = attr;
         }
 
@@ -533,14 +485,14 @@ static void smartbridge_gatt_discover_included_services_result( mico_bt_gatt_eve
 static void smartbridge_gatt_discover_characteristic_result(  mico_bt_gatt_event_data_t *p_event_data )
 {
     /* Create attribute(s) based on information included in the response PDU */
-    mico_bt_smart_attribute_t* attr;
+    mico_bt_smart_attribute_t *attr;
 
     mico_bt_smart_attribute_create( &attr, MICO_ATTRIBUTE_TYPE_CHARACTERISTIC, 0 );
 
-    memcpy( &current_characteristic, &p_event_data->discovery_result.discovery_data.characteristic_declaration, sizeof( current_characteristic ) );
+    memcpy( &current_characteristic, &p_event_data->discovery_result.discovery_data.characteristic_declaration,
+            sizeof( current_characteristic ) );
 
-    if ( attr != NULL )
-    {
+    if ( attr != NULL ) {
         attr->next                      = NULL;
         attr->handle                    = current_characteristic.handle;
         attr->type.len                  = UUID_16BIT;
@@ -555,19 +507,19 @@ static void smartbridge_gatt_discover_characteristic_result(  mico_bt_gatt_event
 
         memcpy( &attr->value.characteristic.uuid, &current_characteristic.char_uuid, sizeof(mico_bt_uuid_t) );
 
-        if ( smartbridge_subprocedure.attr_head == NULL )
-        {
+        if ( smartbridge_subprocedure.attr_head == NULL ) {
             smartbridge_subprocedure.attr_head = attr;
         }
 
-        if ( smartbridge_subprocedure.attr_tail != NULL )
-        {
+        if ( smartbridge_subprocedure.attr_tail != NULL ) {
             smartbridge_subprocedure.attr_tail->next = attr;
         }
 
         smartbridge_subprocedure.attr_tail = attr;
         smartbridge_subprocedure.attr_count++;
-        bt_smartbridge_log( "Characteristic value_handle:%x handle:%x uuid:%x list-count:%u properties:%u",current_characteristic.val_handle, current_characteristic.handle,current_characteristic.char_uuid.uu.uuid16, (unsigned int)smartbridge_subprocedure.attr_count, (int)attr->value.characteristic.properties );
+        bt_smartbridge_log( "Characteristic value_handle:%x handle:%x uuid:%x list-count:%u properties:%u",
+                            current_characteristic.val_handle, current_characteristic.handle, current_characteristic.char_uuid.uu.uuid16,
+                            (unsigned int)smartbridge_subprocedure.attr_count, (int)attr->value.characteristic.properties );
     }
 }
 
@@ -575,23 +527,20 @@ static void smartbridge_gatt_discovery_complete_handler( mico_bt_gatt_event_data
 {
     uint16_t discovery_complete_type = p_event_data->discovery_complete.disc_type;
 
-    switch( discovery_complete_type )
-    {
+    switch ( discovery_complete_type ) {
         case GATT_DISCOVER_SERVICES_ALL:
         case GATT_DISCOVER_SERVICES_BY_UUID:
         case GATT_DISCOVER_INCLUDED_SERVICES:
         case GATT_DISCOVER_CHARACTERISTICS:
         case GATT_DISCOVER_CHARACTERISTIC_DESCRIPTORS:
-            if ( smartbridge_subprocedure.attr_count != 0 )
-            {
+            if ( smartbridge_subprocedure.attr_count != 0 ) {
                 smartbridge_subprocedure.result = MICO_BT_SUCCESS;
-            }
-            else
-            {
+            } else {
                 smartbridge_subprocedure.result = MICO_BT_ITEM_NOT_IN_LIST;
             }
 
-            bt_smartbridge_log( "Discovery Completed ( result:%d type:%d )\r\n", smartbridge_subprocedure.result, discovery_complete_type );
+            bt_smartbridge_log( "Discovery Completed ( result:%d type:%d )\r\n", smartbridge_subprocedure.result,
+                                discovery_complete_type );
 
             subprocedure_notify_complete( &smartbridge_subprocedure );
             break;
@@ -606,33 +555,23 @@ mico_bt_gatt_status_t smartbridge_gatt_callback( mico_bt_gatt_evt_t event, mico_
 {
     mico_bt_gatt_status_t status = MICO_BT_GATT_SUCCESS;
 
-    switch(event)
-    {
-        case GATT_CONNECTION_STATUS_EVT:
-        {
-            if( p_event_data->connection_status.link_role == BT_SMART_LINK_ROLE_MASTER)
-            {
+    switch (event) {
+        case GATT_CONNECTION_STATUS_EVT: {
+            if ( p_event_data->connection_status.link_role == BT_SMART_LINK_ROLE_MASTER) {
 
                 /* Connection */
-                if ( p_event_data->connection_status.connected == MICO_TRUE )
-                {
-                    if( connecting_socket
-                        && memcmp(connecting_socket->remote_device.address, p_event_data->connection_status.bd_addr, BD_ADDR_LEN) == 0)
-                    {
+                if ( p_event_data->connection_status.connected == MICO_TRUE ) {
+                    if ( connecting_socket
+                         && memcmp(connecting_socket->remote_device.address, p_event_data->connection_status.bd_addr, BD_ADDR_LEN) == 0) {
                         smartbridge_gatt_connection_handler( p_event_data->connection_status.conn_id );
-                    }
-                    else
-                    {
+                    } else {
                         smartbridge_gatt_auto_conn_handler( p_event_data->connection_status.bd_addr,
-                                                                  p_event_data->connection_status.conn_id );
+                                                            p_event_data->connection_status.conn_id );
                     }
-                }
-                else
-                {
+                } else {
                     /* Auto connection: drop a connecton object. */
                     int8_t idx = smartbridge_auto_conn_find_dev_by_addr(p_event_data->connection_status.bd_addr);
-                    if (idx >= 0) 
-                    {
+                    if (idx >= 0) {
                         g_auto_conn_dev_table[idx].socket = 0;
                     }
 
@@ -643,30 +582,24 @@ mico_bt_gatt_status_t smartbridge_gatt_callback( mico_bt_gatt_evt_t event, mico_
             break;
         }
 
-        case GATT_ATTRIBUTE_REQUEST_EVT:
-        {
+        case GATT_ATTRIBUTE_REQUEST_EVT: {
             bt_smartbridge_log( "Gatt attribute status event" );
             break;
         }
 
-        case GATT_OPERATION_CPLT_EVT:
-        {
-            if(p_event_data != NULL )
-            {
-                if ( p_event_data->operation_complete.op == GATTC_OPTYPE_READ )
-                {
+        case GATT_OPERATION_CPLT_EVT: {
+            if (p_event_data != NULL ) {
+                if ( p_event_data->operation_complete.op == GATTC_OPTYPE_READ ) {
                     smartbridge_gatt_read_operation_complete_handler( &p_event_data->operation_complete.response_data.att_value );
                     subprocedure_notify_complete( &smartbridge_subprocedure );
                 }
 
-                else if ( p_event_data->operation_complete.op == GATTC_OPTYPE_WRITE )
-                {
+                else if ( p_event_data->operation_complete.op == GATTC_OPTYPE_WRITE ) {
                     bt_smartbridge_log( "Write-Callback event for handle:%x status:%d",
                                         p_event_data->operation_complete.response_data.handle, (unsigned int)p_event_data->operation_complete.status );
                     subprocedure_notify_complete( &smartbridge_subprocedure );
-                }
-                else if ( p_event_data->operation_complete.op == GATTC_OPTYPE_NOTIFICATION || p_event_data->operation_complete.op == GATTC_OPTYPE_INDICATION )
-                {
+                } else if ( p_event_data->operation_complete.op == GATTC_OPTYPE_NOTIFICATION ||
+                            p_event_data->operation_complete.op == GATTC_OPTYPE_INDICATION ) {
                     bt_smartbridge_log( "Notification/Indication Event");
                     smartbridge_gatt_notification_indication_handler( &p_event_data->operation_complete );
                 }
@@ -674,24 +607,16 @@ mico_bt_gatt_status_t smartbridge_gatt_callback( mico_bt_gatt_evt_t event, mico_
             break;
         }
 
-        case GATT_DISCOVERY_RESULT_EVT:
-        {
-            if( p_event_data != NULL )
-            {
-                if ( p_event_data->discovery_result.discovery_type == GATT_DISCOVER_SERVICES_ALL || p_event_data->discovery_result.discovery_type == GATT_DISCOVER_SERVICES_BY_UUID )
-                {
+        case GATT_DISCOVERY_RESULT_EVT: {
+            if ( p_event_data != NULL ) {
+                if ( p_event_data->discovery_result.discovery_type == GATT_DISCOVER_SERVICES_ALL ||
+                     p_event_data->discovery_result.discovery_type == GATT_DISCOVER_SERVICES_BY_UUID ) {
                     smartbridge_gatt_discover_services_result( p_event_data );
-                }
-                else if ( p_event_data->discovery_result.discovery_type == GATT_DISCOVER_INCLUDED_SERVICES )
-                {
+                } else if ( p_event_data->discovery_result.discovery_type == GATT_DISCOVER_INCLUDED_SERVICES ) {
                     smartbridge_gatt_discover_included_services_result( p_event_data );
-                }
-                else if ( p_event_data->discovery_result.discovery_type == GATT_DISCOVER_CHARACTERISTICS )
-                {
+                } else if ( p_event_data->discovery_result.discovery_type == GATT_DISCOVER_CHARACTERISTICS ) {
                     smartbridge_gatt_discover_characteristic_result( p_event_data);
-                }
-                else if ( p_event_data->discovery_result.discovery_type == GATT_DISCOVER_CHARACTERISTIC_DESCRIPTORS )
-                {
+                } else if ( p_event_data->discovery_result.discovery_type == GATT_DISCOVER_CHARACTERISTIC_DESCRIPTORS ) {
                     smartbridge_gatt_discover_characteristic_descriptor_result( p_event_data );
                 }
 
@@ -699,17 +624,14 @@ mico_bt_gatt_status_t smartbridge_gatt_callback( mico_bt_gatt_evt_t event, mico_
             break;
         }
 
-        case GATT_DISCOVERY_CPLT_EVT:
-        {
-            if ( ( p_event_data != NULL ) )
-            {
+        case GATT_DISCOVERY_CPLT_EVT: {
+            if ( ( p_event_data != NULL ) ) {
                 smartbridge_gatt_discovery_complete_handler( p_event_data );
             }
             break;
         }
 
-        default:
-        {
+        default: {
             bt_smartbridge_log( "Gatt callback event:%d", event );
             break;
         }
@@ -722,8 +644,7 @@ OSStatus mico_bt_smartbridge_init( uint8_t count )
 {
     OSStatus result;
 
-    if ( initialised == MICO_TRUE )
-    {
+    if ( initialised == MICO_TRUE ) {
         return MICO_BT_SUCCESS;
     }
 
@@ -734,16 +655,14 @@ OSStatus mico_bt_smartbridge_init( uint8_t count )
     smartbridge_auto_conn_list_init();
 
     result = mico_rtos_init_semaphore(&g_auto_conn_sem, 1);
-    if (result != kNoErr)
-    {
+    if (result != kNoErr) {
         bt_smartbridge_log( "Error initialising a semaphore used to Auto connection" );
         return result;
     }
 
     /* Initialise SmartBridge Socket Manager */
     result = bt_smartbridge_socket_manager_init();
-    if ( result != MICO_BT_SUCCESS )
-    {
+    if ( result != MICO_BT_SUCCESS ) {
         bt_smartbridge_log( "Error initialising SmartBridge Socket Manager" );
         return result;
     }
@@ -760,8 +679,7 @@ OSStatus mico_bt_smartbridge_init( uint8_t count )
 
 OSStatus mico_bt_smartbridge_deinit( void )
 {
-    if ( initialised == MICO_FALSE )
-    {
+    if ( initialised == MICO_FALSE ) {
         return MICO_BT_SUCCESS;
     }
 
@@ -795,11 +713,12 @@ mico_bool_t mico_bt_smartbridge_is_ready_to_connect( void )
     return ( initialised == MICO_FALSE || connecting_socket != NULL ) ? MICO_FALSE : MICO_TRUE;
 }
 
-OSStatus mico_bt_smartbridge_start_scan( const mico_bt_smart_scan_settings_t* settings, mico_bt_smart_scan_complete_callback_t complete_callback, mico_bt_smart_advertising_report_callback_t advertising_report_callback )
+OSStatus mico_bt_smartbridge_start_scan( const mico_bt_smart_scan_settings_t *settings,
+                                         mico_bt_smart_scan_complete_callback_t complete_callback,
+                                         mico_bt_smart_advertising_report_callback_t advertising_report_callback )
 {
 
-    if ( initialised == MICO_FALSE )
-    {
+    if ( initialised == MICO_FALSE ) {
         return MICO_BT_SMART_APPL_UNINITIALISED;
     }
 
@@ -808,17 +727,15 @@ OSStatus mico_bt_smartbridge_start_scan( const mico_bt_smart_scan_settings_t* se
 
 OSStatus mico_bt_smartbridge_stop_scan( void )
 {
-    if ( initialised == MICO_FALSE )
-    {
+    if ( initialised == MICO_FALSE ) {
         return MICO_BT_SMART_APPL_UNINITIALISED;
     }
     return smartbridge_bt_interface_stop_scan();
 }
 
-OSStatus mico_bt_smartbridge_get_scan_result_list( mico_bt_smart_scan_result_t** result_list, uint32_t* count )
+OSStatus mico_bt_smartbridge_get_scan_result_list( mico_bt_smart_scan_result_t **result_list, uint32_t *count )
 {
-    if ( initialised == MICO_FALSE )
-    {
+    if ( initialised == MICO_FALSE ) {
         return MICO_BT_SMART_APPL_UNINITIALISED;
     }
     return smartbridge_helper_get_scan_results( result_list, count );
@@ -826,71 +743,68 @@ OSStatus mico_bt_smartbridge_get_scan_result_list( mico_bt_smart_scan_result_t**
 
 OSStatus mico_bt_smartbridge_get_background_connection_devices_size( uint8_t *size )
 {
-    if ( initialised == MICO_FALSE )
-    {
+    if ( initialised == MICO_FALSE ) {
         return kNotInitializedErr;
     }
-    if ( size == (uint8_t *)0 )
-    {
+    if ( size == (uint8_t *)0 ) {
         return kGeneralErr;
     }
     return smartbridge_bt_interface_get_background_connection_device_size( size );
 }
 
-OSStatus mico_bt_smartbridge_set_auto_connection_action( mico_bool_t start_stop, const mico_bt_smart_scan_settings_t *scan_settings, mico_bt_smartbridge_auto_connection_parms_cback_t p_auto_conn_cback )
+OSStatus mico_bt_smartbridge_set_auto_connection_action( mico_bool_t start_stop,
+                                                         const mico_bt_smart_scan_settings_t *scan_settings,
+                                                         mico_bt_smartbridge_auto_connection_parms_cback_t p_auto_conn_cback )
 {
     OSStatus                            err = kNoErr;
     uint32_t                            duration;
-    
-    if (start_stop && !scan_settings) 
+
+    if (start_stop && !scan_settings) {
         return kParamErr;
-    if (initialised == MICO_FALSE) 
+    }
+    if (initialised == MICO_FALSE) {
         return kNotInitializedErr;
-    if (connecting_socket != NULL) 
+    }
+    if (connecting_socket != NULL) {
         return kInProgressErr;
-    if (start_stop && g_auto_conn_cback) 
+    }
+    if (start_stop && g_auto_conn_cback) {
         return kInProgressErr;
+    }
 
     /* Clear connection list */
     smartbridge_auto_conn_list_clear();
 
-    if (start_stop) 
-    {         
+    if (start_stop) {
         /* Start a scanning procedure */
         duration = scan_settings->duration_second;
         memcpy(&g_auto_conn_scan_cfg, scan_settings, sizeof(mico_bt_smart_scan_settings_t));
         g_auto_conn_scan_cfg.filter_duplicates  = DUPLICATES_FILTER_DISABLED;
         g_auto_conn_scan_cfg.filter_policy      = FILTER_POLICY_WHITE_LIST;
         g_auto_conn_scan_cfg.duration_second    = MIN(SMARTBRIDGE_AUTO_CONN_SCAN_INTERVAL, duration);
-        
-        err = mico_bt_smartbridge_start_scan(&g_auto_conn_scan_cfg, 
-                                             smartbridge_gap_auto_conn_scan_cmpl_handler, 
+
+        err = mico_bt_smartbridge_start_scan(&g_auto_conn_scan_cfg,
+                                             smartbridge_gap_auto_conn_scan_cmpl_handler,
                                              smartbridge_gap_auto_conn_scan_report_handler);
 
-        if (err == MICO_BT_PENDING) 
-        {
-            if (scan_settings->duration_second < (uint16_t)(-1)) 
-            {
+        if (err == MICO_BT_PENDING) {
+            if (scan_settings->duration_second < (uint16_t)(-1)) {
                 /* An limited timeout */
                 g_auto_conn_scan_duration = duration - MIN(SMARTBRIDGE_AUTO_CONN_SCAN_INTERVAL, duration);
-            } 
-            else 
-            {
+            } else {
                 /* Forever until user request to stop it. */
                 g_auto_conn_scan_duration = (uint16_t)(-1);
             }
-            
+
             /* Selective Procedure Callback */
-            if (p_auto_conn_cback) g_auto_conn_cback = p_auto_conn_cback;
+            if (p_auto_conn_cback) {
+                g_auto_conn_cback = p_auto_conn_cback;
+            }
             err = kNoErr;
+        } else {
+            bt_smartbridge_log("%s: start scanning failed", __FUNCTION__);
         }
-        else 
-        {
-            bt_smartbridge_log("%s: start scanning failed", __FUNCTION__); 
-        }
-    }
-    else 
-    {
+    } else {
         g_auto_conn_cback = NULL;
         memset(&g_auto_conn_scan_cfg, 0, sizeof(mico_bt_smart_scan_settings_t));
         err = mico_bt_smartbridge_stop_scan();
@@ -898,10 +812,9 @@ OSStatus mico_bt_smartbridge_set_auto_connection_action( mico_bool_t start_stop,
     return err;
 }
 
-OSStatus mico_bt_smartbridge_create_socket( mico_bt_smartbridge_socket_t* socket )
+OSStatus mico_bt_smartbridge_create_socket( mico_bt_smartbridge_socket_t *socket )
 {
-    if ( initialised == MICO_FALSE )
-    {
+    if ( initialised == MICO_FALSE ) {
         return MICO_BT_SMART_APPL_UNINITIALISED;
     }
 
@@ -910,23 +823,21 @@ OSStatus mico_bt_smartbridge_create_socket( mico_bt_smartbridge_socket_t* socket
     socket->connection_handle = SOCKET_INVALID_CONNECTION_HANDLE;
 
     /* Point node data to socket */
-    socket->node.data = (void*)socket;
+    socket->node.data = (void *)socket;
 
     /* Initialise socket semaphore */
     return mico_rtos_init_semaphore( &socket->semaphore, 1 );
 }
 
-OSStatus mico_bt_smartbridge_delete_socket( mico_bt_smartbridge_socket_t* socket )
+OSStatus mico_bt_smartbridge_delete_socket( mico_bt_smartbridge_socket_t *socket )
 {
     OSStatus result;
-    if ( initialised == MICO_FALSE )
-    {
+    if ( initialised == MICO_FALSE ) {
         return MICO_BT_SMART_APPL_UNINITIALISED;
     }
 
     result = mico_rtos_deinit_semaphore( &socket->semaphore );
-    if ( result != MICO_BT_SUCCESS )
-    {
+    if ( result != MICO_BT_SUCCESS ) {
         return result;
     }
 
@@ -935,64 +846,55 @@ OSStatus mico_bt_smartbridge_delete_socket( mico_bt_smartbridge_socket_t* socket
     return MICO_BT_SUCCESS;
 }
 
-OSStatus mico_bt_smartbridge_get_socket_status( mico_bt_smartbridge_socket_t* socket, mico_bt_smartbridge_socket_status_t* status )
+OSStatus mico_bt_smartbridge_get_socket_status( mico_bt_smartbridge_socket_t *socket,
+                                                mico_bt_smartbridge_socket_status_t *status )
 {
-    if ( initialised == MICO_FALSE )
-    {
+    if ( initialised == MICO_FALSE ) {
         return MICO_BT_SMART_APPL_UNINITIALISED;
     }
 
-    if ( socket->state == SOCKET_STATE_LINK_ENCRYPTED )
-    {
+    if ( socket->state == SOCKET_STATE_LINK_ENCRYPTED ) {
         *status = SMARTBRIDGE_SOCKET_CONNECTED;
-    }
-    else if ( socket->state == SOCKET_STATE_LINK_CONNECTED )
-    {
+    } else if ( socket->state == SOCKET_STATE_LINK_CONNECTED ) {
         /* Status is connected if socket does not have loaded bond info and does not initiate pairing */
-        if ( smartbridge_helper_socket_check_actions_disabled( socket, SOCKET_ACTION_ENCRYPT_USING_BOND_INFO | SOCKET_ACTION_INITIATE_PAIRING ) == MICO_TRUE )
-        {
+        if ( smartbridge_helper_socket_check_actions_disabled( socket,
+                                                               SOCKET_ACTION_ENCRYPT_USING_BOND_INFO | SOCKET_ACTION_INITIATE_PAIRING ) == MICO_TRUE ) {
             *status = SMARTBRIDGE_SOCKET_CONNECTED;
-        }
-        else
-        {
+        } else {
             *status = SMARTBRIDGE_SOCKET_CONNECTING;
         }
-    }
-    else if ( socket->state == SOCKET_STATE_LINK_CONNECTING )
-    {
+    } else if ( socket->state == SOCKET_STATE_LINK_CONNECTING ) {
         *status = SMARTBRIDGE_SOCKET_CONNECTING;
-    }
-    else
-    {
+    } else {
         *status = SMARTBRIDGE_SOCKET_DISCONNECTED;
     }
 
     return MICO_BT_SUCCESS;
 }
 
-OSStatus mico_bt_smartbridge_connect( mico_bt_smartbridge_socket_t* socket, const mico_bt_smart_device_t* remote_device, const mico_bt_smart_connection_settings_t* settings, mico_bt_smartbridge_disconnection_callback_t disconnection_callback, mico_bt_smartbridge_notification_callback_t notification_callback )
+OSStatus mico_bt_smartbridge_connect( mico_bt_smartbridge_socket_t *socket, const mico_bt_smart_device_t *remote_device,
+                                      const mico_bt_smart_connection_settings_t *settings,
+                                      mico_bt_smartbridge_disconnection_callback_t disconnection_callback,
+                                      mico_bt_smartbridge_notification_callback_t notification_callback )
 {
-    mico_bt_smartbridge_socket_t* found_socket;
+    mico_bt_smartbridge_socket_t *found_socket;
     OSStatus result = MICO_BT_SUCCESS;
 
-    if ( initialised == MICO_FALSE )
-    {
+    if ( initialised == MICO_FALSE ) {
         return MICO_BT_SMART_APPL_UNINITIALISED;
     }
 
-    if ( connecting_socket != NULL )
-    {
+    if ( connecting_socket != NULL ) {
         /* Only 1 connecting socket is allowed */
         return MICO_BT_CONNECT_IN_PROGRESS;
     }
 
-    if ( bt_smartbridge_socket_manager_is_full() == MICO_TRUE )
-    {
+    if ( bt_smartbridge_socket_manager_is_full() == MICO_TRUE ) {
         return MICO_BT_MAX_CONNECTIONS_REACHED;
     }
 
-    if ( bt_smartbridge_socket_manager_find_socket_by_address( &remote_device->address, &found_socket ) == MICO_BT_SUCCESS )
-    {
+    if ( bt_smartbridge_socket_manager_find_socket_by_address( &remote_device->address,
+                                                               &found_socket ) == MICO_BT_SUCCESS ) {
         /* device is already connected */
         return MICO_BT_SOCKET_IN_USE;
     }
@@ -1000,8 +902,7 @@ OSStatus mico_bt_smartbridge_connect( mico_bt_smartbridge_socket_t* socket, cons
     bt_smartbridge_log( "connect()...socket things are okay" );
 
     /* Clean-up accidentally set semaphores */
-    while( mico_rtos_get_semaphore( &socket->semaphore, MICO_NO_WAIT ) == MICO_BT_SUCCESS )
-    {
+    while ( mico_rtos_get_semaphore( &socket->semaphore, MICO_NO_WAIT ) == MICO_BT_SUCCESS ) {
     }
 
     /* Store socket pointer in a temporary global variable so it can be referenced in smartbridge_gap_connection_handler */
@@ -1030,13 +931,10 @@ OSStatus mico_bt_smartbridge_connect( mico_bt_smartbridge_socket_t* socket, cons
     /* Set attribute protocol timeout */
     smartbridge_bt_interface_set_attribute_timeout( settings->attribute_protocol_timeout_ms );
 
-    if ( smartbridge_helper_socket_check_actions_enabled( socket, SOCKET_ACTION_INITIATE_PAIRING ) == MICO_TRUE )
-    {
+    if ( smartbridge_helper_socket_check_actions_enabled( socket, SOCKET_ACTION_INITIATE_PAIRING ) == MICO_TRUE ) {
         /* Tell GAP to initiate pairing on the next connection attempt */
         mico_bt_start_pairing( socket->remote_device.address, socket->remote_device.address_type, &socket->security_settings );
-    }
-    else
-    {
+    } else {
         /* Tell GAP to not send pairing request on the next connection attempt */
         mico_bt_stop_pairing( socket->remote_device.address );
     }
@@ -1048,56 +946,45 @@ OSStatus mico_bt_smartbridge_connect( mico_bt_smartbridge_socket_t* socket, cons
     mico_rtos_get_semaphore( &socket->semaphore, socket->connection_settings.timeout_second * 1000 );
 
     /* Check if link is connected. Otherwise, return error */
-    if ( socket->state == SOCKET_STATE_LINK_CONNECTED )
-    {
+    if ( socket->state == SOCKET_STATE_LINK_CONNECTED ) {
 
-        if ( smartbridge_helper_socket_check_actions_enabled( socket, SOCKET_ACTION_INITIATE_PAIRING ) == MICO_TRUE )
-        {
+        if ( smartbridge_helper_socket_check_actions_enabled( socket, SOCKET_ACTION_INITIATE_PAIRING ) == MICO_TRUE ) {
             /* Wait until pairing is complete */
             mico_rtos_get_semaphore( &socket->semaphore, MICO_NEVER_TIMEOUT );
         }
 
         /* Check if encryption is required */
         if ( smartbridge_helper_socket_check_actions_enabled( socket, SOCKET_ACTION_INITIATE_PAIRING ) == MICO_TRUE ||
-             smartbridge_helper_socket_check_actions_enabled( socket, SOCKET_ACTION_ENCRYPT_USING_BOND_INFO ) == MICO_TRUE )
-        {
+             smartbridge_helper_socket_check_actions_enabled( socket, SOCKET_ACTION_ENCRYPT_USING_BOND_INFO ) == MICO_TRUE ) {
             mico_bt_start_encryption( &socket->remote_device.address );
 
             /* Wait until link is encrypted */
             mico_rtos_get_semaphore( &socket->semaphore, MICO_NEVER_TIMEOUT );
 
-            if ( socket->state != SOCKET_STATE_LINK_ENCRYPTED )
-            {
+            if ( socket->state != SOCKET_STATE_LINK_ENCRYPTED ) {
                 result = MICO_BT_ENCRYPTION_FAILED;
                 mico_bt_dev_delete_bonded_device( (uint8_t *)remote_device->address );
                 goto error;
             }
         }
-    }
-    else
-    {
+    } else {
         result = MICO_BT_SOCKET_NOT_CONNECTED;
         goto error;
     }
 
     /* Successful */
-    if ( bt_smartbridge_att_cache_is_enabled() == MICO_TRUE )
-    {
-        bt_smartbridge_att_cache_t* cache = NULL;
+    if ( bt_smartbridge_att_cache_is_enabled() == MICO_TRUE ) {
+        bt_smartbridge_att_cache_t *cache = NULL;
 
         result = bt_smartbridge_att_cache_find( remote_device, &cache );
-        if ( result == MICO_BT_SUCCESS )
-        {
+        if ( result == MICO_BT_SUCCESS ) {
             bt_smartbridge_log( "USING ATT CACHE ..." );
-        }
-        else
-        {
+        } else {
             bt_smartbridge_log( "GENERATING ATT CACHE ..." );
 
             result = bt_smartbridge_att_cache_generate( remote_device, socket->connection_handle, &cache );
 
-            if ( result != MICO_BT_SUCCESS )
-            {
+            if ( result != MICO_BT_SUCCESS ) {
                 bt_smartbridge_log( "Error Generating Cache result:%d", result );
                 goto error;
             }
@@ -1105,22 +992,17 @@ OSStatus mico_bt_smartbridge_connect( mico_bt_smartbridge_socket_t* socket, cons
 
         /* Successful. Mark cache as active and store reference in socket */
         bt_smartbridge_att_cache_set_active_state( cache, MICO_TRUE );
-        socket->att_cache = (void*)cache;
+        socket->att_cache = (void *)cache;
     }
 
     /* Add this device to the white list. */
-    if (connecting_socket->connection_settings.filter_policy == FILTER_POLICY_WHITE_LIST)
-    {
-        if (connecting_socket->remote_device.address_type == BT_SMART_ADDR_TYPE_PUBLIC)
-        {
+    if (connecting_socket->connection_settings.filter_policy == FILTER_POLICY_WHITE_LIST) {
+        if (connecting_socket->remote_device.address_type == BT_SMART_ADDR_TYPE_PUBLIC) {
             result = smartbridge_bt_interface_update_background_connection_device(TRUE, connecting_socket->remote_device.address);
-            if (result != kNoErr)
-            {
+            if (result != kNoErr) {
                 bt_smartbridge_log("Add device to white list unsuccessfully, status: %d", result);
             }
-        }
-        else
-        {
+        } else {
             bt_smartbridge_log("Cannot add device to white list: random address type");
         }
     }
@@ -1135,10 +1017,12 @@ OSStatus mico_bt_smartbridge_connect( mico_bt_smartbridge_socket_t* socket, cons
     return result;
 
 #if 1
-    error:
+error:
     /* Link is not connected nor encrypted. Issue disconnection attempt to clean-up */
-    smartbridge_helper_socket_clear_actions( socket, SOCKET_ACTION_INITIATE_PAIRING|SOCKET_ACTION_ENCRYPT_USING_BOND_INFO );
-    mico_rtos_delay_milliseconds(200);  //A quick disconnection from an established connection may cause a duplicated gatt connected callback, by william
+    smartbridge_helper_socket_clear_actions( socket,
+                                             SOCKET_ACTION_INITIATE_PAIRING | SOCKET_ACTION_ENCRYPT_USING_BOND_INFO );
+    mico_rtos_delay_milliseconds(
+        200);  //A quick disconnection from an established connection may cause a duplicated gatt connected callback, by william
     mico_bt_smartbridge_disconnect( socket, TRUE );
 
     /* Clear connect action as it's no longer needed */
@@ -1152,10 +1036,9 @@ OSStatus mico_bt_smartbridge_connect( mico_bt_smartbridge_socket_t* socket, cons
 #endif
 }
 
-OSStatus mico_bt_smartbridge_disconnect( mico_bt_smartbridge_socket_t* socket, mico_bool_t remove_it_from_whitelist )
+OSStatus mico_bt_smartbridge_disconnect( mico_bt_smartbridge_socket_t *socket, mico_bool_t remove_it_from_whitelist )
 {
-    if ( initialised == MICO_FALSE )
-    {
+    if ( initialised == MICO_FALSE ) {
         return MICO_BT_SMART_APPL_UNINITIALISED;
     }
 
@@ -1163,19 +1046,15 @@ OSStatus mico_bt_smartbridge_disconnect( mico_bt_smartbridge_socket_t* socket, m
     smartbridge_helper_socket_set_actions( socket, SOCKET_ACTION_HOST_DISCONNECT );
 
     /* Clean-up accidentally set semaphores */
-    while( mico_rtos_get_semaphore( &socket->semaphore, MICO_NO_WAIT ) == MICO_BT_SUCCESS )
-    {
+    while ( mico_rtos_get_semaphore( &socket->semaphore, MICO_NO_WAIT ) == MICO_BT_SUCCESS ) {
     }
 
     /* Check if either link is encrypted or connected */
-    if ( socket->state >= SOCKET_STATE_LINK_CONNECTED )
-    {
+    if ( socket->state >= SOCKET_STATE_LINK_CONNECTED ) {
         smartbridge_bt_interface_disconnect( socket->connection_handle );
         /* Wait for disconnection */
         mico_rtos_get_semaphore( &socket->semaphore, socket->connection_settings.timeout_second * 1000 );
-    }
-    else
-    {
+    } else {
         /* Link is not yet connected. Cancel last */
         smartbridge_bt_interface_cancel_last_connect( socket->remote_device.address );
     }
@@ -1184,9 +1063,8 @@ OSStatus mico_bt_smartbridge_disconnect( mico_bt_smartbridge_socket_t* socket, m
     smartbridge_helper_socket_clear_actions( socket, SOCKET_ACTION_HOST_DISCONNECT );
 
     /* Proper clean-up if socket isn't properly disconnected */
-    if ( socket->state != SOCKET_STATE_DISCONNECTED )
-    {
-        mico_bt_smartbridge_socket_t* removed_socket;
+    if ( socket->state != SOCKET_STATE_DISCONNECTED ) {
+        mico_bt_smartbridge_socket_t *removed_socket;
 
         bt_smartbridge_socket_manager_remove_socket( socket->connection_handle, &removed_socket );
 
@@ -1197,33 +1075,31 @@ OSStatus mico_bt_smartbridge_disconnect( mico_bt_smartbridge_socket_t* socket, m
         socket->state = SOCKET_STATE_DISCONNECTED;
 
         /* Mark att cache as inactive and reset reference to cache */
-        bt_smartbridge_att_cache_set_active_state( (bt_smartbridge_att_cache_t*)socket->att_cache, MICO_FALSE );
+        bt_smartbridge_att_cache_set_active_state( (bt_smartbridge_att_cache_t *)socket->att_cache, MICO_FALSE );
         socket->att_cache = NULL;
     }
 
     /* Remove this device from the white list */
-    if (remove_it_from_whitelist)
-    {
+    if (remove_it_from_whitelist) {
         smartbridge_bt_interface_update_background_connection_device(FALSE, socket->remote_device.address);
     }
 
     return MICO_BT_SUCCESS;
 }
 
-OSStatus mico_bt_smartbridge_set_transmit_power( mico_bt_smartbridge_socket_t* socket, int8_t transmit_power_dbm )
+OSStatus mico_bt_smartbridge_set_transmit_power( mico_bt_smartbridge_socket_t *socket, int8_t transmit_power_dbm )
 {
-    if ( initialised == MICO_FALSE || socket->state == SOCKET_STATE_DISCONNECTED )
-    {
+    if ( initialised == MICO_FALSE || socket->state == SOCKET_STATE_DISCONNECTED ) {
         return MICO_BT_SMART_APPL_UNINITIALISED;
     }
 
     return smartbridge_bt_interface_set_connection_tx_power( socket->connection_handle, transmit_power_dbm );
 }
 
-OSStatus mico_bt_smartbridge_set_bond_info( mico_bt_smartbridge_socket_t* socket, const mico_bt_smart_security_settings_t* settings, const mico_bt_smart_bond_info_t* bond_info )
+OSStatus mico_bt_smartbridge_set_bond_info( mico_bt_smartbridge_socket_t *socket,
+                                            const mico_bt_smart_security_settings_t *settings, const mico_bt_smart_bond_info_t *bond_info )
 {
-    if ( initialised == MICO_FALSE )
-    {
+    if ( initialised == MICO_FALSE ) {
         return MICO_BT_SMART_APPL_UNINITIALISED;
     }
 
@@ -1240,10 +1116,9 @@ OSStatus mico_bt_smartbridge_set_bond_info( mico_bt_smartbridge_socket_t* socket
     return MICO_BT_SUCCESS;
 }
 
-OSStatus mico_bt_smartbridge_clear_bond_info( mico_bt_smartbridge_socket_t* socket )
+OSStatus mico_bt_smartbridge_clear_bond_info( mico_bt_smartbridge_socket_t *socket )
 {
-    if ( initialised == MICO_FALSE )
-    {
+    if ( initialised == MICO_FALSE ) {
         return MICO_BT_SMART_APPL_UNINITIALISED;
     }
 
@@ -1256,10 +1131,10 @@ OSStatus mico_bt_smartbridge_clear_bond_info( mico_bt_smartbridge_socket_t* sock
     return MICO_BT_SUCCESS;
 }
 
-OSStatus mico_bt_smartbridge_enable_pairing( mico_bt_smartbridge_socket_t* socket, const mico_bt_smart_security_settings_t* settings, mico_bt_smart_bonding_callback_t bonding_callback )
+OSStatus mico_bt_smartbridge_enable_pairing( mico_bt_smartbridge_socket_t *socket,
+                                             const mico_bt_smart_security_settings_t *settings, mico_bt_smart_bonding_callback_t bonding_callback )
 {
-    if ( initialised == MICO_FALSE )
-    {
+    if ( initialised == MICO_FALSE ) {
         return MICO_BT_SMART_APPL_UNINITIALISED;
     }
 
@@ -1281,10 +1156,9 @@ OSStatus mico_bt_smartbridge_enable_pairing( mico_bt_smartbridge_socket_t* socke
     return MICO_BT_SUCCESS;
 }
 
-OSStatus mico_bt_smartbridge_disable_pairing( mico_bt_smartbridge_socket_t* socket )
+OSStatus mico_bt_smartbridge_disable_pairing( mico_bt_smartbridge_socket_t *socket )
 {
-    if ( initialised == MICO_FALSE )
-    {
+    if ( initialised == MICO_FALSE ) {
         return MICO_BT_SMART_APPL_UNINITIALISED;
     }
 
@@ -1294,10 +1168,10 @@ OSStatus mico_bt_smartbridge_disable_pairing( mico_bt_smartbridge_socket_t* sock
     return MICO_BT_SUCCESS;
 }
 
-OSStatus mico_bt_smartbridge_enable_attribute_cache( uint32_t cache_count, mico_bt_uuid_t cache_services[], uint32_t service_count )
+OSStatus mico_bt_smartbridge_enable_attribute_cache( uint32_t cache_count, mico_bt_uuid_t cache_services[],
+                                                     uint32_t service_count )
 {
-    if ( initialised == MICO_FALSE )
-    {
+    if ( initialised == MICO_FALSE ) {
         return MICO_BT_SMART_APPL_UNINITIALISED;
     }
 
@@ -1307,8 +1181,7 @@ OSStatus mico_bt_smartbridge_enable_attribute_cache( uint32_t cache_count, mico_
 
 OSStatus mico_bt_smartbridge_disable_attribute_cache( void )
 {
-    if ( initialised == MICO_FALSE )
-    {
+    if ( initialised == MICO_FALSE ) {
         return MICO_BT_SMART_APPL_UNINITIALISED;
     }
 
@@ -1316,10 +1189,9 @@ OSStatus mico_bt_smartbridge_disable_attribute_cache( void )
     return bt_smartbridge_att_cache_disable();
 }
 
-OSStatus mico_bt_smartbridge_remove_attribute_cache( mico_bt_smartbridge_socket_t* socket )
+OSStatus mico_bt_smartbridge_remove_attribute_cache( mico_bt_smartbridge_socket_t *socket )
 {
-    if ( initialised == MICO_FALSE )
-    {
+    if ( initialised == MICO_FALSE ) {
         return MICO_BT_SMART_APPL_UNINITIALISED;
     }
 
@@ -1327,58 +1199,52 @@ OSStatus mico_bt_smartbridge_remove_attribute_cache( mico_bt_smartbridge_socket_
     return bt_smartbridge_att_cache_release( socket->att_cache );
 }
 
-OSStatus mico_bt_smartbridge_enable_attribute_cache_notification( mico_bt_smartbridge_socket_t* socket, mico_bool_t is_notification_or_indication )
+OSStatus mico_bt_smartbridge_enable_attribute_cache_notification( mico_bt_smartbridge_socket_t *socket,
+                                                                  mico_bool_t is_notification_or_indication )
 {
-    mico_bt_smart_attribute_list_t* list;
-    mico_bt_smart_attribute_t*      iterator;
-    bt_smartbridge_att_cache_t*      cache;
+    mico_bt_smart_attribute_list_t *list;
+    mico_bt_smart_attribute_t      *iterator;
+    bt_smartbridge_att_cache_t      *cache;
     OSStatus                         result;
 
-    if ( initialised == MICO_FALSE )
-    {
+    if ( initialised == MICO_FALSE ) {
         return MICO_BT_SMART_APPL_UNINITIALISED;
     }
 
-    if ( bt_smartbridge_att_cache_is_enabled( ) == MICO_FALSE )
-    {
+    if ( bt_smartbridge_att_cache_is_enabled( ) == MICO_FALSE ) {
         return MICO_BT_ATT_CACHE_UNINITIALISED;
     }
 
-    if ( socket == NULL || socket->att_cache == NULL )
-    {
+    if ( socket == NULL || socket->att_cache == NULL ) {
         return MICO_BT_BADARG;
     }
 
-    cache = (bt_smartbridge_att_cache_t*)socket->att_cache;
+    cache = (bt_smartbridge_att_cache_t *)socket->att_cache;
 
-    if ( bt_smartbridge_att_cache_is_discovering( cache ) == MICO_TRUE )
-    {
+    if ( bt_smartbridge_att_cache_is_discovering( cache ) == MICO_TRUE ) {
         return MICO_BT_DISCOVER_IN_PROGRESS;
     }
 
     result = bt_smartbridge_att_cache_get_list( cache, &list );
-    if ( result != MICO_BT_SUCCESS )
-    {
+    if ( result != MICO_BT_SUCCESS ) {
         return result;
     }
 
     result = mico_bt_smart_attribute_get_list_head( list, &iterator );
-    if ( result != MICO_BT_SUCCESS )
-    {
+    if ( result != MICO_BT_SUCCESS ) {
         return result;
     }
 
-    while( iterator != NULL )
-    {
-        if ( iterator->type.uu.uuid16 == 0x2902 )
-        {
+    while ( iterator != NULL ) {
+        if ( iterator->type.uu.uuid16 == 0x2902 ) {
             /* Switch on notification from server */
             bt_smartbridge_att_cache_lock( cache );
 
-            if (is_notification_or_indication)
-                iterator->value.client_config.config_bits = 0x0001; // Notification
-            else
-                iterator->value.client_config.config_bits = 0x0002; // Indication
+            if (is_notification_or_indication) {
+                iterator->value.client_config.config_bits = 0x0001;    // Notification
+            } else {
+                iterator->value.client_config.config_bits = 0x0002;    // Indication
+            }
 
             bt_smartbridge_att_cache_unlock( cache );
             result = smartbridge_bt_interface_write_characteristic_descriptor( socket->connection_handle, iterator );
@@ -1390,51 +1256,43 @@ OSStatus mico_bt_smartbridge_enable_attribute_cache_notification( mico_bt_smartb
     return result;
 }
 
-OSStatus mico_bt_smartbridge_disable_attribute_cache_notification( mico_bt_smartbridge_socket_t* socket )
+OSStatus mico_bt_smartbridge_disable_attribute_cache_notification( mico_bt_smartbridge_socket_t *socket )
 {
-    mico_bt_smart_attribute_list_t* list;
-    mico_bt_smart_attribute_t*      iterator;
-    bt_smartbridge_att_cache_t*      cache;
+    mico_bt_smart_attribute_list_t *list;
+    mico_bt_smart_attribute_t      *iterator;
+    bt_smartbridge_att_cache_t      *cache;
     OSStatus                         result;
 
-    if ( initialised == MICO_FALSE )
-    {
+    if ( initialised == MICO_FALSE ) {
         return MICO_BT_SMART_APPL_UNINITIALISED;
     }
 
-    if ( bt_smartbridge_att_cache_is_enabled( ) == MICO_FALSE )
-    {
+    if ( bt_smartbridge_att_cache_is_enabled( ) == MICO_FALSE ) {
         return MICO_BT_ATT_CACHE_UNINITIALISED;
     }
 
-    if ( socket == NULL || socket->att_cache == NULL )
-    {
+    if ( socket == NULL || socket->att_cache == NULL ) {
         return MICO_BT_BADARG;
     }
 
-    cache = (bt_smartbridge_att_cache_t*)socket->att_cache;
+    cache = (bt_smartbridge_att_cache_t *)socket->att_cache;
 
-    if ( bt_smartbridge_att_cache_is_discovering( cache ) == MICO_TRUE )
-    {
+    if ( bt_smartbridge_att_cache_is_discovering( cache ) == MICO_TRUE ) {
         return MICO_BT_DISCOVER_IN_PROGRESS;
     }
 
     result = bt_smartbridge_att_cache_get_list( cache, &list );
-    if ( result != MICO_BT_SUCCESS )
-    {
+    if ( result != MICO_BT_SUCCESS ) {
         return result;
     }
 
     result = mico_bt_smart_attribute_get_list_head( list, &iterator );
-    if ( result != MICO_BT_SUCCESS )
-    {
+    if ( result != MICO_BT_SUCCESS ) {
         return result;
     }
 
-    while( iterator != NULL )
-    {
-        if ( iterator->type.uu.uuid16 == 0x2902 )
-        {
+    while ( iterator != NULL ) {
+        if ( iterator->type.uu.uuid16 == 0x2902 ) {
             /* Swith on notification from server */
             bt_smartbridge_att_cache_lock( cache );
 
@@ -1451,58 +1309,52 @@ OSStatus mico_bt_smartbridge_disable_attribute_cache_notification( mico_bt_smart
     return result;
 }
 
-OSStatus mico_bt_smartbridge_get_attribute_cache_list( mico_bt_smartbridge_socket_t* socket, mico_bt_smart_attribute_list_t** att_cache_list )
+OSStatus mico_bt_smartbridge_get_attribute_cache_list( mico_bt_smartbridge_socket_t *socket,
+                                                       mico_bt_smart_attribute_list_t **att_cache_list )
 {
-    if ( initialised == MICO_FALSE )
-    {
+    if ( initialised == MICO_FALSE ) {
         return MICO_BT_SMART_APPL_UNINITIALISED;
     }
 
-    if ( bt_smartbridge_att_cache_is_enabled( ) == MICO_FALSE )
-    {
+    if ( bt_smartbridge_att_cache_is_enabled( ) == MICO_FALSE ) {
         return MICO_BT_ATT_CACHE_UNINITIALISED;
     }
 
-    if ( socket == NULL || socket->att_cache == NULL || att_cache_list == NULL )
-    {
+    if ( socket == NULL || socket->att_cache == NULL || att_cache_list == NULL ) {
         return MICO_BT_BADARG;
     }
 
-    if ( bt_smartbridge_att_cache_is_discovering( (bt_smartbridge_att_cache_t*)socket->att_cache ) == MICO_TRUE )
-    {
+    if ( bt_smartbridge_att_cache_is_discovering( (bt_smartbridge_att_cache_t *)socket->att_cache ) == MICO_TRUE ) {
         return MICO_BT_DISCOVER_IN_PROGRESS;
     }
 
     /* Call internal function */
-    return bt_smartbridge_att_cache_get_list( (bt_smartbridge_att_cache_t*)socket->att_cache, att_cache_list );
+    return bt_smartbridge_att_cache_get_list( (bt_smartbridge_att_cache_t *)socket->att_cache, att_cache_list );
 }
 
-OSStatus mico_bt_smartbridge_get_attribute_cache_by_handle( mico_bt_smartbridge_socket_t* socket, uint16_t handle, mico_bt_smart_attribute_t* attribute, uint16_t size )
+OSStatus mico_bt_smartbridge_get_attribute_cache_by_handle( mico_bt_smartbridge_socket_t *socket, uint16_t handle,
+                                                            mico_bt_smart_attribute_t *attribute, uint16_t size )
 {
-    bt_smartbridge_att_cache_t*      cache          = NULL;
-    mico_bt_smart_attribute_list_t* att_cache_list = NULL;
-    mico_bt_smart_attribute_t*      att            = NULL;
+    bt_smartbridge_att_cache_t      *cache          = NULL;
+    mico_bt_smart_attribute_list_t *att_cache_list = NULL;
+    mico_bt_smart_attribute_t      *att            = NULL;
     OSStatus                         result;
 
-    if ( initialised == MICO_FALSE )
-    {
+    if ( initialised == MICO_FALSE ) {
         return MICO_BT_SMART_APPL_UNINITIALISED;
     }
 
-    if ( bt_smartbridge_att_cache_is_enabled( ) == MICO_FALSE )
-    {
+    if ( bt_smartbridge_att_cache_is_enabled( ) == MICO_FALSE ) {
         return MICO_BT_ATT_CACHE_UNINITIALISED;
     }
 
-    if ( socket == NULL || socket->att_cache == NULL || attribute == NULL )
-    {
+    if ( socket == NULL || socket->att_cache == NULL || attribute == NULL ) {
         return MICO_BT_BADARG;
     }
 
-    cache = (bt_smartbridge_att_cache_t*)socket->att_cache;
+    cache = (bt_smartbridge_att_cache_t *)socket->att_cache;
 
-    if ( bt_smartbridge_att_cache_is_discovering( cache ) == MICO_TRUE )
-    {
+    if ( bt_smartbridge_att_cache_is_discovering( cache ) == MICO_TRUE ) {
         return MICO_BT_DISCOVER_IN_PROGRESS;
     }
 
@@ -1512,14 +1364,10 @@ OSStatus mico_bt_smartbridge_get_attribute_cache_by_handle( mico_bt_smartbridge_
 
     result = mico_bt_smart_attribute_search_list_by_handle( att_cache_list, handle, &att );
 
-    if ( result == MICO_BT_SUCCESS )
-    {
-        if ( att->value_struct_size + ATTR_COMMON_FIELDS_SIZE > size )
-        {
+    if ( result == MICO_BT_SUCCESS ) {
+        if ( att->value_struct_size + ATTR_COMMON_FIELDS_SIZE > size ) {
             result = MICO_BT_ATTRIBUTE_VALUE_TOO_LONG;
-        }
-        else
-        {
+        } else {
             memcpy( attribute, att, att->value_struct_size + ATTR_COMMON_FIELDS_SIZE );
         }
     }
@@ -1528,32 +1376,30 @@ OSStatus mico_bt_smartbridge_get_attribute_cache_by_handle( mico_bt_smartbridge_
     return result;
 }
 
-OSStatus mico_bt_smartbridge_get_attribute_cache_by_uuid( mico_bt_smartbridge_socket_t* socket, const mico_bt_uuid_t* uuid, uint16_t starting_handle, uint16_t ending_handle, mico_bt_smart_attribute_t* attribute, uint32_t size )
+OSStatus mico_bt_smartbridge_get_attribute_cache_by_uuid( mico_bt_smartbridge_socket_t *socket,
+                                                          const mico_bt_uuid_t *uuid, uint16_t starting_handle, uint16_t ending_handle, mico_bt_smart_attribute_t *attribute,
+                                                          uint32_t size )
 {
-    bt_smartbridge_att_cache_t*      cache          = NULL;
-    mico_bt_smart_attribute_list_t* att_cache_list = NULL;
-    mico_bt_smart_attribute_t*      att            = NULL;
+    bt_smartbridge_att_cache_t      *cache          = NULL;
+    mico_bt_smart_attribute_list_t *att_cache_list = NULL;
+    mico_bt_smart_attribute_t      *att            = NULL;
     OSStatus                         result;
 
-    if ( initialised == MICO_FALSE )
-    {
+    if ( initialised == MICO_FALSE ) {
         return MICO_BT_SMART_APPL_UNINITIALISED;
     }
 
-    if ( bt_smartbridge_att_cache_is_enabled( ) == MICO_FALSE )
-    {
+    if ( bt_smartbridge_att_cache_is_enabled( ) == MICO_FALSE ) {
         return MICO_BT_ATT_CACHE_UNINITIALISED;
     }
 
-    if ( socket == NULL || socket->att_cache == NULL || uuid == NULL || attribute == NULL )
-    {
+    if ( socket == NULL || socket->att_cache == NULL || uuid == NULL || attribute == NULL ) {
         return MICO_BT_BADARG;
     }
 
-    cache = (bt_smartbridge_att_cache_t*)socket->att_cache;
+    cache = (bt_smartbridge_att_cache_t *)socket->att_cache;
 
-    if ( bt_smartbridge_att_cache_is_discovering( cache ) == MICO_TRUE )
-    {
+    if ( bt_smartbridge_att_cache_is_discovering( cache ) == MICO_TRUE ) {
         return MICO_BT_DISCOVER_IN_PROGRESS;
     }
 
@@ -1562,14 +1408,10 @@ OSStatus mico_bt_smartbridge_get_attribute_cache_by_uuid( mico_bt_smartbridge_so
     bt_smartbridge_att_cache_lock( cache );
 
     result = mico_bt_smart_attribute_search_list_by_uuid( att_cache_list, uuid, starting_handle, ending_handle, &att );
-    if ( result == MICO_BT_SUCCESS )
-    {
-        if ( att->value_struct_size + ATTR_COMMON_FIELDS_SIZE > size )
-        {
+    if ( result == MICO_BT_SUCCESS ) {
+        if ( att->value_struct_size + ATTR_COMMON_FIELDS_SIZE > size ) {
             result = MICO_BT_ATTRIBUTE_VALUE_TOO_LONG;
-        }
-        else
-        {
+        } else {
             memcpy( attribute, att, att->value_struct_size + ATTR_COMMON_FIELDS_SIZE );
         }
     }
@@ -1578,7 +1420,9 @@ OSStatus mico_bt_smartbridge_get_attribute_cache_by_uuid( mico_bt_smartbridge_so
     return result;
 }
 
-OSStatus mico_bt_smartbridge_get_service_from_attribute_cache_by_uuid( mico_bt_smartbridge_socket_t* socket, const mico_bt_uuid_t* uuid, uint16_t starting_handle, uint16_t ending_handle, mico_bt_smart_attribute_t* attribute, uint32_t size )
+OSStatus mico_bt_smartbridge_get_service_from_attribute_cache_by_uuid( mico_bt_smartbridge_socket_t *socket,
+                                                                       const mico_bt_uuid_t *uuid, uint16_t starting_handle, uint16_t ending_handle, mico_bt_smart_attribute_t *attribute,
+                                                                       uint32_t size )
 {
     OSStatus result;
     uint16_t _starting_handle = starting_handle;
@@ -1586,27 +1430,25 @@ OSStatus mico_bt_smartbridge_get_service_from_attribute_cache_by_uuid( mico_bt_s
     mico_bt_uuid_t service_uuid = { .len = LEN_UUID_16, .uu.uuid16 = GATT_UUID_PRI_SERVICE };
 
     /* Find service */
-    while( ( result = mico_bt_smartbridge_get_attribute_cache_by_uuid( socket, &service_uuid, _starting_handle, _ending_handle, attribute, size ) )== MICO_BT_SUCCESS )
-    {
-        if( memcmp( (void *)&attribute->value.service.uuid.uu, &uuid->uu, uuid->len ) == 0 )
-        {
+    while ( ( result = mico_bt_smartbridge_get_attribute_cache_by_uuid( socket, &service_uuid, _starting_handle,
+                                                                        _ending_handle, attribute, size ) ) == MICO_BT_SUCCESS ) {
+        if ( memcmp( (void *)&attribute->value.service.uuid.uu, &uuid->uu, uuid->len ) == 0 ) {
             return MICO_BT_SUCCESS;
         }
 
         /* Fixed a bug for a service without characteristics. */
-        if (attribute->value.service.end_handle > attribute->value.service.start_handle)
-        {
+        if (attribute->value.service.end_handle > attribute->value.service.start_handle) {
             _starting_handle = attribute->value.service.end_handle;
-        }
-        else
-        {
+        } else {
             _starting_handle = attribute->handle + 1;
         }
     }
     return result;
 }
 
-OSStatus mico_bt_smartbridge_get_characteritics_from_attribute_cache_by_uuid( mico_bt_smartbridge_socket_t* socket, const mico_bt_uuid_t* uuid, uint16_t starting_handle, uint16_t ending_handle, mico_bt_smart_attribute_t* attribute, uint32_t size )
+OSStatus mico_bt_smartbridge_get_characteritics_from_attribute_cache_by_uuid( mico_bt_smartbridge_socket_t *socket,
+                                                                              const mico_bt_uuid_t *uuid, uint16_t starting_handle, uint16_t ending_handle, mico_bt_smart_attribute_t *attribute,
+                                                                              uint32_t size )
 {
     OSStatus result;
     uint16_t _starting_handle = starting_handle;
@@ -1614,10 +1456,9 @@ OSStatus mico_bt_smartbridge_get_characteritics_from_attribute_cache_by_uuid( mi
     mico_bt_uuid_t characteristic_uuid = { .len = LEN_UUID_16, .uu.uuid16 = GATT_UUID_CHAR_DECLARE };
 
     /* Find service */
-    while( ( result = mico_bt_smartbridge_get_attribute_cache_by_uuid( socket, &characteristic_uuid, _starting_handle, _ending_handle, attribute, size ) )== MICO_BT_SUCCESS )
-    {
-        if( memcmp( (void *)&attribute->value.characteristic.uuid.uu, &uuid->uu, uuid->len ) == 0 )
-        {
+    while ( ( result = mico_bt_smartbridge_get_attribute_cache_by_uuid( socket, &characteristic_uuid, _starting_handle,
+                                                                        _ending_handle, attribute, size ) ) == MICO_BT_SUCCESS ) {
+        if ( memcmp( (void *)&attribute->value.characteristic.uuid.uu, &uuid->uu, uuid->len ) == 0 ) {
             return MICO_BT_SUCCESS;
         }
         _starting_handle = attribute->handle + 1;
@@ -1627,33 +1468,30 @@ OSStatus mico_bt_smartbridge_get_characteritics_from_attribute_cache_by_uuid( mi
 
 
 
-OSStatus mico_bt_smartbridge_refresh_attribute_cache_characteristic_value( mico_bt_smartbridge_socket_t* socket, uint16_t handle )
+OSStatus mico_bt_smartbridge_refresh_attribute_cache_characteristic_value( mico_bt_smartbridge_socket_t *socket,
+                                                                           uint16_t handle )
 {
-    bt_smartbridge_att_cache_t*      cache          = NULL;
-    mico_bt_smart_attribute_list_t* att_cache_list = NULL;
-    mico_bt_smart_attribute_t*      current_att    = NULL;
-    mico_bt_smart_attribute_t*      refreshed_att  = NULL;
+    bt_smartbridge_att_cache_t      *cache          = NULL;
+    mico_bt_smart_attribute_list_t *att_cache_list = NULL;
+    mico_bt_smart_attribute_t      *current_att    = NULL;
+    mico_bt_smart_attribute_t      *refreshed_att  = NULL;
     OSStatus                         result;
 
-    if ( initialised == MICO_FALSE )
-    {
+    if ( initialised == MICO_FALSE ) {
         return MICO_BT_SMART_APPL_UNINITIALISED;
     }
 
-    if ( bt_smartbridge_att_cache_is_enabled( ) == MICO_FALSE )
-    {
+    if ( bt_smartbridge_att_cache_is_enabled( ) == MICO_FALSE ) {
         return MICO_BT_ATT_CACHE_UNINITIALISED;
     }
 
-    if ( socket == NULL || socket->att_cache == NULL )
-    {
+    if ( socket == NULL || socket->att_cache == NULL ) {
         return MICO_BT_BADARG;
     }
 
-    cache = (bt_smartbridge_att_cache_t*)socket->att_cache;
+    cache = (bt_smartbridge_att_cache_t *)socket->att_cache;
 
-    if ( bt_smartbridge_att_cache_is_discovering( cache ) == MICO_TRUE )
-    {
+    if ( bt_smartbridge_att_cache_is_discovering( cache ) == MICO_TRUE ) {
         return MICO_BT_DISCOVER_IN_PROGRESS;
     }
 
@@ -1662,28 +1500,24 @@ OSStatus mico_bt_smartbridge_refresh_attribute_cache_characteristic_value( mico_
     bt_smartbridge_att_cache_lock( cache );
 
     result = mico_bt_smart_attribute_search_list_by_handle( att_cache_list, handle, &current_att );
-    if ( result == MICO_BT_SUCCESS )
-    {
+    if ( result == MICO_BT_SUCCESS ) {
         /* Check if length is longer than what read characteristic value can handle
          * If longer, use read long characteristic value
          */
-        if ( current_att->value_length <= ATT_STANDARD_VALUE_LENGTH )
-        {
-            result = smartbridge_bt_interface_read_characteristic_value( socket->connection_handle, current_att->handle, &current_att->type, &refreshed_att );
-        }
-        else
-        {
-            result = smartbridge_bt_interface_read_long_characteristic_value( socket->connection_handle, current_att->handle, &current_att->type, &refreshed_att );
+        if ( current_att->value_length <= ATT_STANDARD_VALUE_LENGTH ) {
+            result = smartbridge_bt_interface_read_characteristic_value( socket->connection_handle, current_att->handle,
+                                                                         &current_att->type, &refreshed_att );
+        } else {
+            result = smartbridge_bt_interface_read_long_characteristic_value( socket->connection_handle, current_att->handle,
+                                                                              &current_att->type, &refreshed_att );
         }
 
         /* If read is successful, replace attribute with the refreshed one
          */
-        if ( result == MICO_BT_SUCCESS )
-        {
+        if ( result == MICO_BT_SUCCESS ) {
             /* This function removes and also deletes the attribute with handle specified */
             result = mico_bt_smart_attribute_remove_from_list( att_cache_list, current_att->handle );
-            if ( result == MICO_BT_SUCCESS )
-            {
+            if ( result == MICO_BT_SUCCESS ) {
                 result = mico_bt_smart_attribute_add_to_list( att_cache_list, refreshed_att );
             }
         }
@@ -1693,49 +1527,44 @@ OSStatus mico_bt_smartbridge_refresh_attribute_cache_characteristic_value( mico_
     return result;
 }
 
-OSStatus mico_bt_smartbridge_write_attribute_cache_characteristic_value( mico_bt_smartbridge_socket_t* socket, const mico_bt_smart_attribute_t* char_value )
+OSStatus mico_bt_smartbridge_write_attribute_cache_characteristic_value( mico_bt_smartbridge_socket_t *socket,
+                                                                         const mico_bt_smart_attribute_t *char_value )
 {
-    bt_smartbridge_att_cache_t*      cache          = NULL;
-    mico_bt_smart_attribute_list_t* att_cache_list = NULL;
-    mico_bt_smart_attribute_t*      att            = NULL;
+    bt_smartbridge_att_cache_t      *cache          = NULL;
+    mico_bt_smart_attribute_list_t *att_cache_list = NULL;
+    mico_bt_smart_attribute_t      *att            = NULL;
     OSStatus                         result;
 
-    if ( initialised == MICO_FALSE )
-    {
+    if ( initialised == MICO_FALSE ) {
         return MICO_BT_SMART_APPL_UNINITIALISED;
     }
 
-    if ( bt_smartbridge_att_cache_is_enabled( ) == MICO_FALSE )
-    {
+    if ( bt_smartbridge_att_cache_is_enabled( ) == MICO_FALSE ) {
         return MICO_BT_ATT_CACHE_UNINITIALISED;
     }
 
-    if ( socket == NULL || socket->att_cache == NULL || char_value == NULL )
-    {
+    if ( socket == NULL || socket->att_cache == NULL || char_value == NULL ) {
         return MICO_BT_BADARG;
     }
 
-    cache = (bt_smartbridge_att_cache_t*)socket->att_cache;
+    cache = (bt_smartbridge_att_cache_t *)socket->att_cache;
 
-    if ( bt_smartbridge_att_cache_is_discovering( cache ) == MICO_TRUE )
-    {
+    if ( bt_smartbridge_att_cache_is_discovering( cache ) == MICO_TRUE ) {
         return MICO_BT_DISCOVER_IN_PROGRESS;
     }
 
     bt_smartbridge_att_cache_get_list( cache, &att_cache_list );
 
 
-    if ( char_value->value_length <= ATT_STANDARD_VALUE_LENGTH )
-    {
-        result = smartbridge_bt_interface_write_characteristic_value( socket->connection_handle, (mico_bt_smart_attribute_t*)char_value );
-    }
-    else
-    {
-        result = smartbridge_bt_interface_write_long_characteristic_value( socket->connection_handle, (mico_bt_smart_attribute_t*)char_value );
+    if ( char_value->value_length <= ATT_STANDARD_VALUE_LENGTH ) {
+        result = smartbridge_bt_interface_write_characteristic_value( socket->connection_handle,
+                                                                      (mico_bt_smart_attribute_t *)char_value );
+    } else {
+        result = smartbridge_bt_interface_write_long_characteristic_value( socket->connection_handle,
+                                                                           (mico_bt_smart_attribute_t *)char_value );
     }
 
-    if ( result != MICO_BT_SUCCESS )
-    {
+    if ( result != MICO_BT_SUCCESS ) {
         return result;
     }
 
@@ -1745,32 +1574,27 @@ OSStatus mico_bt_smartbridge_write_attribute_cache_characteristic_value( mico_bt
 
     result = mico_bt_smart_attribute_search_list_by_handle( att_cache_list, char_value->handle, &att );
 
-    if ( result == MICO_BT_SUCCESS )
-    {
+    if ( result == MICO_BT_SUCCESS ) {
         /* Found. Compare lengths first.
          * If new length is not equal old length, replace old attribute with new one.
          * If equal, copy content directly.
          */
-        if ( char_value->value_length != att->value_length )
-        {
+        if ( char_value->value_length != att->value_length ) {
             result = mico_bt_smart_attribute_remove_from_list( att_cache_list, att->handle );
 
-            if ( result != MICO_BT_SUCCESS )
-            {
+            if ( result != MICO_BT_SUCCESS ) {
                 goto exit;
             }
 
             att = NULL; /* Reuse attribute pointer */
 
-            if ( result != MICO_BT_SUCCESS )
-            {
+            if ( result != MICO_BT_SUCCESS ) {
                 goto exit;
             }
 
             result = mico_bt_smart_attribute_create( &att, MICO_ATTRIBUTE_TYPE_CHARACTERISTIC_VALUE, char_value->value_length );
 
-            if ( result != MICO_BT_SUCCESS )
-            {
+            if ( result != MICO_BT_SUCCESS ) {
                 goto exit;
             }
 
@@ -1782,19 +1606,14 @@ OSStatus mico_bt_smartbridge_write_attribute_cache_characteristic_value( mico_bt
             memcpy( att->value.value, char_value->value.value, char_value->value_length );
 
             result = mico_bt_smart_attribute_add_to_list( att_cache_list, att );
-        }
-        else
-        {
+        } else {
             memcpy( att->value.value, char_value->value.value, char_value->value_length );
         }
-    }
-    else if ( result == MICO_BT_ITEM_NOT_IN_LIST )
-    {
+    } else if ( result == MICO_BT_ITEM_NOT_IN_LIST ) {
         /* Not found. Create new one and add attribute to the list */
         result = mico_bt_smart_attribute_create( &att, MICO_ATTRIBUTE_TYPE_CHARACTERISTIC_VALUE, char_value->value_length );
 
-        if ( result != MICO_BT_SUCCESS )
-        {
+        if ( result != MICO_BT_SUCCESS ) {
             goto exit;
         }
 
@@ -1808,7 +1627,7 @@ OSStatus mico_bt_smartbridge_write_attribute_cache_characteristic_value( mico_bt
         result = mico_bt_smart_attribute_add_to_list( att_cache_list, att );
     }
 
-    exit:
+exit:
     bt_smartbridge_att_cache_unlock( cache );
     return result;
 }
@@ -1817,25 +1636,23 @@ OSStatus mico_bt_smartbridge_write_attribute_cache_characteristic_value( mico_bt
  *               Callback Definitions
  ******************************************************/
 
-static OSStatus smartbridge_app_notification_handler( void* arg )
+static OSStatus smartbridge_app_notification_handler( void *arg )
 {
-    mico_bt_smartbridge_socket_t* socket = (mico_bt_smartbridge_socket_t*)arg;
+    mico_bt_smartbridge_socket_t *socket = (mico_bt_smartbridge_socket_t *)arg;
 
-    if ( socket != NULL && socket->notification_callback != NULL )
-    {
+    if ( socket != NULL && socket->notification_callback != NULL ) {
         socket->notification_callback( socket, socket->last_notified_attribute_handle );
         return MICO_BT_SUCCESS;
     }
-    
+
     return MICO_BT_ERROR;
 }
 
-static OSStatus smartbridge_app_disconnection_handler( void* arg )
+static OSStatus smartbridge_app_disconnection_handler( void *arg )
 {
-    mico_bt_smartbridge_socket_t* socket = (mico_bt_smartbridge_socket_t*)arg;
+    mico_bt_smartbridge_socket_t *socket = (mico_bt_smartbridge_socket_t *)arg;
 
-    if ( socket != NULL && socket->disconnection_callback != NULL )
-    {
+    if ( socket != NULL && socket->disconnection_callback != NULL ) {
         socket->disconnection_callback( socket );
         return MICO_BT_SUCCESS;
     }
@@ -1928,29 +1745,27 @@ static OSStatus smartbridge_gap_auto_conn_asyn_event_handler(void *arg)
 
     /* Find a scanned device to create a connection. */
     err = smartbridge_auto_conn_list_get_by_state(&report, SMARTBRIDGE_AUTO_CONN_STATE_SCANED);
-    if (err == kNoErr) 
-    {
+    if (err == kNoErr) {
         /* Update current state */
-        smartbridge_auto_conn_list_set_state(report->remote_device.address, 
+        smartbridge_auto_conn_list_set_state(report->remote_device.address,
                                              SMARTBRIDGE_AUTO_CONN_STATE_REPORTED);
 
         /* Check user configuration */
-        if (smartbridge_gap_auto_conn_user_cfg(report->remote_device.address, 
+        if (smartbridge_gap_auto_conn_user_cfg(report->remote_device.address,
                                                (uint8_t *)report->remote_device.name,
                                                report->eir_data,
-                                               report->eir_data_length)) 
-        {            
+                                               report->eir_data_length)) {
             /* Get socket */
             int8_t idx = smartbridge_auto_conn_find_dev_by_addr(report->remote_device.address);
             mico_bt_smartbridge_socket_t *p_socket = g_auto_conn_dev_table[idx].socket;
-            
+
             /* Clear semaphore */
             while (mico_rtos_get_semaphore(&g_auto_conn_sem, MICO_NO_WAIT) == kNoErr);
 
             /* Update current state */
-            smartbridge_auto_conn_list_set_state(report->remote_device.address, 
+            smartbridge_auto_conn_list_set_state(report->remote_device.address,
                                                  SMARTBRIDGE_AUTO_CONN_STATE_CONNING);
-            
+
             /* Update Socket State */
             p_socket->state = SOCKET_STATE_LINK_CONNECTING;
             smartbridge_helper_socket_clear_actions(p_socket, SOCKET_ACTION_HOST_DISCONNECT);
@@ -1961,52 +1776,46 @@ static OSStatus smartbridge_gap_auto_conn_asyn_event_handler(void *arg)
                                                   report->remote_device.address_type,
                                                   BLE_CONN_MODE_HIGH_DUTY,
                                                   MICO_TRUE);
-            if (!gatt_status) 
-            {
+            if (!gatt_status) {
                 bt_smartbridge_log("%s: Create LE Connection failed", __FUNCTION__);
                 err = kConnectionErr;
                 goto err_exit;
             }
-            
+
             /* Wait for completion */
             err = mico_rtos_get_semaphore(&g_auto_conn_sem, 5000);
-            if (err != kNoErr) 
-            {
-                bt_smartbridge_log("%s: Create LE Connection failed: %s", 
-                                    __FUNCTION__, 
-                                    err == kTimeoutErr ? "Timeout" : "Unknown Error");
+            if (err != kNoErr) {
+                bt_smartbridge_log("%s: Create LE Connection failed: %s",
+                                   __FUNCTION__,
+                                   err == kTimeoutErr ? "Timeout" : "Unknown Error");
 err_exit:
                 p_socket->state = SOCKET_STATE_DISCONNECTED;
-                smartbridge_auto_conn_list_set_state(report->remote_device.address, 
+                smartbridge_auto_conn_list_set_state(report->remote_device.address,
                                                      SMARTBRIDGE_AUTO_CONN_STATE_FREE);
-                mico_rtos_send_asynchronous_event(MICO_BT_EVT_WORKER_THREAD, 
-                                                  (event_handler_t)p_socket->auto_connection_callback, 
+                mico_rtos_send_asynchronous_event(MICO_BT_EVT_WORKER_THREAD,
+                                                  (event_handler_t)p_socket->auto_connection_callback,
                                                   (void *)p_socket);
-            }
-            else 
-            {
+            } else {
                 bt_smartbridge_log("%s: Craete LE Connection succesfully", __FUNCTION__);
-                
+
                 /* Start encryption and cache */
-                smartbridge_gap_auto_conn_cryption((void*)p_socket);
-                
+                smartbridge_gap_auto_conn_cryption((void *)p_socket);
+
                 /* Create connection successfully and remove it from the list. */
                 smartbridge_auto_conn_list_remove(report->remote_device.address);
-                
+
                 /* Notify user */
                 mico_rtos_send_asynchronous_event(MICO_BT_EVT_WORKER_THREAD,
                                                   (event_handler_t)p_socket->auto_connection_callback,
                                                   (void *)p_socket);
             }
             /* Next Connection */
-            mico_rtos_send_asynchronous_event(MICO_BT_WORKER_THREAD, 
-                                              smartbridge_gap_auto_conn_asyn_event_handler, 
+            mico_rtos_send_asynchronous_event(MICO_BT_WORKER_THREAD,
+                                              smartbridge_gap_auto_conn_asyn_event_handler,
                                               NULL);
-        }
-        else
-        {
+        } else {
             /* Update current state */
-            smartbridge_auto_conn_list_set_state(report->remote_device.address, 
+            smartbridge_auto_conn_list_set_state(report->remote_device.address,
                                                  SMARTBRIDGE_AUTO_CONN_STATE_IDLE);
         }
     }
@@ -2018,46 +1827,42 @@ static OSStatus smartbridge_gap_auto_conn_scan_report_handler(const mico_bt_smar
 {
     OSStatus                                err = kNoErr;
     mico_bt_smart_advertising_report_t     *match_report = NULL;
-    
+
     bt_smartbridge_log("%s: scan result: %s[%02x:%02x:%02x:%02x:%02x:%02x]",
-                        __FUNCTION__,
-                        report->remote_device.name,
-                        report->remote_device.address[0],
-                        report->remote_device.address[1],
-                        report->remote_device.address[2],
-                        report->remote_device.address[3],
-                        report->remote_device.address[4],
-                        report->remote_device.address[5]);
+                       __FUNCTION__,
+                       report->remote_device.name,
+                       report->remote_device.address[0],
+                       report->remote_device.address[1],
+                       report->remote_device.address[2],
+                       report->remote_device.address[3],
+                       report->remote_device.address[4],
+                       report->remote_device.address[5]);
 
     /* Add it to the list. */
     err = smartbridge_auto_conn_list_add(report);
-    if (err != kNoErr) 
-    {
+    if (err != kNoErr) {
         //bt_smartbridge_log("%s: add list failed", __FUNCTION__);
         goto exit;
     }
-    smartbridge_auto_conn_list_set_state(report->remote_device.address, 
+    smartbridge_auto_conn_list_set_state(report->remote_device.address,
                                          SMARTBRIDGE_AUTO_CONN_STATE_SCANED);
 
     /* Check current state. */
-    err = smartbridge_auto_conn_list_get_by_state(&match_report, 
+    err = smartbridge_auto_conn_list_get_by_state(&match_report,
                                                   SMARTBRIDGE_AUTO_CONN_STATE_CONNING);
-    if (err == kNoErr) 
-    {
+    if (err == kNoErr) {
         bt_smartbridge_log("%s: A connection is busy!", __FUNCTION__);
         /* It is busy for Auto-Connection Procedure and we should wait. */
-    } 
-    else
-    {
+    } else {
         /* Create connection */
-        mico_rtos_send_asynchronous_event(MICO_BT_WORKER_THREAD, 
-                                          smartbridge_gap_auto_conn_asyn_event_handler, 
+        mico_rtos_send_asynchronous_event(MICO_BT_WORKER_THREAD,
+                                          smartbridge_gap_auto_conn_asyn_event_handler,
                                           NULL);
-    } 
-    
-exit:    
+    }
+
+exit:
     return err;
-} 
+}
 
 /* Auto-Connection Scanning Procedure Completion Handler */
 static OSStatus smartbridge_gap_auto_conn_scan_cmpl_handler(void *arg)
@@ -2070,22 +1875,18 @@ static OSStatus smartbridge_gap_auto_conn_scan_cmpl_handler(void *arg)
     smartbridge_auto_conn_list_remove_by_state(SMARTBRIDGE_AUTO_CONN_STATE_IDLE);
 
     /* Restart scanning procedure... */
-    if (g_auto_conn_scan_duration > 0)
-    {
+    if (g_auto_conn_scan_duration > 0) {
         bt_smartbridge_log("restart scanning for auto-connection");
         g_auto_conn_scan_cfg.duration_second = MIN(SMARTBRIDGE_AUTO_CONN_SCAN_INTERVAL, g_auto_conn_scan_duration);
-        err = mico_bt_smartbridge_start_scan(&g_auto_conn_scan_cfg, 
+        err = mico_bt_smartbridge_start_scan(&g_auto_conn_scan_cfg,
                                              smartbridge_gap_auto_conn_scan_cmpl_handler,
                                              smartbridge_gap_auto_conn_scan_report_handler);
 
         /* Update remain duration */
-        if (err == MICO_BT_PENDING && g_auto_conn_scan_duration < (uint16_t)(-1))
-        {
+        if (err == MICO_BT_PENDING && g_auto_conn_scan_duration < (uint16_t)(-1)) {
             g_auto_conn_scan_duration -= MIN(SMARTBRIDGE_AUTO_CONN_SCAN_INTERVAL, g_auto_conn_scan_duration);
         }
-    }
-    else 
-    {
+    } else {
         bt_smartbridge_log("scanning for auto-connection finished");
     }
 
@@ -2097,10 +1898,8 @@ static OSStatus smartbridge_gap_auto_conn_cryption( void *arg )
     OSStatus result = kNoErr;
     mico_bt_smartbridge_socket_t *socket = (mico_bt_smartbridge_socket_t *)arg;
 
-    if (socket != NULL && socket->auto_connection_callback != NULL)
-    {
-        if (socket->security_settings.authentication_requirements != BT_SMART_AUTH_REQ_NONE)
-        {
+    if (socket != NULL && socket->auto_connection_callback != NULL) {
+        if (socket->security_settings.authentication_requirements != BT_SMART_AUTH_REQ_NONE) {
             /* Encryption */
             bt_smartbridge_log("Encryption started.");
             mico_bt_start_encryption( &socket->remote_device.address );
@@ -2110,25 +1909,20 @@ static OSStatus smartbridge_gap_auto_conn_cryption( void *arg )
         }
 
         /* Cache if enabled. */
-        if (bt_smartbridge_att_cache_is_enabled() == MICO_TRUE)
-        {
+        if (bt_smartbridge_att_cache_is_enabled() == MICO_TRUE) {
             bt_smartbridge_log("ATT Cache for an auto connection.");
 
-            bt_smartbridge_att_cache_t* cache = NULL;
+            bt_smartbridge_att_cache_t *cache = NULL;
 
             result = bt_smartbridge_att_cache_find(&socket->remote_device, &cache);
-            if (result == MICO_BT_SUCCESS)
-            {
+            if (result == MICO_BT_SUCCESS) {
                 bt_smartbridge_log("USING ATT CACHE ...");
-            }
-            else
-            {
+            } else {
                 bt_smartbridge_log("GENERATING ATT CACHE ...");
 
                 result = bt_smartbridge_att_cache_generate(&socket->remote_device, socket->connection_handle, &cache);
 
-                if (result != MICO_BT_SUCCESS)
-                {
+                if (result != MICO_BT_SUCCESS) {
                     bt_smartbridge_log("Error Generating Cache result:%d", result );
                     goto error;
                 }
@@ -2136,7 +1930,7 @@ static OSStatus smartbridge_gap_auto_conn_cryption( void *arg )
 
             /* Successful. Mark cache as active and store reference in socket */
             bt_smartbridge_att_cache_set_active_state(cache, MICO_TRUE);
-            socket->att_cache = (void*)cache;
+            socket->att_cache = (void *)cache;
         }
 
         /* Notify user */
@@ -2147,15 +1941,15 @@ error:
     return MICO_BT_ERROR;
 }
 
-static mico_bool_t smartbridge_gap_auto_conn_user_cfg( const mico_bt_device_address_t device_address, const uint8_t *device_name, const uint8_t *p_data, uint8_t length )
+static mico_bool_t smartbridge_gap_auto_conn_user_cfg( const mico_bt_device_address_t device_address,
+                                                       const uint8_t *device_name, const uint8_t *p_data, uint8_t length )
 {
     extern mico_bt_cfg_settings_t           mico_bt_cfg_settings;
     int8_t                                  idx;
     smartbridge_auto_conn_dev_info_t *device_info = NULL;
 
     /* Allocate an entity for storing this connection object. */
-    if ((idx = smartbridge_auto_conn_find_dev_by_addr(device_address)) < 0) 
-    {
+    if ((idx = smartbridge_auto_conn_find_dev_by_addr(device_address)) < 0) {
         bt_smartbridge_log("Device is not Existed!!");
         idx = smartbridge_auto_conn_dev_alloc();
         require_string(idx >= 0, exit, "No resource for the auto connection");
@@ -2179,7 +1973,8 @@ static mico_bool_t smartbridge_gap_auto_conn_user_cfg( const mico_bt_device_addr
     mico_bt_cfg_settings.ble_scan_cfg.conn_min_interval        = g_auto_conn_dev_table[idx].conn_settings.interval_min;
     mico_bt_cfg_settings.ble_scan_cfg.conn_max_interval        = g_auto_conn_dev_table[idx].conn_settings.interval_max;
     mico_bt_cfg_settings.ble_scan_cfg.conn_latency             = g_auto_conn_dev_table[idx].conn_settings.latency;
-    mico_bt_cfg_settings.ble_scan_cfg.conn_supervision_timeout = g_auto_conn_dev_table[idx].conn_settings.supervision_timeout;
+    mico_bt_cfg_settings.ble_scan_cfg.conn_supervision_timeout =
+        g_auto_conn_dev_table[idx].conn_settings.supervision_timeout;
     return MICO_TRUE;
 exit:
     return MICO_FALSE;
@@ -2196,10 +1991,9 @@ static OSStatus smartbridge_auto_conn_user_parms( void *arg )
     /* Request socket information and connection configuration. */
 
     p_entity = &g_auto_conn_dev_table[p_dev_info->handle];
-    
+
     /* Release the socket resource */
-    if (p_entity->socket != NULL) 
-    {
+    if (p_entity->socket != NULL) {
         p_entity->socket->state = SOCKET_STATE_DISCONNECTED;
     }
 
@@ -2209,15 +2003,12 @@ static OSStatus smartbridge_auto_conn_user_parms( void *arg )
                                   p_dev_info->adv_data,
                                   p_dev_info->length,
                                   &parm)
-        ) != kNoErr )
-    {
+         ) != kNoErr ) {
         /* Clear */
         p_entity->socket = (void *) 0;
         memset( (void *) &p_entity->conn_settings, 0, sizeof(mico_bt_smart_connection_settings_t) );
         bt_smartbridge_log(" Not allow this auto connection");
-    }
-    else
-    {
+    } else {
         /* Socket */
         p_entity->socket = parm.socket;
         p_entity->socket->state = SOCKET_STATE_LINK_CONNECTING;
@@ -2242,14 +2033,12 @@ static int8_t smartbridge_auto_conn_find_dev_by_addr(const mico_bt_device_addres
     int8_t idx = 0;
     mico_bt_smartbridge_socket_t *temp_socket;
 
-    for (idx = 0; idx < sizeof(g_auto_conn_dev_table)/sizeof(g_auto_conn_dev_table[0]); idx++)
-    {
+    for (idx = 0; idx < sizeof(g_auto_conn_dev_table) / sizeof(g_auto_conn_dev_table[0]); idx++) {
         temp_socket = g_auto_conn_dev_table[idx].socket;
         if ((temp_socket != (void *)0)
             && (memcmp((void *)temp_socket->remote_device.address,
                        (void *)device_address,
-                       sizeof(mico_bt_device_address_t)) == 0))
-        {
+                       sizeof(mico_bt_device_address_t)) == 0)) {
             return idx;
         }
     }
@@ -2261,13 +2050,11 @@ static int8_t smartbridge_auto_conn_dev_alloc(void)
 {
     int8_t idx = 0;
 
-    for (idx = 0; idx < sizeof(g_auto_conn_dev_table)/sizeof(g_auto_conn_dev_table[0]); idx++)
-    {
-        if (g_auto_conn_dev_table[idx].socket == (void *)0)
-        {
+    for (idx = 0; idx < sizeof(g_auto_conn_dev_table) / sizeof(g_auto_conn_dev_table[0]); idx++) {
+        if (g_auto_conn_dev_table[idx].socket == (void *)0) {
             memset((void *)&g_auto_conn_dev_table[idx].conn_settings,
-                    0,
-                    sizeof(mico_bt_smart_connection_settings_t));
+                   0,
+                   sizeof(mico_bt_smart_connection_settings_t));
             return idx;
         }
     }
@@ -2281,18 +2068,19 @@ void smartbridge_auto_connection_encryption_check(const mico_bt_dev_pairing_cplt
         return;
     }
     int idx = smartbridge_auto_conn_find_dev_by_addr(p_pairing_cplt->bd_addr);
-    
+
     if (idx >= 0) {
-        if (g_auto_conn_dev_table[idx].socket->security_settings.authentication_requirements 
-                != BT_SMART_AUTH_REQ_NONE)
-        mico_rtos_set_semaphore(&g_auto_conn_sem);
+        if (g_auto_conn_dev_table[idx].socket->security_settings.authentication_requirements
+            != BT_SMART_AUTH_REQ_NONE) {
+            mico_rtos_set_semaphore(&g_auto_conn_sem);
+        }
     }
 }
 
 static OSStatus smartbridge_auto_conn_list_init(void)
 {
     linked_list_init(&g_auto_conn_list.list);
-    return mico_rtos_init_mutex(&g_auto_conn_list.mutex); 
+    return mico_rtos_init_mutex(&g_auto_conn_list.mutex);
 }
 
 static OSStatus smartbridge_auto_conn_list_deinit(void)
@@ -2300,10 +2088,10 @@ static OSStatus smartbridge_auto_conn_list_deinit(void)
     return mico_rtos_deinit_mutex(&g_auto_conn_list.mutex);
 }
 
-static mico_bool_t smartbridge_auto_conn_compare_bdaddr(linked_list_node_t* node_to_compare, void* user_data)
+static mico_bool_t smartbridge_auto_conn_compare_bdaddr(linked_list_node_t *node_to_compare, void *user_data)
 {
-    smartbridge_auto_conn_report_t* report = (smartbridge_auto_conn_report_t *)node_to_compare;
-    mico_bt_device_address_t* device_address  = (mico_bt_device_address_t *)user_data;
+    smartbridge_auto_conn_report_t *report = (smartbridge_auto_conn_report_t *)node_to_compare;
+    mico_bt_device_address_t *device_address  = (mico_bt_device_address_t *)user_data;
 
     if (memcmp(report->report.remote_device.address, device_address, BD_ADDR_LEN) == 0) {
         return TRUE;
@@ -2337,23 +2125,21 @@ static OSStatus smartbridge_auto_conn_list_add(const mico_bt_smart_advertising_r
     /* Check if this report is existed. */
     mico_rtos_lock_mutex(&g_auto_conn_list.mutex);
     err = linked_list_find_node(&g_auto_conn_list.list,
-                                 (linked_list_compare_callback_t)smartbridge_auto_conn_compare_bdaddr,
-                                 (void *)report->remote_device.address,
-                                 (linked_list_node_t**)&report_found);
-    
-    /* If already existed, we should update its EIR Data. */
-    if (err == kNoErr) 
-    {
-        bt_smartbridge_log("%s: already existed, state[%d], event[%d]", 
-                            __FUNCTION__, report_found->state, report_found->report.event);
+                                (linked_list_compare_callback_t)smartbridge_auto_conn_compare_bdaddr,
+                                (void *)report->remote_device.address,
+                                (linked_list_node_t **)&report_found);
 
-        if (report_found->state == SMARTBRIDGE_AUTO_CONN_STATE_FREE 
-            || (report_found->state == SMARTBRIDGE_AUTO_CONN_STATE_SCANED 
-                    && report_found->report.event != report->event)) 
-        {
+    /* If already existed, we should update its EIR Data. */
+    if (err == kNoErr) {
+        bt_smartbridge_log("%s: already existed, state[%d], event[%d]",
+                           __FUNCTION__, report_found->state, report_found->report.event);
+
+        if (report_found->state == SMARTBRIDGE_AUTO_CONN_STATE_FREE
+            || (report_found->state == SMARTBRIDGE_AUTO_CONN_STATE_SCANED
+                && report_found->report.event != report->event)) {
             /* Remove it from the list. */
             linked_list_remove_node(&g_auto_conn_list.list, &report_found->this_node);
-            
+
             /* Already existed and if its state is FREE or SCANED we should update it to reuse. */
             report_found->report.signal_strength = report->signal_strength;
             report_found->report.event = report->event;
@@ -2362,31 +2148,25 @@ static OSStatus smartbridge_auto_conn_list_add(const mico_bt_smart_advertising_r
 
             /* Add it to the list rear. */
             err = linked_list_insert_node_at_rear(&g_auto_conn_list.list, &report_found->this_node);
-        } 
-        else 
-        {
-            /* Already existed and we may release it after next scaning procedure 
-             * in smartbridge_auto_conn_scan_cmpl_handler. 
+        } else {
+            /* Already existed and we may release it after next scaning procedure
+             * in smartbridge_auto_conn_scan_cmpl_handler.
              */
             err = kAlreadyInUseErr;
         }
         mico_rtos_unlock_mutex(&g_auto_conn_list.mutex);
-        return err;  
-    }
-    else 
-    {       
+        return err;
+    } else {
         linked_list_get_count(&g_auto_conn_list.list, &count);
         bt_smartbridge_log("%s: not existed, count[%lu]", __FUNCTION__, count);
 
-        if (count > 0) 
-        {
+        if (count > 0) {
             /* Are there a free report ? */
             err = linked_list_find_node(&g_auto_conn_list.list,
                                         (linked_list_compare_callback_t)smartbridge_auto_conn_compare_state,
                                         (void *)&state,
-                                        (linked_list_node_t**)&report_found);
-            if (err == kNoErr) 
-            {
+                                        (linked_list_node_t **)&report_found);
+            if (err == kNoErr) {
                 /* Yeah, we should reuse it. */
                 linked_list_remove_node(&g_auto_conn_list.list, &report_found->this_node);
                 new_report = report_found;
@@ -2396,13 +2176,11 @@ static OSStatus smartbridge_auto_conn_list_add(const mico_bt_smart_advertising_r
     mico_rtos_unlock_mutex(&g_auto_conn_list.mutex);
 
     /* Not existed. */
-    if (new_report == NULL) 
-    {
+    if (new_report == NULL) {
         new_report = malloc(sizeof(smartbridge_auto_conn_report_t));
-        if (!new_report) 
-        {
+        if (!new_report) {
             bt_smartbridge_log("%s: malloc failed", __FUNCTION__);
-            return kNoMemoryErr; 
+            return kNoMemoryErr;
         }
     }
 
@@ -2415,11 +2193,12 @@ static OSStatus smartbridge_auto_conn_list_add(const mico_bt_smart_advertising_r
     err = linked_list_insert_node_at_rear(&g_auto_conn_list.list, &new_report->this_node);
     mico_rtos_unlock_mutex(&g_auto_conn_list.mutex);
 
- exit:
+exit:
     return err;
 }
 
-static OSStatus smartbridge_auto_conn_list_get_by_state(mico_bt_smart_advertising_report_t **report, smartbridge_auto_conn_state_t state)
+static OSStatus smartbridge_auto_conn_list_get_by_state(mico_bt_smart_advertising_report_t **report,
+                                                        smartbridge_auto_conn_state_t state)
 {
     OSStatus err = kNoErr;
     smartbridge_auto_conn_report_t *current_report;
@@ -2430,16 +2209,17 @@ static OSStatus smartbridge_auto_conn_list_get_by_state(mico_bt_smart_advertisin
     err = linked_list_find_node(&g_auto_conn_list.list,
                                 (linked_list_compare_callback_t)smartbridge_auto_conn_compare_state,
                                 (void *)&state,
-                                (linked_list_node_t**)&current_report);
-    
+                                (linked_list_node_t **)&current_report);
+
     *report = &current_report->report;
     mico_rtos_unlock_mutex(&g_auto_conn_list.mutex);
-    
+
 exit:
     return err;
 }
 
-static OSStatus smartbridge_auto_conn_list_set_state(const mico_bt_device_address_t bdaddr, smartbridge_auto_conn_state_t state)
+static OSStatus smartbridge_auto_conn_list_set_state(const mico_bt_device_address_t bdaddr,
+                                                     smartbridge_auto_conn_state_t state)
 {
     OSStatus err = kNoErr;
     smartbridge_auto_conn_report_t *report_found;
@@ -2463,14 +2243,16 @@ exit:
 static OSStatus smartbridge_auto_conn_list_remove(mico_bt_device_address_t bdaddr)
 {
     OSStatus err = kNoErr;
-    smartbridge_auto_conn_report_t* current_report;
+    smartbridge_auto_conn_report_t *current_report;
 
     mico_rtos_lock_mutex(&g_auto_conn_list.mutex);
     err = linked_list_find_node(&g_auto_conn_list.list,
-                                 (linked_list_compare_callback_t)smartbridge_auto_conn_compare_bdaddr,
-                                 bdaddr,
-                                 (linked_list_node_t**)&current_report);
-    if (err != kNoErr) goto exit;
+                                (linked_list_compare_callback_t)smartbridge_auto_conn_compare_bdaddr,
+                                bdaddr,
+                                (linked_list_node_t **)&current_report);
+    if (err != kNoErr) {
+        goto exit;
+    }
     current_report->state = SMARTBRIDGE_AUTO_CONN_STATE_FREE;
 exit:
     mico_rtos_unlock_mutex(&g_auto_conn_list.mutex);
@@ -2480,31 +2262,35 @@ exit:
 static OSStatus smartbridge_auto_conn_list_remove_by_state(smartbridge_auto_conn_state_t state)
 {
     OSStatus err = kNoErr;
-    smartbridge_auto_conn_report_t* current_report;
+    smartbridge_auto_conn_report_t *current_report;
 
     mico_rtos_lock_mutex(&g_auto_conn_list.mutex);
     do {
         err = linked_list_find_node(&g_auto_conn_list.list,
-                                     (linked_list_compare_callback_t)smartbridge_auto_conn_compare_state,
-                                     &state,
-                                     (linked_list_node_t**)&current_report);
-        if (err != kNoErr) break;
+                                    (linked_list_compare_callback_t)smartbridge_auto_conn_compare_state,
+                                    &state,
+                                    (linked_list_node_t **)&current_report);
+        if (err != kNoErr) {
+            break;
+        }
         current_report->state = SMARTBRIDGE_AUTO_CONN_STATE_FREE;
     } while (1);
     mico_rtos_unlock_mutex(&g_auto_conn_list.mutex);
-    
+
     return kNoErr;
 }
 
 static OSStatus smartbridge_auto_conn_list_clear(void)
 {
     OSStatus err = kNoErr;
-    smartbridge_auto_conn_report_t* current_report = NULL;
+    smartbridge_auto_conn_report_t *current_report = NULL;
 
     mico_rtos_lock_mutex(&g_auto_conn_list.mutex);
     do {
         err = linked_list_get_front_node(&g_auto_conn_list.list, (linked_list_node_t **)&current_report);
-        if (err != kNoErr) break;
+        if (err != kNoErr) {
+            break;
+        }
         linked_list_remove_node(&g_auto_conn_list.list, &current_report->this_node);
 
         free(current_report);

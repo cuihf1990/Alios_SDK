@@ -1,42 +1,3 @@
-/**
- ******************************************************************************
- * @file    ble_access_core_master.c
- * @author  Jian Zhang
- * @version V1.2.1
- * @date    26-Dec-2016
- * @file    BLE ACCESS Protocol Components
- * ******************************************************************************
- *
- *  The MIT License
- *  Copyright (c) 2014 MXCHIP Inc.
- *
- *  Permission is hereby granted, free of charge, to any person obtaining a copy
- *  of this software and associated documentation files (the "Software"), to deal
- *  in the Software without restriction, including without limitation the rights
- *  to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
- *  copies of the Software, and to permit persons to whom the Software is furnished
- *  to do so, subject to the following conditions:
- *
- *  The above copyright notice and this permission notice shall be included in
- *  all copies or substantial portions of the Software.
- *
- *  THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
- *  IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
- *  FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
- *  AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY,
- *  WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR
- *  IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
- *
- ******************************************************************************
- *  BLE Vendor Specific Device
- *
- * Features demonstrated
- *  - Implement BLE_ACCESS Center Protocol developed by MXCHIP on MiCOKit-3239.
- *  - You should see details about this protocol on mico.io. 
- *
- ******************************************************************************
- **/
-
 #include <string.h>
 #include <stdio.h>
 
@@ -59,7 +20,7 @@
 /*
  *-------------------------------------------------------------------------------------------------
  *
- *  Configurations & Constants 
+ *  Configurations & Constants
  *
  *-------------------------------------------------------------------------------------------------
  */
@@ -95,17 +56,17 @@
 /*
  *-------------------------------------------------------------------------------------------------
  *
- *  Local Function Prototype 
+ *  Local Function Prototype
  *
  *-------------------------------------------------------------------------------------------------
  */
 
 /* Local function prototype */
-static OSStatus ble_access_connection_handler       (void* arg);
-static OSStatus ble_access_disconnection_handler    (mico_bt_smartbridge_socket_t* socket);
-static OSStatus ble_access_notification_handler     (mico_bt_smartbridge_socket_t* socket, uint16_t attribute_handle);
+static OSStatus ble_access_connection_handler       (void *arg);
+static OSStatus ble_access_disconnection_handler    (mico_bt_smartbridge_socket_t *socket);
+static OSStatus ble_access_notification_handler     (mico_bt_smartbridge_socket_t *socket, uint16_t attribute_handle);
 static OSStatus ble_access_scan_complete_handler    (void *arg);
-static OSStatus ble_access_scan_result_handler      (const mico_bt_smart_advertising_report_t* result);
+static OSStatus ble_access_scan_result_handler      (const mico_bt_smart_advertising_report_t *result);
 
 static OSStatus ble_access_auto_conn_parms_handler  (const mico_bt_device_address_t device_address,
                                                      const char *name,
@@ -126,7 +87,7 @@ static OSStatus ble_access_send_command             (const ble_access_device_t *
 /*
  *-------------------------------------------------------------------------------------------------
  *
- *  Local Variables 
+ *  Local Variables
  *
  *-------------------------------------------------------------------------------------------------
  */
@@ -205,7 +166,7 @@ const mico_bt_uuid_t ble_access_cache_chars_uuid[] = {
 /*
  *-------------------------------------------------------------------------------------------------
  *
- *  Global Function Prototype 
+ *  Global Function Prototype
  *
  *-------------------------------------------------------------------------------------------------
  */
@@ -230,7 +191,7 @@ static mico_bt_device_address_t     ble_access_local_address;
 
 
 /*
- *-------------------------------------------------------------------------------------------------  
+ *-------------------------------------------------------------------------------------------------
  *
  * Function Definitions
  *
@@ -240,7 +201,7 @@ static mico_bt_device_address_t     ble_access_local_address;
 OSStatus ble_access_bluetooth_init(void)
 {
     OSStatus                         err = kNoErr;
-    
+
     ble_access_device_t              *dev = NULL;
     mico_bt_dev_bonded_device_info_t paired_device_list[MAX_CONCURRENT_CONNECTIONS];
     uint16_t                         paired_device_num = MAX_CONCURRENT_CONNECTIONS, idx = 0;
@@ -268,11 +229,11 @@ OSStatus ble_access_bluetooth_init(void)
 
     /* Create connection list */
     err = ble_access_connect_list_init();
-    require_noerr_action_string(err, exit, ble_access_connect_list_deinit(), 
+    require_noerr_action_string(err, exit, ble_access_connect_list_deinit(),
                                 "Initialize Connection list failed");
 
-    /* 
-     * Create all sockets and make them ready to connect. 
+    /*
+     * Create all sockets and make them ready to connect.
      * A socket can connect and disconnect multiple times.
      */
     ble_access_initialize_devices();
@@ -282,19 +243,19 @@ OSStatus ble_access_bluetooth_init(void)
     for (idx = 0; idx < paired_device_num; idx++) {
 
 #if defined(BLE_ACCESS_DEBUG) && BLE_ACCESS_DEBUG == 1
-        ble_access_log("WL: [%02x:%02x:%02x:%02x:%02x:%02x, %lu]", 
-                        paired_device_list[idx].bd_addr[0], paired_device_list[idx].bd_addr[1], paired_device_list[idx].bd_addr[2],
-                        paired_device_list[idx].bd_addr[3], paired_device_list[idx].bd_addr[4], paired_device_list[idx].bd_addr[5],
-                        ble_access_calculate_device_id(paired_device_list[idx].bd_addr));
-#endif 
+        ble_access_log("WL: [%02x:%02x:%02x:%02x:%02x:%02x, %lu]",
+                       paired_device_list[idx].bd_addr[0], paired_device_list[idx].bd_addr[1], paired_device_list[idx].bd_addr[2],
+                       paired_device_list[idx].bd_addr[3], paired_device_list[idx].bd_addr[4], paired_device_list[idx].bd_addr[5],
+                       ble_access_calculate_device_id(paired_device_list[idx].bd_addr));
+#endif
 
         dev = ble_access_get_free_device();
-        require_action_string(dev != NULL, exit, err = kNoResourcesErr, 
-                               "No resource for new connection");
+        require_action_string(dev != NULL, exit, err = kNoResourcesErr,
+                              "No resource for new connection");
         /* Calculate Device ID */
         dev->device_id = ble_access_calculate_device_id(paired_device_list[idx].bd_addr);
         dev->auth_state = BLE_ACCESS_AUTH_STATE_SUCC;
-        
+
         /* Update BLE Controller White List */
         mico_bt_ble_update_background_connection_device(MICO_TRUE, paired_device_list[idx].bd_addr);
     }
@@ -309,7 +270,7 @@ OSStatus ble_access_bluetooth_start(ble_access_event_callback_t callback)
     OSStatus err = kNoErr;
 
     /* Check parameters */
-    require_action_string(callback != NULL, 
+    require_action_string(callback != NULL,
                           exit,
                           err = kParamErr,
                           "ble_access_bluetooth_start: parameters failed");
@@ -325,10 +286,10 @@ OSStatus ble_access_bluetooth_stop(void)
     OSStatus err = kNoErr;
 
     /* Check parameters */
-    require_action_string(ble_access_callback != NULL, 
-                            exit, 
-                            err = kParamErr, 
-                            "ble_access_bluetooth_stop: Parameters failed");
+    require_action_string(ble_access_callback != NULL,
+                          exit,
+                          err = kParamErr,
+                          "ble_access_bluetooth_stop: Parameters failed");
 
     /* Event handler */
     ble_access_callback = NULL;
@@ -349,21 +310,21 @@ OSStatus ble_access_bluetooth_request(uint8_t request, const ble_access_cmd_parm
     mico_bt_device_address_t            device_address;
 
     ble_access_device_t                *dev = NULL;
-    
+
 #if defined(BLE_ACCESS_DEBUG) && BLE_ACCESS_DEBUG == 1
     uint8_t                             size = 0;
-#endif 
+#endif
 
-    ble_access_log("User Request - %s[%#x] to %s device.", 
-                    print_request_str(request),
-                    request,
-                    parms == NULL ? "all" : "specificed");
+    ble_access_log("User Request - %s[%#x] to %s device.",
+                   print_request_str(request),
+                   request,
+                   parms == NULL ? "all" : "specificed");
 
-    if (request == BLE_ACCESS_REQ_DEV_ADD 
-            || request == BLE_ACCESS_REQ_DEV_DISC 
-            || request == BLE_ACCESS_REQ_DEV_REMOVE) {
+    if (request == BLE_ACCESS_REQ_DEV_ADD
+        || request == BLE_ACCESS_REQ_DEV_DISC
+        || request == BLE_ACCESS_REQ_DEV_REMOVE) {
 
-        /* Check Parameters */           
+        /* Check Parameters */
         if (parms == NULL) {
             ble_access_log("Invalid Parameters");
             return kParamErr;
@@ -378,126 +339,126 @@ OSStatus ble_access_bluetooth_request(uint8_t request, const ble_access_cmd_parm
         device_address_str = DataToHexStringWithColons(device_address, 6);
         ble_access_log("device_address: %s", device_address_str);
         free(device_address_str);
-#endif 
+#endif
     }
 
     switch (request) {
-    case BLE_ACCESS_REQ_DEV_SCAN:
-        /* Change state */
-        require_action_string(ble_access_app_state != BLE_ACCESS_APP_STATE_AUTO_CONN,
-                              exit,
-                              err = kUnknownErr,
-                              "Don't request to scan because of auto connection procedure.");
-        
-        /* Stop scanning procedure. */
-        if (!parms->p.start) {
-            mico_bt_smartbridge_stop_scan();
+        case BLE_ACCESS_REQ_DEV_SCAN:
+            /* Change state */
+            require_action_string(ble_access_app_state != BLE_ACCESS_APP_STATE_AUTO_CONN,
+                                  exit,
+                                  err = kUnknownErr,
+                                  "Don't request to scan because of auto connection procedure.");
+
+            /* Stop scanning procedure. */
+            if (!parms->p.start) {
+                mico_bt_smartbridge_stop_scan();
+                break;
+            }
+
+            /* Clear connection list */
+            while (ble_access_connect_list_get(&device, NULL) == kNoErr) {
+                ble_access_connect_list_remove(device);
+            }
+
+            /* start to scanning */
+            ble_access_set_scan_cfg(&scan_settings, MICO_FALSE);
+            mico_bt_smartbridge_start_scan(&scan_settings,
+                                           ble_access_scan_complete_handler,
+                                           ble_access_scan_result_handler);
+            ble_access_app_state = BLE_ACCESS_APP_STATE_ADD;
             break;
-        }
+        case BLE_ACCESS_REQ_DEV_ADD:
+            require_action_string(ble_access_app_state == BLE_ACCESS_APP_STATE_ADD,
+                                  exit,
+                                  err = kUnknownErr,
+                                  "Don't request to Add new device becuase of error state");
 
-        /* Clear connection list */
-        while (ble_access_connect_list_get(&device, NULL) == kNoErr) {
-            ble_access_connect_list_remove(device);
-        }
+            /* find the device */
+            err = ble_access_connect_list_get_by_address(&device, NULL, device_address);
+            require_noerr_action_string(err, exit, err = kNoResourcesErr, "Cannot find the device");
 
-        /* start to scanning */
-        ble_access_set_scan_cfg(&scan_settings, MICO_FALSE);
-        mico_bt_smartbridge_start_scan(&scan_settings, 
-                                        ble_access_scan_complete_handler, 
-                                        ble_access_scan_result_handler);
-        ble_access_app_state = BLE_ACCESS_APP_STATE_ADD;
-        break;
-    case BLE_ACCESS_REQ_DEV_ADD:
-        require_action_string(ble_access_app_state == BLE_ACCESS_APP_STATE_ADD,
-                              exit,
-                              err = kUnknownErr,
-                              "Don't request to Add new device becuase of error state");
+            /* start to connecting by asynchronous event. */
+            ble_access_send_aync_event(ble_access_connection_handler, (void *)device);
+            break;
+        case BLE_ACCESS_REQ_DEV_DISC:
+            /* Check the socket is connected. */
+            dev = ble_access_find_device_by_address(device_address);
+            require_action_string(dev != NULL, exit, err = kConnectionErr, "Not a connection");
 
-        /* find the device */
-        err = ble_access_connect_list_get_by_address(&device, NULL, device_address);
-        require_noerr_action_string(err, exit, err = kNoResourcesErr, "Cannot find the device");
+            /* Send a 'DISC_REQ' command */
+            p_timeout = (uint8_t *)timeout;
+            UINT32_TO_STREAM(p_timeout, parms->p.timeout);
+            err = ble_access_send_command(dev, BLE_ACCESS_CODE_DISC, sizeof(uint32_t), (uint8_t *)timeout);
+            if (err != kNoErr) {
+                ble_access_log("Send a command failed, ret = %d", err);
+                goto exit;
+            }
+            break;
+        case BLE_ACCESS_REQ_DEV_REMOVE:
+            require_action_string(ble_access_app_state != BLE_ACCESS_APP_STATE_AUTO_CONN,
+                                  exit,
+                                  err = kInProgressErr,
+                                  "Don't requrest to remove a device because of Auto connection procedure");
 
-        /* start to connecting by asynchronous event. */
-        ble_access_send_aync_event(ble_access_connection_handler, (void *)device);
-        break;
-    case BLE_ACCESS_REQ_DEV_DISC:
-        /* Check the socket is connected. */
-        dev = ble_access_find_device_by_address(device_address);
-        require_action_string(dev != NULL, exit, err = kConnectionErr, "Not a connection");
+            /* Check the socket is connected. */
+            dev = ble_access_find_device_by_address(device_address);
+            require_action_string(dev != NULL, exit, err = kConnectionErr, "Not a connection");
 
-        /* Send a 'DISC_REQ' command */
-        p_timeout = (uint8_t *)timeout;
-        UINT32_TO_STREAM(p_timeout, parms->p.timeout);
-        err = ble_access_send_command(dev, BLE_ACCESS_CODE_DISC, sizeof(uint32_t), (uint8_t *)timeout);
-        if (err != kNoErr) {
-            ble_access_log("Send a command failed, ret = %d", err);
-            goto exit;
-        }
-        break;
-    case BLE_ACCESS_REQ_DEV_REMOVE:
-        require_action_string(ble_access_app_state != BLE_ACCESS_APP_STATE_AUTO_CONN,
-                                exit,
-                                err = kInProgressErr,
-                                "Don't requrest to remove a device because of Auto connection procedure");
+            /* Delete it from the White List. */
+            mico_bt_smartbridge_get_socket_status(&dev->socket, &status);
+            require_string(status == SMARTBRIDGE_SOCKET_CONNECTED || status == SMARTBRIDGE_SOCKET_DISCONNECTED,
+                           exit,
+                           "This socket is busy!!");
+            if (status == SMARTBRIDGE_SOCKET_CONNECTED) {
+                mico_bt_smartbridge_disconnect(&dev->socket, MICO_TRUE);
+            } else {
+                mico_bt_ble_update_background_connection_device(MICO_FALSE, device_address);
+            }
+            mico_bt_dev_delete_bonded_device(device_address);
+            ble_access_release_device(MICO_TRUE, dev);
+            break;
+        case BLE_ACCESS_REQ_DEV_START_AUTO:
+            /* Change state */
+            ble_access_app_state = BLE_ACCESS_APP_STATE_AUTO_CONN;
+            mico_bt_smartbridge_stop_scan();
 
-        /* Check the socket is connected. */
-        dev = ble_access_find_device_by_address(device_address);
-        require_action_string(dev != NULL, exit, err = kConnectionErr, "Not a connection");
-
-        /* Delete it from the White List. */
-        mico_bt_smartbridge_get_socket_status(&dev->socket, &status);
-        require_string(status == SMARTBRIDGE_SOCKET_CONNECTED || status == SMARTBRIDGE_SOCKET_DISCONNECTED,
-                       exit, 
-                       "This socket is busy!!");
-        if (status == SMARTBRIDGE_SOCKET_CONNECTED) {
-            mico_bt_smartbridge_disconnect(&dev->socket, MICO_TRUE);
-        } else {
-            mico_bt_ble_update_background_connection_device(MICO_FALSE, device_address);
-        } 
-        mico_bt_dev_delete_bonded_device(device_address);
-        ble_access_release_device(MICO_TRUE, dev);
-        break;
-    case BLE_ACCESS_REQ_DEV_START_AUTO:
-        /* Change state */
-        ble_access_app_state = BLE_ACCESS_APP_STATE_AUTO_CONN;
-        mico_bt_smartbridge_stop_scan();
-
-        /* Start auto connection action. */
+            /* Start auto connection action. */
 #if defined(BLE_ACCESS_DEBUG) && BLE_ACCESS_DEBUG == 1
-        err = mico_bt_smartbridge_get_background_connection_devices_size(&size);
-        require_noerr_string(err, exit, "Get white list size unsuccessfully!!");
-        ble_access_log("white list size: %d", size);
+            err = mico_bt_smartbridge_get_background_connection_devices_size(&size);
+            require_noerr_string(err, exit, "Get white list size unsuccessfully!!");
+            ble_access_log("white list size: %d", size);
 #endif
 
-        /* Set auto connection */
-        ble_access_set_scan_cfg(&scan_settings, MICO_TRUE);
-        err = mico_bt_smartbridge_set_auto_connection_action(TRUE, &scan_settings,
-                                                             ble_access_auto_conn_parms_handler);
-        require_noerr_string(err, exit, "Start auto connection type unsuccessfully!!");
-        ble_access_log("Start to establish background connection...");
-        break;
-    case BLE_ACCESS_REQ_DEV_STOP_AUTO:
-        /* Change state */
-        require_action_string(ble_access_app_state == BLE_ACCESS_APP_STATE_AUTO_CONN,
-                                exit,
-                                err = kUnknownErr,
-                                "Don't request to stop auto procedure.");
-        ble_access_app_state = BLE_ACCESS_APP_STATE_INIT;
+            /* Set auto connection */
+            ble_access_set_scan_cfg(&scan_settings, MICO_TRUE);
+            err = mico_bt_smartbridge_set_auto_connection_action(TRUE, &scan_settings,
+                                                                 ble_access_auto_conn_parms_handler);
+            require_noerr_string(err, exit, "Start auto connection type unsuccessfully!!");
+            ble_access_log("Start to establish background connection...");
+            break;
+        case BLE_ACCESS_REQ_DEV_STOP_AUTO:
+            /* Change state */
+            require_action_string(ble_access_app_state == BLE_ACCESS_APP_STATE_AUTO_CONN,
+                                  exit,
+                                  err = kUnknownErr,
+                                  "Don't request to stop auto procedure.");
+            ble_access_app_state = BLE_ACCESS_APP_STATE_INIT;
 
-        /* Stop */
+            /* Stop */
 #if defined(BLE_ACCESS_DEBUG) && BLE_ACCESS_DEBUG == 1
-        err = mico_bt_smartbridge_get_background_connection_devices_size(&size);
-        require_noerr_string(err, exit, "Get white list size unsuccessfully!!");
-        ble_access_log("white list size: %d\n", size);
+            err = mico_bt_smartbridge_get_background_connection_devices_size(&size);
+            require_noerr_string(err, exit, "Get white list size unsuccessfully!!");
+            ble_access_log("white list size: %d\n", size);
 #endif
 
-        err = mico_bt_smartbridge_set_auto_connection_action(FALSE, NULL, NULL);
-        require_noerr_string(err, exit, "Stop auto connection type unsuccessfully!!");
-        ble_access_log("Stop to establish background connection...");
-        break;
-    default:
-        ble_access_log("Unsupported Request!");
-        break;
+            err = mico_bt_smartbridge_set_auto_connection_action(FALSE, NULL, NULL);
+            require_noerr_string(err, exit, "Stop auto connection type unsuccessfully!!");
+            ble_access_log("Stop to establish background connection...");
+            break;
+        default:
+            ble_access_log("Unsupported Request!");
+            break;
     }
 
 exit:
@@ -507,18 +468,18 @@ exit:
 static void ble_access_attribute_copy_from_smart(const mico_bt_smart_attribute_t *from, ble_access_attribute_t *to)
 {
     if (from != NULL && to != NULL) {
-        to->handle = from->handle;             
-        memcpy(&to->type, &from->type, sizeof(mico_bt_uuid_t));               
-        to->permission = from->permission;         
-        to->value_length = from->value_length;       
+        to->handle = from->handle;
+        memcpy(&to->type, &from->type, sizeof(mico_bt_uuid_t));
+        to->permission = from->permission;
+        to->value_length = from->value_length;
         to->value_struct_size = from->value_struct_size;
         memcpy(to->value.value, from->value.value, sizeof(to->value));
     }
 }
 
 /* Get an attribute of Characteristic with the UUID provided from the local attribute database. */
-OSStatus ble_access_get_characteritic_by_uuid(uint32_t dev_id, 
-                                              const ble_access_serv_t *serv, 
+OSStatus ble_access_get_characteritic_by_uuid(uint32_t dev_id,
+                                              const ble_access_serv_t *serv,
                                               const ble_access_uuid_t *uuid,
                                               ble_access_attribute_t *attr)
 {
@@ -529,7 +490,7 @@ OSStatus ble_access_get_characteritic_by_uuid(uint32_t dev_id,
     ble_access_device_t        *dev = NULL;
     OSStatus                    err = kNoErr;
 
-    require_action_string(dev_id != 0 && serv != NULL && attr != NULL, 
+    require_action_string(dev_id != 0 && serv != NULL && attr != NULL,
                           exit,
                           err = kParamErr,
                           "Invalid parameters!");
@@ -544,12 +505,12 @@ OSStatus ble_access_get_characteritic_by_uuid(uint32_t dev_id,
 
     attribute->value_struct_size = BLE_ACCESS_MAX_ATTR_VALUE_LENGTH;
     err = mico_bt_smartbridge_get_characteritics_from_attribute_cache_by_uuid(
-                &dev->socket, 
-                (mico_bt_uuid_t *)uuid, 
-                serv->start_handle, 
-                serv->end_handle, 
-                (mico_bt_smart_attribute_t *)attribute, 
-                ATTR_CHARACTERISTIC_VALUE_SIZE(BLE_ACCESS_MAX_ATTR_VALUE_LENGTH));
+              &dev->socket,
+              (mico_bt_uuid_t *)uuid,
+              serv->start_handle,
+              serv->end_handle,
+              (mico_bt_smart_attribute_t *)attribute,
+              ATTR_CHARACTERISTIC_VALUE_SIZE(BLE_ACCESS_MAX_ATTR_VALUE_LENGTH));
     if (err == kNoErr) {
         ble_access_attribute_copy_from_smart(attribute, attr);
     }
@@ -573,9 +534,9 @@ static OSStatus ble_access_characteristic_aync_event(void *arg)
 
     uint16_t                     start_handle, end_handle;
 
-    mico_bt_uuid_t               characteristic_uuid = { 
-        .len = LEN_UUID_16, 
-        .uu.uuid16 = GATT_UUID_CHAR_DECLARE 
+    mico_bt_uuid_t               characteristic_uuid = {
+        .len = LEN_UUID_16,
+        .uu.uuid16 = GATT_UUID_CHAR_DECLARE
     };
 
     ble_access_evt_parms_t       parms;
@@ -604,15 +565,15 @@ static OSStatus ble_access_characteristic_aync_event(void *arg)
 
     /* Find service */
     attribute->value_struct_size = BLE_ACCESS_MAX_ATTR_VALUE_LENGTH;
-    while((err = mico_bt_smartbridge_get_attribute_cache_by_uuid(
-            &dev->socket, 
-            &characteristic_uuid, 
-            start_handle, 
-            end_handle, 
-            attribute, 
-            ATTR_CHARACTERISTIC_VALUE_SIZE(BLE_ACCESS_MAX_ATTR_VALUE_LENGTH))) 
-            == MICO_BT_SUCCESS) {
-            
+    while ((err = mico_bt_smartbridge_get_attribute_cache_by_uuid(
+                      &dev->socket,
+                      &characteristic_uuid,
+                      start_handle,
+                      end_handle,
+                      attribute,
+                      ATTR_CHARACTERISTIC_VALUE_SIZE(BLE_ACCESS_MAX_ATTR_VALUE_LENGTH)))
+           == MICO_BT_SUCCESS) {
+
         /* Notify */
         ble_access_attribute_copy_from_smart(attribute, &attr);
         parms.p.gatt.attr = &attr;
@@ -633,14 +594,14 @@ OSStatus ble_access_get_characteristics(uint32_t dev_id, const ble_access_serv_t
     uint8_t                     *p = NULL;
     OSStatus                    err = kNoErr;
 
-    require_action_string(dev_id != 0 && serv != NULL, 
+    require_action_string(dev_id != 0 && serv != NULL,
                           exit,
                           err = kParamErr,
                           "Invalid parameters!");
 
     /* Package parameters. */
     p = (uint8_t *)malloc(sizeof(ble_access_serv_t) + sizeof(uint32_t));
-    
+
     if (!p) {
         ble_access_log("Malloc failed");
         return kUnknownErr;
@@ -649,13 +610,15 @@ OSStatus ble_access_get_characteristics(uint32_t dev_id, const ble_access_serv_t
     memcpy(p + sizeof(uint32_t), serv, sizeof(ble_access_serv_t));
     err = ble_access_send_aync_event(ble_access_characteristic_aync_event, p);
 exit:
-    if (err != kNoErr && p) free(p); 
+    if (err != kNoErr && p) {
+        free(p);
+    }
     return err;
 }
 
 /* Find and read attribute with the Handle provided from the Attribute Cache */
-OSStatus ble_access_get_attribute_by_handle(uint32_t dev_id, 
-                                            uint16_t handle, 
+OSStatus ble_access_get_attribute_by_handle(uint32_t dev_id,
+                                            uint16_t handle,
                                             ble_access_attribute_t *attr)
 {
     uint8_t                     buf[ATTR_CHARACTERISTIC_VALUE_SIZE(BLE_ACCESS_MAX_ATTR_VALUE_LENGTH)] = {0};
@@ -665,7 +628,7 @@ OSStatus ble_access_get_attribute_by_handle(uint32_t dev_id,
     ble_access_device_t        *dev = NULL;
     OSStatus                    err = kNoErr;
 
-    require_action_string(dev_id != 0 && handle != 0 && attr != NULL, 
+    require_action_string(dev_id != 0 && handle != 0 && attr != NULL,
                           exit,
                           err = kParamErr,
                           "Invalid parameters!");
@@ -684,15 +647,15 @@ OSStatus ble_access_get_attribute_by_handle(uint32_t dev_id,
 
     attribute->value_struct_size = BLE_ACCESS_MAX_ATTR_VALUE_LENGTH;
     err = mico_bt_smartbridge_get_attribute_cache_by_handle(
-            &dev->socket, 
-            handle, 
-            (mico_bt_smart_attribute_t *)attribute, 
-            ATTR_CHARACTERISTIC_VALUE_SIZE(BLE_ACCESS_MAX_ATTR_VALUE_LENGTH));
-    
+              &dev->socket,
+              handle,
+              (mico_bt_smart_attribute_t *)attribute,
+              ATTR_CHARACTERISTIC_VALUE_SIZE(BLE_ACCESS_MAX_ATTR_VALUE_LENGTH));
+
     require_noerr_string(err, exit, "Get attribute cache failed");
     ble_access_attribute_copy_from_smart(attribute, attr);
-    
-exit: 
+
+exit:
     return err;
 }
 
@@ -705,9 +668,9 @@ OSStatus ble_access_update_characteristic_value(uint32_t dev_id, uint16_t handle
     ble_access_device_t         *dev = NULL;
     OSStatus                     err = kNoErr;
 
-    require_action_string(dev_id != 0 && handle != 0 
-                          && length > 0 && length <= BLE_ACCESS_DEVICE_NAME_MAX_LEN 
-                          && data != NULL, 
+    require_action_string(dev_id != 0 && handle != 0
+                          && length > 0 && length <= BLE_ACCESS_DEVICE_NAME_MAX_LEN
+                          && data != NULL,
                           exit,
                           err = kParamErr,
                           "Invalid parameters!");
@@ -715,7 +678,7 @@ OSStatus ble_access_update_characteristic_value(uint32_t dev_id, uint16_t handle
     /* Generate device address */
     err = ble_access_generate_device_address(device_address, dev_id);
     require_noerr_string(err, exit, "Invalid device ID");
-    
+
 
     /* Check the socket is connected. */
     dev = ble_access_find_device_by_address(device_address);
@@ -723,16 +686,16 @@ OSStatus ble_access_update_characteristic_value(uint32_t dev_id, uint16_t handle
 
     char_value = (mico_bt_smart_attribute_t *)buf;
     char_value->value_struct_size = length;
-    err = mico_bt_smartbridge_get_attribute_cache_by_handle(&dev->socket, 
-                                                            handle, 
-                                                            char_value, 
+    err = mico_bt_smartbridge_get_attribute_cache_by_handle(&dev->socket,
+                                                            handle,
+                                                            char_value,
                                                             ATTR_CHARACTERISTIC_VALUE_SIZE(length));
     require_noerr_string(err, exit, "Get Attribute failed");
 
     char_value->value_length = length;
     memcpy(&char_value->value.value[0], data, length);
 
-    err = mico_bt_smartbridge_write_attribute_cache_characteristic_value(&dev->socket, 
+    err = mico_bt_smartbridge_write_attribute_cache_characteristic_value(&dev->socket,
                                                                          (mico_bt_smart_attribute_t *)char_value);
 exit:
     return err;
@@ -776,7 +739,7 @@ static OSStatus ble_access_scan_complete_handler(void *arg)
 }
 
 /* Handler of Scanning result */
-static OSStatus ble_access_scan_result_handler(const mico_bt_smart_advertising_report_t* scan_result)
+static OSStatus ble_access_scan_result_handler(const mico_bt_smart_advertising_report_t *scan_result)
 {
     OSStatus                        err = kNoErr;
     mico_bool_t                     is_reported = MICO_FALSE;
@@ -788,16 +751,16 @@ static OSStatus ble_access_scan_result_handler(const mico_bt_smart_advertising_r
 
 #if defined(BLE_ACCESS_DEBUG) && BLE_ACCESS_DEBUG == 1
     char *device_address_str = DataToHexStringWithColons(scan_result->remote_device.address, 6);
-    ble_access_log("A device is scanned: %s[%s]", 
-                    scan_result->remote_device.name != NULL ? scan_result->remote_device.name : "Unknown Device", 
-                    device_address_str);
+    ble_access_log("A device is scanned: %s[%s]",
+                   scan_result->remote_device.name != NULL ? scan_result->remote_device.name : "Unknown Device",
+                   device_address_str);
     free(device_address_str);
-#endif 
+#endif
 
     /* Update device name and Notify user layer. */
     if (scan_result->event == BT_SMART_SCAN_RESPONSE_EVENT) {
-        if (kNoErr == ble_access_connect_list_get_by_address(&device, 
-                                                             &is_reported, 
+        if (kNoErr == ble_access_connect_list_get_by_address(&device,
+                                                             &is_reported,
                                                              scan_result->remote_device.address)) {
             if (!is_reported) {
                 /* Update reported */
@@ -814,7 +777,7 @@ static OSStatus ble_access_scan_result_handler(const mico_bt_smart_advertising_r
                 parms.p.scan.RSSI = scan_result->signal_strength;
                 ble_access_send_bt_event(BLE_ACCESS_EVENT_DEV_NEW, &parms);
             }
-            
+
         } else {
             err = kUnknownErr;
         }
@@ -825,7 +788,7 @@ static OSStatus ble_access_scan_result_handler(const mico_bt_smart_advertising_r
         }
     }
 
-    if(!ble_access_calculate_device_id(scan_result->remote_device.address)) {
+    if (!ble_access_calculate_device_id(scan_result->remote_device.address)) {
         err = kUnknownErr;
         goto exit;
     }
@@ -856,7 +819,7 @@ static OSStatus ble_access_scan_result_handler(const mico_bt_smart_advertising_r
     ble_access_log("addr        - %s", device_address_str);
     ble_access_log("\n\n");
     free(device_address_str);
-#endif 
+#endif
 
 exit:
     return err;
@@ -866,10 +829,10 @@ exit:
  * Connect handler. SmartBridge connect is executed in this callback.
  * It runs on the connect_worker_thread context
  */
-static OSStatus ble_access_connection_handler(void* arg)
+static OSStatus ble_access_connection_handler(void *arg)
 {
     OSStatus                err = kNoErr;
-    
+
     ble_access_evt_parms_t  parms;
     mico_bt_smart_device_t *remote_device = (mico_bt_smart_device_t *)arg;
     ble_access_device_t    *dev = NULL;
@@ -893,9 +856,9 @@ static OSStatus ble_access_connection_handler(void* arg)
 #if defined(BLE_ACCESS_DEBUG) && BLE_ACCESS_DEBUG == 1
     char *bt_addr_str = NULL;
     bt_addr_str = DataToHexStringWithColons((uint8_t *)remote_device->address, 6);
-    ble_access_log("Opening GATT Connection to [%s] (addr type =%s)...", 
-                    bt_addr_str, 
-                    (remote_device->address_type == BT_SMART_ADDR_TYPE_PUBLIC) ? "Public" : "Random");
+    ble_access_log("Opening GATT Connection to [%s] (addr type =%s)...",
+                   bt_addr_str,
+                   (remote_device->address_type == BT_SMART_ADDR_TYPE_PUBLIC) ? "Public" : "Random");
     free(bt_addr_str);
 #endif
 
@@ -913,7 +876,7 @@ static OSStatus ble_access_connection_handler(void* arg)
     parms.device_id = ble_access_calculate_device_id(remote_device->address);
 
     /* connect */
-    err = mico_bt_smartbridge_connect(&dev->socket, remote_device, &ble_access_connection_settings, 
+    err = mico_bt_smartbridge_connect(&dev->socket, remote_device, &ble_access_connection_settings,
                                       ble_access_disconnection_handler,
                                       ble_access_notification_handler);
     require_noerr_string(err, exit, "The Peer Device connect failed");
@@ -952,13 +915,13 @@ exit:
 /* Disconnection handler. Disconnection by remote device is reported via this callback.
  * It runs on the MICO_BT_EVT_WORKER_THREAD context.
  */
-static OSStatus ble_access_disconnection_handler(mico_bt_smartbridge_socket_t* socket)
+static OSStatus ble_access_disconnection_handler(mico_bt_smartbridge_socket_t *socket)
 {
     ble_access_evt_parms_t parms;
 
     /* Insert list and allow to add */
     ble_access_connect_list_add(&socket->remote_device, MICO_FALSE);
-    ble_access_release_device(MICO_FALSE, 
+    ble_access_release_device(MICO_FALSE,
                               ble_access_find_device_by_address(socket->remote_device.address));
 
     /* Send event */
@@ -978,7 +941,8 @@ static mico_bool_t ble_access_compare_uuid(const mico_bt_uuid_t *uuid1, const mi
     }
 }
 
-static OSStatus ble_access_cache_all_services(mico_bt_smartbridge_socket_t *socket, ble_access_evt_parms_t *parms, uint8_t max_servs)
+static OSStatus ble_access_cache_all_services(mico_bt_smartbridge_socket_t *socket, ble_access_evt_parms_t *parms,
+                                              uint8_t max_servs)
 {
     uint8_t                      buf[ATTR_CHARACTERISTIC_VALUE_SIZE(BLE_ACCESS_MAX_ATTR_VALUE_LENGTH)] = {0};
     mico_bt_smart_attribute_t   *attribute = (mico_bt_smart_attribute_t *)buf;
@@ -993,21 +957,21 @@ static OSStatus ble_access_cache_all_services(mico_bt_smartbridge_socket_t *sock
 
     /* Find service */
     attribute->value_struct_size = BLE_ACCESS_MAX_ATTR_VALUE_LENGTH;
-    while(mico_bt_smartbridge_get_attribute_cache_by_uuid(
-            socket, 
-            &service_uuid, 
-            start_handle, 
-            end_handle, 
-            attribute, 
-            ATTR_CHARACTERISTIC_VALUE_SIZE(BLE_ACCESS_MAX_ATTR_VALUE_LENGTH)) 
-            == MICO_BT_SUCCESS) {
-            
+    while (mico_bt_smartbridge_get_attribute_cache_by_uuid(
+               socket,
+               &service_uuid,
+               start_handle,
+               end_handle,
+               attribute,
+               ATTR_CHARACTERISTIC_VALUE_SIZE(BLE_ACCESS_MAX_ATTR_VALUE_LENGTH))
+           == MICO_BT_SUCCESS) {
+
         /* Not GAP, GATT or MXCHIP */
-        if (!ble_access_compare_uuid(&attribute->value.service.uuid, &gap_uuid) 
+        if (!ble_access_compare_uuid(&attribute->value.service.uuid, &gap_uuid)
             && !ble_access_compare_uuid(&attribute->value.service.uuid, &gatt_uuid)
-            && !ble_access_compare_uuid(&attribute->value.service.uuid, 
+            && !ble_access_compare_uuid(&attribute->value.service.uuid,
                                         &ble_access_cache_services_uuid[BLE_CONTROL_SERV_UUID_IDX])) {
-            
+
             if (parms->p.add.serv_count >= max_servs) {
                 return kNoResourcesErr;
             }
@@ -1028,7 +992,7 @@ static OSStatus ble_access_cache_all_services(mico_bt_smartbridge_socket_t *sock
 /* Notification handler. GATT notification by remote device is reported via this callback.
  * It runs on the MICO_BT_EVT_WORKER_THREAD context.
  */
-static OSStatus ble_access_notification_handler(mico_bt_smartbridge_socket_t* socket, uint16_t attribute_handle)
+static OSStatus ble_access_notification_handler(mico_bt_smartbridge_socket_t *socket, uint16_t attribute_handle)
 {
     /* GATT value notification event. attribute_handle is the handle
      * which value of the attribute is updated by the remote device.
@@ -1050,10 +1014,10 @@ static OSStatus ble_access_notification_handler(mico_bt_smartbridge_socket_t* so
     err = mico_bt_smartbridge_refresh_attribute_cache_characteristic_value(socket, attribute_handle);
     require_noerr_string(err, exit, "Refresh an Attribute failed");
     err = mico_bt_smartbridge_get_attribute_cache_by_handle(
-            socket,
-            attribute_handle,
-            characteristic_value,
-            ATTR_CHARACTERISTIC_VALUE_SIZE(BLE_ACCESS_MAX_CHAR_VALUE_LENGTH));
+              socket,
+              attribute_handle,
+              characteristic_value,
+              ATTR_CHARACTERISTIC_VALUE_SIZE(BLE_ACCESS_MAX_CHAR_VALUE_LENGTH));
     require_noerr_string(err, exit, "This is not a cached value handle, ignore...");
 
     /* Check socket */
@@ -1077,8 +1041,8 @@ static OSStatus ble_access_notification_handler(mico_bt_smartbridge_socket_t* so
                     parms.status = BLE_ACCESS_STATUS_SUCCESS;
                     parms.p.add.serv = servs;
                     parms.p.add.serv_count = 0;
-                    memset(servs, 0, sizeof(servs)/sizeof(servs[0]));
-                    ble_access_cache_all_services(&dev->socket, &parms, sizeof(servs)/sizeof(servs[0]));
+                    memset(servs, 0, sizeof(servs) / sizeof(servs[0]));
+                    ble_access_cache_all_services(&dev->socket, &parms, sizeof(servs) / sizeof(servs[0]));
 
                     ble_access_log("Authentication Device Successfully");
                 } else {
@@ -1134,13 +1098,13 @@ static OSStatus ble_access_auto_connection_handler(mico_bt_smartbridge_socket_t 
 {
     OSStatus                            err = kNoErr;
     ble_access_device_t                *dev = NULL;
-    
+
     ble_access_serv_t                   servs[BLE_ACCESS_REMOTE_SERVS_NUM];
     ble_access_evt_parms_t              parms;
     mico_bt_smartbridge_socket_status_t status;
 
     dev = ble_access_find_device_by_address(socket->remote_device.address);
-    require_action_string(dev != NULL, exit, err = kGeneralErr, 
+    require_action_string(dev != NULL, exit, err = kGeneralErr,
                           "Unknown a socket which isn't in the pool");
 
     /* Check current socket status */
@@ -1169,8 +1133,8 @@ static OSStatus ble_access_auto_connection_handler(mico_bt_smartbridge_socket_t 
     parms.status = BLE_ACCESS_STATUS_SUCCESS;
     parms.p.add.serv = servs;
     parms.p.add.serv_count = 0;
-    memset(servs, 0, sizeof(servs)/sizeof(servs[0]));
-    ble_access_cache_all_services(socket, &parms, sizeof(servs)/sizeof(servs[0]));
+    memset(servs, 0, sizeof(servs) / sizeof(servs[0]));
+    ble_access_cache_all_services(socket, &parms, sizeof(servs) / sizeof(servs[0]));
     ble_access_send_bt_event(BLE_ACCESS_EVENT_DEV_CONN, &parms);
 
 exit:
@@ -1189,18 +1153,18 @@ OSStatus ble_access_auto_conn_parms_handler(const mico_bt_device_address_t devic
     ble_access_device_t           *dev = NULL;
 
     ble_access_log("Auto connection: %s[%02x:%02x:%02x:%02x:%02x:%02x]",
-                    name,
-                    device_address[0],
-                    device_address[1],
-                    device_address[2],
-                    device_address[3],
-                    device_address[4],
-                    device_address[5]);
+                   name,
+                   device_address[0],
+                   device_address[1],
+                   device_address[2],
+                   device_address[3],
+                   device_address[4],
+                   device_address[5]);
 
     /* Allow to be connected. */
     dev = ble_access_find_device_by_address(device_address);
-    require_action_string(dev != NULL, exit, err = kNoResourcesErr, 
-                         "No resource for new connection");
+    require_action_string(dev != NULL, exit, err = kNoResourcesErr,
+                          "No resource for new connection");
 
     /* Check Advertisement Type */
     err = ble_access_check_adv_type(p_adv_data,
@@ -1296,7 +1260,7 @@ static OSStatus ble_access_send_bt_event(uint8_t evt_code, const ble_access_evt_
         arg = malloc(sizeof(evt_code) + sizeof(ble_access_evt_parms_t));
         if (arg != NULL) {
             memcpy(arg, &evt_code, sizeof(evt_code));
-            memcpy(arg+  sizeof(evt_code), parms, sizeof(ble_access_evt_parms_t));
+            memcpy(arg +  sizeof(evt_code), parms, sizeof(ble_access_evt_parms_t));
             err = ble_access_send_aync_event(ble_access_bt_event_handler, arg);
             if (err != kNoErr) {
                 free(arg);
@@ -1325,10 +1289,10 @@ static OSStatus ble_access_send_command(const ble_access_device_t *dev, uint8_t 
     characteristic_value->value_struct_size = BLE_ACCESS_MAX_CHAR_VALUE_LENGTH;
 
     err = mico_bt_smartbridge_get_attribute_cache_by_handle(
-            (mico_bt_smartbridge_socket_t *)&dev->socket,
-            dev->service.ctrl_evt_char_value_handle,
-            characteristic_value,
-            ATTR_CHARACTERISTIC_VALUE_SIZE(BLE_ACCESS_MAX_CHAR_VALUE_LENGTH));
+              (mico_bt_smartbridge_socket_t *)&dev->socket,
+              dev->service.ctrl_evt_char_value_handle,
+              characteristic_value,
+              ATTR_CHARACTERISTIC_VALUE_SIZE(BLE_ACCESS_MAX_CHAR_VALUE_LENGTH));
     require_noerr_string(err, exit, "Get attribute failed");
 
     /* Fill */
@@ -1353,32 +1317,34 @@ static OSStatus ble_access_cache_control_service(ble_access_device_t *dev)
     uint8_t buf[ATTR_CHARACTERISTIC_VALUE_SIZE(BLE_ACCESS_MAX_ATTR_VALUE_LENGTH)] = {0};
     mico_bt_smart_attribute_t *attribute = (mico_bt_smart_attribute_t *)buf;
 
-    if (!dev) return kParamErr;
+    if (!dev) {
+        return kParamErr;
+    }
 
     /* Find service */
     err = mico_bt_smartbridge_get_service_from_attribute_cache_by_uuid(
-            (mico_bt_smartbridge_socket_t *)&dev->socket,
-            &ble_access_cache_services_uuid[BLE_CONTROL_SERV_UUID_IDX],
-            0x00,
-            0xff,
-            attribute,
-            ATTR_CHARACTERISTIC_VALUE_SIZE(BLE_ACCESS_MAX_ATTR_VALUE_LENGTH));
+              (mico_bt_smartbridge_socket_t *)&dev->socket,
+              &ble_access_cache_services_uuid[BLE_CONTROL_SERV_UUID_IDX],
+              0x00,
+              0xff,
+              attribute,
+              ATTR_CHARACTERISTIC_VALUE_SIZE(BLE_ACCESS_MAX_ATTR_VALUE_LENGTH));
     require_noerr_string(err, exit, "Cache Control Service failed");
 
     /* Find Control Point Event characteristic, and save characteristic value handle */
     err = mico_bt_smartbridge_get_characteritics_from_attribute_cache_by_uuid(
-            (mico_bt_smartbridge_socket_t *)&dev->socket,
-            &ble_access_cache_chars_uuid[BLE_CONTROL_EVT_CHAR_UUID_IDX],
-            attribute->value.service.start_handle,
-            attribute->value.service.end_handle,
-            (mico_bt_smart_attribute_t *)attribute,
-            ATTR_CHARACTERISTIC_VALUE_SIZE(BLE_ACCESS_MAX_ATTR_VALUE_LENGTH));
+              (mico_bt_smartbridge_socket_t *)&dev->socket,
+              &ble_access_cache_chars_uuid[BLE_CONTROL_EVT_CHAR_UUID_IDX],
+              attribute->value.service.start_handle,
+              attribute->value.service.end_handle,
+              (mico_bt_smart_attribute_t *)attribute,
+              ATTR_CHARACTERISTIC_VALUE_SIZE(BLE_ACCESS_MAX_ATTR_VALUE_LENGTH));
     require_noerr_action_string(err,
                                 exit,
                                 mico_bt_smartbridge_remove_attribute_cache((mico_bt_smartbridge_socket_t *)&dev->socket),
                                 "Cache Control Service Response Characteristic Failed");
     dev->service.ctrl_evt_char_value_handle = attribute->value.characteristic.value_handle;
 
- exit:
+exit:
     return err;
 }

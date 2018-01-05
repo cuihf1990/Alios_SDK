@@ -1,12 +1,3 @@
-/**
- *  UNPUBLISHED PROPRIETARY SOURCE CODE
- *  Copyright (c) 2016 MXCHIP Inc.
- *
- *  The contents of this file may not be disclosed to third parties, copied or
- *  duplicated in any form, in whole or in part, without the prior written
- *  permission of MXCHIP Corporation.
- *
- */
 
 /** @file
  *
@@ -17,7 +8,7 @@
 
 
 
- 
+
 #pragma once
 
 #include "mico.h"
@@ -27,8 +18,7 @@
 #include "mico_bt_types.h"
 
 /** GATT Status Codes*/
-enum mico_bt_gatt_status_e
-{
+enum mico_bt_gatt_status_e {
     MICO_BT_GATT_SUCCESS                    = 0x00,         /**< Success */
     MICO_BT_GATT_INVALID_HANDLE             = 0x01,         /**< Invalid Handle */
     MICO_BT_GATT_READ_NOT_PERMIT            = 0x02,         /**< Read Not Permitted */
@@ -66,7 +56,7 @@ enum mico_bt_gatt_status_e
     MICO_BT_GATT_NOT_ENCRYPTED              = 0x8e,         /**< Not Encrypted */
     MICO_BT_GATT_CONGESTED                  = 0x8f,         /**< Congested */
 
-                                                    /* 0xE0 ~ 0xFC reserved for future use */
+    /* 0xE0 ~ 0xFC reserved for future use */
     MICO_BT_GATT_CCC_CFG_ERR                = 0xFD,         /**< Improper Client Char Configuration */
     MICO_BT_GATT_PRC_IN_PROGRESS            = 0xFE,         /**< Procedure Already in Progress */
     MICO_BT_GATT_OUT_OF_RANGE               = 0xFF,         /**< Value Out of Range */
@@ -75,11 +65,10 @@ typedef uint8_t mico_bt_gatt_status_t;     /**< GATT status (see #mico_bt_gatt_s
 
 
 /** GATT Status Codes*/
-enum mico_bt_gatt_app_interface_e
-{
-    GATT_IF_FIXED_DB_GAP                    = 0x01,         
-    GATT_IF_FIXED_DB_APP                    = 0x02,         
-    GATT_IF_CLIENT                          = 0x03,         
+enum mico_bt_gatt_app_interface_e {
+    GATT_IF_FIXED_DB_GAP                    = 0x01,
+    GATT_IF_FIXED_DB_APP                    = 0x02,
+    GATT_IF_CLIENT                          = 0x03,
 };
 typedef uint8_t mico_bt_gatt_app_interface_t;     /**< GATT status (see #mico_bt_gatt_status_e) */
 
@@ -126,7 +115,8 @@ enum mico_bt_gatt_disconn_reason_e {
     GATT_CONN_LMP_TIMEOUT                   = HCI_ERR_LMP_RESPONSE_TIMEOUT,         /**< Connection fail due to LMP response tout */
     GATT_CONN_CANCEL                        = L2CAP_CONN_CANCEL                     /**< L2CAP connection cancelled  */
 };
-typedef uint16_t mico_bt_gatt_disconn_reason_t;    /**< GATT disconnection reason (see #mico_bt_gatt_disconn_reason_e) */
+typedef uint16_t
+mico_bt_gatt_disconn_reason_t;    /**< GATT disconnection reason (see #mico_bt_gatt_disconn_reason_e) */
 
 /* default GATT MTU size over LE link
 */
@@ -138,18 +128,19 @@ typedef uint16_t mico_bt_gatt_disconn_reason_t;    /**< GATT disconnection reaso
 
 
 /** characteristic descriptor: client configuration value */
-enum mico_bt_gatt_client_char_config_e
-{
+enum mico_bt_gatt_client_char_config_e {
     GATT_CLIENT_CONFIG_NONE          = 0x0000,      /**< Does not allow both notifications and indications */
     GATT_CLIENT_CONFIG_NOTIFICATION  = 0x0001,      /**< Allows notifications  */
     GATT_CLIENT_CONFIG_INDICATION    = 0x0002       /**< Allows indications  */
 };
-typedef uint16_t mico_bt_gatt_client_char_config_t;     /**< GATT client config (see #mico_bt_gatt_client_char_config_e) */
+typedef uint16_t
+mico_bt_gatt_client_char_config_t;     /**< GATT client config (see #mico_bt_gatt_client_char_config_e) */
 
 /** characteristic descriptor: server configuration value */
 #define GATT_SERVER_CONFIG_NONE               0x0000     /**< No broadcast   */
 #define GATT_SERVER_CONFIG_BROADCAST          0x0001     /**< Broadcast      */
-typedef uint16_t mico_bt_gatt_server_char_config_t;     /**< GATT server config (see #mico_bt_gatt_server_char_config_e) */
+typedef uint16_t
+mico_bt_gatt_server_char_config_t;     /**< GATT server config (see #mico_bt_gatt_server_char_config_e) */
 
 
 /**  GATT Characteristic Properties Mask */
@@ -163,7 +154,8 @@ enum mico_bt_gatt_char_properties_e {
     GATT_CHAR_PROPERTIES_BIT_AUTH           = (1 << 6),     /**< bit 6: Authenticate */
     GATT_CHAR_PROPERTIES_BIT_EXT_PROP       = (1 << 7)      /**< bit 7: Extended Properties */
 };
-typedef uint8_t mico_bt_gatt_char_properties_t;            /**< GATT characteristic properties mask (see #mico_bt_gatt_char_properties_e) */
+typedef uint8_t
+mico_bt_gatt_char_properties_t;            /**< GATT characteristic properties mask (see #mico_bt_gatt_char_properties_e) */
 
 /*************************************************************************
  *  Macros for parsing results GATT discovery results
@@ -202,13 +194,15 @@ enum mico_bt_gatt_auth_req_e {
 typedef uint8_t mico_bt_gatt_auth_req_t;   /**< GATT authentication requirement (see #mico_bt_gatt_auth_req_e)*/
 
 /** Attribute value, used for GATT write operations, and read response callbacks */
-typedef struct
-{
+typedef struct {
     uint16_t                    handle;                     /**< Attribute handle */
-    uint16_t                    offset;                     /**< Attribute value offset, ignored if not needed for a command */
+    uint16_t
+    offset;                     /**< Attribute value offset, ignored if not needed for a command */
     uint16_t                    len;                        /**< Length of attribute value */
-    mico_bt_gatt_auth_req_t    auth_req;                   /**< Authentication requirement (see @link mico_bt_gatt_auth_req_e mico_bt_gatt_auth_req_t @endlink) */
-    uint8_t                     value[1];                   /**< The attribute value (actual length is specified by 'len') */
+    mico_bt_gatt_auth_req_t
+    auth_req;                   /**< Authentication requirement (see @link mico_bt_gatt_auth_req_e mico_bt_gatt_auth_req_t @endlink) */
+    uint8_t
+    value[1];                   /**< The attribute value (actual length is specified by 'len') */
 } mico_bt_gatt_value_t;
 
 /** GATT Write Execute request flags */
@@ -219,8 +213,7 @@ enum mico_bt_gatt_exec_flag_e {
 typedef uint8_t   mico_bt_gatt_exec_flag_t;    /**< GATT execute flag (see #mico_bt_gatt_exec_flag_e) */
 
 /** Attribute read request */
-typedef struct
-{
+typedef struct {
     uint16_t        handle;     /**< Handle of attribute to read */
     uint16_t        offset;     /**< Offset to read */
     mico_bool_t    is_long;    /**< TRUE if long read */
@@ -229,8 +222,7 @@ typedef struct
 } mico_bt_gatt_read_t;
 
 /** Attribute write request */
-typedef struct
-{
+typedef struct {
     uint16_t      handle;     /**< Handle of attribute to read */
     mico_bool_t   is_prep;    /**< TRUE if this is a prepare write request */
     uint16_t      offset;     /**< Offset to write */
@@ -239,8 +231,7 @@ typedef struct
 } mico_bt_gatt_write_t;
 
 /** Attribute information for GATT attribute requests */
-typedef union
-{
+typedef union {
     mico_bt_gatt_read_t             read_req;                       /**< Parameters for GATTS_REQ_TYPE_READ */
     mico_bt_gatt_write_t            write_req;                      /**< Parameters for GATTS_REQ_TYPE_WRITE */
     uint16_t                        handle;                         /**< Parameters for GATTS_REQ_TYPE_CONF */
@@ -249,8 +240,7 @@ typedef union
 } mico_bt_gatt_request_data_t;
 
 /** GATT Attribute Request Type */
-enum mico_bt_gatt_request_type_e
-{
+enum mico_bt_gatt_request_type_e {
     GATTS_REQ_TYPE_READ = 1,        /**< Attribute read notification (attribute value internally read from GATT database) */
     GATTS_REQ_TYPE_WRITE,           /**< Attribute write notification (attribute value internally written to GATT database) */
     GATTS_REQ_TYPE_PREP_WRITE,      /**< Attribute Prepare Write Notification (Suspending write request before triggering actual execute write ) */
@@ -261,8 +251,7 @@ enum mico_bt_gatt_request_type_e
 typedef uint8_t mico_bt_gatt_request_type_t;   /**< GATT Attribute Request Type (see #mico_bt_gatt_request_type_e) */
 
 /** Discovery types */
-enum mico_bt_gatt_discovery_type_e
-{
+enum mico_bt_gatt_discovery_type_e {
     GATT_DISCOVER_SERVICES_ALL = 1,             /**< discover all services */
     GATT_DISCOVER_SERVICES_BY_UUID,             /**< discover service by UUID */
     GATT_DISCOVER_INCLUDED_SERVICES,            /**< discover an included service within a service */
@@ -273,16 +262,14 @@ enum mico_bt_gatt_discovery_type_e
 typedef uint8_t mico_bt_gatt_discovery_type_t;    /**< GATT Discovery type (see #mico_bt_gatt_discovery_type_e) */
 
 /** Parameters used in a GATT Discovery */
-typedef struct
-{
+typedef struct {
     mico_bt_uuid_t uuid;        /**< Service or Characteristic UUID */
     uint16_t        s_handle;    /**< Start handle for range to search */
     uint16_t        e_handle;    /**< End handle for range to search */
-}mico_bt_gatt_discovery_param_t;
+} mico_bt_gatt_discovery_param_t;
 
 /** GATT Read Types */
-enum mico_bt_gatt_read_type_e
-{
+enum mico_bt_gatt_read_type_e {
     GATT_READ_BY_TYPE = 1,      /**< Read by Type (service or characteristic UUIDs) */
     GATT_READ_BY_HANDLE,        /**< Read by Handle */
     GATT_READ_MULTIPLE,         /**< Read Multiple (array of handles) */
@@ -293,9 +280,9 @@ enum mico_bt_gatt_read_type_e
 typedef uint8_t mico_bt_gatt_read_type_t;      /**< GATT read type (see #mico_bt_gatt_read_type_e) */
 
 /** Parameters for GATT_READ_BY_TYPE and GATT_READ_CHAR_VALUE */
-typedef struct
-{
-    mico_bt_gatt_auth_req_t     auth_req;       /**< Authentication requirement (see @link mico_bt_gatt_auth_req_e mico_bt_gatt_auth_req_t @endlink) */
+typedef struct {
+    mico_bt_gatt_auth_req_t
+    auth_req;       /**< Authentication requirement (see @link mico_bt_gatt_auth_req_e mico_bt_gatt_auth_req_t @endlink) */
     uint16_t                    s_handle;       /**< Starting handle */
     uint16_t                    e_handle;       /**< Ending handle */
     mico_bt_uuid_t              uuid;           /**< uuid */
@@ -303,31 +290,30 @@ typedef struct
 
 #define GATT_MAX_READ_MULTI_HANDLES      10     /**< Max attributes allowed in one GATT_READ_MULTIPLE request */
 /** Parameters for GATT_READ_MULTIPLE */
-typedef struct
-{
-    mico_bt_gatt_auth_req_t     auth_req;                               /**< authentication requirement (see @link mico_bt_gatt_auth_req_e mico_bt_gatt_auth_req_t @endlink) */
+typedef struct {
+    mico_bt_gatt_auth_req_t
+    auth_req;                               /**< authentication requirement (see @link mico_bt_gatt_auth_req_e mico_bt_gatt_auth_req_t @endlink) */
     uint16_t                    num_handles;                            /**< number of handles to read */
     uint16_t                    handles[GATT_MAX_READ_MULTI_HANDLES];   /**< handles list to be read */
 } mico_bt_gatt_read_multi_t;
 
 /** Parameters for GATT_READ_BY_HANDLE */
-typedef struct
-{
-    mico_bt_gatt_auth_req_t     auth_req;    /**< authentication requirement (see @link mico_bt_gatt_auth_req_e mico_bt_gatt_auth_req_t @endlink) */
+typedef struct {
+    mico_bt_gatt_auth_req_t
+    auth_req;    /**< authentication requirement (see @link mico_bt_gatt_auth_req_e mico_bt_gatt_auth_req_t @endlink) */
     uint16_t                    handle;      /**< handle */
 } mico_bt_gatt_read_by_handle_t;
 
 /** Parameters for GATT_READ_PARTIAL */
-typedef struct
-{
-    mico_bt_gatt_auth_req_t     auth_req;    /**< authentication requirement (see @link mico_bt_gatt_auth_req_e mico_bt_gatt_auth_req_t @endlink) */
+typedef struct {
+    mico_bt_gatt_auth_req_t
+    auth_req;    /**< authentication requirement (see @link mico_bt_gatt_auth_req_e mico_bt_gatt_auth_req_t @endlink) */
     uint16_t                    handle;      /**< handle */
     uint16_t                    offset;      /**< offset */
 } mico_bt_gatt_read_partial_t;
 
 /** Read request parameters - used when calling #mico_bt_gatt_send_read */
-typedef union
-{
+typedef union {
     mico_bt_gatt_read_by_type_t   service;           /**< Parameters for GATT_READ_BY_TYPE */
     mico_bt_gatt_read_by_type_t   char_type;         /**< Parameters for GATT_READ_CHAR_VALUE */
     mico_bt_gatt_read_multi_t     read_multiple;     /**< Parameters for GATT_READ_MULTIPLE */
@@ -336,8 +322,7 @@ typedef union
 } mico_bt_gatt_read_param_t;
 
 /**  Write request types - used when calling #mico_bt_gatt_send_write */
-enum mico_bt_gatt_write_type_e
-{
+enum mico_bt_gatt_write_type_e {
     GATT_WRITE_NO_RSP = 1,  /**< Write without response */
     GATT_WRITE,             /**< Write with response */
     GATT_WRITE_PREPARE      /**< Prepare to write (call #mico_bt_gatt_send_execute_write to execute the write) */
@@ -345,8 +330,7 @@ enum mico_bt_gatt_write_type_e
 typedef uint8_t mico_bt_gatt_write_type_t;     /**< GATT write type (see #mico_bt_gatt_write_type_e) */
 
 /**  Response data for read operations */
-typedef struct
-{
+typedef struct {
     uint16_t                    handle;     /**< handle */
     uint16_t                    len;        /**< length of response data */
     uint16_t                    offset;     /**< offset */
@@ -354,17 +338,17 @@ typedef struct
 } mico_bt_gatt_data_t;
 
 /** Client Operation Complete response data (dependent on operation completed) */
-typedef union
-{
-    mico_bt_gatt_data_t    att_value;      /**< Response data for read operations (initiated using #mico_bt_gatt_send_read) */
+typedef union {
+    mico_bt_gatt_data_t
+    att_value;      /**< Response data for read operations (initiated using #mico_bt_gatt_send_read) */
     uint16_t                mtu;            /**< Response data for configuration operations */
-    uint16_t                handle;         /**< Response data for write operations (initiated using #mico_bt_gatt_send_write) */
+    uint16_t
+    handle;         /**< Response data for write operations (initiated using #mico_bt_gatt_send_write) */
 } mico_bt_gatt_operation_complete_rsp_t;   /**< GATT operation complete response type */
 
 /** GATT client operation type, used in client callback function
 */
-enum mico_bt_gatt_optype_e
-{
+enum mico_bt_gatt_optype_e {
     GATTC_OPTYPE_NONE             = 0,    /**< None      */
     GATTC_OPTYPE_DISCOVERY        = 1,    /**< Discovery */
     GATTC_OPTYPE_READ             = 2,    /**< Read      */
@@ -379,17 +363,16 @@ enum mico_bt_gatt_optype_e
 typedef uint8_t mico_bt_gatt_optype_t; /**< GATT operation type (see #mico_bt_gatt_optype_e) */
 
 /** characteristic declaration */
-typedef struct
-{
-    mico_bt_gatt_char_properties_t characteristic_properties;  /**< characteristic properties (see @link mico_bt_gatt_char_properties_e mico_bt_gatt_char_properties_t @endlink) */
+typedef struct {
+    mico_bt_gatt_char_properties_t
+    characteristic_properties;  /**< characteristic properties (see @link mico_bt_gatt_char_properties_e mico_bt_gatt_char_properties_t @endlink) */
     uint16_t                        val_handle;                 /**< characteristic value attribute handle */
     uint16_t                        handle;                     /**< characteristic declaration handle */
     mico_bt_uuid_t                 char_uuid;                  /**< characteristic UUID type */
 } mico_bt_gatt_char_declaration_t;
 
 /** GATT group value */
-typedef struct
-{
+typedef struct {
     mico_bt_uuid_t service_type;   /**< group type */
     uint16_t        s_handle;       /**< starting handle of the group */
     uint16_t        e_handle;       /**< ending handle of the group */
@@ -397,8 +380,7 @@ typedef struct
 
 
 /** included service attribute value */
-typedef struct
-{
+typedef struct {
     mico_bt_uuid_t service_type;   /**< included service UUID */
     uint16_t        handle;         /**< included service handle */
     uint16_t        s_handle;       /**< starting handle */
@@ -406,23 +388,23 @@ typedef struct
 } mico_bt_gatt_included_service_t;
 
 /** characteristic descriptor information */
-typedef struct
-{
+typedef struct {
     mico_bt_uuid_t         type;      /**< descriptor UUID type */
     uint16_t                handle;    /**< descriptor attribute handle */
-}mico_bt_gatt_char_descr_info_t;
+} mico_bt_gatt_char_descr_info_t;
 
 
 /**
  * Discovery result data
  * Use  GATT_DISCOVERY_RESULT_SERVICE_* or GATT_DISCOVERY_RESULT_CHARACTERISTIC_* macros to parse discovery data)
  */
-typedef union
-{
+typedef union {
     mico_bt_gatt_included_service_t    included_service;           /**< Result for GATT_DISCOVER_INCLUDED_SERVICES */
-    mico_bt_gatt_group_value_t         group_value;                /**< Result for GATT_DISCOVER_SERVICES_ALL or GATT_DISCOVER_SERVICES_BY_UUID  */
+    mico_bt_gatt_group_value_t
+    group_value;                /**< Result for GATT_DISCOVER_SERVICES_ALL or GATT_DISCOVER_SERVICES_BY_UUID  */
     mico_bt_gatt_char_declaration_t    characteristic_declaration; /**< Result for GATT_DISCOVER_CHARACTERISTICS */
-    mico_bt_gatt_char_descr_info_t     char_descr_info;            /**< Result for GATT_DISCOVER_CHARACTERISTIC_DESCRIPTORS */
+    mico_bt_gatt_char_descr_info_t
+    char_descr_info;            /**< Result for GATT_DISCOVER_CHARACTERISTIC_DESCRIPTORS */
 } mico_bt_gatt_discovery_data_t;
 
 #define GATT_LINK_IDLE_TIMEOUT_WHEN_NO_APP  0 /* start a idle timer for this duration when no application need to use the link */
@@ -592,8 +574,7 @@ typedef uint16_t mico_bt_gatt_appearance_t;     /**< GATT appearance (see #gatt_
     BIT16_TO_8(uuid)
 
 /** GATT events */
-typedef enum
-{
+typedef enum {
     GATT_CONNECTION_STATUS_EVT,                         /**< GATT connection status change. Event data: #mico_bt_gatt_connection_status_t */
     GATT_OPERATION_CPLT_EVT,                            /**< GATT operation complete. Event data: #mico_bt_gatt_event_data_t */
     GATT_DISCOVERY_RESULT_EVT,                          /**< GATT attribute discovery result. Event data: #mico_bt_gatt_discovery_result_t */
@@ -602,53 +583,53 @@ typedef enum
 } mico_bt_gatt_evt_t;
 
 /** Discovery result (used by GATT_DISCOVERY_RESULT_EVT notification) */
-typedef struct
-{
+typedef struct {
     uint16_t                                conn_id;            /**< ID of the connection */
-    mico_bt_gatt_discovery_type_t          discovery_type;     /**< Discovery type (see @link mico_bt_gatt_discovery_type_e mico_bt_gatt_discovery_type_t @endlink) */
+    mico_bt_gatt_discovery_type_t
+    discovery_type;     /**< Discovery type (see @link mico_bt_gatt_discovery_type_e mico_bt_gatt_discovery_type_t @endlink) */
     mico_bt_gatt_discovery_data_t          discovery_data;     /**< Discovery data  */
 } mico_bt_gatt_discovery_result_t;
 
 /** Discovery Complete (used by GATT_DISCOVERY_CPLT_EVT notification) */
-typedef struct
-{
+typedef struct {
     uint16_t                                conn_id;            /**< ID of the connection */
-    mico_bt_gatt_discovery_type_t          disc_type;          /**< Discovery type (see @link mico_bt_gatt_discovery_type_e mico_bt_gatt_discovery_type_t @endlink) */
+    mico_bt_gatt_discovery_type_t
+    disc_type;          /**< Discovery type (see @link mico_bt_gatt_discovery_type_e mico_bt_gatt_discovery_type_t @endlink) */
     mico_bt_gatt_status_t                  status;             /**< Status of operation */
 } mico_bt_gatt_discovery_complete_t;
 
 /** Response to read/write/disc/config operations (used by GATT_OPERATION_CPLT_EVT notification) */
-typedef struct
-{
+typedef struct {
     uint16_t                                conn_id;            /**< ID of the connection */
-    mico_bt_gatt_optype_t                  op;                 /**< Type of operation completed (see @link mico_bt_gatt_optype_e mico_bt_gatt_optype_t @endlink) */
+    mico_bt_gatt_optype_t
+    op;                 /**< Type of operation completed (see @link mico_bt_gatt_optype_e mico_bt_gatt_optype_t @endlink) */
     mico_bt_gatt_status_t                  status;             /**< Status of operation */
     mico_bt_gatt_operation_complete_rsp_t  response_data;      /**< Response data (dependent on optype) */
 } mico_bt_gatt_operation_complete_t;
 
 /** GATT connection status (used by GATT_CONNECTION_STATUS_EVT notification) */
-typedef struct
-{
+typedef struct {
     uint8_t                         *bd_addr;               /**< Remote device address */
     mico_bt_ble_address_type_t     addr_type;              /**< Remmote device address type */
     uint16_t                        conn_id;                /**< ID of the connection */
     mico_bool_t                    connected;              /**< TRUE if connected, FALSE if disconnected */
-    mico_bt_gatt_disconn_reason_t  reason;                 /**< Reason code (see @link mico_bt_gatt_disconn_reason_e mico_bt_gatt_disconn_reason_t @endlink) */
+    mico_bt_gatt_disconn_reason_t
+    reason;                 /**< Reason code (see @link mico_bt_gatt_disconn_reason_e mico_bt_gatt_disconn_reason_t @endlink) */
     mico_bt_transport_t            transport;              /**< Transport type of the connection */
     uint8_t                         link_role;              /**< Link role on this connection */
 } mico_bt_gatt_connection_status_t;
 
 /** GATT attribute request (used by GATT_ATTRIBUTE_REQUEST_EVT notification) */
-typedef struct
-{
+typedef struct {
     uint16_t                                conn_id;            /**< ID of the connection */
-    mico_bt_gatt_request_type_t            request_type;       /**< Request type (see @link mico_bt_gatt_request_type_e mico_bt_gatt_request_type_t)  */
-    mico_bt_gatt_request_data_t            data;               /**< Information about attribute being request (dependent on request type) */
+    mico_bt_gatt_request_type_t
+    request_type;       /**< Request type (see @link mico_bt_gatt_request_type_e mico_bt_gatt_request_type_t)  */
+    mico_bt_gatt_request_data_t
+    data;               /**< Information about attribute being request (dependent on request type) */
 } mico_bt_gatt_attribute_request_t;
 
 /** Stuctures for GATT event notifications */
-typedef union
-{
+typedef union {
     mico_bt_gatt_discovery_result_t        discovery_result;   /**< Data for GATT_DISCOVERY_RESULT_EVT */
     mico_bt_gatt_discovery_complete_t      discovery_complete; /**< Data for GATT_DISCOVERY_CPLT_EVT */
     mico_bt_gatt_operation_complete_t      operation_complete; /**< Data for GATT_OPERATION_CPLT_EVT */
@@ -725,7 +706,8 @@ mico_bt_gatt_status_t mico_bt_gatt_db_init (const uint8_t *p_gatt_db, uint16_t g
  *  @return @link mico_bt_gatt_status_e mico_bt_gatt_status_t @endlink
  *
  */
-mico_bt_gatt_status_t mico_bt_gatt_send_indication (uint16_t conn_id, uint16_t attr_handle, uint16_t *val_len, uint8_t *p_val );
+mico_bt_gatt_status_t mico_bt_gatt_send_indication (uint16_t conn_id, uint16_t attr_handle, uint16_t *val_len,
+                                                    uint8_t *p_val );
 
 /**
  * Function     mico_bt_gatt_send_notification
@@ -740,20 +722,21 @@ mico_bt_gatt_status_t mico_bt_gatt_send_indication (uint16_t conn_id, uint16_t a
  *  @return @link mico_bt_gatt_status_e mico_bt_gatt_status_t @endlink
  *
  */
-mico_bt_gatt_status_t mico_bt_gatt_send_notification (uint16_t conn_id, uint16_t attr_handle, uint16_t *val_len, uint8_t *p_val );
+mico_bt_gatt_status_t mico_bt_gatt_send_notification (uint16_t conn_id, uint16_t attr_handle, uint16_t *val_len,
+                                                      uint8_t *p_val );
 
 /**
 * Function       mico_bt_gatt_send_response
 *
 *                When application receives a Read Request, Write Request or Indication from the
-*                peer it can reply synchronously or return a MICO_BT_GATT_PENDING result code 
+*                peer it can reply synchronously or return a MICO_BT_GATT_PENDING result code
 *                indicating to the stack that the message is not processed yet.  In that case
-*                application should call this function to send data or just a confirmation to 
+*                application should call this function to send data or just a confirmation to
 *                the peer.
 *
 *  @param[in]  status      : Status of the operation to be send to the peer
 *  @param[in]  conn_id     : Connection handle
-*  @param[in]  attr_handle : Attribute handle 
+*  @param[in]  attr_handle : Attribute handle
 *  @param[in]  attr_len    : Length of the attribute to send
 *  @param[in]  offset      : Attribute value offset
 *  @param[in]  p_attr      : Attribute Value
@@ -761,7 +744,7 @@ mico_bt_gatt_status_t mico_bt_gatt_send_notification (uint16_t conn_id, uint16_t
 *  @return @link mico_bt_gatt_status_e mico_bt_gatt_status_t @endlink
 */
 mico_bt_gatt_status_t mico_bt_gatt_send_response(mico_bt_gatt_status_t status, uint16_t conn_id,
-    uint16_t attr_handle, uint16_t attr_len, uint16_t offset, uint8_t* p_attr);
+                                                 uint16_t attr_handle, uint16_t attr_len, uint16_t offset, uint8_t *p_attr);
 
 /**@} server_api_functions */
 
@@ -803,8 +786,8 @@ mico_bt_gatt_status_t mico_bt_gatt_configure_mtu (uint16_t conn_id, uint16_t mtu
  *  @return @link mico_bt_gatt_status_e mico_bt_gatt_status_t @endlink
 */
 mico_bt_gatt_status_t mico_bt_gatt_send_discover (uint16_t conn_id,
-                                             mico_bt_gatt_discovery_type_t discovery_type,
-                                             mico_bt_gatt_discovery_param_t *p_discovery_param );
+                                                  mico_bt_gatt_discovery_type_t discovery_type,
+                                                  mico_bt_gatt_discovery_param_t *p_discovery_param );
 
 /**
  * Function       mico_bt_gatt_send_read
@@ -820,7 +803,7 @@ mico_bt_gatt_status_t mico_bt_gatt_send_discover (uint16_t conn_id,
  *
  */
 mico_bt_gatt_status_t mico_bt_gatt_send_read (uint16_t conn_id, mico_bt_gatt_read_type_t type,
-                                             mico_bt_gatt_read_param_t *p_read);
+                                              mico_bt_gatt_read_param_t *p_read);
 
 /**
  * Function       mico_bt_gatt_send_write
@@ -835,7 +818,7 @@ mico_bt_gatt_status_t mico_bt_gatt_send_read (uint16_t conn_id, mico_bt_gatt_rea
  *  @return @link mico_bt_gatt_status_e mico_bt_gatt_status_t @endlink
  */
 mico_bt_gatt_status_t mico_bt_gatt_send_write (uint16_t conn_id, mico_bt_gatt_write_type_t type,
-                                              mico_bt_gatt_value_t *p_write);
+                                               mico_bt_gatt_value_t *p_write);
 
 /**
  * Function       mico_bt_gatt_send_execute_write
@@ -918,9 +901,9 @@ mico_bt_gatt_status_t mico_bt_gatt_deregister (mico_bt_gatt_app_interface_t gatt
  *
  */
 mico_bool_t mico_bt_gatt_le_connect (mico_bt_device_address_t bd_addr,
-                                    mico_bt_ble_address_type_t bd_addr_type,
-                                    mico_bt_ble_conn_mode_t conn_mode,
-                                    mico_bool_t is_direct);
+                                     mico_bt_ble_address_type_t bd_addr_type,
+                                     mico_bt_ble_conn_mode_t conn_mode,
+                                     mico_bool_t is_direct);
 
 /**
  * Function       mico_bt_gatt_bredr_connect

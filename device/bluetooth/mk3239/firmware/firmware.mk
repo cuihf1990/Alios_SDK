@@ -1,8 +1,3 @@
-#
-# Copyright 2016, MXCHIP Corporation
-# All Rights Reserved.
-#
-
 NAME := lib_mico_ble_firmware
 
 # Use Firmware images which are already present

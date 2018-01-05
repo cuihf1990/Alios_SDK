@@ -1,12 +1,3 @@
-/**
- *  UNPUBLISHED PROPRIETARY SOURCE CODE
- *  Copyright (c) 2016 MXCHIP Inc.
- *
- *  The contents of this file may not be disclosed to third parties, copied or
- *  duplicated in any form, in whole or in part, without the prior written
- *  permission of MXCHIP Corporation.
- *
- */
 
 /** @file
  *
@@ -37,8 +28,7 @@
 typedef mico_bt_result_t  mico_bt_dev_status_t;      /**< Result/Status for mico_bt_dev */
 
 /** Structure returned with Vendor Specific Command complete callback */
-typedef struct
-{
+typedef struct {
     uint16_t    opcode;                     /**< Vendor specific command opcode */
     uint16_t    param_len;                  /**< Return parameter length        */
     uint8_t     *p_param_buf;               /**< Return parameter buffer        */
@@ -119,8 +109,7 @@ enum mico_bt_dev_filter_cond_e {
 /** BTM service definitions (used for storing EIR data to bit mask */
 #ifndef BTM_EIR_UUID_ENUM
 #define BTM_EIR_UUID_ENUM
-enum
-{
+enum {
     BTM_EIR_UUID_SERVCLASS_SERVICE_DISCOVERY_SERVER,
     BTM_EIR_UUID_SERVCLASS_SERIAL_PORT,
     BTM_EIR_UUID_SERVCLASS_LAN_ACCESS_USING_PPP,
@@ -186,22 +175,19 @@ enum
  *  Device Discovery Types
  ****************************/
 /** Class of Device inquiry filter */
-typedef struct
-{
+typedef struct {
     mico_bt_dev_class_t            dev_class;          /**< class of device */
     mico_bt_dev_class_t            dev_class_mask;     /**< class of device filter mask */
 } mico_bt_dev_cod_cond_t;
 
 /** Inquiry filter */
-typedef union
-{
+typedef union {
     mico_bt_device_address_t       bdaddr_cond;        /**< bluetooth address filter */
     mico_bt_dev_cod_cond_t         cod_cond;           /**< class of device filter */
 } mico_bt_dev_inq_filt_cond_t;
 
 /** Inquiry Parameters */
-typedef struct
-{
+typedef struct {
     uint8_t                         mode;               /**< Inquiry mode (see #mico_bt_inquiry_mode_e) */
     uint8_t                         duration;           /**< Inquiry duration (1.28 sec increments) */
     uint8_t                         filter_cond_type;   /**< Inquiry filter type  (see #mico_bt_dev_filter_cond_e) */
@@ -209,22 +195,21 @@ typedef struct
 } mico_bt_dev_inq_parms_t;
 
 /** Inquiry Results */
-typedef struct
-{
+typedef struct {
     uint16_t                        clock_offset;                           /**< Clock offset */
     mico_bt_device_address_t       remote_bd_addr;                         /**< Device address */
     mico_bt_dev_class_t            dev_class;                              /**< Class of device */
     uint8_t                         page_scan_rep_mode;                     /**< Page scan repetition mode */
     uint8_t                         page_scan_per_mode;                     /**< Page scan per mode */
     uint8_t                         page_scan_mode;                         /**< Page scan mode */
-    int8_t                          rssi;                                   /**< Receive signal strength index (#BTM_INQ_RES_IGNORE_RSSI, if not available) */
+    int8_t
+    rssi;                                   /**< Receive signal strength index (#BTM_INQ_RES_IGNORE_RSSI, if not available) */
     uint32_t                        eir_uuid[BTM_EIR_SERVICE_ARRAY_SIZE];   /**< Array or EIR UUIDs */
     mico_bool_t                    eir_complete_list;                      /**< TRUE if EIR array is complete */
 } mico_bt_dev_inquiry_scan_result_t;
 
 /** RSSI Result (in response to #mico_bt_dev_read_rssi) */
-typedef struct
-{
+typedef struct {
     mico_bt_result_t                  status;             /**< Status of the operation */
     uint8_t                         hci_status;         /**< Status from controller */
     int8_t                          rssi;               /**< RSSI */
@@ -232,8 +217,7 @@ typedef struct
 } mico_bt_dev_rssi_result_t;
 
 /** TX Power Result (in response to #mico_bt_dev_read_tx_power) */
-typedef struct
-{
+typedef struct {
     mico_bt_result_t                  status;             /**< Status of the operation */
     uint8_t                         hci_status;         /**< Status from controller */
     int8_t                          tx_power;           /**< TX power */
@@ -247,8 +231,7 @@ typedef struct
 /** Security Service Levels [bit mask]. Encryption should not be used without authentication. */
 #ifndef BTM_SEC_LEVEL
 #define BTM_SEC_LEVEL
-enum mico_bt_sec_level_e
-{
+enum mico_bt_sec_level_e {
     BTM_SEC_NONE                    = 0x0000,    /**< Nothing required */
     BTM_SEC_IN_AUTHENTICATE         = 0x0002,    /**< Inbound call requires authentication */
     BTM_SEC_OUT_AUTHENTICATE        = 0x0010,    /**< Outbound call requires authentication */
@@ -271,8 +254,7 @@ enum mico_bt_sec_level_e
 #endif
 
 /** Pairing IO Capabilities */
-enum mico_bt_dev_io_cap_e
-{
+enum mico_bt_dev_io_cap_e {
     BTM_IO_CAPABILITIES_DISPLAY_ONLY,             /**< Display Only        */
     BTM_IO_CAPABILITIES_DISPLAY_AND_KEYBOARD,     /**< Display Yes/No      */
     BTM_IO_CAPABILITIES_KEYBOARD_ONLY,            /**< Keyboard Only       */
@@ -291,7 +273,8 @@ enum mico_bt_dev_auth_req_e {
     BTM_AUTH_SINGLE_PROFILE_GENERAL_BONDING_NO = 4,     /**< MITM Protection Not Required - Single Profiles/general bonding. Numeric comparison with automatic accept allowed */
     BTM_AUTH_SINGLE_PROFILE_GENERAL_BONDING_YES = 5,    /**< MITM Protection Required - Single Profiles/general bonding. Use IO Capabilities to determine authentication procedure */
 };
-typedef uint8_t mico_bt_dev_auth_req_t;                /**< BR/EDR authentication requirement (see #mico_bt_dev_auth_req_e) */
+typedef uint8_t
+mico_bt_dev_auth_req_t;                /**< BR/EDR authentication requirement (see #mico_bt_dev_auth_req_e) */
 
 /** Device Security Mode */
 enum mico_bt_security_mode_e {
@@ -302,7 +285,7 @@ enum mico_bt_security_mode_e {
     BTM_SEC_MODE_SP           = 4,
     BTM_SEC_MODE_SP_DEBUG     = 5,
     BTM_SEC_MODE_SC           = 6,
-}; 
+};
 typedef uint8_t mico_bt_security_mode_t;
 
 /** LE Authentication requirement */
@@ -311,18 +294,18 @@ enum mico_bt_dev_le_auth_req_e {
     BTM_LE_AUTH_REQ_BOND =          0x01,                                               /**< Required - General Bond */
     BTM_LE_AUTH_REQ_MITM =          0x04,                                               /**< MITM required - Auth Y/N*/
     BTM_LE_AUTH_REQ_SC_ONLY =       0x08,                                               /**< LE Secure Connection, no MITM, no Bonding */
-    BTM_LE_AUTH_REQ_SC_BOND =       (BTM_LE_AUTH_REQ_SC_ONLY|BTM_LE_AUTH_REQ_BOND),     /**< LE Secure Connection, no MITM, Bonding */
-    BTM_LE_AUTH_REQ_SC_MITM =       (BTM_LE_AUTH_REQ_SC_ONLY|BTM_LE_AUTH_REQ_MITM),     /**< LE Secure Connection, MITM, no Bonding */
-    BTM_LE_AUTH_REQ_SC_MITM_BOND =  (BTM_LE_AUTH_REQ_SC_ONLY|BTM_LE_AUTH_REQ_MITM|BTM_LE_AUTH_REQ_BOND),    /**< LE Secure Connection, MITM, Bonding */
+    BTM_LE_AUTH_REQ_SC_BOND =       (BTM_LE_AUTH_REQ_SC_ONLY | BTM_LE_AUTH_REQ_BOND),   /**< LE Secure Connection, no MITM, Bonding */
+    BTM_LE_AUTH_REQ_SC_MITM =       (BTM_LE_AUTH_REQ_SC_ONLY | BTM_LE_AUTH_REQ_MITM),   /**< LE Secure Connection, MITM, no Bonding */
+    BTM_LE_AUTH_REQ_SC_MITM_BOND =  (BTM_LE_AUTH_REQ_SC_ONLY | BTM_LE_AUTH_REQ_MITM | BTM_LE_AUTH_REQ_BOND), /**< LE Secure Connection, MITM, Bonding */
     BTM_LE_AUTH_REQ_MASK =          0x1D
 };
-typedef uint8_t mico_bt_dev_le_auth_req_t;             /**< BLE authentication requirement (see #mico_bt_dev_le_auth_req_e) */
+typedef uint8_t
+mico_bt_dev_le_auth_req_t;             /**< BLE authentication requirement (see #mico_bt_dev_le_auth_req_e) */
 
 /** OOB Data status */
 #ifndef BTM_OOB_STATE
 #define BTM_OOB_STATE
-enum mico_bt_dev_oob_data_e
-{
+enum mico_bt_dev_oob_data_e {
     BTM_OOB_NONE,                                       /**< No OOB data */
     BTM_OOB_PRESENT_192,                                /**< OOB data present (from the P-192 public key) */
     BTM_OOB_PRESENT_256,                                /**< OOB data present (from the P-256 public key) */
@@ -333,8 +316,7 @@ enum mico_bt_dev_oob_data_e
 typedef uint8_t mico_bt_dev_oob_data_t;                /**< OOB data (see #mico_bt_dev_oob_data_e) */
 
 /** Data type for IO capabalities response (BTM_PAIRING_IO_CAPABILITIES_BR_EDR_RESPONSE_EVT) */
-typedef struct
-{
+typedef struct {
     mico_bt_device_address_t   bd_addr;                /**< Peer address */
     mico_bt_dev_io_cap_t       io_cap;                 /**< Peer IO capabilities */
     mico_bt_dev_oob_data_t     oob_data;               /**< OOB data present at peer device for the local device */
@@ -342,99 +324,92 @@ typedef struct
 } mico_bt_dev_bredr_io_caps_rsp_t;
 
 /** Data for pairing confirmation request (BTM_USER_CONFIRMATION_REQUEST_EVT event data type) */
-typedef struct
-{
+typedef struct {
     mico_bt_device_address_t   bd_addr;                            /**< peer address */
-    uint32_t                    numeric_value;                      /**< numeric value for comparison (if "just_works", do not show this number to UI) */
+    uint32_t
+    numeric_value;                      /**< numeric value for comparison (if "just_works", do not show this number to UI) */
     mico_bool_t                just_works;                         /**< TRUE, if using "just works" association model */
     mico_bt_dev_auth_req_t     local_authentication_requirements;  /**< Authentication requirement for local device */
     mico_bt_dev_auth_req_t     remote_authentication_requirements; /**< Authentication requirement for peer device */
 } mico_bt_dev_user_cfm_req_t;
 
 /** Pairing user passkey request  (BTM_USER_PASSKEY_REQUEST_EVT event data type) */
-typedef struct
-{
+typedef struct {
     mico_bt_device_address_t   bd_addr;            /**< peer address       */
 } mico_bt_dev_user_key_req_t;
 
 /** Data for pairing passkey notification (BTM_USER_PASSKEY_NOTIFICATION_EVT event data type) */
-typedef struct
-{
+typedef struct {
     mico_bt_device_address_t   bd_addr;            /**< peer address       */
     uint32_t                    passkey;            /**< passkey            */
 } mico_bt_dev_user_key_notif_t;
 
 
 /** Pairing keypress types */
-enum mico_bt_dev_passkey_entry_type_e
-{
+enum mico_bt_dev_passkey_entry_type_e {
     BTM_PASSKEY_ENTRY_STARTED,          /**< passkey entry started */
     BTM_PASSKEY_DIGIT_ENTERED,          /**< passkey digit entered */
     BTM_PASSKEY_DIGIT_ERASED,           /**< passkey digit erased */
     BTM_PASSKEY_DIGIT_CLEARED,          /**< passkey cleared */
     BTM_PASSKEY_ENTRY_COMPLETED         /**< passkey entry completed */
 };
-typedef uint8_t mico_bt_dev_passkey_entry_type_t;  /**< Bluetooth pairing keypress value (see #mico_bt_dev_passkey_entry_type_e)  */
+typedef uint8_t
+mico_bt_dev_passkey_entry_type_t;  /**< Bluetooth pairing keypress value (see #mico_bt_dev_passkey_entry_type_e)  */
 
 /** Pairing keypress notification (BTM_USER_KEYPRESS_NOTIFICATION_EVT event data type) */
-typedef struct
-{
+typedef struct {
     mico_bt_device_address_t           bd_addr;        /**< peer address       */
     mico_bt_dev_passkey_entry_type_t   keypress_type;  /**< type of keypress   */
 } mico_bt_dev_user_keypress_t;
 
 /** BR/EDR pairing complete infomation */
-typedef struct
-{
-    uint8_t         status;                 /**< status of the simple pairing process (see defintions for HCI status codes) */
+typedef struct {
+    uint8_t
+    status;                 /**< status of the simple pairing process (see defintions for HCI status codes) */
 } mico_bt_dev_br_edr_pairing_info_t;
 
 /** BLE pairing complete infomation */
-typedef struct
-{
+typedef struct {
     mico_bt_result_t                 status;                 /**< status of the simple pairing process   */
     uint8_t                          reason;                 /**< failure reason (see #mico_bt_smp_status_t) */
     uint8_t                          sec_level;              /**< 0 - None, 1- Unauthenticated Key, 4-Authenticated Key  */
     mico_bool_t                      privacy_supported;      /**< True if privacy supported, False if not    */
     mico_bool_t                      is_pair_cancel;         /**< True if cancelled, else False   */
-    mico_bt_device_address_t         resolved_bd_addr;       /**< Resolved address (if remote device using private address) */
+    mico_bt_device_address_t
+    resolved_bd_addr;       /**< Resolved address (if remote device using private address) */
     mico_bt_ble_address_type_t       resolved_bd_addr_type;  /**< Resolved addr type of bonded device */
 } mico_bt_dev_ble_pairing_info_t;
 
 /** Transport dependent pairing complete infomation */
-typedef union
-{
+typedef union {
     mico_bt_dev_br_edr_pairing_info_t  br_edr;         /**< BR/EDR pairing complete infomation */
     mico_bt_dev_ble_pairing_info_t     ble;            /**< BLE pairing complete infomation */
 } mico_bt_dev_pairing_info_t;
 
 /** Pairing complete notification (BTM_PAIRING_COMPLETE_EVT event data type) */
-typedef struct
-{
+typedef struct {
     uint8_t                     *bd_addr;               /**< peer address           */
     mico_bt_transport_t         transport;              /**< BT_TRANSPORT_BR_EDR or BT_TRANSPORT_LE */
     mico_bt_dev_pairing_info_t  pairing_complete_info;  /**< Transport dependent pairing complete infomation */
-    mico_bt_result_t            bonding_status;         /**< current status of bonding process to notify app of completion status of storing keys */
+    mico_bt_result_t
+    bonding_status;         /**< current status of bonding process to notify app of completion status of storing keys */
 } mico_bt_dev_pairing_cplt_t;
 
 /** Check if application wishes to upgrade security (BTM_SECURITY_UPGRADE_EVT event data type) */
-typedef struct
-{
+typedef struct {
     mico_bt_device_address_t   bd_addr;                /**< [in]  Peer address */
     mico_bool_t                upgrade;                /**< [out] Set to TRUE to request security upgrade  */
 } mico_bt_dev_security_upgrade_t;
 
 /** Security request (BTM_SECURITY_REQUEST_EVT event data type) */
-typedef struct
-{
+typedef struct {
     mico_bt_device_address_t      bd_addr;             /**< peer address           */
 } mico_bt_dev_security_request_t;
 
 /** LE Key type */
 #ifndef BTM_LE_KEY_TYPES
 #define BTM_LE_KEY_TYPES
-enum mico_bt_dev_le_key_type_e
-{
+enum mico_bt_dev_le_key_type_e {
     BTM_LE_KEY_PENC =   (1 << 0),                       /**< encryption information of peer device */
     BTM_LE_KEY_PID =    (1 << 1),                       /**< identity key of the peer device */
     BTM_LE_KEY_PCSRK =  (1 << 2),                       /**< peer SRK */
@@ -455,8 +430,7 @@ enum mico_bt_dev_le_key_type_e
 typedef uint8_t mico_bt_dev_le_key_type_t;             /**< LE key type (see #mico_bt_dev_le_key_type_e) */
 
 
-enum mico_bt_dev_link_key_type_e
-{
+enum mico_bt_dev_link_key_type_e {
     BTM_LKEY_TYPE_COMBINATION,
     BTM_LKEY_TYPE_LOCAL_UNIT,
     BTM_LKEY_TYPE_REMOTE_UNIT,
@@ -477,69 +451,63 @@ typedef uint8_t mico_bt_security_level;
 
 
 /* BLE encryption keys */
-typedef struct
-{
+typedef struct {
     BT_OCTET16              ltk;
     BT_OCTET8               rand;
     UINT16                  ediv;
     mico_bt_security_level  sec_level;
     UINT8                   key_size;
-}tBTM_LE_PENC_KEYS;
+} tBTM_LE_PENC_KEYS;
 
 /* BLE CSRK keys */
-typedef struct
-{
+typedef struct {
     UINT32                  counter;
     BT_OCTET16              csrk;
     mico_bt_security_level  sec_level;
-}tBTM_LE_PCSRK_KEYS;
+} tBTM_LE_PCSRK_KEYS;
 
 /* BLE Encryption reproduction keys */
-typedef struct
-{
+typedef struct {
 #if BLE_INCLUDED == TRUE && SMP_INCLUDED == TRUE && SMP_LE_SC_INCLUDED == TRUE
     BT_OCTET16  ltk;
 #endif
     UINT16                  div;
     UINT8                   key_size;
     mico_bt_security_level  sec_level;
-}tBTM_LE_LENC_KEYS;
+} tBTM_LE_LENC_KEYS;
 
 /* BLE SRK keys */
-typedef struct
-{
+typedef struct {
     UINT32                  counter;
     UINT16                  div;
     mico_bt_security_level  sec_level;
 #if BLE_INCLUDED == TRUE && SMP_INCLUDED == TRUE && SMP_LE_SC_INCLUDED == TRUE
     BT_OCTET16              csrk;
 #endif
-}tBTM_LE_LCSRK_KEYS;
+} tBTM_LE_LCSRK_KEYS;
 
-typedef struct
-{
+typedef struct {
     BT_OCTET16                  irk;
     mico_bt_ble_address_type_t  addr_type;
     mico_bt_device_address_t    static_addr;
-}tBTM_LE_PID_KEYS;
+} tBTM_LE_PID_KEYS;
 
-typedef union
-{
+typedef union {
     tBTM_LE_PENC_KEYS   penc_key;       /* received peer encryption key */
     tBTM_LE_PCSRK_KEYS  pcsrk_key;      /* received peer device SRK */
     tBTM_LE_PID_KEYS    pid_key;        /* peer device ID key */
     tBTM_LE_LENC_KEYS   lenc_key;       /* local encryption reproduction keys LTK = = d1(ER,DIV,0)*/
     tBTM_LE_LCSRK_KEYS  lcsrk_key;      /* local device CSRK = d1(ER,DIV,1)*/
-}tBTM_LE_KEY_VALUE;
+} tBTM_LE_KEY_VALUE;
 
-typedef struct{
+typedef struct {
     /* BR/EDR key */
     LINK_KEY_TYPE                   br_edr_key_type;        /* BR/EDR Link Key type */
     LINK_KEY                        br_edr_key;             /* BR/EDR Link Key */
-}tBTM_BR_EDR_KEY;
+} tBTM_BR_EDR_KEY;
 
 
-typedef union{
+typedef union {
     tBTM_LE_KEY_VALUE le_keys;
     tBTM_BR_EDR_KEY  br_edr_key;
 } mico_bt_security_key_value_t;
@@ -548,8 +516,7 @@ typedef union{
 /** Scan duty cycle (used for BTM_BLE_SCAN_STATE_CHANGED_EVT and mico_bt_dev_create_connection) */
 #ifndef BTM_BLE_SCAN_TYPE
 #define BTM_BLE_SCAN_TYPE
-enum mico_bt_ble_scan_type_e
-{
+enum mico_bt_ble_scan_type_e {
     BTM_BLE_SCAN_TYPE_NONE,         /**< Stop scanning */
     BTM_BLE_SCAN_TYPE_HIGH_DUTY,    /**< High duty cycle scan */
     BTM_BLE_SCAN_TYPE_LOW_DUTY      /**< Low duty cycle scan */
@@ -559,30 +526,29 @@ typedef uint8_t mico_bt_ble_scan_type_t;   /**< scan type (see #mico_bt_ble_scan
 
 
 /** bonding device information from mico_bt_dev_get_bonded_devices */
-typedef struct
-{
+typedef struct {
     mico_bt_device_address_t     bd_addr;                 /**< peer address           */
     mico_bt_ble_address_type_t   addr_type;               /**< peer address type : BLE_ADDR_PUBLIC/BLE_ADDR_RANDOM */
-    mico_bt_device_type_t        device_type;             /**< peer device type : BT_DEVICE_TYPE_BREDR/BT_DEVICE_TYPE_BLE/BT_DEVICE_TYPE_BREDR_BLE  */
-}mico_bt_dev_bonded_device_info_t;
+    mico_bt_device_type_t
+    device_type;             /**< peer device type : BT_DEVICE_TYPE_BREDR/BT_DEVICE_TYPE_BLE/BT_DEVICE_TYPE_BREDR_BLE  */
+} mico_bt_dev_bonded_device_info_t;
 
 /* LE Secure connection event data */
 /** Type of OOB data required  */
 #ifndef BTM_OOB_REQ_TYPE
 #define BTM_OOB_REQ_TYPE
-enum mico_bt_dev_oob_data_req_type_e
-{
+enum mico_bt_dev_oob_data_req_type_e {
     BTM_OOB_INVALID_TYPE,
     BTM_OOB_PEER,                                       /**< Peer OOB data requested */
     BTM_OOB_LOCAL,                                      /**< Local OOB data requested */
     BTM_OOB_BOTH                                        /**< Both local and peer OOB data requested */
 };
 #endif
-typedef UINT8 mico_bt_dev_oob_data_req_type_t;         /**< OOB data type requested (see #mico_bt_dev_oob_data_req_type_t) */
+typedef UINT8
+mico_bt_dev_oob_data_req_type_t;         /**< OOB data type requested (see #mico_bt_dev_oob_data_req_type_t) */
 
 /** SMP Pairing status codes */
-enum mico_bt_smp_status_e
-{
+enum mico_bt_smp_status_e {
     SMP_SUCCESS                 = 0,                    /**< Success */
     SMP_PASSKEY_ENTRY_FAIL      = 0x01,                 /**< Passkey entry failed */
     SMP_OOB_FAIL                = 0x02,                 /**< OOB failed */
@@ -615,28 +581,25 @@ enum mico_bt_smp_status_e
 typedef uint8_t mico_bt_smp_status_t;      /**< SMP Pairing status (see #mico_bt_smp_status_e) */
 
 /** data type for BTM_SMP_REMOTE_OOB_DATA_REQUEST_EVT */
-typedef struct
-{
+typedef struct {
     mico_bt_device_address_t           bd_addr;        /* peer address */
 } mico_bt_smp_remote_oob_req_t;
 
 /** data type for BTM_SMP_SC_REMOTE_OOB_DATA_REQUEST_EVT */
-typedef struct
-{
+typedef struct {
     mico_bt_device_address_t           bd_addr;        /* peer address */
-    mico_bt_dev_oob_data_req_type_t    oob_type;       /* requested oob data types (BTM_OOB_PEER, BTM_OOB_LOCAL, or BTM_OOB_BOTH) */
+    mico_bt_dev_oob_data_req_type_t
+    oob_type;       /* requested oob data types (BTM_OOB_PEER, BTM_OOB_LOCAL, or BTM_OOB_BOTH) */
 } mico_bt_smp_sc_remote_oob_req_t;
 
 /** Public key */
-typedef struct
-{
+typedef struct {
     BT_OCTET32  x;
     BT_OCTET32  y;
 } mico_bt_public_key_t;
 
 /**< Data for BTM_SMP_SC_LOCAL_OOB_DATA_NOTIFICATION_EVT */
-typedef struct
-{
+typedef struct {
     mico_bool_t                present;                /**< TRUE if local oob is present */
     BT_OCTET16                  randomizer;             /**< randomizer */
     BT_OCTET16                  commitment;             /**< commitment */
@@ -691,8 +654,7 @@ typedef struct {
 /** Power Management status codes */
 #ifndef BTM_PM_STATUS_CODES
 #define BTM_PM_STATUS_CODES
-enum mico_bt_dev_power_mgmt_status_e
-{
+enum mico_bt_dev_power_mgmt_status_e {
     BTM_PM_STS_ACTIVE = HCI_MODE_ACTIVE,    /**< Active */
     BTM_PM_STS_HOLD   = HCI_MODE_HOLD,      /**< Hold */
     BTM_PM_STS_SNIFF  = HCI_MODE_SNIFF,     /**< Sniff */
@@ -702,7 +664,8 @@ enum mico_bt_dev_power_mgmt_status_e
     BTM_PM_STS_ERROR                        /**< Error (controller returned error) */
 };
 #endif
-typedef uint8_t mico_bt_dev_power_mgmt_status_t;   /**< Power management status (see #mico_bt_dev_power_mgmt_status_e) */
+typedef uint8_t
+mico_bt_dev_power_mgmt_status_t;   /**< Power management status (see #mico_bt_dev_power_mgmt_status_e) */
 
 /* Bluetooth application tracing macro */
 #ifndef WPRINT_BT_APP_INFO
@@ -800,9 +763,12 @@ typedef struct {
     mico_bool_t            is_extended_oob_data;       /**< TRUE if extended OOB data */
 
     BT_OCTET16              c_192;                      /**< Simple Pairing Hash C derived from the P-192 public key */
-    BT_OCTET16              r_192;                      /**< Simple Pairing Randomnizer R associated with the P-192 public key */
-    BT_OCTET16              c_256;                      /**< Simple Pairing Hash C derived from the P-256 public key (valid only if is_extended_oob_data=TRUE) */
-    BT_OCTET16              r_256;                      /**< Simple Pairing Randomnizer R associated with the P-256 public key (valid only if is_extended_oob_data=TRUE) */
+    BT_OCTET16
+    r_192;                      /**< Simple Pairing Randomnizer R associated with the P-192 public key */
+    BT_OCTET16
+    c_256;                      /**< Simple Pairing Hash C derived from the P-256 public key (valid only if is_extended_oob_data=TRUE) */
+    BT_OCTET16
+    r_256;                      /**< Simple Pairing Randomnizer R associated with the P-256 public key (valid only if is_extended_oob_data=TRUE) */
 } mico_bt_dev_local_oob_t;
 
 /** BTM_REMOTE_OOB_DATA_REQUEST_EVT */
@@ -812,8 +778,7 @@ typedef struct {
 } mico_bt_dev_remote_oob_t;
 
 /** BR/EDR Pairing IO Capabilities (to be filled by application callback on BTM_PAIRING_IO_CAPABILITIES_REQUEST_EVT) */
-typedef struct
-{
+typedef struct {
     mico_bt_device_address_t   bd_addr;                /**< [in] BD Address of remote   */
     mico_bt_dev_io_cap_t       local_io_cap;           /**< local IO capabilities (to be filled by application callback) */
     mico_bt_dev_oob_data_t     oob_data;               /**< OOB data present at peer device for the local device   */
@@ -822,20 +787,23 @@ typedef struct
 } mico_bt_dev_bredr_io_caps_req_t;
 
 /** BLE Pairing IO Capabilities (to be filled by application callback on BTM_PAIRING_IO_CAPABILITIES_REQUEST_EVT) */
-typedef struct
-{
+typedef struct {
     mico_bt_device_address_t   bd_addr;                /**< [in] BD Address of remote   */
     mico_bt_dev_io_cap_t       local_io_cap;           /**< local IO capabilities (to be filled by application callback) */
-    uint8_t                     oob_data;               /**< OOB data present (locally) for the peer device                             */
-    mico_bt_dev_le_auth_req_t  auth_req;               /**< Authentication request (for local device) contain bonding and MITM info    */
-    uint8_t                     max_key_size;           /**< Max encryption key size                                                    */
-    mico_bt_dev_le_key_type_t  init_keys;              /**< Keys to be distributed, bit mask                                           */
-    mico_bt_dev_le_key_type_t  resp_keys;              /**< keys to be distributed, bit mask                                           */
+    uint8_t
+    oob_data;               /**< OOB data present (locally) for the peer device                             */
+    mico_bt_dev_le_auth_req_t
+    auth_req;               /**< Authentication request (for local device) contain bonding and MITM info    */
+    uint8_t
+    max_key_size;           /**< Max encryption key size                                                    */
+    mico_bt_dev_le_key_type_t
+    init_keys;              /**< Keys to be distributed, bit mask                                           */
+    mico_bt_dev_le_key_type_t
+    resp_keys;              /**< keys to be distributed, bit mask                                           */
 } mico_bt_dev_ble_io_caps_req_t;
 
 
-typedef struct
-{
+typedef struct {
     BT_OCTET16          irk;            /**< peer diverified identity root */
 #if SMP_INCLUDED == TRUE && SMP_LE_SC_INCLUDED == TRUE
     BT_OCTET16          pltk;           /**< peer long term key */
@@ -858,11 +826,10 @@ typedef struct
 
     UINT32              counter;        /**< peer sign counter for verifying rcv signed cmd */
     UINT32              local_counter;  /**< local sign counter for sending signed write cmd*/
-}mico_bt_ble_keys_t;
+} mico_bt_ble_keys_t;
 
 
-typedef struct
-{
+typedef struct {
     /* BR/EDR key */
     uint8_t                           br_edr_key_type;        /**<  BR/EDR Link Key type */
     mico_bt_link_key_t                br_edr_key;             /**<  BR/EDR Link Key */
@@ -876,8 +843,7 @@ typedef struct
 } mico_bt_device_sec_keys_t;
 
 /** Paired device link key notification (used by BTM_PAIRED_DEVICE_LINK_KEYS_UPDATE_EVT notication) */
-typedef struct
-{
+typedef struct {
     mico_bt_device_address_t   bd_addr;         /**< [in] BD Address of remote */
     mico_bt_device_sec_keys_t  key_data;        /**< [in/out] Key data */
 } mico_bt_device_link_keys_t;
@@ -885,8 +851,7 @@ typedef struct
 /** advertisement type (used when calling mico_bt_start_advertisements) */
 #ifndef BTM_BLE_ADVERT_MODE
 #define BTM_BLE_ADVERT_MODE
-enum mico_bt_ble_advert_mode_e
-{
+enum mico_bt_ble_advert_mode_e {
     BTM_BLE_ADVERT_OFF,                 /**< Stop advertising */
     BTM_BLE_ADVERT_DIRECTED_HIGH,       /**< Directed advertisement (high duty cycle) */
     BTM_BLE_ADVERT_DIRECTED_LOW,        /**< Directed advertisement (low duty cycle) */
@@ -903,8 +868,7 @@ typedef uint8_t mico_bt_ble_advert_mode_t;   /**< Advertisement type (see #mico_
 /** scan mode used in initiating */
 #ifndef BTM_BLE_CONN_MODE
 #define BTM_BLE_CONN_MODE
-enum mico_bt_ble_conn_mode_e
-{
+enum mico_bt_ble_conn_mode_e {
     BLE_CONN_MODE_OFF,                  /**< Stop initiating */
     BLE_CONN_MODE_LOW_DUTY,             /**< slow connection scan parameter */
     BLE_CONN_MODE_HIGH_DUTY             /**< fast connection scan parameter */
@@ -913,41 +877,55 @@ enum mico_bt_ble_conn_mode_e
 typedef uint8_t mico_bt_ble_conn_mode_t;       /**< Conn mode (see #mico_bt_ble_conn_mode_e) */
 
 /** Structure definitions for Bluetooth Management (mico_bt_management_cback_t) event notifications */
-typedef union
-{
+typedef union {
     /* Bluetooth status event data types*/
     mico_bt_dev_enabled_t              enabled;                            /**< Data for BTM_ENABLED_EVT */
     mico_bt_power_mgmt_notification_t  power_mgmt_notification;            /**< Data for BTM_POWER_MANAGEMENT_STATUS_EVT */
 
     /* Security event data types */
     mico_bt_dev_name_and_class_t       pin_request;                        /**< Data for BTM_PIN_REQUEST_EVT */
-    mico_bt_dev_user_cfm_req_t         user_confirmation_request;          /**< Data for BTM_USER_CONFIRMATION_REQUEST_EVT */
-    mico_bt_dev_user_key_notif_t       user_passkey_notification;          /**< Data for BTM_USER_PASSKEY_NOTIFICATION_EVT */
+    mico_bt_dev_user_cfm_req_t
+    user_confirmation_request;          /**< Data for BTM_USER_CONFIRMATION_REQUEST_EVT */
+    mico_bt_dev_user_key_notif_t
+    user_passkey_notification;          /**< Data for BTM_USER_PASSKEY_NOTIFICATION_EVT */
     mico_bt_dev_user_key_req_t         user_passkey_request;               /**< Data for BTM_USER_PASSKEY_REQUEST_EVT */
-    mico_bt_dev_user_keypress_t        user_keypress_notification;         /**< Data for BTM_USER_KEYPRESS_NOTIFICATION_EVT - See #mico_bt_dev_user_keypress_t */
-    mico_bt_dev_bredr_io_caps_req_t    pairing_io_capabilities_br_edr_request; /**< Data for BTM_PAIRING_IO_CAPABILITIES_BR_EDR_REQUEST_EVT */
-    mico_bt_dev_bredr_io_caps_rsp_t    pairing_io_capabilities_br_edr_response;/**< Data for BTM_PAIRING_IO_CAPABILITIES_BR_EDR_RESPONSE_EVT */
-    mico_bt_dev_ble_io_caps_req_t      pairing_io_capabilities_ble_request;    /**< Data for BTM_PAIRING_IO_CAPABILITIES_BLE_REQUEST_EVT */
+    mico_bt_dev_user_keypress_t
+    user_keypress_notification;         /**< Data for BTM_USER_KEYPRESS_NOTIFICATION_EVT - See #mico_bt_dev_user_keypress_t */
+    mico_bt_dev_bredr_io_caps_req_t
+    pairing_io_capabilities_br_edr_request; /**< Data for BTM_PAIRING_IO_CAPABILITIES_BR_EDR_REQUEST_EVT */
+    mico_bt_dev_bredr_io_caps_rsp_t
+    pairing_io_capabilities_br_edr_response;/**< Data for BTM_PAIRING_IO_CAPABILITIES_BR_EDR_RESPONSE_EVT */
+    mico_bt_dev_ble_io_caps_req_t
+    pairing_io_capabilities_ble_request;    /**< Data for BTM_PAIRING_IO_CAPABILITIES_BLE_REQUEST_EVT */
     mico_bt_dev_pairing_cplt_t         pairing_complete;                   /**< Data for BTM_PAIRING_COMPLETE_EVT */
     mico_bt_dev_encryption_status_t    encryption_status;                  /**< Data for BTM_ENCRYPTION_STATUS_EVT */
     mico_bt_dev_security_request_t     security_request;                   /**< Data for BTM_SECURITY_REQUEST_EVT */
-    mico_bt_dev_security_upgrade_t     security_upgrade;                   /**< Data for BTM_SECURITY_UPGRADE_EVT See #mico_bt_dev_security_upgrade_t */
+    mico_bt_dev_security_upgrade_t
+    security_upgrade;                   /**< Data for BTM_SECURITY_UPGRADE_EVT See #mico_bt_dev_security_upgrade_t */
     mico_bt_dev_name_and_class_t       security_aborted;                   /**< Data for BTM_SECURITY_ABORTED_EVT */
 
-    mico_bt_dev_local_oob_t            read_local_oob_data_complete;       /**< Data for BTM_READ_LOCAL_OOB_DATA_COMPLETE_EVT */
+    mico_bt_dev_local_oob_t
+    read_local_oob_data_complete;       /**< Data for BTM_READ_LOCAL_OOB_DATA_COMPLETE_EVT */
     mico_bt_dev_remote_oob_t           remote_oob_data_request;            /**< Data for BTM_REMOTE_OOB_DATA_REQUEST_EVT */
 
-    mico_bt_device_link_keys_t         paired_device_link_keys_update;     /**< Data for BTM_PAIRED_DEVICE_LINK_KEYS_UPDATE_EVT */
-    mico_bt_device_link_keys_t         paired_device_link_keys_request;    /**< Data for BTM_PAIRED_DEVICE_LINK_KEYS_REQUEST_EVT */
-    mico_bt_local_identity_keys_t      local_identity_keys_update;         /**< Data for BTM_LOCAL_IDENTITY_KEYS_UPDATE_EVT */
-    mico_bt_local_identity_keys_t      local_identity_keys_request;        /**< Data for BTM_LOCAL_IDENTITY_KEYS_REQUEST_EVT */
+    mico_bt_device_link_keys_t
+    paired_device_link_keys_update;     /**< Data for BTM_PAIRED_DEVICE_LINK_KEYS_UPDATE_EVT */
+    mico_bt_device_link_keys_t
+    paired_device_link_keys_request;    /**< Data for BTM_PAIRED_DEVICE_LINK_KEYS_REQUEST_EVT */
+    mico_bt_local_identity_keys_t
+    local_identity_keys_update;         /**< Data for BTM_LOCAL_IDENTITY_KEYS_UPDATE_EVT */
+    mico_bt_local_identity_keys_t
+    local_identity_keys_request;        /**< Data for BTM_LOCAL_IDENTITY_KEYS_REQUEST_EVT */
 
     mico_bt_ble_scan_type_t            ble_scan_state_changed;             /**< Data for BTM_BLE_SCAN_STATE_CHANGED_EVT */
     mico_bt_ble_advert_mode_t          ble_advert_state_changed;           /**< Data for BTM_BLE_ADVERT_STATE_CHANGED_EVT */
 
-    mico_bt_smp_remote_oob_req_t       smp_remote_oob_data_request;        /**< Data for BTM_SMP_REMOTE_OOB_DATA_REQUEST_EVT */
-    mico_bt_smp_sc_remote_oob_req_t    smp_sc_remote_oob_data_request;     /**< Data for BTM_SMP_SC_REMOTE_OOB_DATA_REQUEST_EVT */
-    mico_bt_smp_sc_local_oob_t         *p_smp_sc_local_oob_data;           /**< Data for BTM_SMP_SC_LOCAL_OOB_DATA_NOTIFICATION_EVT */
+    mico_bt_smp_remote_oob_req_t
+    smp_remote_oob_data_request;        /**< Data for BTM_SMP_REMOTE_OOB_DATA_REQUEST_EVT */
+    mico_bt_smp_sc_remote_oob_req_t
+    smp_sc_remote_oob_data_request;     /**< Data for BTM_SMP_SC_REMOTE_OOB_DATA_REQUEST_EVT */
+    mico_bt_smp_sc_local_oob_t
+    *p_smp_sc_local_oob_data;           /**< Data for BTM_SMP_SC_LOCAL_OOB_DATA_NOTIFICATION_EVT */
 
     mico_bt_sco_connected_t            sco_connected;                      /**< Data for BTM_SCO_CONNECTED_EVT */
     mico_bt_sco_disconnected_t         sco_disconnected;                   /**< Data for BTM_SCO_DISCONNECTED_EVT */
@@ -967,7 +945,8 @@ typedef union
  *
  * @return Status of event handling
  */
-typedef mico_bt_result_t (mico_bt_management_cback_t) (mico_bt_management_evt_t event, mico_bt_management_evt_data_t *p_event_data);
+typedef mico_bt_result_t (mico_bt_management_cback_t) (mico_bt_management_evt_t event,
+                                                       mico_bt_management_evt_data_t *p_event_data);
 
 /**
  * Connection status change callback
@@ -983,7 +962,8 @@ typedef mico_bt_result_t (mico_bt_management_cback_t) (mico_bt_management_evt_t 
  *
  * @return void
  */
-typedef void (mico_bt_connection_status_change_cback_t) (mico_bt_device_address_t bd_addr, uint8_t *p_features, mico_bool_t is_connected, uint16_t handle, mico_bt_transport_t transport);  /**<   connection status change callback */
+typedef void (mico_bt_connection_status_change_cback_t) (mico_bt_device_address_t bd_addr, uint8_t *p_features,
+                                                         mico_bool_t is_connected, uint16_t handle, mico_bt_transport_t transport);  /**<   connection status change callback */
 
 
 /**
@@ -994,7 +974,8 @@ typedef void (mico_bt_connection_status_change_cback_t) (mico_bt_device_address_
  *
  * @return Nothing
  */
-typedef void (mico_bt_inquiry_result_cback_t) (mico_bt_dev_inquiry_scan_result_t *p_inquiry_result, uint8_t *p_eir_data); /**<   inquiry result callback */
+typedef void (mico_bt_inquiry_result_cback_t) (mico_bt_dev_inquiry_scan_result_t *p_inquiry_result,
+                                               uint8_t *p_eir_data); /**<   inquiry result callback */
 
 /**
  * Synchronous BTM operation is complete.
@@ -1012,7 +993,8 @@ typedef void (mico_bt_dev_cmpl_cback_t) (void *p_data);
  *
  * @return Nothing
  */
-typedef void (mico_bt_dev_vendor_specific_command_complete_cback_t) (mico_bt_dev_vendor_specific_command_complete_params_t *p_command_complete_params);
+typedef void (mico_bt_dev_vendor_specific_command_complete_cback_t) (
+    mico_bt_dev_vendor_specific_command_complete_params_t *p_command_complete_params);
 
 /******************************************************
  *               Function Declarations
@@ -1060,7 +1042,8 @@ extern "C" {
  *                  MICO_BT_NO_RESOURCES if could not allocate resources to start the command
  *                  MICO_BT_WRONG_MODE if the device is not up.
  */
-mico_bt_result_t  mico_bt_start_inquiry (mico_bt_dev_inq_parms_t *p_inqparms, mico_bt_inquiry_result_cback_t *p_inquiry_result_cback);
+mico_bt_result_t  mico_bt_start_inquiry (mico_bt_dev_inq_parms_t *p_inqparms,
+                                         mico_bt_inquiry_result_cback_t *p_inquiry_result_cback);
 
 /**
  * Function         mico_bt_cancel_inquiry
@@ -1109,7 +1092,7 @@ mico_bt_result_t mico_bt_dev_set_advanced_connection_params (mico_bt_dev_inquiry
 /**
  * Function         mico_bt_dev_set_local_device_address
  *
- *                  
+ *
  *                  Set local Bluetooth Device Address.
  *
  * @param[in]       bdaddr              : Bluetooth Device Address
@@ -1121,7 +1104,7 @@ mico_bt_result_t mico_bt_dev_set_advanced_connection_params (mico_bt_dev_inquiry
  *                  MICO_BT_NO_RESOURCES: Failure and no resources.
  *
  */
-mico_bt_result_t mico_bt_dev_set_local_device_address(mico_bt_device_address_t bdaddr, 
+mico_bt_result_t mico_bt_dev_set_local_device_address(mico_bt_device_address_t bdaddr,
                                                       mico_bt_dev_cmpl_cback_t *p_cback);
 
 /**
@@ -1142,7 +1125,7 @@ mico_bt_result_t mico_bt_dev_set_local_device_address(mico_bt_device_address_t b
  *
  */
 mico_bt_result_t mico_bt_dev_vendor_specific_command (uint16_t opcode, uint8_t param_len, uint8_t *p_param_buf,
-                                mico_bt_dev_vendor_specific_command_complete_cback_t *p_cback);
+                                                      mico_bt_dev_vendor_specific_command_complete_cback_t *p_cback);
 
 /**
  * Function         mico_bt_dev_set_discoverability
@@ -1164,7 +1147,7 @@ mico_bt_result_t mico_bt_dev_vendor_specific_command (uint16_t opcode, uint8_t p
  *                  MICO_BT_WRONG_MODE:     If the device is not up
  */
 mico_bt_result_t  mico_bt_dev_set_discoverability (uint8_t inq_mode, uint16_t duration,
-                                                    uint16_t interval);
+                                                   uint16_t interval);
 
 /**
  * Function         mico_bt_dev_set_connectability
@@ -1185,7 +1168,7 @@ mico_bt_result_t  mico_bt_dev_set_discoverability (uint8_t inq_mode, uint16_t du
  *                  MICO_BT_WRONG_MODE:     If the device is not up
  */
 mico_bt_result_t mico_bt_dev_set_connectability (uint8_t page_mode, uint16_t window,
-                                                      uint16_t interval);
+                                                 uint16_t interval);
 /**
  * Function         mico_bt_dev_register_connection_status_change
  *
@@ -1199,7 +1182,8 @@ mico_bt_result_t mico_bt_dev_set_connectability (uint8_t page_mode, uint16_t win
  *                  MICO_BT_SUCCESS : on success;
  *                  MICO_BT_FAILED : if an error occurred
  */
-mico_bt_result_t mico_bt_dev_register_connection_status_change(mico_bt_connection_status_change_cback_t *p_mico_bt_connection_status_change_cback);
+mico_bt_result_t mico_bt_dev_register_connection_status_change(mico_bt_connection_status_change_cback_t
+                                                               *p_mico_bt_connection_status_change_cback);
 
 /**
  * Function         mico_bt_dev_set_sniff_mode
@@ -1249,7 +1233,7 @@ mico_bt_result_t mico_bt_dev_cancel_sniff_mode (mico_bt_device_address_t remote_
  *                  MICO_BT_ILLEGAL_ACTION : if an error occurred
  */
 mico_bt_result_t mico_bt_dev_set_sniff_subrating (mico_bt_device_address_t remote_bda, uint16_t max_latency,
-                              uint16_t min_remote_timeout, uint16_t min_local_timeout);
+                                                  uint16_t min_remote_timeout, uint16_t min_local_timeout);
 
 /**
  * Function         mico_bt_dev_read_rssi
@@ -1268,7 +1252,8 @@ mico_bt_result_t mico_bt_dev_set_sniff_subrating (mico_bt_device_address_t remot
  *                  MICO_BT_BUSY if command is already in progress
  *
  */
-mico_bt_result_t mico_bt_dev_read_rssi (mico_bt_device_address_t remote_bda, mico_bt_transport_t transport, mico_bt_dev_cmpl_cback_t *p_cback);
+mico_bt_result_t mico_bt_dev_read_rssi (mico_bt_device_address_t remote_bda, mico_bt_transport_t transport,
+                                        mico_bt_dev_cmpl_cback_t *p_cback);
 
 /**
  * Function         mico_bt_dev_read_tx_power
@@ -1324,8 +1309,8 @@ mico_bt_result_t mico_bt_dev_write_eir (uint8_t *p_buff, uint16_t len);
 
 
 /**
- * Function         mico_bt_dev_set_pin_code_only 
- * 
+ * Function         mico_bt_dev_set_pin_code_only
+ *
  *                  Set the latency pairing mode.
  *
  * @param[in]       enable      : Pin Code Only Mode is enable or not.
@@ -1335,7 +1320,7 @@ mico_bt_result_t mico_bt_dev_write_eir (uint8_t *p_buff, uint16_t len);
 mico_bt_result_t mico_bt_dev_set_pin_code_only(mico_bool_t enable);
 
 /**
- * Function         mico_bt_dev_set_security_mode 
+ * Function         mico_bt_dev_set_security_mode
  *
  *                  Set PIN type for the device.
  *
@@ -1359,7 +1344,8 @@ void mico_bt_dev_set_pin_type(mico_bool_t fixed_pin, uint8_t *pin_code, uint8_t 
  *
  * @return          void
  */
-void mico_bt_dev_pin_code_reply (mico_bt_device_address_t bd_addr, mico_bt_result_t res, uint8_t pin_len, uint8_t *p_pin);
+void mico_bt_dev_pin_code_reply (mico_bt_device_address_t bd_addr, mico_bt_result_t res, uint8_t pin_len,
+                                 uint8_t *p_pin);
 
 /**
  * Function         mico_bt_dev_sec_bond
@@ -1380,7 +1366,8 @@ void mico_bt_dev_pin_code_reply (mico_bt_device_address_t bd_addr, mico_bt_resul
  *                  MICO_BT_SUCCESS if already paired to the device, else
  *                  error code
  */
-mico_bt_result_t mico_bt_dev_sec_bond (mico_bt_device_address_t bd_addr, mico_bt_ble_address_type_t bd_addr_type, mico_bt_transport_t transport, uint8_t pin_len, uint8_t *p_pin);
+mico_bt_result_t mico_bt_dev_sec_bond (mico_bt_device_address_t bd_addr, mico_bt_ble_address_type_t bd_addr_type,
+                                       mico_bt_transport_t transport, uint8_t pin_len, uint8_t *p_pin);
 
 
 /**
@@ -1415,7 +1402,8 @@ mico_bt_result_t mico_bt_dev_sec_bond_cancel (mico_bt_device_address_t bd_addr);
  *                  MICO_BT_WRONG_MODE         : connection not up.
  *                  MICO_BT_BUSY               : security procedures are currently active
  */
-mico_bt_result_t mico_bt_dev_set_encryption (mico_bt_device_address_t bd_addr, mico_bt_transport_t transport, void *p_ref_data);
+mico_bt_result_t mico_bt_dev_set_encryption (mico_bt_device_address_t bd_addr, mico_bt_transport_t transport,
+                                             void *p_ref_data);
 
 
 /**
@@ -1484,9 +1472,9 @@ mico_bt_result_t mico_bt_dev_read_local_oob_data(void);
  *
  */
 void mico_bt_dev_remote_oob_data_reply (mico_bt_result_t res, mico_bt_device_address_t bd_addr,
-                                              mico_bool_t is_extended_oob_data,
-                                              BT_OCTET16 c_192, BT_OCTET16 r_192,
-                                              BT_OCTET16 c_256, BT_OCTET16 r_256);
+                                        mico_bool_t is_extended_oob_data,
+                                        BT_OCTET16 c_192, BT_OCTET16 r_192,
+                                        BT_OCTET16 c_256, BT_OCTET16 r_256);
 
 /*
  *
@@ -1507,9 +1495,9 @@ void mico_bt_dev_remote_oob_data_reply (mico_bt_result_t res, mico_bt_device_add
  *
  */
 uint16_t mico_bt_dev_build_oob_data(uint8_t *p_data, uint16_t max_len,
-                                          mico_bool_t is_extended_oob_data,
-                                          BT_OCTET16 c_192, BT_OCTET16 r_192,
-                                          BT_OCTET16 c_256, BT_OCTET16 r_256);
+                                    mico_bool_t is_extended_oob_data,
+                                    BT_OCTET16 c_192, BT_OCTET16 r_192,
+                                    BT_OCTET16 c_256, BT_OCTET16 r_256);
 
 /*
  *
@@ -1539,7 +1527,8 @@ void mico_bt_smp_oob_data_reply(mico_bt_device_address_t bd_addr, mico_bt_result
  * @return          TRUE: creation of local SC OOB data set started.
  *
  */
-mico_bool_t mico_bt_smp_create_local_sc_oob_data (mico_bt_device_address_t bd_addr, mico_bt_ble_address_type_t bd_addr_type);
+mico_bool_t mico_bt_smp_create_local_sc_oob_data (mico_bt_device_address_t bd_addr,
+                                                  mico_bt_ble_address_type_t bd_addr_type);
 
 /**
  *
@@ -1560,13 +1549,12 @@ void mico_bt_smp_sc_oob_reply (uint8_t *p_oob_data);
 
 
 /** HCI trace types  */
-typedef enum
-{
+typedef enum {
     HCI_TRACE_EVENT, /**< HCI event data from controller to the host */
     HCI_TRACE_COMMAND, /**< HCI command data from host to controller */
     HCI_TRACE_INCOMING_ACL_DATA,/**< HCI incoming acl data */
     HCI_TRACE_OUTGOING_ACL_DATA/**< HCI outgoing acl data */
-}mico_bt_hci_trace_type_t;
+} mico_bt_hci_trace_type_t;
 
 /**
  * HCI trace callback
@@ -1580,7 +1568,7 @@ typedef enum
  *
  * @return void
  */
-typedef void ( mico_bt_hci_trace_cback_t )( mico_bt_hci_trace_type_t type, uint16_t length, uint8_t* p_data );
+typedef void ( mico_bt_hci_trace_cback_t )( mico_bt_hci_trace_type_t type, uint16_t length, uint8_t *p_data );
 
 /**
  * Function         mico_bt_dev_register_hci_trace
@@ -1592,7 +1580,7 @@ typedef void ( mico_bt_hci_trace_cback_t )( mico_bt_hci_trace_type_t type, uint1
  * @return          void
  *
  */
-void mico_bt_dev_register_hci_trace( mico_bt_hci_trace_cback_t* p_cback );
+void mico_bt_dev_register_hci_trace( mico_bt_hci_trace_cback_t *p_cback );
 
 
 /**
@@ -1606,7 +1594,8 @@ void mico_bt_dev_register_hci_trace( mico_bt_hci_trace_cback_t* p_cback );
  * @return          mico_bt_result_t
  *
  */
-mico_bt_result_t mico_bt_dev_get_bonded_devices(mico_bt_dev_bonded_device_info_t *p_paired_device_list,uint16_t *p_num_devices);
+mico_bt_result_t mico_bt_dev_get_bonded_devices(mico_bt_dev_bonded_device_info_t *p_paired_device_list,
+                                                uint16_t *p_num_devices);
 
 /**
  * Function         mico_bt_dev_find_bonded_device
@@ -1632,7 +1621,8 @@ mico_bool_t mico_bt_dev_find_bonded_device( mico_bt_device_address_t bd_addr);
  * @return          mico_bt_result_t
  *
  */
-mico_bt_result_t mico_bt_dev_get_key_by_keytype(mico_bt_device_address_t bd_addr, mico_bt_dev_le_key_type_t key_type, mico_bt_security_key_value_t *p_sec_keys);
+mico_bt_result_t mico_bt_dev_get_key_by_keytype(mico_bt_device_address_t bd_addr, mico_bt_dev_le_key_type_t key_type,
+                                                mico_bt_security_key_value_t *p_sec_keys);
 
 
 

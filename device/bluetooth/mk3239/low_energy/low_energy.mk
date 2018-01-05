@@ -1,8 +1,3 @@
-#
-# Copyright 2016, MXCHIP Corporation
-# All Rights Reserved.
-#
-
 NAME := lib_ble_low_energy
 
 BTE_PLATFORM_DIR := ../BTE_platform

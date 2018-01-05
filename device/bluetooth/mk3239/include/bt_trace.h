@@ -1,12 +1,3 @@
-/**
- *  UNPUBLISHED PROPRIETARY SOURCE CODE
- *  Copyright (c) 2016 MXCHIP Inc.
- *
- *  The contents of this file may not be disclosed to third parties, copied or
- *  duplicated in any form, in whole or in part, without the prior written
- *  permission of MXCHIP Corporation.
- *
- */
 
 #ifndef BT_TRACE_H
 #define BT_TRACE_H
@@ -165,47 +156,47 @@ extern void LogMsg_6 (UINT32 trace_set_mask, const char *fmt_str, UINTPTR p1, UI
 
 /* Prototype for stack tracing function. */
 EXPORT_API extern void BTTRC_StackTrace0(tBTTRC_LAYER_ID layer_id,
-                                   tBTTRC_TYPE type,
-                                   UINT16 token);
+                                         tBTTRC_TYPE type,
+                                         UINT16 token);
 EXPORT_API extern void BTTRC_StackTrace1(tBTTRC_LAYER_ID layer_id,
-                                   tBTTRC_TYPE type,
-                                   UINT16 token,
-                                   tBTTRC_PARAM_TYPE p1_type, UINTPTR p1_val);
+                                         tBTTRC_TYPE type,
+                                         UINT16 token,
+                                         tBTTRC_PARAM_TYPE p1_type, UINTPTR p1_val);
 EXPORT_API extern void BTTRC_StackTrace2(tBTTRC_LAYER_ID layer_id,
-                                   tBTTRC_TYPE type,
-                                   UINT16 token,
-                                   tBTTRC_PARAM_TYPE p1_type, UINTPTR p1_val,
-                                   tBTTRC_PARAM_TYPE p2_type, UINTPTR p2_val);
+                                         tBTTRC_TYPE type,
+                                         UINT16 token,
+                                         tBTTRC_PARAM_TYPE p1_type, UINTPTR p1_val,
+                                         tBTTRC_PARAM_TYPE p2_type, UINTPTR p2_val);
 EXPORT_API extern void BTTRC_StackTrace3(tBTTRC_LAYER_ID layer_id,
-                                   tBTTRC_TYPE type,
-                                   UINT16 token,
-                                   tBTTRC_PARAM_TYPE p1_type, UINTPTR p1_val,
-                                   tBTTRC_PARAM_TYPE p2_type, UINTPTR p2_val,
-                                   tBTTRC_PARAM_TYPE p3_type, UINTPTR p3_val);
+                                         tBTTRC_TYPE type,
+                                         UINT16 token,
+                                         tBTTRC_PARAM_TYPE p1_type, UINTPTR p1_val,
+                                         tBTTRC_PARAM_TYPE p2_type, UINTPTR p2_val,
+                                         tBTTRC_PARAM_TYPE p3_type, UINTPTR p3_val);
 EXPORT_API extern void BTTRC_StackTrace4(tBTTRC_LAYER_ID layer_id,
-                                   tBTTRC_TYPE type,
-                                   UINT16 token,
-                                   tBTTRC_PARAM_TYPE p1_type, UINTPTR p1_val,
-                                   tBTTRC_PARAM_TYPE p2_type, UINTPTR p2_val,
-                                   tBTTRC_PARAM_TYPE p3_type, UINTPTR p3_val,
-                                   tBTTRC_PARAM_TYPE p4_type, UINTPTR p4_val);
+                                         tBTTRC_TYPE type,
+                                         UINT16 token,
+                                         tBTTRC_PARAM_TYPE p1_type, UINTPTR p1_val,
+                                         tBTTRC_PARAM_TYPE p2_type, UINTPTR p2_val,
+                                         tBTTRC_PARAM_TYPE p3_type, UINTPTR p3_val,
+                                         tBTTRC_PARAM_TYPE p4_type, UINTPTR p4_val);
 EXPORT_API extern void BTTRC_StackTrace5(tBTTRC_LAYER_ID layer_id,
-                                   tBTTRC_TYPE type,
-                                   UINT16 token,
-                                   tBTTRC_PARAM_TYPE p1_type, UINTPTR p1_val,
-                                   tBTTRC_PARAM_TYPE p2_type, UINTPTR p2_val,
-                                   tBTTRC_PARAM_TYPE p3_type, UINTPTR p3_val,
-                                   tBTTRC_PARAM_TYPE p4_type, UINTPTR p4_val,
-                                   tBTTRC_PARAM_TYPE p5_type, UINTPTR p5_val);
+                                         tBTTRC_TYPE type,
+                                         UINT16 token,
+                                         tBTTRC_PARAM_TYPE p1_type, UINTPTR p1_val,
+                                         tBTTRC_PARAM_TYPE p2_type, UINTPTR p2_val,
+                                         tBTTRC_PARAM_TYPE p3_type, UINTPTR p3_val,
+                                         tBTTRC_PARAM_TYPE p4_type, UINTPTR p4_val,
+                                         tBTTRC_PARAM_TYPE p5_type, UINTPTR p5_val);
 EXPORT_API extern void BTTRC_StackTrace6(tBTTRC_LAYER_ID layer_id,
-                                   tBTTRC_TYPE type,
-                                   UINT16 token,
-                                   tBTTRC_PARAM_TYPE p1_type, UINTPTR p1_val,
-                                   tBTTRC_PARAM_TYPE p2_type, UINTPTR p2_val,
-                                   tBTTRC_PARAM_TYPE p3_type, UINTPTR p3_val,
-                                   tBTTRC_PARAM_TYPE p4_type, UINTPTR p4_val,
-                                   tBTTRC_PARAM_TYPE p5_type, UINTPTR p5_val,
-                                   tBTTRC_PARAM_TYPE p6_type, UINTPTR p6_val);
+                                         tBTTRC_TYPE type,
+                                         UINT16 token,
+                                         tBTTRC_PARAM_TYPE p1_type, UINTPTR p1_val,
+                                         tBTTRC_PARAM_TYPE p2_type, UINTPTR p2_val,
+                                         tBTTRC_PARAM_TYPE p3_type, UINTPTR p3_val,
+                                         tBTTRC_PARAM_TYPE p4_type, UINTPTR p4_val,
+                                         tBTTRC_PARAM_TYPE p5_type, UINTPTR p5_val,
+                                         tBTTRC_PARAM_TYPE p6_type, UINTPTR p6_val);
 
 #ifdef __cplusplus
 }

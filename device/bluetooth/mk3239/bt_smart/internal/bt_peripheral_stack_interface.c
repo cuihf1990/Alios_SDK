@@ -1,12 +1,3 @@
-/**
- *  UNPUBLISHED PROPRIETARY SOURCE CODE
- *  Copyright (c) 2016 MXCHIP Inc.
- *
- *  The contents of this file may not be disclosed to third parties, copied or
- *  duplicated in any form, in whole or in part, without the prior written
- *  permission of MXCHIP Corporation.
- *
- */
 /** @file
  *
  */
@@ -60,7 +51,8 @@ gatt_subprocedure_t              peripheral_subprocedure;
 extern mico_bt_cfg_settings_t         mico_bt_cfg_settings;
 extern mico_bt_dev_ble_io_caps_req_t  default_io_caps_ble;
 
-extern mico_bt_gatt_status_t   bt_peripheral_gatt_callback( mico_bt_gatt_evt_t event,        mico_bt_gatt_event_data_t *p_event_data );
+extern mico_bt_gatt_status_t   bt_peripheral_gatt_callback( mico_bt_gatt_evt_t event,
+                                                            mico_bt_gatt_event_data_t *p_event_data );
 
 mico_bt_smart_advertising_complete_callback_t      app_advertising_complete_callback;
 
@@ -75,15 +67,13 @@ OSStatus peripheral_bt_interface_initialize( void )
     bt_peripheral_log( "Initializing Bluetooth Interface..." );
 
     result = mico_rtos_init_mutex( &peripheral_subprocedure.mutex );
-    if ( result  != MICO_BT_SUCCESS )
-    {
+    if ( result  != MICO_BT_SUCCESS ) {
         bt_peripheral_log( "Error creating mutex" );
         return result;
     }
 
     result = mico_rtos_init_semaphore( &peripheral_subprocedure.done_semaphore, 1 );
-    if ( result != MICO_BT_SUCCESS )
-    {
+    if ( result != MICO_BT_SUCCESS ) {
         bt_peripheral_log( "Error creating semaphore" );
         return result;
     }
@@ -115,7 +105,7 @@ OSStatus peripheral_bt_interface_disconnect( uint16_t connection_handle )
     return mico_bt_gatt_disconnect( connection_handle );
 }
 
-OSStatus peripheral_bt_interface_set_security_settings( const mico_bt_smart_security_settings_t* settings )
+OSStatus peripheral_bt_interface_set_security_settings( const mico_bt_smart_security_settings_t *settings )
 {
     /* update the security settings as per passed by the application */
     default_io_caps_ble.local_io_cap      = settings->io_capabilities;
@@ -128,7 +118,8 @@ OSStatus peripheral_bt_interface_set_security_settings( const mico_bt_smart_secu
     return MICO_BT_SUCCESS;
 }
 
-OSStatus peripheral_bt_interface_start_advertisements( mico_bt_smart_advertising_settings_t* settings, mico_bt_smart_advertising_complete_callback_t complete_callback )
+OSStatus peripheral_bt_interface_start_advertisements( mico_bt_smart_advertising_settings_t *settings,
+                                                       mico_bt_smart_advertising_complete_callback_t complete_callback )
 {
     mico_bt_smart_advertising_type_t advertising_type = settings->type;
     mico_bool_t high_duty = settings->use_high_duty;
@@ -136,10 +127,8 @@ OSStatus peripheral_bt_interface_start_advertisements( mico_bt_smart_advertising
 
     app_advertising_complete_callback = complete_callback;
 
-    switch( advertising_type )
-    {
-        case BT_SMART_UNDIRECTED_ADVERTISING:
-        {
+    switch ( advertising_type ) {
+        case BT_SMART_UNDIRECTED_ADVERTISING: {
 
             mico_bt_cfg_settings.ble_advert_cfg.high_duty_min_interval  = settings->high_duty_interval;
             mico_bt_cfg_settings.ble_advert_cfg.high_duty_max_interval  = settings->high_duty_interval;
@@ -149,14 +138,13 @@ OSStatus peripheral_bt_interface_start_advertisements( mico_bt_smart_advertising
             mico_bt_cfg_settings.ble_advert_cfg.low_duty_max_interval   = settings->low_duty_interval;
             mico_bt_cfg_settings.ble_advert_cfg.low_duty_duration       = settings->low_duty_duration;
 
-            mode = high_duty? BTM_BLE_ADVERT_UNDIRECTED_HIGH:BTM_BLE_ADVERT_UNDIRECTED_LOW;
+            mode = high_duty ? BTM_BLE_ADVERT_UNDIRECTED_HIGH : BTM_BLE_ADVERT_UNDIRECTED_LOW;
 
             return mico_bt_start_advertisements( mode, 0, NULL );
 
         }
         case BT_SMART_NON_CONNECTABLE_UNDIRECTED_ADVERTISING:
-        case BT_SMART_DISCOVERABLE_ADVERTISING:
-        {
+        case BT_SMART_DISCOVERABLE_ADVERTISING: {
             mico_bt_cfg_settings.ble_advert_cfg.high_duty_nonconn_min_interval  = settings->high_duty_interval;
             mico_bt_cfg_settings.ble_advert_cfg.high_duty_nonconn_max_interval  = settings->high_duty_interval;
             mico_bt_cfg_settings.ble_advert_cfg.high_duty_nonconn_duration      = settings->high_duty_duration;
@@ -165,20 +153,16 @@ OSStatus peripheral_bt_interface_start_advertisements( mico_bt_smart_advertising
             mico_bt_cfg_settings.ble_advert_cfg.low_duty_nonconn_max_interval   = settings->low_duty_interval;
             mico_bt_cfg_settings.ble_advert_cfg.low_duty_nonconn_duration       = settings->low_duty_duration;
 
-            if( advertising_type == BT_SMART_NON_CONNECTABLE_UNDIRECTED_ADVERTISING )
-            {
-                mode = high_duty? BTM_BLE_ADVERT_NONCONN_HIGH:BTM_BLE_ADVERT_NONCONN_LOW;
-            }
-            else
-            {
-                mode = high_duty? BTM_BLE_ADVERT_DISCOVERABLE_HIGH:BTM_BLE_ADVERT_DISCOVERABLE_LOW;
+            if ( advertising_type == BT_SMART_NON_CONNECTABLE_UNDIRECTED_ADVERTISING ) {
+                mode = high_duty ? BTM_BLE_ADVERT_NONCONN_HIGH : BTM_BLE_ADVERT_NONCONN_LOW;
+            } else {
+                mode = high_duty ? BTM_BLE_ADVERT_DISCOVERABLE_HIGH : BTM_BLE_ADVERT_DISCOVERABLE_LOW;
             }
 
             return mico_bt_start_advertisements( mode, 0, NULL );
 
         }
-        case BT_SMART_DIRECTED_ADVERTISING:
-        {
+        case BT_SMART_DIRECTED_ADVERTISING: {
             mico_bt_cfg_settings.ble_advert_cfg.low_duty_directed_min_interval   = settings->low_duty_interval;
             mico_bt_cfg_settings.ble_advert_cfg.low_duty_directed_max_interval   = settings->low_duty_interval;
             mico_bt_cfg_settings.ble_advert_cfg.low_duty_directed_duration       = settings->low_duty_duration;
@@ -186,9 +170,10 @@ OSStatus peripheral_bt_interface_start_advertisements( mico_bt_smart_advertising
             mico_bt_cfg_settings.ble_advert_cfg.high_duty_directed_min_interval  = settings->high_duty_interval;
             mico_bt_cfg_settings.ble_advert_cfg.high_duty_directed_max_interval  = settings->high_duty_interval;
 
-            mode = high_duty? BTM_BLE_ADVERT_DIRECTED_HIGH:BTM_BLE_ADVERT_DIRECTED_LOW;
+            mode = high_duty ? BTM_BLE_ADVERT_DIRECTED_HIGH : BTM_BLE_ADVERT_DIRECTED_LOW;
 
-            return mico_bt_start_advertisements( BTM_BLE_ADVERT_DIRECTED_HIGH, settings->directed_advertisement_addr_type, settings->directed_advertisement_addr );
+            return mico_bt_start_advertisements( BTM_BLE_ADVERT_DIRECTED_HIGH, settings->directed_advertisement_addr_type,
+                                                 settings->directed_advertisement_addr );
 
         }
         default:
@@ -204,13 +189,13 @@ OSStatus peripheral_bt_interface_stop_advertisements( void )
 
 void peripheral_bt_interface_advertisements_state_change_callback( mico_bt_ble_advert_mode_t state )
 {
-    if( state == BTM_BLE_ADVERT_OFF && app_advertising_complete_callback != NULL )
-    {
+    if ( state == BTM_BLE_ADVERT_OFF && app_advertising_complete_callback != NULL ) {
         mico_rtos_send_asynchronous_event( MICO_BT_EVT_WORKER_THREAD, app_advertising_complete_callback, NULL );
     }
 }
 
-OSStatus peripheral_bt_interface_indicate_attribute_value ( uint16_t connection_handle, const mico_bt_ext_attribute_value_t* attribute )
+OSStatus peripheral_bt_interface_indicate_attribute_value ( uint16_t connection_handle,
+                                                            const mico_bt_ext_attribute_value_t *attribute )
 {
     uint16_t val_len = 0;
     uint16_t offset = 0;
@@ -221,18 +206,20 @@ OSStatus peripheral_bt_interface_indicate_attribute_value ( uint16_t connection_
 
     val_len = attribute->value_length;
 
-    while(  mico_bt_gatt_send_indication( connection_handle, attribute->handle, &val_len, attribute->p_value + offset ) == MICO_BT_GATT_SUCCESS )
-    {
+    while (  mico_bt_gatt_send_indication( connection_handle, attribute->handle, &val_len,
+                                           attribute->p_value + offset ) == MICO_BT_GATT_SUCCESS ) {
         subprocedure_wait_for_completion( &peripheral_subprocedure );
 
-        if ( peripheral_subprocedure.result != MICO_BT_SUCCESS )
+        if ( peripheral_subprocedure.result != MICO_BT_SUCCESS ) {
             break;
+        }
 
         offset += val_len;
         val_len = attribute->value_length - offset;
 
-        if( offset >= attribute->value_length )
+        if ( offset >= attribute->value_length ) {
             break;
+        }
     }
 
     subprocedure_unlock( &peripheral_subprocedure );
@@ -240,7 +227,8 @@ OSStatus peripheral_bt_interface_indicate_attribute_value ( uint16_t connection_
     return peripheral_subprocedure.result;
 }
 
-OSStatus peripheral_bt_interface_notify_attribute_value( uint16_t connection_handle, const mico_bt_ext_attribute_value_t* attribute )
+OSStatus peripheral_bt_interface_notify_attribute_value( uint16_t connection_handle,
+                                                         const mico_bt_ext_attribute_value_t *attribute )
 {
     uint16_t val_len = 0;
     uint16_t offset = 0;
@@ -251,13 +239,14 @@ OSStatus peripheral_bt_interface_notify_attribute_value( uint16_t connection_han
 
     val_len = attribute->value_length;
 
-    while(  mico_bt_gatt_send_notification( connection_handle, attribute->handle, &val_len, attribute->p_value + offset ) == MICO_BT_GATT_SUCCESS )
-    {
+    while (  mico_bt_gatt_send_notification( connection_handle, attribute->handle, &val_len,
+                                             attribute->p_value + offset ) == MICO_BT_GATT_SUCCESS ) {
         offset += val_len;
         val_len = attribute->value_length - offset;
 
-        if( offset >= attribute->value_length )
+        if ( offset >= attribute->value_length ) {
             break;
+        }
     }
 
     subprocedure_unlock( &peripheral_subprocedure );
@@ -266,7 +255,8 @@ OSStatus peripheral_bt_interface_notify_attribute_value( uint16_t connection_han
 }
 
 #if 0
-OSStatus smartbridge_bt_interface_start_advertise( const mico_bt_smart_advertise_settings_t* settings, mico_bt_smart_advertise_mode_changed_callback_t advertise_mode_changed_callback )
+OSStatus smartbridge_bt_interface_start_advertise( const mico_bt_smart_advertise_settings_t *settings,
+                                                   mico_bt_smart_advertise_mode_changed_callback_t advertise_mode_changed_callback )
 {
     mico_bool_t duplicate_filter_enabled = MICO_FALSE;
 
@@ -297,7 +287,9 @@ OSStatus smartbridge_bt_interface_stop_scan( )
     return mico_bt_ble_scan( BTM_BLE_SCAN_TYPE_NONE, MICO_TRUE, smartbridge_scan_result_callback );
 }
 
-OSStatus smartbridge_bt_interface_start_scan( const mico_bt_smart_scan_settings_t* settings, mico_bt_smart_scan_complete_callback_t complete_callback, mico_bt_smart_advertising_report_callback_t advertising_report_callback )
+OSStatus smartbridge_bt_interface_start_scan( const mico_bt_smart_scan_settings_t *settings,
+                                              mico_bt_smart_scan_complete_callback_t complete_callback,
+                                              mico_bt_smart_advertising_report_callback_t advertising_report_callback )
 {
     mico_bool_t duplicate_filter_enabled = MICO_FALSE;
 
@@ -318,29 +310,29 @@ OSStatus smartbridge_bt_interface_start_scan( const mico_bt_smart_scan_settings_
 }
 #endif
 
-OSStatus peripheral_bt_interface_update_advertisements_white_list( mico_bool_t add, mico_bt_device_address_t device_address ) 
+OSStatus peripheral_bt_interface_update_advertisements_white_list( mico_bool_t add,
+                                                                   mico_bt_device_address_t device_address )
 {
-    if ( device_address == 0 ) 
-    {
+    if ( device_address == 0 ) {
         return kParamErr;
     }
-    if ( add ) 
-    {
-        if( TRUE != mico_bt_ble_update_advertising_white_list( MICO_TRUE, device_address ) )
+    if ( add ) {
+        if ( TRUE != mico_bt_ble_update_advertising_white_list( MICO_TRUE, device_address ) ) {
             return kGeneralErr;
-    }
-    else 
-    {
-        if ( TRUE != mico_bt_ble_update_advertising_white_list( MICO_FALSE, device_address ) ) 
+        }
+    } else {
+        if ( TRUE != mico_bt_ble_update_advertising_white_list( MICO_FALSE, device_address ) ) {
             return kGeneralErr;
+        }
     }
     return kNoErr;
 }
 
 OSStatus peripheral_bt_interface_get_advertisements_white_list_size( uint8_t *size )
 {
-    if ( TRUE != mico_bt_ble_get_advertisement_white_list_size(size) )
+    if ( TRUE != mico_bt_ble_get_advertisement_white_list_size(size) ) {
         return kGeneralErr;
+    }
     return kNoErr;
 }
 
@@ -349,26 +341,26 @@ OSStatus peripheral_bt_interface_set_advertisements_filter_policy(mico_bt_periph
     OSStatus status = kNoErr;
     mico_bt_ble_advert_filter_policy_t policy;
 
-    switch (type)
-    {
-    case PERIPHERAL_ADVERT_FILTER_ALL_CONNECTION_REQ_ALL_SCAN_REQ:
-        policy = BTM_BLE_ADVERT_FILTER_ALL_CONNECTION_REQ_ALL_SCAN_REQ;
-        break;
-    case PERIPHERAL_ADVERT_FILTER_ALL_CONNECTION_REQ_WHITELIST_SCAN_REQ:
-        policy = BTM_BLE_ADVERT_FILTER_ALL_CONNECTION_REQ_WHITELIST_SCAN_REQ;
-        break;
-    case PERIPHERAL_ADVERT_FILTER_WHITELIST_CONNECTION_REQ_ALL_SCAN_REQ:
-        policy = BTM_BLE_ADVERT_FILTER_WHITELIST_CONNECTION_REQ_ALL_SCAN_REQ;
-        break;
-    case PERIPHERAL_ADVERT_FILTER_WHITELIST_CONNECTION_REQ_WHITELIST_SCAN_REQ:
-        policy = BTM_BLE_ADVERT_FILTER_WHITELIST_CONNECTION_REQ_WHITELIST_SCAN_REQ;
-        break;
-    default:
-        return kParamErr;
+    switch (type) {
+        case PERIPHERAL_ADVERT_FILTER_ALL_CONNECTION_REQ_ALL_SCAN_REQ:
+            policy = BTM_BLE_ADVERT_FILTER_ALL_CONNECTION_REQ_ALL_SCAN_REQ;
+            break;
+        case PERIPHERAL_ADVERT_FILTER_ALL_CONNECTION_REQ_WHITELIST_SCAN_REQ:
+            policy = BTM_BLE_ADVERT_FILTER_ALL_CONNECTION_REQ_WHITELIST_SCAN_REQ;
+            break;
+        case PERIPHERAL_ADVERT_FILTER_WHITELIST_CONNECTION_REQ_ALL_SCAN_REQ:
+            policy = BTM_BLE_ADVERT_FILTER_WHITELIST_CONNECTION_REQ_ALL_SCAN_REQ;
+            break;
+        case PERIPHERAL_ADVERT_FILTER_WHITELIST_CONNECTION_REQ_WHITELIST_SCAN_REQ:
+            policy = BTM_BLE_ADVERT_FILTER_WHITELIST_CONNECTION_REQ_WHITELIST_SCAN_REQ;
+            break;
+        default:
+            return kParamErr;
     }
-    
-    if (!mico_bt_ble_update_advertisement_filter_policy(policy)) 
+
+    if (!mico_bt_ble_update_advertisement_filter_policy(policy)) {
         status = kUnknownErr;
+    }
     return status;
 }
 

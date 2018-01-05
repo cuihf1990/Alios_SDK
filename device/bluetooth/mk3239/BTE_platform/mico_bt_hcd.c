@@ -1,13 +1,3 @@
-/**
- *  UNPUBLISHED PROPRIETARY SOURCE CODE
- *  Copyright (c) 2016 MXCHIP Inc.
- *
- *  The contents of this file may not be disclosed to third parties, copied or
- *  duplicated in any form, in whole or in part, without the prior written
- *  permission of MXCHIP Corporation.
- *
- */
-
 #include "mico.h"
 #include "platform.h"
 #include "platform_config.h"
@@ -15,7 +5,7 @@
 #ifdef MICO_USE_BT_PARTITION
 
 static uint32_t image_size = 0x0;
-void get_one_command(char * out, int offset)
+void get_one_command(char *out, int offset)
 {
     //uint32_t size = 0;
     uint16_t len = 0;
@@ -25,25 +15,25 @@ void get_one_command(char * out, int offset)
     //resource_read(&bt_patchram_image, offset, len + 3, &size, out);
     //uint32_t buffer_size;
 
-    volatile uint32_t read_address = offset+2;
+    volatile uint32_t read_address = offset + 2;
     mico_logic_partition_t *driver_partition = MicoFlashGetInfo( MICO_PARTITION_BT_FIRMWARE );
 
-    if( image_size == 0)
-      image_size = driver_partition->partition_length;
+    if ( image_size == 0) {
+        image_size = driver_partition->partition_length;
+    }
 
     MicoFlashRead( MICO_PARTITION_BT_FIRMWARE, &read_address, (uint8_t *)&len, 1);
-    len = len&0x00ff;
+    len = len & 0x00ff;
     read_address = offset;
-    MicoFlashRead( MICO_PARTITION_BT_FIRMWARE, &read_address, (uint8_t*)out, len+3);
+    MicoFlashRead( MICO_PARTITION_BT_FIRMWARE, &read_address, (uint8_t *)out, len + 3);
 
-    read_address = offset+10;
+    read_address = offset + 10;
 }
 
 uint32_t get_hcd_content_length()
 {
 #define READ_LEN 2048
-    if(image_size==0)
-    {
+    if (image_size == 0) {
         mico_logic_partition_t *driver_partition = MicoFlashGetInfo( MICO_PARTITION_BT_FIRMWARE );
         uint32_t offset = driver_partition->partition_length;
         uint32_t *p;
@@ -54,8 +44,8 @@ uint32_t get_hcd_content_length()
             offset -= READ_LEN; // Next block
             MicoFlashRead( MICO_PARTITION_BT_FIRMWARE, &offset, (uint8_t *)buf, READ_LEN);
             offset -= READ_LEN; // MicoFlashRead will increase FlashAddress READ_LEN, move back.
-            p = buf + (READ_LEN - 4)/sizeof(uint32_t);
-            while(p >= buf) {
+            p = buf + (READ_LEN - 4) / sizeof(uint32_t);
+            while (p >= buf) {
                 if (*p != 0xFFFFFFFF) {
                     goto EXIT;
                 }
@@ -66,7 +56,7 @@ uint32_t get_hcd_content_length()
 
 EXIT:
         free(buf);
-        image_size=image_size2;//35584;//image_size2;
+        image_size = image_size2; //35584;//image_size2;
     }
     return image_size;
 }
@@ -87,7 +77,7 @@ extern const int brcm_patch_ram_length;
 ** Returns          none
 **
 *******************************************************************************/
-void get_one_command(char * out, int offset)
+void get_one_command(char *out, int offset)
 {
     int len = brcm_patchram_buf[2 + offset] & 0x00ff;
     memcpy(out, brcm_patchram_buf + offset, 3 + len);

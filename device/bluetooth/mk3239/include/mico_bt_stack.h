@@ -1,12 +1,3 @@
-/**
- *  UNPUBLISHED PROPRIETARY SOURCE CODE
- *  Copyright (c) 2016 MXCHIP Inc.
- *
- *  The contents of this file may not be disclosed to third parties, copied or
- *  duplicated in any form, in whole or in part, without the prior written
- *  permission of MXCHIP Corporation.
- *
- */
 
 /** @file
  *
@@ -62,8 +53,8 @@ extern "C" {
  *            MICO_BT_FAILED : if an error occurred
  */
 mico_bt_result_t mico_bt_stack_init(mico_bt_management_cback_t *p_bt_management_cback,
-                                   const mico_bt_cfg_settings_t     *p_bt_cfg_settings,
-                                   const mico_bt_cfg_buf_pool_t     mico_bt_cfg_buf_pools[MICO_BT_CFG_NUM_BUF_POOLS]);
+                                    const mico_bt_cfg_settings_t     *p_bt_cfg_settings,
+                                    const mico_bt_cfg_buf_pool_t     mico_bt_cfg_buf_pools[MICO_BT_CFG_NUM_BUF_POOLS]);
 
 
 

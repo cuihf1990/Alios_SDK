@@ -1,42 +1,3 @@
-/**
- ******************************************************************************
- * @file    ble_access_core_i.c
- * @author  Jian Zhang
- * @version V1.2.1
- * @date    26-Dec-2016
- * @file    BLE ACCESS Protocol Components
- * ******************************************************************************
- *
- *  The MIT License
- *  Copyright (c) 2014 MXCHIP Inc.
- *
- *  Permission is hereby granted, free of charge, to any person obtaining a copy
- *  of this software and associated documentation files (the "Software"), to deal
- *  in the Software without restriction, including without limitation the rights
- *  to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
- *  copies of the Software, and to permit persons to whom the Software is furnished
- *  to do so, subject to the following conditions:
- *
- *  The above copyright notice and this permission notice shall be included in
- *  all copies or substantial portions of the Software.
- *
- *  THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
- *  IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
- *  FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
- *  AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY,
- *  WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR
- *  IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
- *
- ******************************************************************************
- *  BLE Vendor Specific Device
- *
- * Features demonstrated
- *  - Implement BLE_ACCESS Center Protocol developed by MXCHIP on MiCOKit-3239.
- *  - You should see details about this protocol on mico.io. 
- *
- ******************************************************************************
- **/
-
 #include <string.h>
 #include <stdio.h>
 
@@ -58,7 +19,7 @@
 /*
  *-------------------------------------------------------------------------------------------------
  *
- *  Configurations & Constants 
+ *  Configurations & Constants
  *
  *-------------------------------------------------------------------------------------------------
  */
@@ -74,7 +35,7 @@
 /*
  *-------------------------------------------------------------------------------------------------
  *
- *  Local Function Prototype 
+ *  Local Function Prototype
  *
  *-------------------------------------------------------------------------------------------------
  */
@@ -82,25 +43,25 @@
 /*
  *-------------------------------------------------------------------------------------------------
  *
- *  Local Variables 
+ *  Local Variables
  *
  *-------------------------------------------------------------------------------------------------
  */
 
-static ble_access_device_t  ble_access_devices[MAX_CONCURRENT_CONNECTIONS];  
+static ble_access_device_t  ble_access_devices[MAX_CONCURRENT_CONNECTIONS];
 static mico_mutex_t         ble_access_dev_mutex;
 
-static linked_list_t        ble_access_connecting_device_list; 
+static linked_list_t        ble_access_connecting_device_list;
 static mico_mutex_t         ble_access_conn_dev_list_mutex;
 
 static mico_worker_thread_t ble_access_worker_thread;
 static event_handler_t      ble_access_timer_evt;
 
 /* Prefix Address for valid device MAC Address */
-static uint8_t prefix_addr[][BLE_ACCESS_PREFIX_LEN] = { 
+static uint8_t prefix_addr[][BLE_ACCESS_PREFIX_LEN] = {
     [0] = {
         BLE_ACCESS_PREFIX_D0BAE4
-    }, 
+    },
     [1] = {
         BLE_ACCESS_PREFIX_C89346
     },
@@ -120,7 +81,7 @@ static uint8_t prefix_addr[][BLE_ACCESS_PREFIX_LEN] = {
 
 OSStatus ble_access_create_worker_thread(void)
 {
-    return mico_rtos_create_worker_thread(&ble_access_worker_thread, 
+    return mico_rtos_create_worker_thread(&ble_access_worker_thread,
                                           MICO_DEFAULT_WORKER_PRIORITY,
                                           2048,
                                           20);
@@ -192,7 +153,7 @@ void ble_access_initialize_devices(void)
         require_noerr_string(err, exit, "Create Sockets failed");
     }
     mico_rtos_init_mutex(&ble_access_dev_mutex);
-    
+
 exit:
     return;
 }
@@ -224,7 +185,7 @@ ble_access_device_t *ble_access_find_device_by_address(const mico_bt_device_addr
         dev = &ble_access_devices[idx];
     }
     mico_rtos_unlock_mutex(&ble_access_dev_mutex);
-    
+
     return dev;
 }
 
@@ -252,8 +213,8 @@ void ble_access_release_device(mico_bool_t free, const ble_access_device_t *devi
 
     mico_rtos_lock_mutex(&ble_access_dev_mutex);
     if (device != NULL) {
-        for (idx = 0; 
-             idx < ble_access_array_size(ble_access_devices) && device != &ble_access_devices[idx]; 
+        for (idx = 0;
+             idx < ble_access_array_size(ble_access_devices) && device != &ble_access_devices[idx];
              idx++);
         if (idx < ble_access_array_size(ble_access_devices) && free) {
             ble_access_devices[idx].device_id = 0;
@@ -385,8 +346,8 @@ OSStatus ble_access_check_adv_type(const uint8_t *adv_data,
     ble_access_manufactor_data_t     manufactor_data;
 
     if (adv_data == NULL
-            || length == 0
-            || (adv_type != BLE_ACCESS_ADV_TYPE_INIT && adv_type != BLE_ACCESS_ADV_TYPE_RECONN)) {
+        || length == 0
+        || (adv_type != BLE_ACCESS_ADV_TYPE_INIT && adv_type != BLE_ACCESS_ADV_TYPE_RECONN)) {
         return MICO_FALSE;
     }
 
@@ -401,7 +362,9 @@ OSStatus ble_access_check_adv_type(const uint8_t *adv_data,
     err = ble_access_get_manufactor_adv_data(packet,
                                              data_length,
                                              &manufactor_data);
-    if (err != kNoErr) goto exit;
+    if (err != kNoErr) {
+        goto exit;
+    }
 
     if (memcmp(manufactor_data.mxchip, BLE_ACCESS_MXCHIP_FLAG, 6) == 0) {
         if (manufactor_data.adv_type != adv_type) {
@@ -421,7 +384,7 @@ exit:
 void ble_access_set_scan_cfg(mico_bt_smart_scan_settings_t *scan_cfg, mico_bool_t is_auto_scanning)
 {
     require_string(scan_cfg != NULL, exit, "invalid parameters");
-    
+
     if (is_auto_scanning) {
         scan_cfg->interval = 2048;
         scan_cfg->window = 48;
@@ -437,7 +400,7 @@ void ble_access_set_scan_cfg(mico_bt_smart_scan_settings_t *scan_cfg, mico_bool_
         scan_cfg->filter_policy = FILTER_POLICY_NONE;
         scan_cfg->filter_duplicates = DUPLICATES_FILTER_DISABLED;
     }
-    
+
 exit:
     return;
 }
@@ -448,7 +411,7 @@ mico_bool_t ble_access_uuid_compare(const ble_access_uuid_t *uuid1, const ble_ac
         return MICO_FALSE;
     }
 
-    if (uuid1->len == uuid2->len 
+    if (uuid1->len == uuid2->len
         && memcmp(&uuid1->uu, &uuid2->uu, uuid1->len) == 0) {
 
         return MICO_TRUE;
@@ -468,7 +431,7 @@ OSStatus ble_access_connect_list_deinit(void)
     OSStatus                err = kNoErr;
     mico_bt_smart_device_t *dev = NULL;
 
-    for(; ;) {
+    for (; ;) {
         err = ble_access_connect_list_get(&dev, NULL);
         if (err == kNoErr) {
             ble_access_connect_list_remove(dev);
@@ -476,14 +439,14 @@ OSStatus ble_access_connect_list_deinit(void)
             break;
         }
     }
-    
+
     return mico_rtos_deinit_mutex(&ble_access_conn_dev_list_mutex);
 }
 
-mico_bool_t compare_device_by_address(linked_list_node_t* node_to_compare, void* user_data)
+mico_bool_t compare_device_by_address(linked_list_node_t *node_to_compare, void *user_data)
 {
-    ble_access_connecting_device_t* device = (ble_access_connecting_device_t* )node_to_compare;
-    mico_bt_device_address_t* device_address  = (mico_bt_device_address_t *)user_data;
+    ble_access_connecting_device_t *device = (ble_access_connecting_device_t * )node_to_compare;
+    mico_bt_device_address_t *device_address  = (mico_bt_device_address_t *)user_data;
 
     if (memcmp(device->device.address, device_address, BD_ADDR_LEN) == 0) {
         return TRUE;
@@ -501,11 +464,11 @@ OSStatus ble_access_connect_list_add(const mico_bt_smart_device_t *remote_device
 
     mico_rtos_lock_mutex(&ble_access_conn_dev_list_mutex);
     err = linked_list_find_node(&ble_access_connecting_device_list,
-                                 (linked_list_compare_callback_t)compare_device_by_address,
-                                 (void *)remote_device->address,
-                                 (linked_list_node_t**)&device_found);
+                                (linked_list_compare_callback_t)compare_device_by_address,
+                                (void *)remote_device->address,
+                                (linked_list_node_t **)&device_found);
     mico_rtos_unlock_mutex(&ble_access_conn_dev_list_mutex);
-    
+
     if (err != kNotFoundErr) {
         err = kAlreadyInUseErr;
         goto exit;
@@ -549,27 +512,32 @@ exit:
     return err;
 }
 
-OSStatus ble_access_connect_list_get(mico_bt_smart_device_t** device, mico_bool_t *reported)
+OSStatus ble_access_connect_list_get(mico_bt_smart_device_t **device, mico_bool_t *reported)
 {
     OSStatus err = kNoErr;
-    ble_access_connecting_device_t* current_device;
+    ble_access_connecting_device_t *current_device;
 
     require_action(device != NULL, exit, err = kParamErr);
 
     mico_rtos_lock_mutex(&ble_access_conn_dev_list_mutex);
     err = linked_list_get_front_node(&ble_access_connecting_device_list, (linked_list_node_t **)&current_device);
     mico_rtos_unlock_mutex(&ble_access_conn_dev_list_mutex);
-    
-    if (err != kNoErr) goto exit;
+
+    if (err != kNoErr) {
+        goto exit;
+    }
 
     *device = &current_device->device;
-    if (reported) *reported = current_device->reported;
+    if (reported) {
+        *reported = current_device->reported;
+    }
 
 exit:
     return err;
 }
 
-OSStatus ble_access_connect_list_get_by_address(mico_bt_smart_device_t **device, mico_bool_t *reported, const mico_bt_device_address_t address)
+OSStatus ble_access_connect_list_get_by_address(mico_bt_smart_device_t **device, mico_bool_t *reported,
+                                                const mico_bt_device_address_t address)
 {
     OSStatus err = kNoErr;
     ble_access_connecting_device_t *current_device;
@@ -582,11 +550,15 @@ OSStatus ble_access_connect_list_get_by_address(mico_bt_smart_device_t **device,
                                 (void *)address,
                                 (linked_list_node_t **)&current_device);
     mico_rtos_unlock_mutex(&ble_access_conn_dev_list_mutex);
-    
-    if (err != kNoErr) goto exit;
+
+    if (err != kNoErr) {
+        goto exit;
+    }
 
     *device = &current_device->device;
-    if (reported) *reported = current_device->reported;
+    if (reported) {
+        *reported = current_device->reported;
+    }
 
 exit:
     return err;
@@ -609,17 +581,21 @@ OSStatus ble_access_connect_list_find_by_address(const mico_bt_device_address_t 
 OSStatus ble_access_connect_list_remove(mico_bt_smart_device_t *device)
 {
     OSStatus err = kNoErr;
-    ble_access_connecting_device_t* current_device;
+    ble_access_connecting_device_t *current_device;
 
     mico_rtos_lock_mutex(&ble_access_conn_dev_list_mutex);
     err = linked_list_find_node(&ble_access_connecting_device_list,
-                                 (linked_list_compare_callback_t)compare_device_by_address,
-                                 device->address,
-                                 (linked_list_node_t**)&current_device);
-    if (err != kNoErr) goto exit;
+                                (linked_list_compare_callback_t)compare_device_by_address,
+                                device->address,
+                                (linked_list_node_t **)&current_device);
+    if (err != kNoErr) {
+        goto exit;
+    }
 
     err = linked_list_remove_node(&ble_access_connecting_device_list, &current_device->this_node);
-    if (err != kNoErr) goto exit;
+    if (err != kNoErr) {
+        goto exit;
+    }
 
     free(current_device);
 exit:
@@ -630,19 +606,19 @@ exit:
 const char *print_request_str(uint8_t request)
 {
     switch (request) {
-    case BLE_ACCESS_REQ_DEV_SCAN: 
-        return "SCAN_REQ";
-    case BLE_ACCESS_REQ_DEV_ADD: 
-        return "ADD_REQ";
-    case BLE_ACCESS_REQ_DEV_DISC: 
-        return "DISC_REQ";
-    case BLE_ACCESS_REQ_DEV_REMOVE: 
-        return "REMOVE_REQ";
-    case BLE_ACCESS_REQ_DEV_START_AUTO: 
-        return "START_AUTO_REQ";
-    case BLE_ACCESS_REQ_DEV_STOP_AUTO: 
-        return "STOP_AUTO_REQ";
-    default: 
-        return "Unknown request";
+        case BLE_ACCESS_REQ_DEV_SCAN:
+            return "SCAN_REQ";
+        case BLE_ACCESS_REQ_DEV_ADD:
+            return "ADD_REQ";
+        case BLE_ACCESS_REQ_DEV_DISC:
+            return "DISC_REQ";
+        case BLE_ACCESS_REQ_DEV_REMOVE:
+            return "REMOVE_REQ";
+        case BLE_ACCESS_REQ_DEV_START_AUTO:
+            return "START_AUTO_REQ";
+        case BLE_ACCESS_REQ_DEV_STOP_AUTO:
+            return "STOP_AUTO_REQ";
+        default:
+            return "Unknown request";
     }
 }

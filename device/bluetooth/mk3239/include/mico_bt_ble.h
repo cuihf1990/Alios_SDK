@@ -1,12 +1,3 @@
-/**
- *  UNPUBLISHED PROPRIETARY SOURCE CODE
- *  Copyright (c) 2016 MXCHIP Inc.
- *
- *  The contents of this file may not be disclosed to third parties, copied or
- *  duplicated in any form, in whole or in part, without the prior written
- *  permission of MXCHIP Corporation.
- *
- */
 
 /** @file
  *
@@ -21,8 +12,7 @@
 typedef uint8_t mico_bt_ble_chnl_map_t[CHNL_MAP_LEN];
 
 /** Scan modes */
-enum mico_bt_ble_scan_mode_e
-{
+enum mico_bt_ble_scan_mode_e {
     BTM_BLE_SCAN_MODE_PASSIVE = 0,  /**< Passive scan mode */
     BTM_BLE_SCAN_MODE_ACTIVE = 1,   /**< Active scan mode */
     BTM_BLE_SCAN_MODE_NONE = 0xff   /**< None */
@@ -30,21 +20,20 @@ enum mico_bt_ble_scan_mode_e
 typedef uint8_t mico_bt_ble_scan_mode_t;   /**< scan mode (see #mico_bt_ble_scan_mode_e) */
 
 /** Scan filter policy */
-enum mico_bt_ble_scan_filter_policy_e 
-{
+enum mico_bt_ble_scan_filter_policy_e {
     BTM_BLE_SCAN_FILTER_POLICY_NONE = 0,    /**< Not use White List for Scanning Procedure. */
     BTM_BLE_SCAN_FILTER_POLICY_WHITE_LIST = 1,  /**< Use White List for Scanning Procedure. */
 };
 typedef uint8_t mico_bt_ble_scan_filter_policy_t; /**< scan filter policy (see #mico_bt_ble_scan_filter_policy_e) */
 
 /** advertising channel map */
-enum mico_bt_ble_advert_chnl_map_e
-{
+enum mico_bt_ble_advert_chnl_map_e {
     BTM_BLE_ADVERT_CHNL_37  = (0x01 << 0),  /**< ADV channel */
     BTM_BLE_ADVERT_CHNL_38  = (0x01 << 1),  /**< ADV channel */
     BTM_BLE_ADVERT_CHNL_39  = (0x01 << 2)   /**< ADV channel */
 };
-typedef uint8_t mico_bt_ble_advert_chnl_map_t;  /**< BLE advertisement channel map (see #mico_bt_ble_advert_chnl_map_e) */
+typedef uint8_t
+mico_bt_ble_advert_chnl_map_t;  /**< BLE advertisement channel map (see #mico_bt_ble_advert_chnl_map_e) */
 
 /* default advertising channel map */
 #ifndef BTM_BLE_DEFAULT_ADVERT_CHNL_MAP
@@ -59,7 +48,8 @@ enum mico_bt_ble_advert_filter_policy_e {
     BTM_BLE_ADVERT_FILTER_WHITELIST_CONNECTION_REQ_WHITELIST_SCAN_REQ   = 0x03,    /**< Process scan and connection requests only from devices in the White List. */
     BTM_BLE_ADVERT_FILTER_MAX
 };
-typedef uint8_t   mico_bt_ble_advert_filter_policy_t;  /**< Advertising filter policy (see #mico_bt_ble_advert_filter_policy_e) */
+typedef uint8_t
+mico_bt_ble_advert_filter_policy_t;  /**< Advertising filter policy (see #mico_bt_ble_advert_filter_policy_e) */
 
 /* default advertising filter policy */
 #define BTM_BLE_ADVERT_FILTER_DEFAULT   BTM_BLE_ADVERT_FILTER_ALL_CONNECTION_REQ_ALL_SCAN_REQ
@@ -117,7 +107,8 @@ typedef uint8_t   mico_bt_ble_advert_filter_policy_t;  /**< Advertising filter p
 
 /** BLE Signature */
 #define BTM_BLE_AUTH_SIGNATURE_SIZE                 12                      /**< BLE data signature length 8 Bytes + 4 bytes counter*/
-typedef uint8_t mico_dev_ble_signature_t[BTM_BLE_AUTH_SIGNATURE_SIZE];     /**< Device address (see #BTM_BLE_AUTH_SIGNATURE_SIZE) */
+typedef uint8_t
+mico_dev_ble_signature_t[BTM_BLE_AUTH_SIGNATURE_SIZE];     /**< Device address (see #BTM_BLE_AUTH_SIGNATURE_SIZE) */
 
 #define BTM_BLE_POLICY_BLACK_ALL                    0x00    /* relevant to both */
 #define BTM_BLE_POLICY_ALLOW_SCAN                   0x01    /* relevant to advertiser */
@@ -189,90 +180,88 @@ enum mico_bt_ble_advert_type_e {
 typedef uint8_t   mico_bt_ble_advert_type_t;    /**< BLE advertisement data type (see #mico_bt_ble_advert_type_e) */
 
 /** security settings used with L2CAP LE COC */
-enum mico_bt_ble_sec_flags_e
-{
+enum mico_bt_ble_sec_flags_e {
     BTM_SEC_LE_LINK_ENCRYPTED                       = 0x01,                 /**< Link encrypted */
     BTM_SEC_LE_LINK_PAIRED_WITHOUT_MITM             = 0x02,                 /**< Paired without man-in-the-middle protection */
     BTM_SEC_LE_LINK_PAIRED_WITH_MITM                = 0x04                  /**< Link with man-in-the-middle protection */
 };
 
 /** Slave preferred connection interval range */
-typedef struct
-{
+typedef struct {
     uint16_t    low;    /**< Preferred low connection interval */
     uint16_t    hi;     /**< Preferred high connection interval */
-}mico_bt_ble_int_range_t;
+} mico_bt_ble_int_range_t;
 
 /** Service tag supported in the device */
-typedef struct
-{
+typedef struct {
     uint8_t         num_service;    /**< Number of services */
     mico_bool_t    list_cmpl;      /**< Complete list or not */
     uint16_t        *p_uuid;        /**< 16-bit UUID data */
-}mico_bt_ble_service_t;
+} mico_bt_ble_service_t;
 
 /** 32 bits Service supported in the device */
-typedef struct
-{
+typedef struct {
     uint8_t         num_service;    /**< Number of services */
     mico_bool_t    list_cmpl;      /**< Complete list or not */
     uint32_t        *p_uuid;        /**< 32-bit UUID data */
-}mico_bt_ble_32service_t;
+} mico_bt_ble_32service_t;
 
 /** 128 bits Service supported in the device */
-typedef struct
-{
+typedef struct {
     mico_bool_t    list_cmpl;      /**< Complete list or not */
     uint8_t         uuid128[MAX_UUID_SIZE]; /**< 128-bit UUID data */
-}mico_bt_ble_128service_t;
+} mico_bt_ble_128service_t;
 
 /** Manufacturer data supported in the device */
-typedef struct
-{
+typedef struct {
     uint8_t     len;                /**< Length of manufacturer data */
     uint8_t    *p_val;              /**< Manufacturer data */
-}mico_bt_ble_manu_t;
+} mico_bt_ble_manu_t;
 
 /** Service data supported in the device */
-typedef struct
-{
+typedef struct {
     mico_bt_uuid_t service_uuid;   /**< Service UUID data */
     uint8_t         len;            /**< Service UUID length */
     uint8_t         *p_val;         /**< Service data value */
-}mico_bt_ble_service_data_t;
+} mico_bt_ble_service_data_t;
 
 /** Proprietary data element supported in the device */
-typedef struct
-{
+typedef struct {
     uint8_t     advert_type;        /**< Advertisement type */
     uint8_t     len;                /**< Advertisement length */
     uint8_t     *p_val;             /**< Element data */
-}mico_bt_ble_prop_elem_t;
+} mico_bt_ble_prop_elem_t;
 
 /** Proprietary data elements structure supported in the device */
-typedef struct
-{
+typedef struct {
     uint8_t                     num_elem;   /**< Number of elements */
     mico_bt_ble_prop_elem_t    *p_elem;    /**< Proprietary elements */
-}mico_bt_ble_proprietary_t;
+} mico_bt_ble_proprietary_t;
 
 /** Advertising data */
-typedef struct
-{
-    mico_bt_ble_int_range_t    int_range;              /**< slave preferred connection interval range (BTM_BLE_ADVERT_BIT_INTERVAL_RANGE) */
+typedef struct {
+    mico_bt_ble_int_range_t
+    int_range;              /**< slave preferred connection interval range (BTM_BLE_ADVERT_BIT_INTERVAL_RANGE) */
     mico_bt_ble_manu_t         *p_manu;                /**< manufacturer data (BTM_BLE_ADVERT_BIT_MANUFACTURER) */
-    mico_bt_ble_service_t      *p_services;            /**< list of supported services - 16 bit UUIDs (BTM_BLE_ADVERT_BIT_SERVICE) */
-    mico_bt_ble_128service_t   *p_services_128b;       /**< list of supported services - 128 bit UUIDs (BTM_BLE_ADVERT_BIT_SERVICE_128) */
-    mico_bt_ble_32service_t    *p_service_32b;         /**< list of supported services - 32 bit UUIDs (BTM_BLE_ADVERT_BIT_SERVICE_32) */
-    mico_bt_ble_service_t      *p_sol_services;        /**< list of solicited services - 16 bit UUIDs (BTM_BLE_ADVERT_BIT_SERVICE_SOLICITATION) */
-    mico_bt_ble_32service_t    *p_sol_service_32b;     /**< list of solicited services - 32 bit UUIDs (BTM_BLE_ADVERT_BIT_SERVICE_32SOLICITATION) */
-    mico_bt_ble_128service_t   *p_sol_service_128b;    /**< list of solicited services - 128 bit UUIDs (BTM_BLE_ADVERT_BIT_SERVICE_128SOLICITATION) */
-    mico_bt_ble_proprietary_t  *p_proprietary;         /**< list of proprietary data elements (BTM_BLE_ADVERT_BIT_PROPRIETARY) */
+    mico_bt_ble_service_t
+    *p_services;            /**< list of supported services - 16 bit UUIDs (BTM_BLE_ADVERT_BIT_SERVICE) */
+    mico_bt_ble_128service_t
+    *p_services_128b;       /**< list of supported services - 128 bit UUIDs (BTM_BLE_ADVERT_BIT_SERVICE_128) */
+    mico_bt_ble_32service_t
+    *p_service_32b;         /**< list of supported services - 32 bit UUIDs (BTM_BLE_ADVERT_BIT_SERVICE_32) */
+    mico_bt_ble_service_t
+    *p_sol_services;        /**< list of solicited services - 16 bit UUIDs (BTM_BLE_ADVERT_BIT_SERVICE_SOLICITATION) */
+    mico_bt_ble_32service_t
+    *p_sol_service_32b;     /**< list of solicited services - 32 bit UUIDs (BTM_BLE_ADVERT_BIT_SERVICE_32SOLICITATION) */
+    mico_bt_ble_128service_t
+    *p_sol_service_128b;    /**< list of solicited services - 128 bit UUIDs (BTM_BLE_ADVERT_BIT_SERVICE_128SOLICITATION) */
+    mico_bt_ble_proprietary_t
+    *p_proprietary;         /**< list of proprietary data elements (BTM_BLE_ADVERT_BIT_PROPRIETARY) */
     mico_bt_ble_service_data_t *p_service_data;        /**< service data (BTM_BLE_ADVERT_BIT_SERVICE_DATA) */
     uint16_t                    appearance;             /**< appearance (BTM_BLE_ADVERT_BIT_APPEARANCE) */
     uint8_t                     flag;                   /**< flag (BTM_BLE_ADVERT_BIT_FLAGS) */
     uint8_t                     tx_power;               /**< transmit power (BTM_BLE_ADVERT_BIT_TX_POWER) */
-}mico_bt_ble_advert_data_t;
+} mico_bt_ble_advert_data_t;
 
 /** Scan result event type */
 enum mico_bt_dev_ble_evt_type_e {
@@ -285,8 +274,7 @@ enum mico_bt_dev_ble_evt_type_e {
 typedef uint8_t mico_bt_dev_ble_evt_type_t;    /**< Scan result event value (see #mico_bt_dev_ble_evt_type_e) */
 
 /** Background connection type */
-enum mico_bt_ble_conn_type_e
-{
+enum mico_bt_ble_conn_type_e {
     BTM_BLE_CONN_NONE,                          /**< No background connection */
     BTM_BLE_CONN_AUTO,                          /**< Auto connection */
     BTM_BLE_CONN_SELECTIVE                      /**< Selective connection */
@@ -294,12 +282,12 @@ enum mico_bt_ble_conn_type_e
 typedef uint8_t mico_bt_ble_conn_type_t;       /**< Connection type (see #mico_bt_ble_conn_type_e) */
 
 /** LE inquiry result type */
-typedef struct
-{
+typedef struct {
     mico_bt_device_address_t       remote_bd_addr;                         /**< Device address */
     uint8_t                         ble_addr_type;                          /**< LE Address type */
     mico_bt_dev_ble_evt_type_t     ble_evt_type;                           /**< Scan result event type */
-    int8_t                          rssi;                                   /**< Set to #BTM_INQ_RES_IGNORE_RSSI, if not valid */
+    int8_t
+    rssi;                                   /**< Set to #BTM_INQ_RES_IGNORE_RSSI, if not valid */
     uint8_t                         flag;
     uint8_t                         length;
 } mico_bt_ble_scan_results_t;
@@ -314,7 +302,8 @@ typedef struct
  *
  * @return
  */
-typedef bool (mico_bt_ble_selective_conn_cback_t)(mico_bt_device_address_t remote_bda, uint8_t *p_remote_name, const uint8_t *p_data, uint8_t length);
+typedef bool (mico_bt_ble_selective_conn_cback_t)(mico_bt_device_address_t remote_bda, uint8_t *p_remote_name,
+                                                  const uint8_t *p_data, uint8_t length);
 
 
 /**
@@ -365,7 +354,9 @@ extern "C" {
  * @return      status
  *
  */
-mico_bt_result_t mico_bt_start_advertisements(mico_bt_ble_advert_mode_t advert_mode, mico_bt_ble_address_type_t directed_advertisement_bdaddr_type, mico_bt_device_address_ptr_t directed_advertisement_bdaddr_ptr);
+mico_bt_result_t mico_bt_start_advertisements(mico_bt_ble_advert_mode_t advert_mode,
+                                              mico_bt_ble_address_type_t directed_advertisement_bdaddr_type,
+                                              mico_bt_device_address_ptr_t directed_advertisement_bdaddr_ptr);
 
 /**
  *
@@ -392,7 +383,7 @@ mico_bt_ble_advert_mode_t mico_bt_ble_get_current_advert_mode(void);
  *
  */
 mico_bt_result_t mico_bt_ble_set_advertisement_data(mico_bt_ble_advert_mask_t  data_mask,
-                                              mico_bt_ble_advert_data_t *p_data);
+                                                    mico_bt_ble_advert_data_t *p_data);
 
 /**
  *
@@ -407,7 +398,7 @@ mico_bt_result_t mico_bt_ble_set_advertisement_data(mico_bt_ble_advert_mask_t  d
  *
  */
 mico_bt_dev_status_t mico_bt_ble_set_scan_response_data(mico_bt_ble_advert_mask_t data_mask,
-                                               mico_bt_ble_advert_data_t *p_data);
+                                                        mico_bt_ble_advert_data_t *p_data);
 
 /**
  * Function         mico_bt_ble_scan
@@ -432,7 +423,8 @@ mico_bt_dev_status_t mico_bt_ble_set_scan_response_data(mico_bt_ble_advert_mask_
  *                  MICO_BT_NO_RESOURCES if could not allocate resources to start the command
  *                  MICO_BT_WRONG_MODE if the device is not up.
  */
-mico_bt_result_t  mico_bt_ble_scan (mico_bt_ble_scan_type_t scan_type, mico_bool_t duplicate_filter_enable, mico_bt_ble_scan_result_cback_t *p_scan_result_cback);
+mico_bt_result_t  mico_bt_ble_scan (mico_bt_ble_scan_type_t scan_type, mico_bool_t duplicate_filter_enable,
+                                    mico_bt_ble_scan_result_cback_t *p_scan_result_cback);
 
 /**
  *
@@ -478,7 +470,7 @@ void mico_bt_ble_security_grant(mico_bt_device_address_t bd_addr, uint8_t res);
  *
  */
 mico_bool_t mico_bt_ble_data_signature (mico_bt_device_address_t bd_addr, uint8_t *p_text, uint16_t len,
-                                             mico_dev_ble_signature_t signature);
+                                        mico_dev_ble_signature_t signature);
 
 /**
  *
@@ -496,8 +488,8 @@ mico_bool_t mico_bt_ble_data_signature (mico_bt_device_address_t bd_addr, uint8_
  *
  */
 mico_bool_t mico_bt_ble_verify_signature (mico_bt_device_address_t bd_addr, uint8_t *p_orig,
-                                            uint16_t len, uint32_t counter,
-                                            uint8_t *p_comp);
+                                          uint16_t len, uint32_t counter,
+                                          uint8_t *p_comp);
 
 /**
  *
@@ -511,7 +503,8 @@ mico_bool_t mico_bt_ble_verify_signature (mico_bt_device_address_t bd_addr, uint
  * @return          TRUE if background connection set
  *
  */
-mico_bool_t mico_bt_ble_set_background_connection_type (mico_bt_ble_conn_type_t conn_type, mico_bt_ble_selective_conn_cback_t *p_select_cback);
+mico_bool_t mico_bt_ble_set_background_connection_type (mico_bt_ble_conn_type_t conn_type,
+                                                        mico_bt_ble_selective_conn_cback_t *p_select_cback);
 
 /**
  *
@@ -528,7 +521,8 @@ mico_bool_t mico_bt_ble_set_background_connection_type (mico_bt_ble_conn_type_t 
  * @return          TRUE if successful
  *
  */
-mico_bool_t mico_bt_ble_update_background_connection_device(mico_bool_t add_remove, mico_bt_device_address_t remote_bda);
+mico_bool_t mico_bt_ble_update_background_connection_device(mico_bool_t add_remove,
+                                                            mico_bt_device_address_t remote_bda);
 
 
 /**
@@ -602,7 +596,8 @@ void mico_bt_ble_enable_mixed_privacy_mode(mico_bool_t mixed_on);
  * @return          TRUE if successful
  *
  */
-mico_bool_t mico_bt_ble_get_security_state (mico_bt_device_address_t bd_addr, uint8_t *p_le_sec_flags, uint8_t *p_le_key_size);
+mico_bool_t mico_bt_ble_get_security_state (mico_bt_device_address_t bd_addr, uint8_t *p_le_sec_flags,
+                                            uint8_t *p_le_key_size);
 
 /**
  *

@@ -6,6 +6,7 @@
 **                                                                           *
 **  Copyright (c) 2015, Broadcom Corp., All Rights Reserved.                 *
 ******************************************************************************/
+
 #include <stdint.h>
 
 /* FILE-CSTYLED */
@@ -13,8 +14,7 @@ const char brcm_patch_version[] = "BCM20703A1_001.001.005.0060.0000_Generic_UART
 
 const uint8_t brcm_patchram_format = 0x01;
 
-const uint8_t brcm_patchram_buf[] =
-{
+const uint8_t brcm_patchram_buf[] = {
     /* Configuration Data Records (Write_RAM) */
     0x4C, 0xFC, 0x8B, 0xF0, 0x04, 0x24, 0x00, 0x01, 0x06, 0x00, 0x69, 0x99, 0x99,
     0x42, 0x04, 0x1F, 0xC1, 0x5E, 0x00, 0x00, 0x00, 0x14, 0x22, 0x22, 0x00,
