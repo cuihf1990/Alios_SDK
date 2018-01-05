@@ -38,7 +38,6 @@ GLOBAL_LDFLAGS      += -lpthread -lm -lrt
 GLOBAL_DEFINES      += CONFIG_AOS_RHINO_MMREGION
 GLOBAL_DEFINES      += CONFIG_YSH_CMD_DUMPSYS
 GLOBAL_CFLAGS       += -Wall -Wno-missing-field-initializers -Wno-strict-aliasing -Wno-address -Wno-unused-result 
-GLOBAL_CFLAGS       += -U_FORTIFY_SOURCE -D_FORTIFY_SOURCE=1 -Dprintf=csp_printf
 GLOBAL_DEFINES      += CSP_LINUXHOST
 GLOBAL_DEFINES      += CONFIG_LOGMACRO_DETAILS
 GLOBAL_DEFINES      += CONFIG_AOS_FATFS_SUPPORT
