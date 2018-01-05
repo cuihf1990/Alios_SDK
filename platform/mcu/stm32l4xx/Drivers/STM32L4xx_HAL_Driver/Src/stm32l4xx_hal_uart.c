@@ -1004,7 +1004,7 @@ HAL_StatusTypeDef HAL_UART_Receive_IT_Buf_Queue_1byte(UART_HandleTypeDef *huart,
     ret = HAL_BUSY;
   }
 
-  return ret;
+  return (HAL_StatusTypeDef)ret;
 }
 
 /**
