@@ -140,16 +140,14 @@ void *cpu_entry(void *arg)
     cpu_set_t get;
 
     CPU_ZERO(&get);
-
     CPU_ZERO(&mask);
     CPU_SET((int)arg, &mask);
-    printf("cpu num is %d\n", (int)arg);
-
-    sigprocmask(SIG_BLOCK, &cpu_sig_set, NULL);
 
     if (pthread_setaffinity_np(pthread_self(), sizeof(mask), &mask) != 0) {
         printf("Not enough cpu nums!!!\n");
     }
+
+    printf("cpu num is %d\n", (int)arg);
 
     ktask_t    *tcb     = g_preferred_ready_task[(int)arg];
     task_ext_t *tcb_ext = (task_ext_t *)tcb->task_stack;
@@ -282,7 +280,8 @@ void cpu_first_task_start(void)
     ktask_t    *tcb     = g_preferred_ready_task[cpu_cur_get()];
     task_ext_t *tcb_ext = (task_ext_t *)tcb->task_stack;
 
-    sigprocmask(SIG_BLOCK, &cpu_sig_set, NULL);
+    ret = pthread_sigmask(SIG_BLOCK, &cpu_sig_set, NULL);
+    assert(ret == 0);
 
     #if (RHINO_CONFIG_CPU_NUM > 1)
     for (i = 1; i < RHINO_CONFIG_CPU_NUM; i++) {
@@ -291,9 +290,6 @@ void cpu_first_task_start(void)
         }
     }
     #endif
-
-    /* make 20ms sleep */
-    usleep(20 * 1000);
 
     memset(&sevp, 0, sizeof(sevp));
     sevp.sigev_notify = SIGEV_SIGNAL | SIGEV_THREAD_ID;
