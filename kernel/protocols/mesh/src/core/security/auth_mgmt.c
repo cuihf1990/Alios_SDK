@@ -25,10 +25,9 @@ auth_context_t g_auth_context = {
     .auth_candidate   = NULL,
     .auth_retry_times = 0,
 };
+socket_t udp_sock;
 
 static void handle_auth_timer(void *args);
-
-socket_t udp_sock;
 static void handle_udp_socket(const uint8_t *payload, uint16_t length)
 {
     uint8_t cmd;
