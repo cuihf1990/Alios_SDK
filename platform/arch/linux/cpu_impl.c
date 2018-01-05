@@ -292,6 +292,9 @@ void cpu_first_task_start(void)
     }
     #endif
 
+    /* make 20ms sleep */
+    usleep(20 * 1000);
+
     memset(&sevp, 0, sizeof(sevp));
     sevp.sigev_notify = SIGEV_SIGNAL | SIGEV_THREAD_ID;
     sevp.sigev_signo = SIGUSR1;
@@ -431,6 +434,8 @@ void cpu_task_del_hook(ktask_t *tcb, res_free_t *arg)
 void task_proc(void)
 {
     ktask_t *task_tcb;
+
+    sigprocmask(SIG_BLOCK, &cpu_sig_set, NULL);
 
     task_ext_t *tcb_ext = (task_ext_t *)g_active_task[cpu_cur_get()]->task_stack;
 
