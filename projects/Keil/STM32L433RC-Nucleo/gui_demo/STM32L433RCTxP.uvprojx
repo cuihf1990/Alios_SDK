@@ -10,7 +10,7 @@
       <TargetName>STM32L433RCTxP</TargetName>
       <ToolsetNumber>0x4</ToolsetNumber>
       <ToolsetName>ARM-ADS</ToolsetName>
-      <pCCUsed>5060300::V5.06 update 3 (build 300)::ARMCC</pCCUsed>
+      <pCCUsed>5060422::V5.06 update 4 (build 422)::ARMCC</pCCUsed>
       <TargetOption>
         <TargetCommonOption>
           <Device>STM32L433RCTx</Device>
@@ -527,7 +527,7 @@
             <File>
               <FileName>k_fifo.c</FileName>
               <FileType>1</FileType>
-              <FilePath>..\..\..\..\kernel\rhino\core\k_fifo.c</FilePath>
+              <FilePath>..\..\..\..\kernel\rhino\common\k_fifo.c</FilePath>
             </File>
             <File>
               <FileName>k_idle.c</FileName>
@@ -627,7 +627,7 @@
             <File>
               <FileName>k_trace.c</FileName>
               <FileType>1</FileType>
-              <FilePath>..\..\..\..\kernel\rhino\core\k_trace.c</FilePath>
+              <FilePath>..\..\..\..\kernel\rhino\common\k_trace.c</FilePath>
             </File>
             <File>
               <FileName>k_workqueue.c</FileName>

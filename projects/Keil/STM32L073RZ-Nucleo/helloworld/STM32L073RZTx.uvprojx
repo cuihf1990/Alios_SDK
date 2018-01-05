@@ -522,7 +522,7 @@
             <File>
               <FileName>k_fifo.c</FileName>
               <FileType>1</FileType>
-              <FilePath>..\..\..\..\kernel\rhino\core\k_fifo.c</FilePath>
+              <FilePath>..\..\..\..\kernel\rhino\common\k_fifo.c</FilePath>
             </File>
             <File>
               <FileName>k_idle.c</FileName>
@@ -622,7 +622,7 @@
             <File>
               <FileName>k_trace.c</FileName>
               <FileType>1</FileType>
-              <FilePath>..\..\..\..\kernel\rhino\core\k_trace.c</FilePath>
+              <FilePath>..\..\..\..\kernel\rhino\common\k_trace.c</FilePath>
             </File>
             <File>
               <FileName>k_workqueue.c</FileName>
