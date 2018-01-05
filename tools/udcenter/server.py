@@ -5,6 +5,7 @@ import TBframe
 MAX_MSG_LENTH = 8192
 ENCRYPT_CLIENT = False
 ENCRYPT_TERMINAL = False
+ENCRYPT_CONTROLLER = False
 DEBUG = True
 
 def signal_handler(sig, frame):
@@ -80,33 +81,39 @@ class Server:
                     if type == TBframe.TYPE_NONE:
                         break
 
-                    self.conn_timeout[conn]['timeout'] = time.time() + 30
                     if client == None:
-                        if type != TBframe.CLIENT_UUID:
-                            data = TBframe.construct(TBframe.CLIENT_UUID, 'give me your uuid first')
+                        if type != TBframe.CLIENT_LOGIN:
+                            data = TBframe.construct(TBframe.CLIENT_LOGIN, 'request')
                             conn.send(data)
                             time.sleep(0.1)
                             continue
-                        for c in self.client_list:
-                            if c['uuid'] != value:
-                                continue
-                            client = c
+                        try:
+                            [uuid, tag, token] = value.split(',')
+                            client = self.get_client_by_uuid(uuid)
+                        except:
+                            if DEBUG: traceback.print_exc()
+                        if client == None or 'token' not in client or client['token'] != token:
+                            print client
+                            print "warning: invalid client {0} connecting @ {1}".format(value, addr)
+                            data = TBframe.construct(TBframe.CLIENT_LOGIN, 'fail')
+                            conn.send(data)
+                            self.conn_timeout[conn]['timeout'] = time.time() + 1
                             break
-                        if client == None:
-                            client = {'uuid':value,
-                                      'valid':True,
-                                      'socket':conn,
-                                      'addr':addr,
-                                      'devices':{}}
-                            self.client_list.append(client)
-                            print "new client {0} connected @ {1}".format(value, addr)
                         else:
                             client['socket'] = conn
+                            client['tag'] = tag
+                            client['token'] = token
                             client['addr'] = addr
                             client['valid'] = True
-                            print "client {0} re-connected @ {1}".format(value, addr)
+                            if 'devices' not in client:
+                                client['devices'] = {}
+                            data = TBframe.construct(TBframe.CLIENT_LOGIN, 'success')
+                            conn.send(data)
+                            self.conn_timeout[conn]['timeout'] = time.time() + 30
+                            print "client {0} connected @ {1}, tag={2}".format(uuid, addr, repr(tag))
                         continue
 
+                    self.conn_timeout[conn]['timeout'] = time.time() + 30
                     if type == TBframe.CLIENT_DEV:
                         new_devices = value.split(':')
                         for port in new_devices:
@@ -221,9 +228,6 @@ class Server:
                             else:
                                 data = TBframe.construct(TBframe.CMD_DONE, ','.join(values[2:]))
                             terminal['socket'].send(data)
-                    elif type == TBframe.CLIENT_TAG:
-                        client['tag'] = value
-                        print 'client {0} tag: {1}'.format(client['uuid'],repr(value))
             except:
                 if DEBUG: traceback.print_exc()
                 break
@@ -279,8 +283,6 @@ class Server:
         ret = None
         for client in self.client_list:
             if client['uuid'] != uuid:
-                continue
-            if client['valid'] == False:
                 continue
             ret = client
             break
@@ -403,7 +405,7 @@ class Server:
                         uuid = dev_str.split(',')[0]
                         target_data = value[len(dev_str):]
                         client = self.get_client_by_uuid(uuid)
-                        if client == None:
+                        if client == None or client['valid'] == False:
                             data = TBframe.construct(TBframe.CMD_ERROR, 'nonexist')
                             terminal['socket'].send(data)
                             continue
@@ -421,7 +423,7 @@ class Server:
                             continue
                         [uuid, port] = dev_str_split
                         client = self.get_client_by_uuid(uuid)
-                        if client == None:
+                        if client == None or client['valid'] == False:
                             data = TBframe.construct(TBframe.CMD_ERROR,'nonexist')
                             terminal['socket'].send(data)
                             continue
@@ -443,7 +445,7 @@ class Server:
                             continue
                         [uuid, port] = dev_str_split
                         client = self.get_client_by_uuid(uuid)
-                        if client == None:
+                        if client == None or client['valid'] == False:
                             continue
                         if port not in list(client['devices']):
                             continue
@@ -483,7 +485,8 @@ class Server:
                         datestr = time.strftime('%Y-%m-%d')
                         filename = 'server/' + datestr + '/' + uuid + '-' + port.split('/')[-1] + '.log'
                         client = self.get_client_by_uuid(uuid)
-                        if client == None or port not in list(client['devices']) or os.path.exists(filename) == False:
+                        if client == None or client['valid'] == False or \
+                           port not in list(client['devices']) or os.path.exists(filename) == False:
                             data = TBframe.construct(TBframe.CMD_ERROR,'fail')
                             terminal['socket'].send(data)
                             print "terminal {0}:{1}".format(terminal['addr'][0], terminal['addr'][1]),
@@ -546,7 +549,115 @@ class Server:
             except:
                 traceback.print_exc()
 
-    def statistics_thread(self):
+    def contoller_interact_thread(self, contoller_ip, controller_port):
+        sock = None; logedin = False; status_timeout = False
+        while self.keep_running:
+            if sock == None: #connect to controller
+                sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+                if ENCRYPT_CONTROLLER:
+                    sock = ssl.wrap_socket(sock, cert_reqs=ssl.CERT_REQUIRED, ca_certs='server_cert.pem')
+                try:
+                    sock.connect((contoller_ip, controller_port))
+                    msg = ''; logedin = False; status_timeout = None
+                    sock.settimeout(1)
+                except:
+                    if DEBUG: traceback.print_exc()
+                    sock = None; logedin = False; status_timeout = None
+                    time.sleep(2)
+                    continue
+
+            while sock != None:
+                if logedin == False: #try to login
+                    content = {'client_port':self.client_socket.getsockname()[1], 'terminal_port':self.terminal_socket.getsockname()[1]}
+                    content = TBframe.construct(TBframe.ACCESS_LOGIN, json.dumps(content))
+                    try:
+                        sock.send(content)
+                    except:
+                        sock = None; logedin = False; status_timeout = None
+                        continue
+                if status_timeout and time.time() > status_timeout:
+                    client_num = 0
+                    device_num = 0
+                    for c in self.client_list:
+                        if c['valid'] == False:
+                            continue
+                        client_num += 1
+                        for port in c['devices']:
+                            if c['devices'][port]['valid'] == False:
+                                continue
+                            device_num += 1
+                    terminal_num = len(list(self.terminal_list))
+                    status = {'client_num':client_num, 'device_num':device_num, 'terminal_num': terminal_num}
+                    content = TBframe.construct(TBframe.ACCESS_REPORT_STATUS, json.dumps(status))
+                    status_timeout += 10
+                    try:
+                        sock.send(content)
+                    except:
+                        sock = None; logedin = False; status_timeout = None
+                        continue
+
+                try:
+                    data = sock.recv(MAX_MSG_LENTH)
+                except socket.timeout:
+                    continue
+                except:
+                    sock = None; logedin = False; status_timeout = None
+                    break
+                if not data:
+                    print("error: connection to contoller lost")
+                    sock = None; logedin = False; status_timeout = None
+                    break
+
+                msg += data
+                while msg != '':
+                    type, length, value, msg = TBframe.parse(msg)
+                    #print time.time(), 'contoller', type, value
+                    if type == TBframe.TYPE_NONE:
+                        break
+
+                    if type == TBframe.ACCESS_LOGIN:
+                        if value == 'ok':
+                            logedin = True
+                            status_timeout = time.time() + 10
+                        else:
+                            time.sleep(5)
+                        continue
+                    if type == TBframe.ACCESS_REPORT_STATUS:
+                        continue
+                    if type == TBframe.ACCESS_ADD_CLIENT:
+                        [uuid, token] = value.split(',')
+                        client = self.get_client_by_uuid(uuid)
+                        if client == None:
+                            client = {'uuid': uuid,
+                                      'token': token,
+                                      'valid':False,
+                                      'devices':{}}
+                            self.client_list.append(client)
+                        else:
+                            if 'sock' in client:
+                                client['sock'].close()
+                            client['valid'] = False
+                            client['token'] = token
+                        content = TBframe.construct(TBframe.ACCESS_ADD_CLIENT, 'success,' + value)
+                        try:
+                            sock.send(content)
+                        except:
+                            sock = None; logedin = False; status_timeout = None
+                        continue
+                    if type == TBframe.ACCESS_DEL_CLIENT:
+                        uuid = value
+                        client = self.get_client_by_uuid(uuid)
+                        if client == None:
+                            continue
+                        client['socket'].close()
+                        client.pop('token')
+                        continue
+                    if type == TBframe.ACCESS_ADD_TERMINAL:
+                        continue
+                    if type == TBframe.ACCESS_DEL_TERMINAL:
+                        continue
+
+    def house_keeping_thread(self):
         minute = time.strftime("%Y-%m-%d@%H:%M")
         datestr = time.strftime("%Y-%m-%d")
         statistics={ \
@@ -655,16 +766,20 @@ class Server:
                 print "error: unable to create/open {0}".format(logname)
                 return
 
-    def init(self, server_port):
+    def init(self):
         try:
             #initilize CLIENT socket
+            client_port = 2048 + ord(os.urandom(1))
             self.client_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
             self.client_socket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
-            self.client_socket.bind(('', server_port))
+            self.client_socket.bind(('', client_port))
             #initilize TERMINAL socket
+            terminal_port = 2048 + ord(os.urandom(1))
+            while terminal_port == client_port:
+                terminal_port = 2048 + ord(os.urandom(1))
             self.terminal_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
             self.terminal_socket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
-            self.terminal_socket.bind(('', server_port + 1))
+            self.terminal_socket.bind(('', terminal_port))
         except:
             print "address still in use, try later"
             return "fail"
@@ -677,7 +792,8 @@ class Server:
         try:
             thread.start_new_thread(self.client_listen_thread, ())
             thread.start_new_thread(self.terminal_listen_thread, ())
-            thread.start_new_thread(self.statistics_thread, ())
+            thread.start_new_thread(self.contoller_interact_thread, ('localhost', 34569,))
+            thread.start_new_thread(self.house_keeping_thread, ())
             while True:
                 time.sleep(0.1)
                 if self.allocated['devices'] != [] and time.time() > self.allocated['timeout']:
@@ -701,6 +817,6 @@ class Server:
             pass
 
     def server_func(self, server_port):
-        if self.init(server_port) == "success":
+        if self.init() == "success":
             self.run()
         self.deinit()

@@ -567,6 +567,56 @@ class Client:
         except:
             raise ConnectionLost
 
+    def login_and_get_server(self, controller_ip, controller_port):
+        retry = 6; sock = None
+        while retry > 0:
+            retry -= 1
+            if sock == None:
+                sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+                if ENCRYPT:
+                    sock = ssl.wrap_socket(sock, cert_reqs=ssl.CERT_REQUIRED, ca_certs='server_cert.pem')
+                try:
+                    sock.connect((controller_ip, controller_port))
+                    sock.settimeout(2)
+                    msg = ''
+                except:
+                    traceback.print_exc()
+                    print "error: connect to contoller failed"
+                    sock = None
+                    time.sleep(2)
+                    continue
+
+            content = TBframe.construct(TBframe.ACCESS_LOGIN, self.uuid)
+            try:
+                sock.send(content)
+            except:
+                sock = None
+                continue
+
+            try:
+                data = sock.recv(MAX_MSG_LENTH)
+            except socket.timeout:
+                continue
+            except:
+                sock.close()
+                sock = None
+                continue
+            if data == '':
+                sock.close()
+                sock = None
+                continue
+            msg += data
+            type, length, value, msg = TBframe.parse(msg)
+            #print 'controller', type, value
+            if type != TBframe.ACCESS_LOGIN:
+                continue
+            rets = value.split(',')
+            if rets[0] != 'ok':
+                time.sleep(1)
+                continue
+            return rets[1:]
+        return None
+
     def connect_to_server(self, server_ip, server_port):
         sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         if ENCRYPT:
@@ -580,30 +630,26 @@ class Client:
             if DEBUG: traceback.print_exc()
             return "fail"
 
-    def client_func(self, server_ip, server_port):
+    def client_func(self, contoller_ip, controller_port):
         self.load_interfaces()
-
-        result = self.connect_to_server(server_ip, server_port)
-        if result == 'success':
-            print 'connect to server {0}:{1} succeeded'.format(server_ip, server_port)
-        else:
-            print 'connect to server {0}:{1} failed'.format(server_ip, server_port)
-            return
 
         if os.path.exists('client') == False:
             os.mkdir('client')
         signal.signal(signal.SIGINT, signal_handler)
 
-        self.send_packet(TBframe.CLIENT_UUID, self.uuid)
-        self.send_packet(TBframe.CLIENT_TAG, self.poll_str)
         thread.start_new_thread(self.device_monitor,())
         thread.start_new_thread(self.heartbeat_func,())
 
         file_received = {}
         file_receiving = {}
+        self.connected = False
+        self.service_socket = None
         msg = ''
         while True:
             try:
+                if self.connected == False:
+                    raise ConnectionLost
+
                 new_msg = self.service_socket.recv(MAX_MSG_LENTH)
                 if new_msg == '':
                     raise ConnectionLost
@@ -776,24 +822,45 @@ class Client:
                             print "run command '{0}' at {1} failed, device nonexist".format(cmd, port)
                         content = ','.join(term) + ',' + result
                         self.send_packet(type, content)
-                    elif type == TBframe.CLIENT_UUID:
-                        print 'server request UUID'
-                        self.send_packet(TBframe.CLIENT_UUID, self.uuid)
-                        self.send_packet(TBframe.CLIENT_TAG, self.poll_str)
-                        self.send_device_list()
+                    elif type == TBframe.CLIENT_LOGIN:
+                        if value == 'request':
+                            print 'server request login'
+                            data = self.uuid + ',' + self.poll_str + ',' + token
+                            self.send_packet(TBframe.CLIENT_LOGIN, data)
+                        elif value == 'success':
+                            print "login to server succeed"
+                            self.send_device_list()
+                        else:
+                            print "login to server failed, retry later ..."
+                            time.sleep(10)
+                            raise ConnectionLost
             except ConnectionLost:
                 self.connected = False
-                self.service_socket.close()
-                print 'connection to server lost, try reconnecting...'
-                while True:
-                    result = self.connect_to_server(server_ip, server_port)
-                    if result == 'success':
-                        self.send_packet(TBframe.CLIENT_UUID, self.uuid)
-                        self.send_packet(TBframe.CLIENT_TAG, self.poll_str)
-                        self.send_device_list()
-                        break
-                    time.sleep(1)
-                print 'connection to server resumed'
+                if self.service_socket != None:
+                    self.service_socket.close()
+                    print 'connection to server lost, try reconnecting...'
+
+                result = self.login_and_get_server(contoller_ip, controller_port)
+                if result == None:
+                    print 'login to controller failed, retry later...'
+                    time.sleep(5)
+                    continue
+                else:
+                    [server_ip, server_port, token] = result
+                    server_port = int(server_port)
+                    print 'login to controller succees, server_ip-{0} server_port-{1}'.format(server_ip, server_port)
+                #time.sleep(0.1)
+
+                result = self.connect_to_server(server_ip, server_port)
+                if result == 'success':
+                    print 'connect to server {0}:{1} succeeded'.format(server_ip, server_port)
+                else:
+                    print 'connect to server {0}:{1} failed, retry later ...'.format(server_ip, server_port)
+                    time.sleep(5)
+                    continue
+
+                data = self.uuid + ',' + self.poll_str + ',' + token
+                self.send_packet(TBframe.CLIENT_LOGIN, data)
             except KeyboardInterrupt:
                 print "client exiting ..."
                 self.keep_running = False
