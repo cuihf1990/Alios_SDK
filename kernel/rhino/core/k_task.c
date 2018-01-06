@@ -188,7 +188,7 @@ kstat_t krhino_task_cpu_dyn_create(ktask_t **task, const name_t *name, void *arg
                                    uint8_t pri, tick_t ticks, size_t stack,
                                    task_entry_t entry, uint8_t cpu_num, uint8_t autorun)
 {
-    return task_dyn_create(task, name, arg, pri, ticks, stack, entry, 0, 1, autorun);
+    return task_dyn_create(task, name, arg, pri, ticks, stack, entry, cpu_num, 1, autorun);
 }
 #endif
 #endif
