@@ -39,6 +39,10 @@ void idle_task(void *arg)
     /* avoid warning */
     (void)arg;
 
+#if (RHINO_CONFIG_USER_HOOK > 0)
+    krhino_idle_pre_hook();
+#endif
+
     while (RHINO_TRUE) {
         RHINO_CPU_INTRPT_DISABLE();
 

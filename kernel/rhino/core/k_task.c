@@ -183,6 +183,14 @@ kstat_t krhino_task_dyn_create(ktask_t **task, const name_t *name, void *arg,
     return task_dyn_create(task, name, arg, pri, ticks, stack, entry, 0, 0, autorun);
 }
 
+#if (RHINO_CONFIG_CPU_NUM > 1)
+kstat_t krhino_task_cpu_dyn_create(ktask_t **task, const name_t *name, void *arg,
+                                   uint8_t pri, tick_t ticks, size_t stack,
+                                   task_entry_t entry, uint8_t cpu_num, uint8_t autorun)
+{
+    return task_dyn_create(task, name, arg, pri, ticks, stack, entry, 0, 1, autorun);
+}
+#endif
 #endif
 
 kstat_t krhino_task_sleep(tick_t ticks)
