@@ -182,14 +182,14 @@ def main(firmware='~/lb-all.bin', model='mk3060', testname='5pps'):
         timeout = 3600
     else:
         timeout = 120
-    allocted_leader = at.device_allocate(model, number, timeout, 'general')
-    allocted_router = at.device_allocate(model, number, timeout, 'alink')
-    if len(allocted_leader) != number or len(allocted_router) != number:
+    allocated_leader = at.device_allocate(model, number, timeout, 'general')
+    allocated_router = at.device_allocate(model, number, timeout, 'alink')
+    if len(allocated_leader) != number or len(allocated_router) != number:
         print "error: request allocating devices failed"
         return [1, 'allocate device failed']
-    devices['A'] = allocted_leader[0]
-    devices['B'] = allocted_router[0]
-    print "allocted device", allocted
+    devices['A'] = allocated_leader[0]
+    devices['B'] = allocated_router[0]
+    print "allocated: leader-{0}, router-{1}".format(allocated_leader[0], allocated_router[0])
 
     #subscribe device
     if at.device_subscribe(devices) == False:
