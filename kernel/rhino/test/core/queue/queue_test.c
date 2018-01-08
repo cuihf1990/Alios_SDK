@@ -21,9 +21,6 @@ void queue_test(void)
     task_queue_nowait_recv_test();
     next_test_case_wait();
 
-    task_queue_notify_set_test();
-    next_test_case_wait();
-
     task_queue_is_full_test();
     next_test_case_wait();
 

@@ -14,9 +14,6 @@ kstat_t mutex_create(kmutex_t *mutex, const name_t *name, uint8_t mm_alloc_flag)
     /* init the list */
     klist_init(&mutex->blk_obj.blk_list);
     mutex->blk_obj.blk_policy = BLK_POLICY_PRI;
-#if (RHINO_CONFIG_KOBJ_SET > 0)
-    mutex->blk_obj.handle = NULL;
-#endif
     mutex->blk_obj.name       = name;
     mutex->mutex_task         = NULL;
     mutex->mutex_list         = NULL;
