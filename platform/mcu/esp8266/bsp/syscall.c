@@ -25,6 +25,9 @@
 #if 1
 
 #include <string.h>
+#include <aos/kernel.h>
+#include <sys/stat.h>
+
 
 void* malloc(size_t size)
 {
@@ -116,10 +119,12 @@ int _kill_r(struct _reent *r, int pid, int sig)
 
 __attribute__((noreturn)) void _exit(int __status)
 {
+    while (1);
 }
 
 int _fstat_r(struct _reent *r, int fd, struct stat * st)
 {
+    return -1;
 }
 
 off_t _lseek_r(struct _reent *r, int fd, off_t size, int mode)
