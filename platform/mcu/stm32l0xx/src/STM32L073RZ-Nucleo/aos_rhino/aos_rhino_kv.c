@@ -208,6 +208,10 @@ int aos_sem_is_valid(aos_sem_t *sem)
 
     k_sem = sem->hdl;
 
+    if (k_sem == NULL) {
+        return 0;
+    }
+
     if (k_sem->blk_obj.obj_type != RHINO_SEM_OBJ_TYPE) {
         return 0;
     }
