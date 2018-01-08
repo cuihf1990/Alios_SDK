@@ -50,7 +50,6 @@ $(NAME)_SOURCES := \
     core/queue/queue_info_get.c \
     core/queue/queue_is_full.c \
     core/queue/queue_nowait_recv.c \
-    core/queue/queue_notify_set.c \
     core/queue/queue_test.c \
     core/sem/sem_break.c \
     core/sem/sem_count.c \
@@ -87,6 +86,5 @@ $(NAME)_SOURCES := \
     core/combination/sem_mutex.c \
     core/combination/comb_all.c  \
     core/combination/mutex_queue_buf.c \
-    core/combination/sem_queue.c\
     core/combination/mutex_queue.c \
 

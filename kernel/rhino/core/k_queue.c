@@ -29,10 +29,6 @@ static kstat_t queue_create(kqueue_t *queue, const name_t *name, void **start,
 
     queue->blk_obj.name       = name;
     queue->blk_obj.blk_policy = BLK_POLICY_PRI;
-#if (RHINO_CONFIG_KOBJ_SET > 0)
-    queue->blk_obj.handle     = NULL;
-#endif
-
     queue->msg_q.queue_start  = start;
 
     ringbuf_init(&queue->ringbuf, (void *)start, msg_num * sizeof(void *),
@@ -226,12 +222,6 @@ static kstat_t msg_send(kqueue_t *p_q, void *p_void, uint8_t opt_send_method,
         }
 
         RHINO_CRITICAL_EXIT();
-
-#if (RHINO_CONFIG_KOBJ_SET > 0)
-        if (p_q->blk_obj.handle != NULL) {
-            p_q->blk_obj.handle->notify((blk_obj_t *)p_q, p_q->blk_obj.handle);
-        }
-#endif
         return RHINO_SUCCESS;
     }
 

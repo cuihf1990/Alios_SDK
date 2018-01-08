@@ -19,7 +19,6 @@ $(info kernel_version:${CONFIG_SYSINFO_KERNEL_VERSION})
 $(NAME)_SOURCES := core/k_err.c          \
                    core/k_mm.c           \
                    core/k_mm_debug.c     \
-                   core/k_obj_set.c      \
                    core/k_ringbuf.c      \
                    core/k_stats.c        \
                    core/k_task_sem.c     \

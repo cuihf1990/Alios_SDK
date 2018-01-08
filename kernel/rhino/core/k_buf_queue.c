@@ -32,9 +32,6 @@ static kstat_t buf_queue_create(kbuf_queue_t *queue, const name_t *name,
     queue->max_msg_size       = max_msg;
     queue->blk_obj.name       = name;
     queue->blk_obj.blk_policy = BLK_POLICY_PRI;
-#if (RHINO_CONFIG_KOBJ_SET > 0)
-    queue->blk_obj.handle = NULL;
-#endif
     queue->mm_alloc_flag      = mm_alloc_flag;
 
     RHINO_CRITICAL_ENTER();
@@ -258,12 +255,6 @@ static kstat_t buf_queue_send(kbuf_queue_t *queue, void *msg, size_t msg_size,
         TRACE_BUF_QUEUE_POST(g_active_task[cur_cpu_num], queue, msg, msg_size);
 
         RHINO_CRITICAL_EXIT();
-
-#if (RHINO_CONFIG_KOBJ_SET > 0)
-        if (queue->blk_obj.handle != NULL) {
-            queue->blk_obj.handle->notify((blk_obj_t *)queue, queue->blk_obj.handle);
-        }
-#endif
         return RHINO_SUCCESS;
     }
 

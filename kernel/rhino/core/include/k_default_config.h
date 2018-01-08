@@ -96,10 +96,6 @@
 #define RHINO_CONFIG_TASK_SEM                0
 #endif
 
-#ifndef RHINO_CONFIG_KOBJ_SET
-#define RHINO_CONFIG_KOBJ_SET                0
-#endif
-
 /* kernel task conf */
 #ifndef RHINO_CONFIG_TASK_PRI_CHG
 #define RHINO_CONFIG_TASK_PRI_CHG            1
