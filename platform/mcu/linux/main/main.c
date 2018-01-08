@@ -10,7 +10,10 @@
 #include <string.h>
 #include <aos/aos.h>
 #include <arg_options.h>
+
+#ifndef CONFIG_VCALL_POSIX
 #include <k_api.h>
+#endif
 
 #define TAG "main"
 
@@ -52,7 +55,9 @@ static void app_entry(void *arg)
     kinit.argv        = options.argv;
     kinit.cli_enable  = options.cli.enable;
 
+#ifndef CONFIG_VCALL_POSIX
     cpu_tmr_sync();
+#endif
 
     aos_features_init();
 
@@ -68,12 +73,16 @@ static void app_entry(void *arg)
 
 static void start_app(void)
 {
-    #if (RHINO_CONFIG_CPU_NUM > 1)
+#ifndef CONFIG_VCALL_POSIX
+#if (RHINO_CONFIG_CPU_NUM > 1)
     ktask_t     *app_task;
     krhino_task_cpu_dyn_create(&app_task, "app_task", 0, 20, 0, 2048, app_entry, 0, 1);
-    #else
+#else
     aos_task_new("app", app_entry, NULL, 8192);
-    #endif
+#endif
+#else
+    aos_task_new("app", app_entry, NULL, 8192);
+#endif
 }
 
 int csp_get_args(const char ***pargv)
