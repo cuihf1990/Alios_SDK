@@ -17,12 +17,22 @@ uart_dev_t uart_0 = {
     .port = 0,
 };
 
-void application_start(void *p)
+static kinit_t kinit = {
+    .argc = 0,
+    .argv = NULL,
+    .cli_enable = 1
+};
+
+static void app_entry(void *arg)
 {
+#if 0
+    aos_kernel_init(&kinit);
+#else
     while (1) {
-        ets_printf("tick %lld\n", krhino_sys_tick_get());
+        ets_printf("%s:%d tick %lld\n", __func__, __LINE__, krhino_sys_tick_get());
         krhino_task_sleep(RHINO_CONFIG_TICKS_PER_SECOND);
     }
+#endif
 }
 
 static void init_bss_data(void)
@@ -47,9 +57,7 @@ void call_user_start(void)
 
     aos_init();
 
-    kstat_t ret = krhino_task_dyn_create(&g_aos_init, "aos app", 0, AOS_DEFAULT_APP_PRI, 0, 512, (task_entry_t)application_start, 1);
-    if (ret != RHINO_SUCCESS)
-        ets_printf("%d\n", ret);
+    aos_task_new("main", app_entry, 0, 8192);
 
     aos_start();
 
