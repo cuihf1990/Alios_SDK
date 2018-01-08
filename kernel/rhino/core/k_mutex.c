@@ -434,14 +434,3 @@ kstat_t krhino_mutex_unlock(kmutex_t *mutex)
     return RHINO_SUCCESS;
 }
 
-kstat_t krhino_mutex_is_valid(kmutex_t *mutex)
-{
-    NULL_PARA_CHK(mutex);
-
-    if (mutex->blk_obj.obj_type != RHINO_MUTEX_OBJ_TYPE) {
-        return RHINO_KOBJ_TYPE_ERR;
-    }
-
-    return RHINO_SUCCESS;
-}
-

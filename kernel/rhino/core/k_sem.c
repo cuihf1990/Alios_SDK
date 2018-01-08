@@ -349,16 +349,5 @@ kstat_t krhino_sem_count_get(ksem_t *sem, sem_count_t *count)
     return RHINO_SUCCESS;
 }
 
-kstat_t krhino_sem_is_valid(ksem_t *sem)
-{
-    NULL_PARA_CHK(sem);
-
-    if (sem->blk_obj.obj_type != RHINO_SEM_OBJ_TYPE) {
-        return RHINO_KOBJ_TYPE_ERR;
-    }
-
-    return RHINO_SUCCESS;
-}
-
 #endif /* RHINO_CONFIG_SEM */
 
