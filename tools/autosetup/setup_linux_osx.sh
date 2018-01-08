@@ -47,7 +47,8 @@ if [ "$OS" = "Darwin" ]; then
         brew install axel > /dev/null
     fi
     GCC_ARM_URL="https://launchpad.net/gcc-arm-embedded/5.0/5-2016-q3-update/+download/gcc-arm-none-eabi-5_4-2016q3-20160926-mac.tar.bz2"
-    GCC_XTENSA_URL="https://dl.espressif.com/dl/xtensa-esp32-elf-osx-1.22.0-75-gbaf03c2-5.2.0.tar.gz"
+    GCC_XTENSA_ESP32_URL="https://dl.espressif.com/dl/xtensa-esp32-elf-osx-1.22.0-75-gbaf03c2-5.2.0.tar.gz"
+	GCC_XTENSA_ESP8266_URL="http://arduino.esp8266.com/osx-xtensa-lx106-elf.tar.gz"
     HOST_OS=OSX
     BASHRC_FILE=.profile
     PIP_CMD=pip
@@ -56,7 +57,8 @@ else #Some Linux version
     BASHRC_FILE=.bashrc
     PIP_CMD=pip
     if [ "`uname -m`" = "x86_64" ]; then
-        GCC_XTENSA_URL="https://dl.espressif.com/dl/xtensa-esp32-elf-linux64-1.22.0-75-gbaf03c2-5.2.0.tar.gz"
+        GCC_XTENSA_ESP32_URL="https://dl.espressif.com/dl/xtensa-esp32-elf-linux64-1.22.0-75-gbaf03c2-5.2.0.tar.gz"
+		GCC_XTENSA_ESP8266_URL="http://arduino.esp8266.com/linux64-xtensa-lx106-elf.tar.gz"
         HOST_OS=Linux64
         if [ "`which apt-get`" != "" ]; then
             sudo apt-get update > /dev/null
@@ -81,7 +83,8 @@ else #Some Linux version
             exit 1
         fi
     else
-        GCC_XTENSA_URL="https://dl.espressif.com/dl/xtensa-esp32-elf-linux32-1.22.0-75-gbaf03c2-5.2.0.tar.gz"
+        GCC_XTENSA_ESP32_URL="https://dl.espressif.com/dl/xtensa-esp32-elf-linux32-1.22.0-75-gbaf03c2-5.2.0.tar.gz"
+		GCC_XTENSA_ESP8266_URL="http://arduino.esp8266.com/linux32-xtensa-lx106-elf.tar.gz"
         HOST_OS=Linux32
         if [ "`which apt-get`" != "" ]; then
             sudo apt-get -y install git wget axel make flex bison gperf unzip python-pip > /dev/null
@@ -150,7 +153,7 @@ if [ ! -d ${XTENSA_TOOLCHAIN_PATH} ]; then
     mkdir -p ${XTENSA_TOOLCHAIN_PATH}
 fi
 cd ${XTENSA_TOOLCHAIN_PATH}
-wget -q ${GCC_XTENSA_URL}
+wget -q ${GCC_XTENSA_ESP32_URL}
 if [ $? -ne 0 ]; then
     echo -e "\nerror: download gcc-xtensa-esp32 toolchain faield\n"
     exit 1
@@ -163,6 +166,30 @@ fi
 rm -f xtensa-esp32-elf*.tar.gz
 mv xtensa-esp32-elf* ${HOST_OS}
 exist=`cat ~/${BASHRC_FILE} | grep gcc-xtensa-esp32`
+if [ "${exist}" = "" ]; then
+    echo "export PATH=\"${XTENSA_TOOLCHAIN_PATH}/${HOST_OS}/bin:\$PATH\"" >> ~/${BASHRC_FILE}
+fi
+echo "done"
+
+echo -n "installing gcc-xtensa-lx106 toolchain ..."
+XTENSA_TOOLCHAIN_PATH=${OBJ_DIR}/build/compiler/gcc-xtensa-lx106
+if [ ! -d ${XTENSA_TOOLCHAIN_PATH} ]; then
+    mkdir -p ${XTENSA_TOOLCHAIN_PATH}
+fi
+cd ${XTENSA_TOOLCHAIN_PATH}
+wget -q ${GCC_XTENSA_ESP8266_URL}
+if [ $? -ne 0 ]; then
+    echo -e "\nerror: download gcc-xtensa-lx106 toolchain faield\n"
+    exit 1
+fi
+tar zxf *xtensa-lx106-elf.tar.gz
+if [ $? -ne 0 ]; then
+    echo -e "\nerror: extract gcc-xtensa-lx106 toolchain faield\n"
+    exit 1
+fi
+rm -f *xtensa-lx106-elf.tar.gz
+mv *xtensa-lx106-elf ${HOST_OS}
+exist=`cat ~/${BASHRC_FILE} | grep gcc-xtensa-lx106`
 if [ "${exist}" = "" ]; then
     echo "export PATH=\"${XTENSA_TOOLCHAIN_PATH}/${HOST_OS}/bin:\$PATH\"" >> ~/${BASHRC_FILE}
 fi

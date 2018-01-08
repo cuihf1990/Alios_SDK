@@ -64,6 +64,23 @@ if [ "${exist}" = "" ]; then
     echo "export PATH=\"\$HOME/tools/xtensa-esp32-elf/bin:\$PATH\"" >> ~/.bashrc
 fi
 
+if [ ! -d xtensa-lx106-elf ]; then
+    arch=`uname -m`
+    if [ "${arch}" = "x86_64" ]; then
+        wget http://arduino.esp8266.com/linux64-xtensa-lx106-elf.tar.gz
+        tar xzf linux64-xtensa-lx106-elf.tar.gz
+        rm -f linux64-xtensa-lx106-elf.tar.gz
+    else
+        wget http://arduino.esp8266.com/linux32-xtensa-lx106-elf.tar.gz
+        tar xzf linux32-xtensa-lx106-elf.tar.gz
+        rm -f linux32-xtensa-lx106-elf.tar.gz
+    fi
+fi
+exist=`cat ~/.bashrc | grep xtensa-lx106-elf/bin`
+if [ "${exist}" = "" ]; then
+    echo "export PATH=\"\$HOME/tools/xtensa-lx106-elf/bin:\$PATH\"" >> ~/.bashrc
+fi
+
 #add alink test server to /etc/hosts
 exist=`cat /etc/hosts | grep pre-iotx-qs.alibaba.com`
 if [ "${exist}" = "" ]; then
