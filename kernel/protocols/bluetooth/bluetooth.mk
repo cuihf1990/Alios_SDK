@@ -33,6 +33,10 @@ $(NAME)_SOURCES := core/atomic_c.c \
                    core/work.c \
                    port/rhino_port.c
 
+ifeq ($(hci_h4),1)
+$(NAME)_SOURCES += hci_drivers/h4.c
+endif
+
 ifeq ($(COMPILER),)
 $(NAME)_CFLAGS      += -Wall
 else ifeq ($(COMPILER),gcc)
