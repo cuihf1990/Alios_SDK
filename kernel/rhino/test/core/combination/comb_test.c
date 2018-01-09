@@ -12,7 +12,6 @@ static const test_case_t comb_case_runner[] = {
     sem_mutex_coopr_test,
     comb_all_coopr_test,
     mutex_buf_queue_coopr_test,
-    mutex_queue_coopr_test,
     NULL
 };
 
