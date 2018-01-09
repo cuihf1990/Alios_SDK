@@ -84,6 +84,4 @@ $(NAME)_SOURCES := \
     core/combination/sem_event.c \
     core/combination/sem_queue_buf.c \
     core/combination/sem_mutex.c \
-    core/combination/comb_all.c  \
-    core/combination/mutex_queue_buf.c \
 
