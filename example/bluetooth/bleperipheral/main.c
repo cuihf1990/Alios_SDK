@@ -31,7 +31,6 @@
 
 #define DEVICE_NAME	"AOS-BLE-PERIPHERAL"
 #define DEVICE_NAME_LEN	(sizeof(DEVICE_NAME) - 1)
-#define APPEARANCE	0x0000
 
 extern int hci_driver_init();
 
@@ -70,9 +69,32 @@ static void disconnected(struct bt_conn *conn, uint8_t reason)
 	printf("Disconnected from %s (reason %u)\n", addr, reason);
 }
 
+static void identity_resolved(struct bt_conn *conn, const bt_addr_le_t *rpa,
+                              const bt_addr_le_t *identity)
+{
+        char addr_identity[BT_ADDR_LE_STR_LEN];
+        char addr_rpa[BT_ADDR_LE_STR_LEN];
+
+        bt_addr_le_to_str(identity, addr_identity, sizeof(addr_identity));
+        bt_addr_le_to_str(rpa, addr_rpa, sizeof(addr_rpa));
+
+        printf("Identity resolved %s -> %s\n", addr_rpa, addr_identity);
+}
+
+static void security_changed(struct bt_conn *conn, bt_security_t level)
+{
+        char addr[BT_ADDR_LE_STR_LEN];
+
+        bt_addr_le_to_str(bt_conn_get_dst(conn), addr, sizeof(addr));
+
+        printf("Security changed: %s level %u\n", addr, level);
+}
+
 static struct bt_conn_cb conn_callbacks = {
 	.connected = connected,
 	.disconnected = disconnected,
+        .identity_resolved = identity_resolved,
+        .security_changed = security_changed,
 };
 
 static void auth_passkey_display(struct bt_conn *conn, unsigned int passkey)
@@ -99,48 +121,11 @@ static struct bt_conn_auth_cb auth_cb_display = {
 	.cancel = auth_cancel,
 };
 
-static const char *gap_name;
-static uint16_t gap_appearance;
-
-static ssize_t read_name(struct bt_conn *conn, const struct bt_gatt_attr *attr,
-                         void *buf, uint16_t len, uint16_t offset)
-{
-        return bt_gatt_attr_read(conn, attr, buf, len, offset, gap_name,
-                                 strlen(gap_name));
-}
-
-static ssize_t read_appearance(struct bt_conn *conn,
-                               const struct bt_gatt_attr *attr, void *buf,
-                               uint16_t len, uint16_t offset)
-{
-        uint16_t appearance = sys_cpu_to_le16(gap_appearance);
-
-        return bt_gatt_attr_read(conn, attr, buf, len, offset, &appearance,
-                                 sizeof(appearance));
-}
-
-static struct bt_gatt_attr attrs[] = {
-        BT_GATT_PRIMARY_SERVICE(BT_UUID_GAP),
-        BT_GATT_CHARACTERISTIC(BT_UUID_GAP_DEVICE_NAME, BT_GATT_CHRC_READ),
-        BT_GATT_DESCRIPTOR(BT_UUID_GAP_DEVICE_NAME, BT_GATT_PERM_READ,
-                           read_name, NULL, NULL),
-        BT_GATT_CHARACTERISTIC(BT_UUID_GAP_APPEARANCE, BT_GATT_CHRC_READ),
-        BT_GATT_DESCRIPTOR(BT_UUID_GAP_APPEARANCE, BT_GATT_PERM_READ,
-                           read_appearance, NULL, NULL),
-};
-
-static void gap_init(const char *name, uint16_t appearance)
-{
-        gap_name = name;
-        gap_appearance = appearance;
-
-        bt_gatt_register(attrs, ARRAY_SIZE(attrs));
-}
 
 extern int hci_driver_init();
 void ble_sample(void)
 {
-	int err;
+	int err = 0;
 
         hci_driver_init();
 	err = bt_enable(NULL);
@@ -150,8 +135,6 @@ void ble_sample(void)
 	}
 
 	printf("Bluetooth initialized\n");
-
-	gap_init(DEVICE_NAME, APPEARANCE);
 
 	bt_conn_auth_cb_register(&auth_cb_display);
 	bt_conn_cb_register(&conn_callbacks);

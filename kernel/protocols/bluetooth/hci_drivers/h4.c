@@ -10,10 +10,10 @@
 #ifndef BT_DBG_ENABLED
 #define BT_DBG_ENABLED IS_ENABLED(CONFIG_BLUETOOTH_DEBUG_HCI_DRIVER)
 #endif
-#include <bluetooth/log.h>
 #include <bluetooth/bluetooth.h>
 #include <bluetooth/hci.h>
 #include <bluetooth/hci_driver.h>
+#include <common/log.h>
 
 #include <hal/soc/uart.h>
 
@@ -27,7 +27,6 @@
 #define H4_SCO  0x03
 #define H4_EVT  0x04
 
-static BT_STACK_NOINIT(rx_thread_stack, CONFIG_BLUETOOTH_HCI_RX_STACK_SIZE);
 
 static struct {
     struct net_buf *buf;
@@ -122,7 +121,7 @@ static inline void get_evt_hdr(void)
                 rx.remaining++;
                 rx.hdr_len++;
                 break;
-#if defined(CONFIG_BLUETOOTH_BREDR)
+#if defined(CONFIG_BT_BREDR)
 
             case BT_HCI_EVT_INQUIRY_RESULT_WITH_RSSI:
             case BT_HCI_EVT_EXTENDED_INQUIRY_RESULT:
@@ -169,7 +168,7 @@ static struct net_buf *get_rx(int timeout)
         return bt_buf_get_cmd_complete(timeout);
     }
 
-    return bt_buf_get_rx(timeout);
+    return bt_buf_get_rx(BT_BUF_EVT, timeout);
 }
 
 static size_t h4_discard(uart_dev_t *uart, size_t len)
@@ -213,7 +212,7 @@ static inline void read_payload(void)
         copy_hdr(rx.buf);
     }
 
-    hal_uart_recv(&h4_dev, net_buf_tail(rx.buf), rx.remaining, &read, -1);
+    hal_uart_recv(&h4_dev, net_buf_tail(rx.buf), rx.remaining, (uint32_t *)&read, -1);
     net_buf_add(rx.buf, read);
     rx.remaining -= read;
 
@@ -353,7 +352,7 @@ static inline void process_rx(void)
     }
 }
 
-static void rx_thread(void *p1)
+static void rx_thread(void *p1, void *p2, void *p3)
 {
     struct net_buf *buf;
 
@@ -413,17 +412,20 @@ static int h4_send(struct net_buf *buf)
 
 static int h4_open(void)
 {
+    static struct k_thread h4_rx_thread;
+    static BT_STACK_NOINIT(rx_thread_stack, CONFIG_BT_HCI_RX_STACK_SIZE);
+
     BT_INFO("");
 
     hal_uart_init(&h4_dev);
 
     h4_discard(&h4_dev, 32);
 
-    k_thread_spawn("hci rx thread", rx_thread_stack, sizeof(rx_thread_stack), rx_thread,
-                   NULL, 46);
+    k_thread_create(&h4_rx_thread, rx_thread_stack, sizeof(rx_thread_stack), rx_thread,
+                   NULL, NULL, NULL, 46, 0, K_NO_WAIT);
 
-    k_fifo_init(&tx.fifo, "tx fifo", NULL, CONFIG_BLUETOOTH_RX_BUF_COUNT);
-    k_fifo_init(&rx.fifo, "rx fifo", NULL, CONFIG_BLUETOOTH_RX_BUF_COUNT);
+    k_fifo_init(&tx.fifo);
+    k_fifo_init(&rx.fifo);
 
     return 0;
 }

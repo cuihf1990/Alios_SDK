@@ -7,6 +7,7 @@
 #include <aos/aos.h>
 #include <aos/kernel.h>
 
+#include <misc/slist.h>
 #include <bluetooth/bluetooth.h>
 #include <bluetooth/hci.h>
 
@@ -21,7 +22,6 @@ void ble_sample(void)
         .interval_min = BT_GAP_ADV_FAST_INT_MIN_2, \
         .interval_max = BT_GAP_ADV_FAST_INT_MAX_2, \
         .own_addr = &addr, \
-        .peer_addr = NULL, \
     };
     int err;
 

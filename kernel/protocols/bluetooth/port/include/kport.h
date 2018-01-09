@@ -11,7 +11,6 @@
 
 #include "esp_log.h"
 
-#ifdef CONFIG_AOS_RHINO
 #include <stddef.h>
 #include <stdint.h>
 #include <string.h>
@@ -35,7 +34,6 @@
 #include <k_timer.h>
 #include <k_time.h>
 #include <k_event.h>
-#include <k_obj_set.h>
 #include <k_stats.h>
 #include <k_mm_debug.h>
 #include <k_mm_blk.h>
@@ -48,20 +46,18 @@
 #include <k_hook.h>
 #include <port.h>
 #include <k_endian.h>
-#endif
 
 #if defined(__cplusplus)
 extern "C"
 {
 #endif
 
-#ifdef CONFIG_AOS_RHINO
 typedef kqueue_t _queue_t;
 typedef ksem_t  _sem_t;
-#else
-typedef void* _queue_t;
-typedef void* _sem_t
-#endif
+typedef ktask_t _task_t;
+typedef cpu_stack_t _stack_element_t;
+
+#define _K_SEM_INITIALIZER(obj, initial_count, count_limit)  { 0 }
 
 /* Log define*/
 enum {
@@ -93,19 +89,20 @@ struct k_lifo {
 #endif
 };
 
+#define _K_LIFO_INITIALIZER(obj)  { 0 }
+
+#define K_LIFO_INITIALIZER DEPRECATED_MACRO _K_LIFO_INITIALIZER
+
 /**
  * @brief Initialize a lifo.
  *
  * This routine initializes a lifo object, prior to its first use.
  *
  * @param lifo Address of the lifo.
- * @param name lifo name.
- * @param start Address of static assgin memery.if NULL ,alloc memery dynamically
- * @param msg_num message numbers of the lifo.
  *
  * @return N/A
  */
-void k_lifo_init(struct k_lifo *lifo, const char *name,void **start,size_t msg_num);
+void k_lifo_init(struct k_lifo *lifo);
 
 /**
  * @brief Add an element to a lifo.
@@ -146,19 +143,20 @@ struct k_fifo {
 #endif
 };
 
+#define _K_FIFO_INITIALIZER(obj)  { 0 }
+
+#define K_FIFO_INITIALIZER DEPRECATED_MACRO _K_FIFO_INITIALIZER
+
 /**
  * @brief Initialize a fifo.
  *
  * This routine initializes a fifo object, prior to its first use.
  *
  * @param fifo Address of the fifo.
- * @param name lifo name.
- * @param start Address of static assgin memery.if NULL ,alloc memery dynamically
- * @param msg_num message numbers of the lifo.
  *
  * @return N/A
  */
-void k_fifo_init(struct k_fifo *fifo, const char *name, void **start, size_t msg_len);
+void k_fifo_init(struct k_fifo *fifo);
 
 /**
  * @brief Add an element to a fifo.
@@ -172,6 +170,8 @@ void k_fifo_init(struct k_fifo *fifo, const char *name, void **start, size_t msg
  * @return N/A
  */
 void k_fifo_put(struct k_fifo *fifo, void *msg);
+
+void k_fifo_put_list(struct k_fifo *fifo, void *head, void *tail);
 
 /**
  * @brief Get an element from a fifo.
@@ -303,6 +303,8 @@ void k_timer_stop(k_timer_t *timer);
 #define K_MSEC(ms)     (ms)
 #define K_SECONDS(s)   K_MSEC((s) * MSEC_PER_SEC)
 
+#define K_PRIO_COOP(x)  x
+
 /**
  * @brief Get time now.
  *
@@ -310,7 +312,23 @@ void k_timer_stop(k_timer_t *timer);
  */
 int64_t k_uptime_get();
 
-typedef void (*k_thread_entry_t)(void *args);
+struct k_thread {
+    _task_t *task;
+};
+
+typedef _stack_element_t k_thread_stack_t;
+
+inline void k_call_stacks_analyze(void) { }
+
+#define K_THREAD_STACK_DEFINE(sym, size) _stack_element_t sym[size]
+#define K_THREAD_STACK_SIZEOF(sym) sizeof(sym)
+
+static inline char *K_THREAD_STACK_BUFFER(k_thread_stack_t *sym)
+{
+    return (char *)sym;
+}
+
+typedef void (*k_thread_entry_t)(void *p1, void *p2, void *p3);
 /**
  * @brief Spawn a thread.
  *
@@ -325,8 +343,10 @@ typedef void (*k_thread_entry_t)(void *args);
  *
  * @return 0 success.
  */
-int k_thread_spawn(const char *name, uint32_t *stack, uint32_t stack_size, \
-                   k_thread_entry_t fn, void *arg, int prio);
+int k_thread_create(struct k_thread *new_thread, k_thread_stack_t *stack,
+                    size_t stack_size, k_thread_entry_t entry,
+                    void *p1, void *p2, void *p3,
+                    int prio, u32_t options, s32_t delay);
 
 /**
  * @brief Yield the current thread.

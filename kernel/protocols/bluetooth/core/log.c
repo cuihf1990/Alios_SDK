@@ -1,6 +1,7 @@
 /* log.c - logging helpers */
 
 /*
+ * Copyright (c) 2017 Nordic Semiconductor ASA
  * Copyright (c) 2016 Intel Corporation
  *
  * SPDX-License-Identifier: Apache-2.0
@@ -12,16 +13,18 @@
  */
 
 #include <stddef.h>
-#include <stdint.h>
+#include <zephyr/types.h>
 #include <zephyr.h>
 #include <misc/util.h>
+#include <bluetooth/bluetooth.h>
+#include <bluetooth/hci.h>
 
 const char *bt_hex(const void *buf, size_t len)
 {
 	static const char hex[] = "0123456789abcdef";
 	static char hexbufs[4][129];
-	static uint8_t curbuf;
-	const uint8_t *b = buf;
+	static u8_t curbuf;
+	const u8_t *b = buf;
 	unsigned int mask;
 	char *str;
 	int i;
@@ -42,3 +45,32 @@ const char *bt_hex(const void *buf, size_t len)
 
 	return str;
 }
+
+#if defined(CONFIG_BT_DEBUG)
+const char *bt_addr_str(const bt_addr_t *addr)
+{
+	static char bufs[2][BT_ADDR_STR_LEN];
+	static u8_t cur;
+	char *str;
+
+	str = bufs[cur++];
+	cur %= ARRAY_SIZE(bufs);
+	bt_addr_to_str(addr, str, sizeof(bufs[cur]));
+
+	return str;
+}
+
+const char *bt_addr_le_str(const bt_addr_le_t *addr)
+{
+	static char bufs[2][BT_ADDR_LE_STR_LEN];
+	static u8_t cur;
+	char *str;
+
+	str = bufs[cur++];
+	cur %= ARRAY_SIZE(bufs);
+	bt_addr_le_to_str(addr, str, sizeof(bufs[cur]));
+
+	return str;
+}
+#endif /* CONFIG_BT_DEBUG */
+
