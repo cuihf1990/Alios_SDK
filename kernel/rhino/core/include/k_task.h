@@ -132,6 +132,8 @@ kstat_t krhino_task_cpu_create(ktask_t *task, const name_t *name, void *arg,
                                uint8_t prio, tick_t ticks, cpu_stack_t *stack_buf,
                                size_t stack_size, task_entry_t entry, uint8_t cpu_num,
                                uint8_t autorun);
+
+kstat_t krhino_task_cpu_bind(ktask_t *task, uint8_t cpu_num);
 #endif
 
 
