@@ -2,11 +2,12 @@ NAME := spiffs
 
 $(NAME)_TYPE        := kernel
 
-$(NAME)_SOURCES     += spiffs/spiffs_cache.c
-$(NAME)_SOURCES     += spiffs/spiffs_check.c
-$(NAME)_SOURCES     += spiffs/spiffs_gc.c
-$(NAME)_SOURCES     += spiffs/spiffs_hydrogen.c
-$(NAME)_SOURCES     += spiffs/spiffs_nucleus.c
+$(NAME)_SOURCES     +=  spiffs_port.c \
+                        spiffs/spiffs_cache.c \
+                        spiffs/spiffs_check.c \
+                        spiffs/spiffs_gc.c \
+                        spiffs/spiffs_hydrogen.c \
+                        spiffs/spiffs_nucleus.c
 
 #default gcc
 ifeq ($(COMPILER),)
