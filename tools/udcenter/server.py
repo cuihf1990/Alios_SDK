@@ -569,7 +569,8 @@ class Server:
             while sock != None:
                 if logedin == False: #try to login
                     content = {'client_port':self.client_socket.getsockname()[1], 'terminal_port':self.terminal_socket.getsockname()[1]}
-                    content = TBframe.construct(TBframe.ACCESS_LOGIN, json.dumps(content))
+                    content = 'server,' + json.dumps(content)
+                    content = TBframe.construct(TBframe.ACCESS_LOGIN, content)
                     try:
                         sock.send(content)
                     except:
@@ -792,7 +793,7 @@ class Server:
         try:
             thread.start_new_thread(self.client_listen_thread, ())
             thread.start_new_thread(self.terminal_listen_thread, ())
-            thread.start_new_thread(self.contoller_interact_thread, ('localhost', 34569,))
+            thread.start_new_thread(self.contoller_interact_thread, ('localhost', 34567,))
             thread.start_new_thread(self.house_keeping_thread, ())
             while True:
                 time.sleep(0.1)
