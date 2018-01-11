@@ -14,9 +14,9 @@ $(NAME)_COMPONENTS += yloop
 
 $(NAME)_SOURCES := core/atomic_c.c \
                    core/buf.c \
+                   core/log.c \
                    host/uuid.c \
                    host/hci_core.c \
-                   host/log.c \
                    core/tinycrypt/source/utils.c \
                    core/tinycrypt/source/sha256.c \
                    core/tinycrypt/source/hmac.c \
@@ -25,11 +25,12 @@ $(NAME)_SOURCES := core/atomic_c.c \
                    host/l2cap.c \
                    host/att.c \
                    host/gatt.c \
-                   host/smp_null.c \
+                   host/crypto.c \
                    host/smp.c \
                    host/keys.c \
                    core/tinycrypt/source/cmac_mode.c \
                    core/tinycrypt/source/aes_encrypt.c \
+                   core/rpa.c \
                    core/work.c \
                    port/rhino_port.c
 
@@ -38,15 +39,14 @@ $(NAME)_SOURCES += hci_drivers/h4.c
 endif
 
 ifeq ($(COMPILER),)
-$(NAME)_CFLAGS      += -Wall
+$(NAME)_CFLAGS      += -Wall -Werror
 else ifeq ($(COMPILER),gcc)
-$(NAME)_CFLAGS      += -Wall
+$(NAME)_CFLAGS      += -Wall -Werror
 endif
 
 GLOBAL_DEFINES += CONFIG_AOS_BLUETOOTH
 GLOBAL_DEFINES += CONFIG_BLUETOOTH
-GLOBAL_DEFINES += CONFIG_AOS_RHINO
-GLOBAL_DEFINES += CONFIG_BLUETOOTH_PERIPHERAL
+GLOBAL_DEFINES += CONFIG_BT_PERIPHERAL
 
 ## BLE debug log general control macro (Note: still to be affected by DEBUG)
 ## Enable below macros if BLE stack debug needed

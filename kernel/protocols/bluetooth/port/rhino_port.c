@@ -15,7 +15,7 @@
 
 #define BT_DBG_ENABLED IS_ENABLED(CONFIG_BLUETOOTH_DEBUG_CORE)
 
-#include <bluetooth/log.h>
+#include <common/log.h>
 #include <stddef.h>
 #include <stdint.h>
 #include <string.h>
@@ -39,7 +39,6 @@
 #include <k_timer.h>
 #include <k_time.h>
 #include <k_event.h>
-#include <k_obj_set.h>
 #include <k_stats.h>
 #include <k_mm_debug.h>
 #include <k_mm_blk.h>
@@ -66,19 +65,18 @@ extern "C"
 {
 #endif
 
-void k_lifo_init(struct k_lifo *lifo, const char *name, void **start, size_t msg_num)
+void k_lifo_init(struct k_lifo *lifo)
 {
     kstat_t ret;
-    UNUSED(start);
+    const char *name = "ble_lifo";
+    size_t msg_num = 20;
 
     if (NULL == lifo) {
         BT_ERR("lifo is NULL");
         return;
     }
 
-    BT_DBG("lifo %p,name %s,start %p,msg_num %d",lifo,name,start,msg_num);
     ret = krhino_queue_dyn_create(&lifo->_queue, name, msg_num);
-
     if (RHINO_SUCCESS != ret) {
         BT_ERR("lifo %s %p creat fail,%d\n",name, lifo, ret);
     }
@@ -143,15 +141,16 @@ void *k_lifo_get(struct k_lifo *lifo, tick_t timeout)
     return msg;
 }
 
-void k_fifo_init(struct k_fifo *fifo, const char *name, void **start, size_t msg_len)
+void k_fifo_init(struct k_fifo *fifo)
 {
     kstat_t ret;
+    const char *name = "ble_fifo";
+    size_t msg_len = 20;
 
     if (NULL == fifo) {
         BT_ERR("fifo is NULL");
         return;
     }
-    BT_DBG("fifo %p,name %s,start %p,msg_num %d",fifo,name,start,msg_len);
     ret = krhino_queue_dyn_create(&fifo->_queue, name, msg_len);
 
     if (ret) {
@@ -217,6 +216,15 @@ void k_fifo_put(struct k_fifo *fifo, void *msg)
 #if LIFO_DEBUG
     fifo->count++;
 #endif
+}
+
+void k_fifo_put_list(struct k_fifo *fifo, void *head, void *tail)
+{
+    struct net_buf *buf_tail = (struct net_buf *)head;
+
+    for (buf_tail = (struct net_buf *)head; buf_tail; buf_tail = buf_tail->frags) {
+        k_fifo_put(fifo, buf_tail);
+    }
 }
 
 int k_sem_init(struct k_sem *sem, unsigned int initial_count, unsigned int limit)
@@ -286,16 +294,19 @@ int64_t k_uptime_get()
     return krhino_ticks_to_ms(krhino_sys_tick_get());
 }
 
-int k_thread_spawn(const char *name, uint32_t *stack, uint32_t stack_size, \
-                   k_thread_entry_t fn, void *arg, int prio)
-
+typedef void (*task_entry_t)(void *args);
+int k_thread_create(struct k_thread *new_thread, k_thread_stack_t *stack,
+                    size_t stack_size, k_thread_entry_t entry,
+                    void *p1, void *p2, void *p3,
+                    int prio, u32_t options, s32_t delay)
 {
-    ktask_t *task;
     kstat_t ret;
-    ret = krhino_task_dyn_create(&task, name, arg, prio, 0, stack_size, fn, 1);
+
+    ret = krhino_task_dyn_create(&new_thread->task, "ble-task", p1, prio, 0, \
+                                 stack_size, (task_entry_t)entry, 1);
 
     if (ret) {
-        SYS_LOG_ERR("creat task %s fail\n", name);
+        SYS_LOG_ERR("create task ble task fail\n");
         return ret;
     }
 
@@ -308,7 +319,7 @@ int k_yield()
 }
 
 
-unsigned int irq_lock()
+unsigned int irq_lock(void)
 {
     CPSR_ALLOC();
     RHINO_CPU_INTRPT_DISABLE();
@@ -349,6 +360,11 @@ void k_timer_stop(k_timer_t *timer)
     ASSERT(timer, "timer is NULL");
     BT_DBG("timer %p", timer);
     aos_cancel_delayed_action(timer->timeout,timer->handler, timer->args);
+}
+
+int k_poll_signal(struct k_poll_signal *signal, int result)
+{
+    return 0;
 }
 
 #if defined(__cplusplus)
