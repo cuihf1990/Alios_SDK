@@ -154,6 +154,23 @@ kstat_t krhino_task_cpu_bind(ktask_t *task, uint8_t cpu_num)
     return RHINO_SUCCESS;
 }
 
+kstat_t krhino_task_cpu_unbind(ktask_t *task)
+{
+    CPSR_ALLOC();
+
+    ktask_t *task_cur;
+
+    RHINO_CRITICAL_ENTER();
+    task_cur = g_active_task[cpu_cur_get()];
+    if (task != task_cur) {
+        RHINO_CRITICAL_EXIT();
+        return RHINO_INV_PARAM;
+    }
+    task->cpu_binded = 0u;
+    RHINO_CRITICAL_EXIT_SCHED();
+
+    return RHINO_SUCCESS;
+}
 #endif
 
 #if (RHINO_CONFIG_KOBJ_DYN_ALLOC > 0)
