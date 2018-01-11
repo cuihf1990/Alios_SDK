@@ -25,8 +25,13 @@ CMD_DONE       = 'CMDD'
 CMD_ERROR      = 'CMDE'
 HEARTBEAT      = 'HTBT'
 TYPE_NONE      = 'NONE'
-CLIENT_UUID    = 'CUID'
-CLIENT_TAG     = 'CTAG'
+CLIENT_LOGIN   = 'CLGI'
+ACCESS_LOGIN         = 'ALGI'
+ACCESS_REPORT_STATUS = 'ARPS'
+ACCESS_ADD_CLIENT    = 'AADC'
+ACCESS_DEL_CLIENT    = 'ADLC'
+ACCESS_ADD_TERMINAL  = 'AADT'
+ACCESS_DEL_TERMINAL  = 'ADLT'
 
 def is_valid_type(type):
     #frequently used commands
@@ -75,9 +80,19 @@ def is_valid_type(type):
         return True
     if type == DEVICE_ALLOC:
         return True
-    if type == CLIENT_UUID:
+    if type == CLIENT_LOGIN:
         return True
-    if type == CLIENT_TAG:
+    if type == ACCESS_LOGIN:
+        return True
+    if type == ACCESS_REPORT_STATUS:
+        return True
+    if type == ACCESS_ADD_CLIENT:
+        return True
+    if type == ACCESS_DEL_CLIENT:
+        return True
+    if type == ACCESS_ADD_TERMINAL:
+        return True
+    if type == ACCESS_DEL_TERMINAL:
         return True
     return False
 
@@ -98,7 +113,7 @@ def parse(msg):
             length = 0
             value = ''
             break;
-        #  print msg
+        #   print(msg)
         for i in range(len(msg)):
             if msg[i] != '{':
                 continue
@@ -114,8 +129,8 @@ def parse(msg):
                 continue
             sync = True
             if DEBUG and i > 0:
-                print "msg:{0}".format(msg)
-                print "discard:{0}".format(msg[0:i])
+                print("msg:{0}".format(msg))
+                print("discard:{0}".format(msg[0:i]))
             msg = msg[i:]
             break
         if sync == False:
@@ -130,8 +145,7 @@ def parse(msg):
             break
         if msg[length + 11] != '}':
             sync = False
-            if DEBUG:
-                print msg[0:11],"Lose sync because of FOOTER error"
+            if DEBUG: print(msg[0:11] + " Lose sync because of FOOTER error")
             msg = msg[1:]
             continue
         value = msg[11:length+11]

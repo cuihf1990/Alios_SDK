@@ -6,7 +6,7 @@ from operator import itemgetter
 import TBframe
 
 MAX_MSG_LENTH = 8192
-ENCRYPT = False
+ENCRYPT = True
 DEBUG = True
 
 class ConnectionLost(Exception):
