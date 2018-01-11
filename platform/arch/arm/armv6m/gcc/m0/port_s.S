@@ -2,45 +2,45 @@
 @                            EXTERN PARAMETERS
 @******************************************************************************
 
-.extern g_active_task
-.extern g_preferred_ready_task
+.extern  g_active_task
+.extern  g_preferred_ready_task
+.extern  krhino_stack_ovf_check
 
 @******************************************************************************
 @                            EXPORT FUNCTIONS
 @******************************************************************************
 
-.global cpu_intrpt_save
-.global cpu_intrpt_restore
-.global cpu_task_switch
-.global cpu_intrpt_switch
-.global cpu_first_task_start
+.global  cpu_intrpt_save
+.global  cpu_intrpt_restore
+.global  cpu_task_switch
+.global  cpu_intrpt_switch
+.global  cpu_first_task_start
 
-.global PendSV_Handler
+.global  PendSV_Handler
 
 @******************************************************************************
 @                                 EQUATES
 @******************************************************************************
 
-.equ NVIC_INT_CTRL,   0xE000ED04 @ Interrupt control state register.
-.equ NVIC_SYSPRI2,    0xE000ED20 @ System priority register.
-.equ NVIC_KERNEL_PRI, 0xFFFF0000 @ PendSV and SysTick priority value (lowest).
-.equ NVIC_PENDSVSET,  0x10000000 @ Value to trigger PendSV exception.
+.equ SCB_ICSR,        0xE000ED04 @ Interrupt Control and State Register.
+.equ ICSR_PENDSVSET,  0x10000000 @ Value to trigger PendSV exception.
+
+.equ SHPR3_PRI_14_15, 0xE000ED20 @ System Handler Priority Register 3 (PendSV + SysTick).
+.equ SHPR3_PRI_LVL,   0xC0C00000 @ PendSV + SysTick priority level (lowest).
 
 @******************************************************************************
 @                        CODE GENERATION DIRECTIVES
 @******************************************************************************
-
 .text
-.align 4
+.align 2
+.thumb
 .syntax unified
-.code 16        /* assemble in Thumb-2  (.thumb" can also be used) */
 
 @******************************************************************************
 @ Functions:
 @     size_t cpu_intrpt_save(void);
 @     void cpu_intrpt_restore(size_t cpsr);
 @******************************************************************************
-
 .thumb_func
 cpu_intrpt_save:
     MRS     R0, PRIMASK
@@ -57,18 +57,17 @@ cpu_intrpt_restore:
 @     void cpu_intrpt_switch(void);
 @     void cpu_task_switch(void);
 @******************************************************************************
-
 .thumb_func
 cpu_task_switch:
-    LDR     R0, =NVIC_INT_CTRL
-    LDR     R1, =NVIC_PENDSVSET
+    LDR     R0, =SCB_ICSR
+    LDR     R1, =ICSR_PENDSVSET
     STR     R1, [R0]
     BX      LR
 
 .thumb_func
 cpu_intrpt_switch:
-    LDR     R0, =NVIC_INT_CTRL
-    LDR     R1, =NVIC_PENDSVSET
+    LDR     R0, =SCB_ICSR
+    LDR     R1, =ICSR_PENDSVSET
     STR     R1, [R0]
     BX      LR
 
@@ -76,25 +75,31 @@ cpu_intrpt_switch:
 @ Functions:
 @     void cpu_first_task_start(void);
 @******************************************************************************
-
 .thumb_func
 cpu_first_task_start:
-    LDR     R0, =NVIC_SYSPRI2
-    LDR     R1, =NVIC_KERNEL_PRI
-    STR     R1, [R0]
+    @set PendSV prority to the lowest
+    LDR     R0, =SHPR3_PRI_14_15                   
+    LDR     R2, [R0]
+    LDR     R1, =SHPR3_PRI_LVL
+    ORRS    R2, R1
+    STR     R2, [R0]
 
+    @indicate PendSV_Handler branch to _pendsv_handler_nosave
     MOVS    R0, #0
     MSR     PSP, R0
 
+    @align MSP to 8 byte
     MRS     R0, MSP
     LSRS    R0, R0, #3
     LSLS    R0, R0, #3
     MSR     MSP, R0
 
-    LDR     R0, =NVIC_INT_CTRL
-    LDR     R1, =NVIC_PENDSVSET
+    @make PendSV exception pending
+    LDR     R0, =SCB_ICSR
+    LDR     R1, =ICSR_PENDSVSET
     STR     R1, [R0]
 
+    @goto PendSV_Handler
     CPSIE   I
     B       .
 
@@ -107,18 +112,30 @@ PendSV_Handler:
     CPSID   I
     MRS     R0, PSP
     CMP     R0, #0
+    @branch if cpu_first_task_start
     BEQ     _pendsv_handler_nosave
 
-    SUBS    R0, R0, #32
-    LDR     R1, =g_active_task
-    LDR     R1, [R1]
-    STR     R0, [R1]
-    STMIA   R0!, {R4-R7}
-    MOV     R4, R8
+    @hardware saved R0~R3,R12,LR,PC,xPSR
+    
+    @save context
+    SUBS    R0, R0, #0x20
+    STMIA   R0!, {R4 - R7}
+    MOV     R4, R8                
     MOV     R5, R9
     MOV     R6, R10
     MOV     R7, R11
-    STMIA   R0!, {R4-R7}  
+    STMIA   R0!, {R4 - R7}
+
+    @g_active_task->task_stack = context region
+    SUBS    R0, R0, #0x20
+    LDR     R1, =g_active_task
+    LDR     R1, [R1]
+    STR     R0, [R1]
+
+    @save and restore LR
+    MOV     R4, LR
+    bl      krhino_stack_ovf_check
+    MOV     LR, R4
 
 .thumb_func
 _pendsv_handler_nosave:
@@ -126,23 +143,28 @@ _pendsv_handler_nosave:
     LDR     R1, =g_preferred_ready_task
     LDR     R2, [R1]
     STR     R2, [R0]
-
+    @R0 = g_active_task->task_stack = context region
     LDR     R0, [R2]
-    ADDS    R0, R0, #16
-    LDMIA   R0!, {R4-R7}
-    MOV     R8, R4
-    MOV     R9, R5
-    MOV     R10, R6
-    MOV     R11, R7
-    MSR     PSP, R0
-    SUBS    R0, R0, #32
-    LDMIA   R0!, {R4-R7} 
 
+    @restore context
+    LDMIA   R0!, {R4 - R7}          
+    LDMIA   R0!, {R2 - R3}          
+    MOV     R8,  R2                 
+    MOV     R9,  R3                 
+    LDMIA   R0!, {R2 - R3}          
+    MOV     R10,  R2                 
+    MOV     R11,  R3                 
+
+    @return stack = PSP
+    MSR     PSP, R0
+
+    @after exception return: stack = PSP
     MOV     R0, LR
-    MOVS    R1, #4
+    MOVS    R1, #0x04
     ORRS    R0, R1
     MOV     LR, R0
     CPSIE   I
+    @hardware restore R0~R3,R12,LR,PC,xPSR
     BX      LR
 
 .end

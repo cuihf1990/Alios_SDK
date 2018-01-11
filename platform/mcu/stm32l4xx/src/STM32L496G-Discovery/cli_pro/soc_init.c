@@ -37,9 +37,14 @@
   */
 
 /* Includes ------------------------------------------------------------------*/
+#include <stdint.h>
+
 #include "soc_init.h"
+#include "hal/soc/uart.h"
 #include "k_config.h"
+
 #include "stm32l4xx_hal.h"
+
 
 #if defined (__CC_ARM) && defined(__MICROLIB)
 #define PUTCHAR_PROTOTYPE int fputc(int ch, FILE *f)
@@ -61,6 +66,7 @@
 
 /* Private variables ---------------------------------------------------------*/
 UART_HandleTypeDef huart2;
+
 
 /* USER CODE BEGIN PV */
 /* Private variables ---------------------------------------------------------*/
@@ -738,6 +744,25 @@ HAL_StatusTypeDef HAL_InitTick(uint32_t TickPriority)
   return HAL_OK;
 }
 
+int32_t hal_uart_send(uart_dev_t *uart, const void *data, uint32_t size, uint32_t timeout) {
+    (void)uart;
+    if (HAL_UART_Transmit(&huart2, (uint8_t *)data, size,timeout) != HAL_OK) {
+        Error_Handler();
+      }
+
+    return size;
+}
+
+int32_t hal_uart_recv(uart_dev_t *uart, void *data, uint32_t expect_size, uint32_t *recv_size, uint32_t timeout) {
+    int ret;
+    (void)uart;
+    (void)recv_size;
+    ret = HAL_UART_Receive(&huart2, (uint8_t *)data, expect_size,timeout);
+
+    return ret;
+}
+
+
 /**
   * @brief  Retargets the C library printf function to the USART.
   * @param  None
@@ -747,9 +772,9 @@ PUTCHAR_PROTOTYPE
 {
   if (ch == '\n') {
     //hal_uart_send(&console_uart, (void *)"\r", 1, 30000);
-    HAL_UART_Transmit(&huart2, (void *)"\r", 1,30000);
+    hal_uart_send(NULL, (void *)"\r", 1,30000);
   }
-  HAL_UART_Transmit(&huart2, (uint8_t *)&ch, 1, 0xFFFF);
+  hal_uart_send(NULL, (uint8_t *)&ch, 1, 0xFFFF);
   return ch;
 }
 
@@ -764,9 +789,11 @@ GETCHAR_PROTOTYPE
   /* e.g. readwrite a character to the USART2 and Loop until the end of transmission */
   uint8_t ch = 0;
   //uint32_t recv_size;
-  HAL_UART_Receive(&huart2, &ch, 1,30000);
+  hal_uart_recv(NULL, &ch, 1,NULL,30000);
   return ch;
 }
+
+
 
 /**
   * @}

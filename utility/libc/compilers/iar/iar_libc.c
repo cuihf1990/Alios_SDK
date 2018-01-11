@@ -7,12 +7,13 @@
 #include <sys/types.h>
 #include <time.h>
 #include <stdio.h>
+#include <string.h>
 
+#if (RHINO_CONFIG_MM_TLF > 0)
 extern void *aos_malloc(unsigned int size);
 extern void aos_alloc_trace(void *addr, size_t allocator);
 extern void aos_free(void *mem);
 extern void *aos_realloc(void *mem, unsigned int size);
-extern long long aos_now_ms(void);
 
 __ATTRIBUTES void *malloc(unsigned int size)
 {
@@ -61,10 +62,12 @@ __ATTRIBUTES void free(void *mem)
 {
     aos_free(mem);
 }
+#endif
 
+extern long long krhino_sys_time_get(void);
 __ATTRIBUTES time_t time(time_t *tod)
 {
-    uint64_t t = aos_now_ms();
+    uint64_t t = krhino_sys_time_get();
     return (time_t)(t / 1000);
 }
 
@@ -120,3 +123,4 @@ void optarg()
 }
 
  #endif
+

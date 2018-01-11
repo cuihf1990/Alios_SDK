@@ -33,14 +33,14 @@
 #define RHINO_CONFIG_BUF_QUEUE               0
 #endif
 #ifndef RHINO_CONFIG_MM_BLK
-#define RHINO_CONFIG_MM_BLK                  0
+#define RHINO_CONFIG_MM_BLK                  1
 #endif
 #ifndef RHINO_CONFIG_MM_DEBUG
 #define RHINO_CONFIG_MM_DEBUG                0
 #endif
 
 #ifndef RHINO_CONFIG_MM_TLF
-#define RHINO_CONFIG_MM_TLF                  0
+#define RHINO_CONFIG_MM_TLF                  1
 #endif
 #ifndef RHINO_CONFIG_MM_TLF_BLK_SIZE
 #define RHINO_CONFIG_MM_TLF_BLK_SIZE         8192
@@ -75,7 +75,7 @@
 #endif
 
 #ifndef RHINO_CONFIG_TASK_STACK_CUR_CHECK
-#define RHINO_CONFIG_TASK_STACK_CUR_CHECK    0
+#define RHINO_CONFIG_TASK_STACK_CUR_CHECK    1
 #endif
 
 #ifndef RHINO_CONFIG_TASK_WAIT_ABORT
@@ -165,7 +165,7 @@
 
 /* kernel dyn alloc conf */
 #ifndef RHINO_CONFIG_KOBJ_DYN_ALLOC
-#define RHINO_CONFIG_KOBJ_DYN_ALLOC          0
+#define RHINO_CONFIG_KOBJ_DYN_ALLOC          1
 #endif
 
 #if (RHINO_CONFIG_KOBJ_DYN_ALLOC > 0)
@@ -182,7 +182,7 @@
 
 /* kernel idle conf */
 #ifndef RHINO_CONFIG_IDLE_TASK_STACK_SIZE
-#define RHINO_CONFIG_IDLE_TASK_STACK_SIZE    100
+#define RHINO_CONFIG_IDLE_TASK_STACK_SIZE    200
 #endif
 
 /* kernel hook conf */

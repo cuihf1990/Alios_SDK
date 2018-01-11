@@ -25,10 +25,8 @@
 SCB_ICSR              EQU      0xE000ED04 ; Interrupt Control and State Register.
 ICSR_PENDSVSET        EQU      0x10000000 ; Value to trigger PendSV exception.
 
-SHPR3_PRI_14          EQU      0xE000ED22 ; System Handler Priority Register 3 (PendSV).
-PRI_LVL_PENDSV        EQU      0xFF       ; PendSV priority level (lowest).
-SHPR3_PRI_15          EQU      0xE000ED23 ; System Handler Priority Register 3 (SysTick).
-PRI_LVL_SYSTICK       EQU      0xFF       ; SYstick priority level (lowest).
+SHPR3_PRI_14_15       EQU      0xE000ED20 ; System Handler Priority Register 3 (PendSV + SysTick).
+SHPR3_PRI_LVL         EQU      0xC0C00000 ; PendSV + SysTick priority level (lowest).
 
 ;******************************************************************************
 ;                        CODE GENERATION DIRECTIVES
@@ -75,14 +73,11 @@ cpu_intrpt_switch
 ;******************************************************************************
 cpu_first_task_start
     ;set PendSV prority to the lowest
-    LDR     R0, =SHPR3_PRI_14
-    LDR     R1, =PRI_LVL_PENDSV
-    STRB    R1, [R0]
-    
-    ;set Systick prority to the lowest
-    LDR     R0, =SHPR3_PRI_15
-    LDR     R1, =PRI_LVL_SYSTICK
-    STRB    R1, [R0]
+    LDR     R0, =SHPR3_PRI_14_15                   
+    LDR     R2, [R0]
+    LDR     R1, =SHPR3_PRI_LVL
+    ORRS    R2, R1
+    STR     R2, [R0]
 
     ;indicate PendSV_Handler branch to _pendsv_handler_nosave
     MOVS    R0, #0
@@ -110,25 +105,31 @@ cpu_first_task_start
 PendSV_Handler
     CPSID   I
     MRS     R0, PSP
+    CMP     R0, #0
     ;branch if cpu_first_task_start
-    CBZ     R0, _pendsv_handler_nosave
+    BEQ     _pendsv_handler_nosave
 
     ;hardware saved R0~R3,R12,LR,PC,xPSR
-
+    
     ;save context
-    IF      {FPU} != "SoftVFP"
-    VSTMFD  R0!, {D8 - D15}
-    ENDIF
-
-    SUBS    R0, R0, #0x24
-    STM     R0, {R4-R11, LR}
+    SUBS    R0, R0, #0x20
+    STMIA   R0!, {R4 - R7}
+    MOV     R4, R8                
+    MOV     R5, R9
+    MOV     R6, R10
+    MOV     R7, R11
+    STMIA   R0!, {R4 - R7}
 
     ;g_active_task->task_stack = context region
+    SUBS    R0, R0, #0x20
     LDR     R1, =g_active_task
     LDR     R1, [R1]
     STR     R0, [R1]
 
+    ;save and restore LR
+    MOV     R4, LR
     bl      krhino_stack_ovf_check
+    MOV     LR, R4
 
 _pendsv_handler_nosave
     LDR     R0, =g_active_task
@@ -139,19 +140,22 @@ _pendsv_handler_nosave
     LDR     R0, [R2]
 
     ;restore context
-    LDM     R0, {R4-R11, LR}
-    ADDS    R0, R0, #0x24
-
-    IF	    {FPU} != "SoftVFP"
-    VLDMFD  R0!, {D8 - D15}
-    ENDIF
+    LDMIA   R0!, {R4 - R7}          
+    LDMIA   R0!, {R2 - R3}          
+    MOV     R8,  R2                 
+    MOV     R9,  R3                 
+    LDMIA   R0!, {R2 - R3}          
+    MOV     R10,  R2                 
+    MOV     R11,  R3                 
 
     ;return stack = PSP
     MSR     PSP, R0
 
     ;after exception return: stack = PSP
-    ORR     LR, LR, #0x04
-    
+    MOV     R0, LR
+    MOVS    R1, #0x04
+    ORRS    R0, R1
+    MOV     LR, R0
     CPSIE   I
     ;hardware restore R0~R3,R12,LR,PC,xPSR
     BX      LR
