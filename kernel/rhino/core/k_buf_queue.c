@@ -411,16 +411,5 @@ kstat_t krhino_buf_queue_info_get(kbuf_queue_t *queue, kbuf_queue_info_t *info)
     return RHINO_SUCCESS;
 }
 
-kstat_t krhino_buf_queue_is_valid(kbuf_queue_t *queue)
-{
-    NULL_PARA_CHK(queue);
-
-    if (queue->blk_obj.obj_type != RHINO_BUF_QUEUE_OBJ_TYPE) {
-        return RHINO_KOBJ_TYPE_ERR;
-    }
-
-    return RHINO_SUCCESS;
-}
-
 #endif
 
