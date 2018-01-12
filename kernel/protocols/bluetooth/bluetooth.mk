@@ -3,11 +3,10 @@ NAME := bluetooth
 $(NAME)_TYPE := kernel
 GLOBAL_INCLUDES += include \
                    include/drivers \
+                   core/include \
                    port/include
 
 $(NAME)_INCLUDES += core/tinycrypt/include \
-                    core/include \
-                    profile \
                     ../../rhino/core/include
 
 $(NAME)_COMPONENTS += yloop
@@ -47,6 +46,9 @@ endif
 GLOBAL_DEFINES += CONFIG_AOS_BLUETOOTH
 GLOBAL_DEFINES += CONFIG_BLUETOOTH
 GLOBAL_DEFINES += CONFIG_BT_PERIPHERAL
+GLOBAL_DEFINES += CONFIG_BT_SMP
+
+GLOBAL_DEFINES += CONFIG_BLE_50
 
 ## BLE debug log general control macro (Note: still to be affected by DEBUG)
 ## Enable below macros if BLE stack debug needed
