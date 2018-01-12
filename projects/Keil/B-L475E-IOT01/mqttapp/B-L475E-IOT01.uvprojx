@@ -310,7 +310,7 @@
           </ArmAdsMisc>
           <Cads>
             <interw>1</interw>
-            <Optim>1</Optim>
+            <Optim>3</Optim>
             <oTime>0</oTime>
             <SplitLS>0</SplitLS>
             <OneElfS>1</OneElfS>
@@ -655,9 +655,9 @@
               <FilePath>..\..\..\..\platform\arch\arm\armv7m\armcc\m4\port_c.c</FilePath>
             </File>
             <File>
-              <FileName>port_s.s</FileName>
+              <FileName>port_s.S</FileName>
               <FileType>2</FileType>
-              <FilePath>..\..\..\..\platform\arch\arm\armv7m\armcc\m4\port_s.s</FilePath>
+              <FilePath>..\..\..\..\platform\arch\arm\armv7m\armcc\m4\port_s.S</FilePath>
             </File>
           </Files>
         </Group>
@@ -813,11 +813,6 @@
               <FileName>k_obj.c</FileName>
               <FileType>1</FileType>
               <FilePath>..\..\..\..\kernel\rhino\core\k_obj.c</FilePath>
-            </File>
-            <File>
-              <FileName>k_obj_set.c</FileName>
-              <FileType>1</FileType>
-              <FilePath>..\..\..\..\kernel\rhino\core\k_obj_set.c</FilePath>
             </File>
             <File>
               <FileName>k_pend.c</FileName>
