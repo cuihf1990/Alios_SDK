@@ -160,3 +160,4 @@ GLOBAL_INCLUDES     +=
 endif # APP=spi_flash_write
 endif # APP=bootloader
 
+GLOBAL_DEFINES += CONFIG_ARM
