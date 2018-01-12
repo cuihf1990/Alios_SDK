@@ -1,9 +1,7 @@
 NAME := ble_app_framework
 
-$(NAME)_COMPONENTS :=
-$(info Hello COMPONENTS: $(COMPONENTS))
-ifeq (,$(filter %.ble_app_framework_impl,$(COMPONENTS)))
-$(NAME)_COMPONENTS += bluetooth.ble_app_framework_impl
+ifneq ($(no_ble_app_framework),1)
+$(NAME)_SOURCES := ble_app_framework.c
 endif
 
 GLOBAL_INCLUDES += .

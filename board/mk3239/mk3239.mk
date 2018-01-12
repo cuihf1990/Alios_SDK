@@ -50,5 +50,6 @@ EXTRA_TARGET_MAKEFILES +=  $(MAKEFILES_PATH)/aos_standard_targets.mk
 #EXTRA_TARGET_MAKEFILES +=  $(SOURCE_ROOT)/platform/mcu/$(HOST_MCU_FAMILY)/gen_crc_bin.mk
 
 ifeq ($(ble),1)
+no_ble_app_framework := 1
 $(NAME)_COMPONENTS := bluetooth.mk3239.ble_app_framework_impl
 endif
