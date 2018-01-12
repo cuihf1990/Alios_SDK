@@ -46,6 +46,7 @@ typedef struct network_mgmt_state_s {
 } network_mgmt_state_t;
 static network_mgmt_state_t g_nm_state;
 
+static void start_discover_timer(void);
 static void handle_discovery_timer(void *args);
 static ur_error_t send_discovery_request(void);
 static ur_error_t send_discovery_response(network_context_t *network, ur_addr_t *dest);
@@ -89,6 +90,7 @@ static void handle_discovery_timer(void *args)
         nbr = get_neighbor_by_mac_addr(g_nm_state.discover_result.addr.addr, NULL);
         g_nm_state.handler(nbr);
     } else if (umesh_mm_get_device_state() >= DEVICE_STATE_LEAF) {
+        start_discover_timer();
         umesh_mm_set_channel(hal, umesh_mm_get_prev_channel());
     } else {
         umesh_mm_set_channel(hal, hal->def_channel);
