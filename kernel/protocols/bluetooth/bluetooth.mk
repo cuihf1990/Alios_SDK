@@ -48,6 +48,8 @@ GLOBAL_DEFINES += CONFIG_BLUETOOTH
 GLOBAL_DEFINES += CONFIG_BT_PERIPHERAL
 GLOBAL_DEFINES += CONFIG_BT_SMP
 
+GLOBAL_DEFINES += CONFIG_BLE_50
+
 ## BLE debug log general control macro (Note: still to be affected by DEBUG)
 ## Enable below macros if BLE stack debug needed
 #GLOBAL_DEFINES += CONFIG_BLUETOOTH_DEBUG_LOG

@@ -37,7 +37,9 @@ typedef struct ble_peri_s {
      */
     ble_gatt_attr_t *vattr;
     /* service structure built from attr */
+#ifdef CONFIG_BLE_50
     struct bt_gatt_service svc;
+#endif
     char dev_name[DEV_NAME_MAX_LEN];
     char manu_name[MANUFACTURE_NAME_MAX_LEN];
 } ble_peri_t;
@@ -120,8 +122,9 @@ void ble_peripheral_deinit
     free_val_attrs_list(hdl);
     free_handle_to_attr_tbl(hdl);
 
-    /* not supported in this version yet. */
-    //bt_gatt_service_unregister(&g_peri[hdl].svc);
+#ifdef CONFIG_BLE_50
+    bt_gatt_service_unregister(&g_peri[hdl].svc);
+#endif
 
     return;
 }
@@ -149,6 +152,9 @@ struct db_char_hdr {
 static int make_attr_and_svc(peripheral_hdl_t hdl)
 {
     uint8_t *db = g_peri[hdl].db, *p;
+#ifdef CONFIG_BLE_50
+    uint8_t attr_ignore_flag = 0;;
+#endif
     int db_len = g_peri[hdl].db_len, len = 0, attr_cnt = 0, attr_idx = 0;
     struct db_genreral_hdr *iter = (struct db_genreral_hdr *)db;
     struct db_char_hdr *c;
@@ -171,7 +177,20 @@ static int make_attr_and_svc(peripheral_hdl_t hdl)
         if (TYPE_CMP(iter->type, GATT_UUID_PRI_SERVICE) || /* primary service */
             TYPE_CMP(iter->type, GATT_UUID_SEC_SERVICE)) { /* secondary service */
             LOGD(MOD, "A primary or secondary service item found.");
-            attr_cnt++;
+#ifdef CONFIG_BLE_50
+            p = (uint8_t *)iter + G_HEADER_SIZE;
+            /* Skip GAP and GATT services */
+            if (((iter->len[0 ] == 4) && (p[0] == 0x00) && (p[1] == 0x18)) ||
+                ((iter->len[0] == 4) && (p[0] == 0x01) && (p[1] == 0x18))) {
+                LOGD(MOD, "GAP/GATT service, ignore it.");
+                attr_ignore_flag = 1; /* ignore following char and desc */
+            } else {
+                attr_ignore_flag = 0;
+#endif
+                attr_cnt++;
+#ifdef CONFIG_BLE_50
+            }
+#endif
             p = (uint8_t *)iter;
             p += G_HEADER_SIZE + iter->len[0] - 2;
             iter = (struct db_genreral_hdr *)p;
@@ -181,7 +200,14 @@ static int make_attr_and_svc(peripheral_hdl_t hdl)
         } else if (TYPE_CMP(iter->type, GATT_UUID_CHAR_DECLARE)) { /* characteristic declare */
             LOGD(MOD, "A characteristic item found.");
 
-            attr_cnt += 2; /* 1 for c, one for cdesr, do we need ccc? <TODO> */
+#ifdef CONFIG_BLE_50
+            if (!attr_ignore_flag) 
+#endif
+                attr_cnt += 2; /* 1 for c, one for c-v, do we need ccc? <TODO> */
+#ifdef CONFIG_BLE_50
+            else
+                LOGD(MOD, "GAP/GATT characteristic, ignore it.");
+#endif
 
             p = (uint8_t *)iter;
             p += G_HEADER_SIZE + iter->len[0] - 2; /* eat until uuid */
@@ -232,6 +258,20 @@ static int make_attr_and_svc(peripheral_hdl_t hdl)
     while ((uint32_t)iter < (uint32_t)(db + db_len)) {
         if (TYPE_CMP(iter->type, GATT_UUID_PRI_SERVICE) ||
             TYPE_CMP(iter->type, GATT_UUID_SEC_SERVICE)) { /* service */
+#ifdef CONFIG_BLE_50
+            p = (uint8_t *)iter + G_HEADER_SIZE;
+            /* Skip GAP and GATT services */
+            if (((iter->len[0] == 4) && (p[0] == 0x00) && (p[1] == 0x18)) ||
+                ((iter->len[0] == 4) && (p[0] == 0x01) && (p[1] == 0x18))) {
+                LOGD(MOD, "GAP/GATT service, ignore it.");
+                attr_ignore_flag = 1; /* ignore following char and desc */
+            } else {
+                attr_ignore_flag = 0;
+            }
+
+            if (!attr_ignore_flag) {
+#endif
+
             a = &(g_peri[hdl].attr)[attr_idx];
 
             if (TYPE_CMP(iter->type, GATT_UUID_PRI_SERVICE)) {
@@ -277,8 +317,13 @@ static int make_attr_and_svc(peripheral_hdl_t hdl)
                 return -1;
             }
 
-            /* update pointer*/
             attr_idx++;
+
+#ifdef CONFIG_BLE_50
+            } /* if (!ignore) */
+#endif
+
+            /* update pointer*/
             p = (uint8_t *)iter;
             p += G_HEADER_SIZE + iter->len[0] - 2;
             iter = (struct db_genreral_hdr *)p;
@@ -286,6 +331,9 @@ static int make_attr_and_svc(peripheral_hdl_t hdl)
             LOGW(MOD, "Included service is not supported yet!!");
             return -1;
         } else if (TYPE_CMP(iter->type, GATT_UUID_CHAR_DECLARE)) {
+#ifdef CONFIG_BLE_50
+            if (!attr_ignore_flag) {
+#endif
             LOGD(MOD, "Adding a characteristic and a value attribute.");
 
             /* Fill the charateristic attribute */
@@ -365,8 +413,13 @@ static int make_attr_and_svc(peripheral_hdl_t hdl)
 
             attr_idx += 2;
 
+#ifdef CONFIG_BLE_50
+            } /* if (!attr_ignore_flag) */
+#endif
+
             /* update pointer */
             p = (uint8_t *)iter;
+            c = (struct db_char_hdr *)(p + G_HEADER_SIZE + iter->len[0] - 2);
             p += G_HEADER_SIZE + iter->len[0] - 2 + C_HEADER_SIZE + c->len[0];
             if (c->perm[0] & (uint8_t)LEGATTDB_PERM_WRITABLE)
                 p++;
@@ -391,6 +444,11 @@ static int make_attr_and_svc(peripheral_hdl_t hdl)
              attr_idx, g_peri[hdl].attr_num);
         return -1;
     }
+
+#ifdef CONFIG_BLE_50
+    g_peri[hdl].svc.attrs = g_peri[hdl].attr;
+    g_peri[hdl].svc.attr_count = g_peri[hdl].attr_num;
+#endif
 
     return 0;
 }
@@ -419,8 +477,11 @@ void ble_adv_start
             sizeof(g_peri[hdl].manu_name) - 1);
 
     if (make_attr_and_svc(hdl) != 0) return;
-    //bt_gatt_service_register(&(g_peri[hdl].svc));
+#ifdef CONFIG_BLE_50
+    bt_gatt_service_register(&(g_peri[hdl].svc));
+#else
     bt_gatt_register(g_peri[hdl].attr, g_peri[hdl].attr_num);
+#endif
 
     err = bt_le_adv_start(BT_LE_ADV_CONN, ad, ARRAY_SIZE(ad),
                           sd, ARRAY_SIZE(sd));
