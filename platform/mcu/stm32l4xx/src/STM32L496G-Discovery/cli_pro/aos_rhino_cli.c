@@ -212,6 +212,27 @@ void aos_sem_signal(aos_sem_t *sem)
 }
 AOS_EXPORT(void, aos_sem_signal, aos_sem_t *);
 
+int aos_sem_is_valid(aos_sem_t *sem)
+{
+    ksem_t *k_sem;
+
+    if (sem == NULL) {
+        return 0;
+    }
+
+    k_sem = sem->hdl;
+
+    if (k_sem == NULL) {
+        return 0;
+    }
+
+    if (k_sem->blk_obj.obj_type != RHINO_SEM_OBJ_TYPE) {
+        return 0;
+    }
+
+    return 1;
+}
+
 void aos_sem_signal_all(aos_sem_t *sem)
 {
     if (sem == NULL) {

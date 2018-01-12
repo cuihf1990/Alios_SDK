@@ -600,11 +600,6 @@
               <FilePath>..\..\..\..\kernel\rhino\core\k_obj.c</FilePath>
             </File>
             <File>
-              <FileName>k_obj_set.c</FileName>
-              <FileType>1</FileType>
-              <FilePath>..\..\..\..\kernel\rhino\core\k_obj_set.c</FilePath>
-            </File>
-            <File>
               <FileName>k_pend.c</FileName>
               <FileType>1</FileType>
               <FilePath>..\..\..\..\kernel\rhino\core\k_pend.c</FilePath>
