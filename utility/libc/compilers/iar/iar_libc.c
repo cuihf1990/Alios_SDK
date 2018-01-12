@@ -8,8 +8,10 @@
 #include <time.h>
 #include <stdio.h>
 #include <string.h>
+#include "k_config.h"
 
 #if (RHINO_CONFIG_MM_TLF > 0)
+#define AOS_UNSIGNED_INT_MSB (1u << (sizeof(unsigned int) * 8 - 1))
 extern void *aos_malloc(unsigned int size);
 extern void aos_alloc_trace(void *addr, size_t allocator);
 extern void aos_free(void *mem);
