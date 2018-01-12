@@ -79,6 +79,8 @@ ctx_switch_t g_sys_ctx_switch_times;
 #if (RHINO_CONFIG_KOBJ_DYN_ALLOC > 0)
 ksem_t       g_res_sem;
 klist_t      g_res_list;
+ktask_t      g_dyn_task;
+cpu_stack_t  g_dyn_task_stack[RHINO_CONFIG_K_DYN_TASK_STACK];
 #endif
 
 #if (RHINO_CONFIG_WORKQUEUE > 0)

@@ -80,6 +80,8 @@ extern ctx_switch_t g_sys_ctx_switch_times;
 #if (RHINO_CONFIG_KOBJ_DYN_ALLOC > 0)
 extern ksem_t       g_res_sem;
 extern klist_t      g_res_list;
+extern ktask_t      g_dyn_task;
+extern cpu_stack_t  g_dyn_task_stack[RHINO_CONFIG_K_DYN_TASK_STACK];
 #endif
 
 #if (RHINO_CONFIG_WORKQUEUE > 0)
