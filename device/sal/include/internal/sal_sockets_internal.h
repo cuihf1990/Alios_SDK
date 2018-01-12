@@ -84,6 +84,14 @@ typedef struct sal_netbuf{
     u16_t     port;
 }sal_netbuf_t;
 
+typedef struct sal_outputbuf{
+    void *payload;
+    u16_t len;
+    u16_t remote_port;
+    int   socket;
+    char  remote_ip[16];
+}sal_outputbuf_t;
+
 /** Description for a task waiting in select */
 struct sal_select_cb {
     /** Pointer to the next waiting task */
