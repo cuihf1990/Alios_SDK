@@ -92,6 +92,7 @@ static void handle_discovery_timer(void *args)
     } else if (umesh_mm_get_device_state() >= DEVICE_STATE_LEAF) {
         start_discover_timer();
         umesh_mm_set_channel(hal, umesh_mm_get_prev_channel());
+        start_discover_timer();
     } else {
         umesh_mm_set_channel(hal, hal->def_channel);
         g_nm_state.handler(NULL);
