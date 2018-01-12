@@ -9,12 +9,7 @@
 #define RHINO_INTRPT_STACK_OVF_MAGIC 0xdeaddeadu     /* 32 bit or 64 bit stack overflow magic value */
 #define RHINO_MM_CORRUPT_DYE         0xFEFEFEFE
 #define RHINO_MM_FREE_DYE            0xABABABAB
-
-#ifdef __ICCARM__
-#define RHINO_INLINE                 static inline
-#else
-#define RHINO_INLINE                 static __inline /* inline keyword, it may change under different compilers */
-#endif
+#define RHINO_INLINE                 static inline /* inline keyword, it may change under different compilers */
 
 typedef char     name_t;
 typedef uint32_t sem_count_t;
@@ -24,11 +19,6 @@ typedef uint32_t lr_timer_t;
 typedef uint32_t mutex_nested_t;
 typedef uint8_t  suspend_nested_t;
 typedef uint64_t ctx_switch_t;
-
-/* keil compiler not define ssize_t */
-#ifdef __CC_ARM
-typedef int32_t ssize_t;
-#endif
 
 #endif /* TYPES_H */
 

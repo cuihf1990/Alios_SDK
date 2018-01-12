@@ -14,7 +14,7 @@ void *cpu_task_stack_init(cpu_stack_t *stack_base, size_t stack_size,
     temp &= 0xfffffff8; 
     stk = (cpu_stack_t *)temp;
 
-    /*  ask context saved & restore by hardware: */
+    /* task context saved & restore by hardware: */
     *(--stk) = (cpu_stack_t)0x01000000L; /* xPSR: EPSR.T = 1, thumb mode   */
     *(--stk) = (cpu_stack_t)entry;       /* Entry Point                    */
     *(--stk) = (cpu_stack_t)krhino_task_deathbed; /* R14 (LR)              */

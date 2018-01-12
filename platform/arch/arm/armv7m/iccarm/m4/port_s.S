@@ -10,13 +10,13 @@
 ;                            EXPORT FUNCTIONS
 ;******************************************************************************
 
-    EXPORT  cpu_intrpt_save    
-    EXPORT  cpu_intrpt_restore
-    EXPORT  cpu_task_switch
-    EXPORT  cpu_intrpt_switch
-    EXPORT  cpu_first_task_start
+    PUBLIC  cpu_intrpt_save
+    PUBLIC  cpu_intrpt_restore
+    PUBLIC  cpu_task_switch
+    PUBLIC  cpu_intrpt_switch
+    PUBLIC  cpu_first_task_start
 
-    EXPORT  PendSV_Handler
+    PUBLIC  PendSV_Handler
 
 ;******************************************************************************
 ;                                 EQUATES
@@ -33,7 +33,7 @@ PRI_LVL_SYSTICK       EQU      0xFF       ; SYstick priority level (lowest).
 ;******************************************************************************
 ;                        CODE GENERATION DIRECTIVES
 ;******************************************************************************
-    AREA |.text|, CODE, READONLY, ALIGN=2
+    SECTION   .text:CODE(2)
     THUMB
     REQUIRE8
     PRESERVE8
@@ -43,12 +43,12 @@ PRI_LVL_SYSTICK       EQU      0xFF       ; SYstick priority level (lowest).
 ;     size_t cpu_intrpt_save(void);
 ;     void cpu_intrpt_restore(size_t cpsr);
 ;******************************************************************************
-cpu_intrpt_save
+cpu_intrpt_save:
     MRS     R0, PRIMASK
     CPSID   I
     BX      LR
 
-cpu_intrpt_restore
+cpu_intrpt_restore:
     MSR     PRIMASK, R0
     BX      LR
 
@@ -57,13 +57,13 @@ cpu_intrpt_restore
 ;     void cpu_intrpt_switch(void);
 ;     void cpu_task_switch(void);
 ;******************************************************************************
-cpu_task_switch
+cpu_task_switch:
     LDR     R0, =SCB_ICSR
     LDR     R1, =ICSR_PENDSVSET
     STR     R1, [R0]
     BX      LR
 
-cpu_intrpt_switch
+cpu_intrpt_switch:
     LDR     R0, =SCB_ICSR
     LDR     R1, =ICSR_PENDSVSET
     STR     R1, [R0]
@@ -73,7 +73,7 @@ cpu_intrpt_switch
 ; Functions:
 ;     void cpu_first_task_start(void);
 ;******************************************************************************
-cpu_first_task_start
+cpu_first_task_start:
     ;set PendSV prority to the lowest
     LDR     R0, =SHPR3_PRI_14
     LDR     R1, =PRI_LVL_PENDSV
@@ -107,7 +107,7 @@ cpu_first_task_start
 ; Functions:
 ;     void krhino_pendsv_handler(void);
 ;******************************************************************************
-PendSV_Handler
+PendSV_Handler:
     CPSID   I
     MRS     R0, PSP
     ;branch if cpu_first_task_start
@@ -116,9 +116,9 @@ PendSV_Handler
     ;hardware saved R0~R3,R12,LR,PC,xPSR
 
     ;save context
-    IF      {FPU} != "SoftVFP"
-    VSTMFD  R0!, {D8 - D15}
-    ENDIF
+    #if defined(__ARMVFP__)
+    VSTMDB  R0!, {D8 - D15}
+    #endif
 
     SUBS    R0, R0, #0x24
     STM     R0, {R4-R11, LR}
@@ -130,7 +130,7 @@ PendSV_Handler
 
     bl      krhino_stack_ovf_check
 
-_pendsv_handler_nosave
+_pendsv_handler_nosave:
     LDR     R0, =g_active_task
     LDR     R1, =g_preferred_ready_task
     LDR     R2, [R1]
@@ -142,9 +142,9 @@ _pendsv_handler_nosave
     LDM     R0, {R4-R11, LR}
     ADDS    R0, R0, #0x24
 
-    IF	    {FPU} != "SoftVFP"
-    VLDMFD  R0!, {D8 - D15}
-    ENDIF
+    #if defined(__ARMVFP__)
+    VLDMIA  R0!, {D8 - D15}
+    #endif
 
     ;return stack = PSP
     MSR     PSP, R0
@@ -156,6 +156,5 @@ _pendsv_handler_nosave
     ;hardware restore R0~R3,R12,LR,PC,xPSR
     BX      LR
 
-    ALIGN
     END
 

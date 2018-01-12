@@ -6,20 +6,21 @@
 #include <stdio.h>
 #include <sys/time.h>
 
-#if defined (__CC_ARM)
+#if defined (__CC_ARM) && defined(__MICROLIB)
 void __aeabi_assert(const char *expr, const char *file, int line)
 {
     while (1);
 }
-extern long long aos_now_ms(void);
+extern long long krhino_sys_time_get(void);
 int gettimeofday(struct timeval *tv, void *tzp)
 {
-    uint64_t t = aos_now_ms();
+    uint64_t t = krhino_sys_time_get();
     tv->tv_sec = t / 1000;
     tv->tv_usec = (t % 1000) * 1000;
     return 0;
 }
 
+#if (RHINO_CONFIG_MM_TLF > 0)
 extern void *aos_malloc(unsigned int size);
 extern void aos_alloc_trace(void *addr, size_t allocator);
 extern void aos_free(void *mem);
@@ -81,4 +82,6 @@ char * strdup(const char *s)
         return NULL;
     return (char *)memcpy(dup_str, s, len);
 }
+#endif
+
 #endif
