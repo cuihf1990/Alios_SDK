@@ -100,7 +100,7 @@ ifneq ($(mesh),0)
 $(NAME)_COMPONENTS += protocols.mesh
 endif
 
-ble := 0
+ble ?= 0
 ifneq ($(ble),0)
 $(NAME)_COMPONENTS += protocols.bluetooth
 GLOBAL_INCLUDES += $(ESP_INC_PATH)/bt/include
