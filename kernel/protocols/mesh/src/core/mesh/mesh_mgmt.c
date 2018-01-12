@@ -781,10 +781,6 @@ static ur_error_t handle_attach_request(message_t *message)
 
     info = message->info;
     network = (network_context_t *)info->network;
-    if (g_mm_state.device.state < DEVICE_STATE_LEADER ||
-        g_mm_state.attach_context.attach_candidate) {
-        return UR_ERROR_FAIL;
-    }
 
     MESH_LOG_DEBUG("handle attach request");
 
@@ -802,6 +798,12 @@ static ur_error_t handle_attach_request(message_t *message)
     }
 
     if ((node = update_neighbor(info, tlvs, tlvs_length, true)) == NULL) {
+        error = UR_ERROR_FAIL;
+        goto exit;
+    }
+
+    if (g_mm_state.device.state < DEVICE_STATE_LEADER ||
+        g_mm_state.attach_context.attach_candidate) {
         error = UR_ERROR_FAIL;
         goto exit;
     }
