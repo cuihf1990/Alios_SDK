@@ -1246,7 +1246,9 @@ static neighbor_t *choose_attach_candidate(neighbor_t *nbr)
     slist_for_each_entry(nbrs, nbr, neighbor_t, next) {
         cmp_mode = umesh_mm_compare_mode(g_mm_state.device.mode, nbr->mode);
         if (cmp_mode < 0 || nbr->attach_candidate_timeout > 0 || (nbr->mode & MODE_MOBILE) ||
-            (network->router->sid_type == STRUCTURED_SID && nbr->ssid_info.free_slots < 1)) {
+            (network->router->sid_type == STRUCTURED_SID && nbr->ssid_info.free_slots < 1) ||
+            is_unique_netid(nbr->netid) == false || nbr->sid == BCAST_SID ||
+            nbr->sid == INVALID_SID) {
             continue;
         }
         if (attach_candidate == NULL) {
