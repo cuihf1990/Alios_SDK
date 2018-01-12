@@ -8,6 +8,8 @@ mk3060_targets="alinkapp helloworld linuxapp meshapp tls uDataapp"
 mk3060_platforms="mk3060 mk3060@release"
 b_l475e_targets="mqttapp helloworld tls uDataapp"
 b_l475e_platforms="b_l475e"
+lpcxpresso54102_targets="helloworld alinkapp mqttapp tls"
+lpcxpresso54102_platforms="lpcxpresso54102"
 esp32_targets="alinkapp helloworld bluetooth.bleadv bluetooth.bleperipheral"
 esp32_platforms="esp32devkitc"
 esp8266_targets="alinkapp helloworld"
@@ -148,6 +150,34 @@ for target in ${mk3060_targets}; do
                 exit 1
             fi
         done
+    done
+done
+
+#single-bin, lpc54102
+aos make clean > /dev/null 2>&1
+for target in ${lpcxpresso54102_targets}; do
+    for platform in ${lpcxpresso54102_platforms}; do
+        if [ "${DEBUG}" != "no" ]; then
+            echo "before make ${target}@${platform}@${branch}"
+            pwd && ls
+        fi
+        aos make ${target}@${platform} JOBS=${JNUM} > ${target}@${platform}@${branch}.log 2>&1
+        ret=$?
+        if [ "${DEBUG}" != "no" ]; then
+            echo "after make ${target}@${platform}@${branch}"
+            pwd && ls
+        fi
+        if [ ${ret} -eq 0 ]; then
+            rm -f ${target}@${platform}@${branch}.log
+            echo "build ${target}@${platform} at ${branch} branch succeed"
+        else
+            echo -e "build ${target}@${platform} at ${branch} branch failed, log:\n"
+            cat ${target}@${platform}@${branch}.log
+            rm -f ${target}@${platform}@${branch}.log
+            echo -e "\nbuild ${target}@${platform} at ${branch} branch failed"
+            aos make clean > /dev/null 2>&1
+            exit 1
+        fi
     done
 done
 
