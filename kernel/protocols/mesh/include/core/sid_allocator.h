@@ -55,7 +55,7 @@ typedef struct sid_base_s {
 
 typedef struct ssid_allocator_s {
     sid_base_t base;
-    uint16_t sid_shift;
+    int16_t sid_shift;
     uint16_t sid_prefix;
     uint32_t attach_free_bits;
     uint16_t pf_node_num;
