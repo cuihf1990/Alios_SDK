@@ -7,5 +7,5 @@ $(NAME)_INCLUDES    := ../../../kernel/protocols/bluetooth/include \
 
 ble = 1
 
-$(NAME)_COMPONENTS  += protocols.bluetooth yloop cli
+$(NAME)_COMPONENTS  += protocols.bluetooth yloop cli bluetooth.profile
 GLOBAL_DEFINES      += AOS_NO_WIFI CONFIG_BT_SMP
