@@ -224,6 +224,7 @@ static void set_attach_context(uint16_t sid, bool init_allocator)
         g_mm_state.attach_context.attach_node->state = STATE_NEIGHBOR;
         g_mm_state.attach_context.attach_node = NULL;
     }
+    g_mm_state.attach_context.path_cost = 0;
     if (g_mm_state.attach_context.attach_candidate) {
         g_mm_state.attach_context.attach_candidate->flags &=
             (~(NBR_SID_CHANGED | NBR_DISCOVERY_REQUEST | NBR_NETID_CHANGED));
@@ -233,7 +234,6 @@ static void set_attach_context(uint16_t sid, bool init_allocator)
         g_mm_state.attach_context.attach_node->state = STATE_PARENT;
     }
     g_mm_state.attach_context.attach_candidate = NULL;
-    g_mm_state.attach_context.path_cost = 0;
     g_mm_state.attach_context.sid = sid;
     g_mm_state.attach_context.candidate_meshnetid = BCAST_NETID;
 
@@ -597,9 +597,7 @@ ur_error_t send_advertisement(network_context_t *network)
     uint16_t length;
     uint8_t *data;
     uint8_t *data_orig;
-    mm_ssid_info_tv_t *ssid_info;
     message_info_t *info;
-    uint16_t subnet_size = 0;
 
     if (network == NULL || umesh_mm_get_local_sid() == BCAST_SID) {
         return UR_ERROR_FAIL;
@@ -620,22 +618,10 @@ ur_error_t send_advertisement(network_context_t *network)
     data_orig = data;
     data += sizeof(mm_header_t);
 
-    subnet_size = sid_allocator_get_num(network);
-    if (g_mm_state.device.state == DEVICE_STATE_LEADER ||
-        g_mm_state.device.state == DEVICE_STATE_SUPER_ROUTER) {
-        nd_set_meshnetsize(network, subnet_size);
-    }
-
     data += set_mm_netinfo_tv(network, data);
-
     if (network->router->sid_type == STRUCTURED_SID) {
-        ssid_info = (mm_ssid_info_tv_t *)data;
-        umesh_mm_init_tv_base((mm_tv_t *)ssid_info, TYPE_SSID_INFO);
-        ssid_info->child_num = subnet_size;
-        ssid_info->free_slots = get_free_number(network->sid_base);
-        data += sizeof(mm_ssid_info_tv_t);
+        data += set_mm_ssid_info_tv(network, data);
     }
-
     data += set_mm_path_cost_tv(data);
     data += set_mm_channel_tv(network->hal, data);
 
@@ -1238,9 +1224,11 @@ static neighbor_t *choose_attach_candidate(neighbor_t *nbr)
     uint16_t new_metric;
     hal_context_t *hal = get_default_hal_context();
     network_context_t *network = get_default_network_context();
+    uint16_t netid = (nbr? nbr->netid: INVALID_NETID);
 
-    if (nbr && nbr->attach_candidate_timeout == 0) {
-        return nbr;
+    if (nbr && nbr->attach_candidate_timeout == 0 &&
+        (network->router->sid_type != STRUCTURED_SID || nbr->ssid_info.free_slots > 0)) {
+        attach_candidate = nbr;
     }
     nbrs = umesh_get_nbrs(hal->module->type);
     slist_for_each_entry(nbrs, nbr, neighbor_t, next) {
@@ -1248,7 +1236,7 @@ static neighbor_t *choose_attach_candidate(neighbor_t *nbr)
         if (cmp_mode < 0 || nbr->attach_candidate_timeout > 0 || (nbr->mode & MODE_MOBILE) ||
             (network->router->sid_type == STRUCTURED_SID && nbr->ssid_info.free_slots < 1) ||
             is_unique_netid(nbr->netid) == false || nbr->sid == BCAST_SID ||
-            nbr->sid == INVALID_SID) {
+            nbr->sid == INVALID_SID || (is_unique_netid(netid) && nbr->netid != netid)) {
             continue;
         }
         if (attach_candidate == NULL) {
@@ -1294,9 +1282,8 @@ static ur_error_t attach_start(neighbor_t *nbr)
     MESH_LOG_INFO("%d node, attach start, from %04x:%04x to %04x:%x",
                   g_mm_state.device.state, g_mm_state.attach_context.attach_node ?
                   g_mm_state.attach_context.attach_node->sid : 0,
-                  network->meshnetid, nbr ? nbr->sid : 0,
+                  network->meshnetid, nbr->sid,
                   g_mm_state.attach_context.candidate_meshnetid);
-
     return UR_ERROR_NONE;
 }
 
@@ -1911,7 +1898,8 @@ uint8_t set_mm_path_cost_tv(uint8_t *data)
     path_cost = (mm_cost_tv_t *)data;
     umesh_mm_init_tv_base((mm_tv_t *)path_cost, TYPE_PATH_COST);
     path_cost->cost = g_mm_state.attach_context.path_cost;
-    if (g_mm_state.device.state == DEVICE_STATE_LEAF) {
+    if (g_mm_state.device.state == DEVICE_STATE_LEAF ||
+        is_in_attaching(g_mm_state.attach_context.attach_state)) {
         path_cost->cost = INFINITY_PATH_COST;
     }
     return sizeof(mm_cost_tv_t);
@@ -1978,6 +1966,23 @@ uint8_t set_mm_timestamp_tv(uint8_t *data, uint32_t time)
     timestamp->timestamp = time;
     data += sizeof(mm_timestamp_tv_t);
     return sizeof(mm_timestamp_tv_t);
+}
+
+uint8_t set_mm_ssid_info_tv(network_context_t *network, uint8_t *data)
+{
+    mm_ssid_info_tv_t *ssid_info;
+    uint16_t subnet_size = sid_allocator_get_num(network);
+
+    if (g_mm_state.device.state == DEVICE_STATE_LEADER ||
+        g_mm_state.device.state == DEVICE_STATE_SUPER_ROUTER) {
+        nd_set_meshnetsize(network, subnet_size);
+    }
+
+    ssid_info = (mm_ssid_info_tv_t *)data;
+    umesh_mm_init_tv_base((mm_tv_t *)ssid_info, TYPE_SSID_INFO);
+    ssid_info->child_num = subnet_size;
+    ssid_info->free_slots = get_free_number(network->sid_base);
+    return sizeof(mm_ssid_info_tv_t);
 }
 
 void update_mm_timestamp(uint8_t *tlvs, uint16_t tlvs_length)
