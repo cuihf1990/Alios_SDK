@@ -19,13 +19,13 @@
 #include "hal/interfaces.h"
 
 typedef struct discover_result_s {
-    slist_t next;
     mac_address_t addr;
     uint16_t meshnetid;
     uint8_t channel;
     int8_t rssi;
     node_mode_t leader_mode;
     uint16_t net_size;
+    uint16_t path_cost;
 } discover_result_t;
 
 typedef struct network_mgmt_state_s {
@@ -150,7 +150,8 @@ static ur_error_t send_discovery_response(network_context_t *network, ur_addr_t 
         return UR_ERROR_FAIL;
     }
 
-    length = sizeof(mm_header_t) + sizeof(mm_netinfo_tv_t) + sizeof(mm_channel_tv_t);
+    length = sizeof(mm_header_t) + sizeof(mm_netinfo_tv_t) + sizeof(mm_channel_tv_t) +
+             sizeof(mm_cost_tv_t);
     if (network->router->sid_type == STRUCTURED_SID) {
         length += sizeof(mm_ssid_info_tv_t);
     }
@@ -165,7 +166,7 @@ static ur_error_t send_discovery_response(network_context_t *network, ur_addr_t 
     if (network->router->sid_type == STRUCTURED_SID) {
         data += set_mm_ssid_info_tv(network, data);
     }
-
+    data += set_mm_path_cost_tv(data);
     message = mf_build_message(MESH_FRAME_TYPE_CMD, COMMAND_DISCOVERY_RESPONSE,
                                data_orig, length, NETWORK_MGMT_2);
     if (message) {
@@ -228,6 +229,7 @@ exit:
 
 ur_error_t handle_discovery_response(message_t *message)
 {
+    ur_error_t error = UR_ERROR_NONE;
     uint8_t *tlvs;
     uint16_t tlvs_length;
     neighbor_t *nbr;
@@ -236,10 +238,7 @@ ur_error_t handle_discovery_response(message_t *message)
     message_info_t *info;
     mm_netinfo_tv_t *netinfo;
     mm_channel_tv_t *channel;
-
-    if (umesh_mm_get_device_state() != DEVICE_STATE_DETACHED && g_nm_state.started == false) {
-        return UR_ERROR_NONE;
-    }
+    int8_t cmp;
 
     info = message->info;
     network = info->network;
@@ -252,43 +251,54 @@ ur_error_t handle_discovery_response(message_t *message)
 
     nbr = update_neighbor(info, tlvs, tlvs_length, true);
     if (nbr == NULL) {
-        ur_mem_free(tlvs, tlvs_length);
-        return UR_ERROR_FAIL;
+        error = UR_ERROR_FAIL;
+        goto exit;
+    }
+
+    if (umesh_mm_get_device_state() != DEVICE_STATE_DETACHED && g_nm_state.started == false) {
+        goto exit;
     }
     nbr->flags &= (~NBR_DISCOVERY_REQUEST);
-
     netinfo = (mm_netinfo_tv_t *)umesh_mm_get_tv(tlvs, tlvs_length, TYPE_NETWORK_INFO);
     if (netinfo == NULL) {
-        ur_mem_free(tlvs, tlvs_length);
-        return UR_ERROR_FAIL;
+        error = UR_ERROR_FAIL;
+        goto exit;
     }
 
     MESH_LOG_DEBUG("handle discovery response from %x", info->src.netid);
 
-    if (is_bcast_netid(info->src.netid)) {
-        ur_mem_free(tlvs, tlvs_length);
-        return UR_ERROR_NONE;
-    }
-
-    channel = (mm_channel_tv_t *)umesh_mm_get_tv(tlvs, tlvs_length,
-                                                 TYPE_UCAST_CHANNEL);
+    channel = (mm_channel_tv_t *)umesh_mm_get_tv(tlvs, tlvs_length, TYPE_UCAST_CHANNEL);
     if (channel) {
         info->src_channel = channel->channel;
     }
 
+    if (is_unique_netid(info->src.netid) == false ||
+        is_same_mainnet(network->meshnetid, info->src.netid) ||
+        (network->router->sid_type == STRUCTURED_SID && nbr->ssid_info.free_slots < 1)) {
+        goto exit;
+    }
+
     res = &g_nm_state.discover_result;
-    if ((is_bcast_netid(res->meshnetid) ||
-         res->meshnetid < get_main_netid(info->src.netid)) &&
-        is_same_mainnet(network->meshnetid, info->src.netid) == false) {
+    if (is_unique_netid(res->meshnetid) == false) {
+        cmp = umesh_mm_compare_mode(umesh_mm_get_leader_mode(), netinfo->leader_mode);
+    } else {
+        cmp = umesh_mm_compare_mode(res->leader_mode, netinfo->leader_mode);
+    }
+    if ((is_same_mainnet(res->meshnetid, info->src.netid) == false && cmp < 0) ||
+        (cmp == 0 && (is_unique_netid(res->meshnetid) == false ||
+         get_main_netid(res->meshnetid) < get_main_netid(info->src.netid))) ||
+        (res->meshnetid == info->src.netid && res->path_cost > nbr->path_cost)) {
         memcpy(&res->addr, &info->src_mac.addr, sizeof(res->addr));
         res->channel = info->src_channel;
         res->meshnetid = info->src.netid;
         res->leader_mode = netinfo->leader_mode;
         res->net_size = netinfo->size;
+        res->path_cost = nbr->path_cost;
     }
 
+exit:
     ur_mem_free(tlvs, tlvs_length);
-    return UR_ERROR_NONE;
+    return error;
 }
 
 void umesh_network_stop_discover(void)
