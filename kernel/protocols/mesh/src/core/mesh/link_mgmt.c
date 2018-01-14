@@ -395,11 +395,10 @@ neighbor_t *update_neighbor(const message_info_t *info,
     MESH_LOG_DEBUG("update neighbor");
 
     hal = get_hal_context(info->hal_type);
-    nbr = get_neighbor_by_mac_addr(info->src_mac.addr.addr, NULL);
-
-    if (length == 0) {
+    if (length == 0 || hal == NULL) {
         goto exit;
     }
+    nbr = get_neighbor_by_mac_addr(info->src_mac.addr.addr, NULL);
 
     path_cost = (mm_cost_tv_t *)umesh_mm_get_tv(tlvs, length, TYPE_PATH_COST);
     ssid_info = (mm_ssid_info_tv_t *)umesh_mm_get_tv(tlvs, length, TYPE_SSID_INFO);

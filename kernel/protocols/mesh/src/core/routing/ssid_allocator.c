@@ -362,6 +362,8 @@ uint16_t get_free_number(allocator_t hdl)
     ssid_allocator_t *allocator = (ssid_allocator_t *)hdl;
     if (allocator->sid_prefix == LEADER_SID) {
         return 11 - allocator->base.node_num;
+    } else if (allocator->sid_shift == 0) {
+        return 0;
     }
     return 15 - allocator->base.node_num;
 }
