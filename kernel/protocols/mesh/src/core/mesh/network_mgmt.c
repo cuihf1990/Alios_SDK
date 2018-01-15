@@ -46,6 +46,7 @@ typedef struct network_mgmt_state_s {
 } network_mgmt_state_t;
 static network_mgmt_state_t g_nm_state;
 
+static void start_discover_timer(void);
 static void handle_discovery_timer(void *args);
 static ur_error_t send_discovery_request(void);
 static ur_error_t send_discovery_response(network_context_t *network, ur_addr_t *dest);
@@ -89,7 +90,9 @@ static void handle_discovery_timer(void *args)
         nbr = get_neighbor_by_mac_addr(g_nm_state.discover_result.addr.addr, NULL);
         g_nm_state.handler(nbr);
     } else if (umesh_mm_get_device_state() >= DEVICE_STATE_LEAF) {
+        start_discover_timer();
         umesh_mm_set_channel(hal, umesh_mm_get_prev_channel());
+        start_discover_timer();
     } else {
         umesh_mm_set_channel(hal, hal->def_channel);
         g_nm_state.handler(NULL);
@@ -148,6 +151,9 @@ static ur_error_t send_discovery_response(network_context_t *network, ur_addr_t 
     }
 
     length = sizeof(mm_header_t) + sizeof(mm_netinfo_tv_t) + sizeof(mm_channel_tv_t);
+    if (network->router->sid_type == STRUCTURED_SID) {
+        length += sizeof(mm_ssid_info_tv_t);
+    }
     data = ur_mem_alloc(length);
     if (data == NULL) {
         return UR_ERROR_MEM;
@@ -156,6 +162,9 @@ static ur_error_t send_discovery_response(network_context_t *network, ur_addr_t 
     data += sizeof(mm_header_t);
     data += set_mm_netinfo_tv(network, data);
     data += set_mm_channel_tv(network->hal, data);
+    if (network->router->sid_type == STRUCTURED_SID) {
+        data += set_mm_ssid_info_tv(network, data);
+    }
 
     message = mf_build_message(MESH_FRAME_TYPE_CMD, COMMAND_DISCOVERY_RESPONSE,
                                data_orig, length, NETWORK_MGMT_2);
@@ -181,10 +190,6 @@ ur_error_t handle_discovery_request(message_t *message)
     network_context_t *network;
     message_info_t *info;
 
-    if (umesh_mm_get_device_state() < DEVICE_STATE_LEADER) {
-        return UR_ERROR_FAIL;
-    }
-
     MESH_LOG_DEBUG("handle discovery request");
 
     info = message->info;
@@ -197,8 +202,13 @@ ur_error_t handle_discovery_request(message_t *message)
     message_copy_to(message, sizeof(mm_header_t), tlvs, tlvs_length);
 
     if ((nbr = update_neighbor(info, tlvs, tlvs_length, true)) == NULL) {
-        ur_mem_free(tlvs, tlvs_length);
-        return UR_ERROR_FAIL;
+        error = UR_ERROR_FAIL;
+        goto exit;
+    }
+
+    if (umesh_mm_get_device_state() < DEVICE_STATE_LEADER) {
+        error = UR_ERROR_FAIL;
+        goto exit;
     }
 
     flag = (mm_state_flags_tv_t *)umesh_mm_get_tv(tlvs, tlvs_length, TYPE_STATE_FLAGS);
@@ -210,6 +220,8 @@ ur_error_t handle_discovery_request(message_t *message)
     nbr->flags |= NBR_WAKEUP;
 
     send_discovery_response(network, &info->src_mac);
+
+exit:
     ur_mem_free(tlvs, tlvs_length);
     return error;
 }

@@ -30,7 +30,7 @@ class ConnectionLost(Exception):
 
 class Client:
     def __init__(self):
-        self.service_socket = 0
+        self.service_socket = None
         self.devices = {}
         self.keep_running = True
         self.connected = False
@@ -568,54 +568,48 @@ class Client:
             raise ConnectionLost
 
     def login_and_get_server(self, controller_ip, controller_port):
-        retry = 6; sock = None
-        while retry > 0:
-            retry -= 1
-            if sock == None:
-                sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-                if ENCRYPT:
-                    sock = ssl.wrap_socket(sock, cert_reqs=ssl.CERT_REQUIRED, ca_certs='server_cert.pem')
-                try:
-                    sock.connect((controller_ip, controller_port))
-                    sock.settimeout(2)
-                    msg = ''
-                except:
-                    traceback.print_exc()
-                    print "error: connect to contoller failed"
-                    sock = None
-                    time.sleep(2)
-                    continue
+        sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        if ENCRYPT:
+            sock = ssl.wrap_socket(sock, cert_reqs=ssl.CERT_REQUIRED, ca_certs='server_cert.pem')
+        try:
+            sock.connect((controller_ip, controller_port))
+            sock.settimeout(3)
+            msg = ''
+        except:
+            if DEBUG: traceback.print_exc()
+            return None
 
-            content = TBframe.construct(TBframe.ACCESS_LOGIN, self.uuid)
-            try:
-                sock.send(content)
-            except:
-                sock = None
-                continue
+        content = TBframe.construct(TBframe.ACCESS_LOGIN, 'client,' + self.uuid)
+        try:
+            sock.send(content)
+        except:
+            if DEBUG: traceback.print_exc()
+            sock.close()
+            return None
 
-            try:
-                data = sock.recv(MAX_MSG_LENTH)
-            except socket.timeout:
-                continue
-            except:
-                sock.close()
-                sock = None
-                continue
-            if data == '':
-                sock.close()
-                sock = None
-                continue
-            msg += data
-            type, length, value, msg = TBframe.parse(msg)
-            #print 'controller', type, value
-            if type != TBframe.ACCESS_LOGIN:
-                continue
-            rets = value.split(',')
-            if rets[0] != 'ok':
-                time.sleep(1)
-                continue
-            return rets[1:]
-        return None
+        try:
+            data = sock.recv(MAX_MSG_LENTH)
+        except KeyboardInterrupt:
+            sock.close()
+            raise
+        except:
+            sock.close()
+            return None
+
+        if data == '':
+            sock.close()
+            return None
+
+        type, length, value, data = TBframe.parse(data)
+        #print 'controller', type, value
+        rets = value.split(',')
+        if type != TBframe.ACCESS_LOGIN or rets[0] != 'ok':
+            print "login failed, ret={0}".format(value)
+            sock.close()
+            return None
+
+        sock.close()
+        return rets[1:]
 
     def connect_to_server(self, server_ip, server_port):
         sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
@@ -832,7 +826,10 @@ class Client:
                             self.send_device_list()
                         else:
                             print "login to server failed, retry later ..."
-                            time.sleep(10)
+                            try:
+                                time.sleep(10)
+                            except KeyboardInterrupt:
+                                break
                             raise ConnectionLost
             except ConnectionLost:
                 self.connected = False
@@ -840,32 +837,40 @@ class Client:
                     self.service_socket.close()
                     print 'connection to server lost, try reconnecting...'
 
-                result = self.login_and_get_server(contoller_ip, controller_port)
+                try:
+                    result = self.login_and_get_server(contoller_ip, controller_port)
+                except KeyboardInterrupt:
+                    break
                 if result == None:
                     print 'login to controller failed, retry later...'
-                    time.sleep(5)
+                    try:
+                        time.sleep(5)
+                    except KeyboardInterrupt:
+                        break
                     continue
                 else:
                     [server_ip, server_port, token] = result
                     server_port = int(server_port)
                     print 'login to controller succees, server_ip-{0} server_port-{1}'.format(server_ip, server_port)
-                #time.sleep(0.1)
 
                 result = self.connect_to_server(server_ip, server_port)
                 if result == 'success':
                     print 'connect to server {0}:{1} succeeded'.format(server_ip, server_port)
                 else:
                     print 'connect to server {0}:{1} failed, retry later ...'.format(server_ip, server_port)
-                    time.sleep(5)
+                    try:
+                        time.sleep(5)
+                    except KeyboardInterrupt:
+                        break
                     continue
 
                 data = self.uuid + ',' + self.poll_str + ',' + token
                 self.send_packet(TBframe.CLIENT_LOGIN, data)
             except KeyboardInterrupt:
-                print "client exiting ..."
-                self.keep_running = False
-                time.sleep(0.3)
                 break
             except:
                 if DEBUG: traceback.print_exc()
-        self.service_socket.close()
+        print "client exiting ..."
+        self.keep_running = False
+        time.sleep(0.3)
+        if self.service_socket: self.service_socket.close()

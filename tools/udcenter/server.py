@@ -21,6 +21,7 @@ class Server:
         self.client_list = []
         self.terminal_list = []
         self.conn_timeout = {}
+        self.device_map = {}
         self.keep_running = True
         self.log_preserve_period = (7 * 24 * 3600) * 3 #save log for 3 weeks
         self.allocated = {'lock':threading.Lock(), 'devices':[], 'timeout':0}
@@ -569,25 +570,26 @@ class Server:
             while sock != None:
                 if logedin == False: #try to login
                     content = {'client_port':self.client_socket.getsockname()[1], 'terminal_port':self.terminal_socket.getsockname()[1]}
-                    content = TBframe.construct(TBframe.ACCESS_LOGIN, json.dumps(content))
+                    content = 'server,' + json.dumps(content)
+                    content = TBframe.construct(TBframe.ACCESS_LOGIN, content)
                     try:
                         sock.send(content)
                     except:
                         sock = None; logedin = False; status_timeout = None
                         continue
                 if status_timeout and time.time() > status_timeout:
-                    client_num = 0
-                    device_num = 0
+                    clients = []
+                    devices = []
                     for c in self.client_list:
                         if c['valid'] == False:
                             continue
-                        client_num += 1
+                        clients += [c['uuid']]
                         for port in c['devices']:
                             if c['devices'][port]['valid'] == False:
                                 continue
-                            device_num += 1
+                            devices += [c['uuid'] + ':' + port]
                     terminal_num = len(list(self.terminal_list))
-                    status = {'client_num':client_num, 'device_num':device_num, 'terminal_num': terminal_num}
+                    status = {'clients':clients, 'devices':devices, 'terminals': terminal_num}
                     content = TBframe.construct(TBframe.ACCESS_REPORT_STATUS, json.dumps(status))
                     status_timeout += 10
                     try:
@@ -625,7 +627,10 @@ class Server:
                     if type == TBframe.ACCESS_REPORT_STATUS:
                         continue
                     if type == TBframe.ACCESS_ADD_CLIENT:
-                        [uuid, token] = value.split(',')
+                        try:
+                            [uuid, token] = value.split(',')
+                        except:
+                            continue
                         client = self.get_client_by_uuid(uuid)
                         if client == None:
                             client = {'uuid': uuid,
@@ -651,6 +656,21 @@ class Server:
                             continue
                         client['socket'].close()
                         client.pop('token')
+                        continue
+                    if type == TBframe.ACCESS_ADD_TERMINAL:
+                        try:
+                            [uuid, token, devices] = value.split(',')
+                            devices = devices.split('|')
+                        except:
+                            continue
+                        for device in devices:
+                            self.device_map[device] = uuid
+                        content = ','.join(['success', uuid, token])
+                        content = TBframe.construct(TBframe.ACCESS_ADD_TERMINAL, content)
+                        try:
+                            sock.send(content)
+                        except:
+                            sock = None; logedin = False; status_timeout = None
                         continue
                     if type == TBframe.ACCESS_ADD_TERMINAL:
                         continue
@@ -792,7 +812,7 @@ class Server:
         try:
             thread.start_new_thread(self.client_listen_thread, ())
             thread.start_new_thread(self.terminal_listen_thread, ())
-            thread.start_new_thread(self.contoller_interact_thread, ('localhost', 34569,))
+            thread.start_new_thread(self.contoller_interact_thread, ('localhost', 34567,))
             thread.start_new_thread(self.house_keeping_thread, ())
             while True:
                 time.sleep(0.1)

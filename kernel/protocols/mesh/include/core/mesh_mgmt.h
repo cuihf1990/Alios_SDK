@@ -178,6 +178,7 @@ uint8_t set_mm_mode_tv(uint8_t *data);
 uint8_t set_mm_allocated_node_type_tv(uint8_t *data, uint8_t type);
 uint8_t set_mm_mcast_tv(uint8_t *data);
 uint8_t set_mm_timestamp_tv(uint8_t *data, uint32_t timestamp);
+uint8_t set_mm_ssid_info_tv(network_context_t *network, uint8_t *data);
 
 void update_mm_timestamp(uint8_t *tlvs, uint16_t tlvs_length);
 

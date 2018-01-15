@@ -1,5 +1,6 @@
-import os, sys, re, time, socket, ssl, signal
+import os, sys, re, time, socket, ssl, signal, tty, termios
 import select, thread, Queue, json, traceback
+import sqlite3 as sql
 import TBframe
 
 CONFIG_TIMEOUT = 30
@@ -36,7 +37,7 @@ class selector():
 
     def select(self):
         ret = []
-        r, w, e = select.select(list(self.read_map), list(self.write_map), list(self.error_map), 0)
+        r, w, e = select.select(list(self.read_map), list(self.write_map), list(self.error_map))
         for fd in r:
             ret.append([fd, self.read_map[fd]])
         for fd in w:
@@ -50,64 +51,114 @@ class Controller():
     def __init__(self, host, port):
         self.host = host
         self.port = port
-        self.clients = {}
-        self.servers = {}
-        self.terminals = {}
-        self.client_sel = None
-        self.server_sel = None
-        self.terminal_sel = None
+        self.connections = {}
         self.timeouts = {}
+        self.selector = None
+        self.user_cmd = ''
+        self.cur_pos = 0
+        self.serve_funcs = {'none':    self.login_process, 'client':  self.client_process,
+                            'server':  self.server_process, 'terminal':self.terminal_process}
         self.keyfile = 'server_key.pem'
         self.certfile = 'server_cert.pem'
+        self.dbase = sql.connect('controller.db')
+        sqlcmd = 'CREATE TABLE IF NOT EXISTS Users(uuid TEXT, name TEXT, email TEXT, devices TEXT)'
+        self.database_excute_sqlcmd(sqlcmd)
 
-    def accept(self, sel, sock, role):
-        funcs = {'client':self.client_serve, 'server':self.server_serve, 'terminal':self.terminal_serve}
-        clist = {'client':self.clients, 'server':self.servers, 'terminal':self.terminals}
+        if os.path.exists('controller') == False:
+            try:
+                os.mkdir('controller')
+            except:
+                print "create 'controller' directory failed"
+
+        self.cmd_history = []
+        if os.path.exists('controller/.cmd_history') == True:
+            try:
+                file = open('controller/.cmd_history','rb')
+                self.cmd_history = json.load(file)
+                file.close()
+            except:
+                print "read command history failed"
+
+    def database_excute_sqlcmd(self, sqlcmd):
+        ret = None
+        with self.dbase:
+            cur = self.dbase.cursor()
+            try:
+                cur.execute(sqlcmd)
+            except:
+                traceback.print_exc()
+            else:
+                ret = cur.fetchall()
+        return ret
+
+
+
+    def netlog_print(self, log):
+        if len(self.user_cmd) >= len(log):
+            sys.stdout.write('\r' + ' ' * len(self.user_cmd))
+        sys.stdout.write('\r' + log + '\r\n')
+        self.cmd_print()
+
+    def accept(self, sock):
         conn, addr = sock.accept()
-        if role not in funcs:
-            print "error: unsupported role {0}".format(role)
-            conn.close()
-            return
-        print('{0} {1} connected'.format(role, addr))
+        self.netlog_print('{0} connected'.format(addr))
         conn.setblocking(False)
-        sel.register(conn, selector.EVENT_READ, funcs[role])
-        self.timeouts[sel][conn] = time.time() + CONFIG_TIMEOUT
-        clist[role][conn] = {'msg':'', 'buff':Queue.Queue(128)}
+        self.selector.register(conn, selector.EVENT_READ, self.data_read)
+        self.connections[conn] = {'role':'none', 'inbuff':'', 'outbuff':Queue.Queue(256)}
+        self.timeouts[conn] = time.time() + 0.2
 
-    def data_write(self, sel, sock, role):
-        roles = {'client':self.clients, 'server':self.servers, 'terminal':self.terminals}
-        queue = roles[role][sock]['buff']
+    def data_write(self, sock):
+        queue = self.connections[sock]['outbuff']
         try:
             data = queue.get(False)
         except:
             pass
         else:
-            #print time.time(), data
+            #self.netlog_print(str(time.time()' + ' ' + data)
             sock.send(data)
         if queue.empty():
-            sel.unregister(sock, selector.EVENT_WRITE)
+            self.selector.unregister(sock, selector.EVENT_WRITE)
 
-    def send_data(self, sock, role, content):
-        roles = {'client':self.clients, 'server':self.servers, 'terminal':self.terminals}
-        selcs = {'client':self.client_sel, 'server':self.server_sel, 'terminal':self.terminal_sel}
-        if sock not in roles[role]:
-            print "error: {0} is not a {1}".format(sock.getpeername(), role)
+    def data_read(self, sock):
+        data = sock.recv(CONFIG_MAXMSG_LENTH)
+        role = self.connections[sock]['role']
+        if not data:
+            self.netlog_print("{0} {1} disconnect".format(role, sock.getpeername()))
+            self.selector.unregister(sock, selector.EVENT_READ)
+            self.selector.unregister(sock, selector.EVENT_WRITE)
+            sock.close()
+            self.timeouts.pop(sock)
+            self.connections.pop(sock)
+            return
+        msg = self.connections[sock]['inbuff']
+        msg += data
+        while msg != '':
+            type, length, value, msg = TBframe.parse(msg)
+            if type == TBframe.TYPE_NONE:
+                break
+            self.serve_funcs[role](sock, type, value)
+
+    def send_data(self, sock, content):
+        if sock not in self.connections:
+            self.netlog_print("error: sending data to invalid connection {0}".format(sock.getpeername()))
             return False
-        queue = roles[role][sock]['buff']
+        queue = self.connections[sock]['outbuff']
         if queue.full():
+            self.netlog_print("warning: output buffer for {0} full, discard packet".format(sock.getpeername()))
             return False
         queue.put_nowait(content)
-        role_sel = selcs[role]
-        role_sel.register(sock, selector.EVENT_WRITE, self.data_write)
+        self.selector.register(sock, selector.EVENT_WRITE, self.data_write)
 
     def choose_random_server(self):
         server_list = []
-        for server in self.servers:
-            if 'valid' not in self.servers[server]:
+        for conn in self.connections:
+            if self.connections[conn]['role'] != 'server':
                 continue
-            if self.servers[server]['valid'] == False:
+            if 'valid' not in self.connections[conn]:
                 continue
-            server_list.append(server)
+            if self.connections[conn]['valid'] == False:
+                continue
+            server_list.append(conn)
         if server_list == []:
             return None
 
@@ -116,131 +167,196 @@ class Controller():
         rand_num = rand_num % len(server_list)
         return server_list[rand_num]
 
-    def generate_random_token(self):
-        bytes = os.urandom(8); token = ''
-        for byte in bytes: token += '{0:02x}'.format(ord(byte))
-        return token
+    def generate_random_hexstr(self, len):
+        bytes = os.urandom(int(round(len/2.0))); hexstr = ''
+        for byte in bytes: hexstr += '{0:02x}'.format(ord(byte))
+        return hexstr[:len]
 
-    def client_serve(self, sel, sock, role):
-        data = sock.recv(CONFIG_MAXMSG_LENTH)
-        if not data:
-            print("client {0} disconnect".format(sock.getpeername()))
-            sel.unregister(sock, selector.EVENT_READ)
-            sock.close()
-            self.timeouts[sel].pop(sock)
-            self.clients.pop(sock)
+    def login_process(self, sock, type, value):
+        if type != TBframe.ACCESS_LOGIN:
+            content = TBframe.construct(TBframe.ACCESS_LOGIN, 'request')
+            self.send_data(sock, content)
             return
-        msg = self.clients[sock]['msg']
-        msg += data
-        while msg != '':
-            type, length, value, msg = TBframe.parse(msg)
-            if type == TBframe.TYPE_NONE:
-                break
-            print role, type, value
-            self.timeouts[sel][sock] = time.time() + CONFIG_TIMEOUT
-            if type == TBframe.ACCESS_LOGIN:
-                is_valid_uuid = re.match('^[0-9a-f]{12}$', value)
-                server_sock = self.choose_random_server()
-                if is_valid_uuid and server_sock:
-                    uuid = value
-                    token = self.generate_random_token()
-                    content = '{0},{1}'.format(uuid, token)
-                    content = TBframe.construct(TBframe.ACCESS_ADD_CLIENT, content)
-                    self.send_data(server_sock, 'server', content)
-                    self.clients[sock]['uuid'] = uuid
-                else:
-                    content = TBframe.construct(TBframe.ACCESS_LOGIN, 'fail')
-                    self.send_data(sock, role, content)
-                continue
 
-    def server_serve(self, sel, sock, role):
-        data = sock.recv(CONFIG_MAXMSG_LENTH)
-        if not data:
-            print("server {0} disconnect".format(sock.getpeername()))
-            sel.unregister(sock, selector.EVENT_READ)
-            sock.close()
-            self.timeouts[sel].pop(sock)
-            self.servers.pop(sock)
+        try:
+            role = value.split(',')[0]
+        except:
+            role = None
+
+        if role == None or role not in ['client', 'server', 'terminal']:
+            content = TBframe.construct(TBframe.ACCESS_LOGIN, 'argerror')
+            self.send_data(sock, content)
             return
-        msg = self.servers[sock]['msg']
-        msg += data
-        while msg != '':
-            type, length, value, msg = TBframe.parse(msg)
-            if type == TBframe.TYPE_NONE:
-                break
-            print role, type, value
-            self.timeouts[sel][sock] = time.time() + CONFIG_TIMEOUT
-            if type == TBframe.ACCESS_LOGIN:
-                try:
-                    ports = json.loads(value)
-                except:
-                    if DEBUG: traceback.print_exc()
-                    ports = {}
-                if 'client_port' not in ports or 'terminal_port' not in ports:
-                    content = TBframe.construct(TBframe.ACCESS_LOGIN, 'fail')
-                    self.servers[sock]['valid'] = False
-                else:
-                    content = TBframe.construct(TBframe.ACCESS_LOGIN, 'ok')
-                    self.servers[sock]['client_port'] = ports['client_port']
-                    self.servers[sock]['terminal_port'] = ports['terminal_port']
-                    self.servers[sock]['valid'] = True
-                self.send_data(sock, role, content)
-                continue
-            if type == TBframe.ACCESS_REPORT_STATUS:
-                try:
-                    status = json.loads(value)
-                except:
-                    if DEBUG: traceback.print_exc()
-                    status = {}
-                if not status:
-                    content = TBframe.construct(TBframe.ACCESS_REPORT_STATUS, 'fail')
-                else:
-                    self.servers[sock]['status'] = status
-                    content = TBframe.construct(TBframe.ACCESS_REPORT_STATUS, 'ok')
-                self.send_data(sock, role, content)
-                continue
-            if type == TBframe.ACCESS_ADD_CLIENT:
-                try:
-                    [ret, uuid, token] = value.split(',')
-                except:
-                    if DEBUG: print "error: invalid return value {0}".format(repr(value))
+
+        self.connections[sock]['role'] = role
+        value = value[len(role)+1:]
+        self.serve_funcs[role](sock, type, value)
+
+    def client_process(self, sock, type, value):
+        self.netlog_print('client {0} {1}'.format(type, value))
+        self.timeouts[sock] = time.time() + CONFIG_TIMEOUT
+        if type == TBframe.ACCESS_LOGIN:
+            is_valid_uuid = re.match('^[0-9a-f]{12}$', value)
+            server_sock = self.choose_random_server()
+            if is_valid_uuid == None:
+                content = TBframe.construct(TBframe.ACCESS_LOGIN, 'argerror')
+                self.send_data(sock, content)
+                return
+
+            if server_sock == None:
+                content = TBframe.construct(TBframe.ACCESS_LOGIN, 'noserver')
+                self.send_data(sock, content)
+                return
+
+            uuid = value
+            token = self.generate_random_hexstr(16)
+            content = '{0},{1}'.format(uuid, token)
+            content = TBframe.construct(TBframe.ACCESS_ADD_CLIENT, content)
+            self.send_data(server_sock, content)
+            self.connections[sock]['uuid'] = uuid
+            return
+
+    def server_process(self, sock, type, value):
+        self.netlog_print('server {0} {1}'.format(type, value))
+        self.timeouts[sock] = time.time() + CONFIG_TIMEOUT
+        if type == TBframe.ACCESS_LOGIN:
+            try:
+                ports = json.loads(value)
+            except:
+                if DEBUG: traceback.print_exc()
+                ports = {}
+            if 'client_port' not in ports or 'terminal_port' not in ports:
+                content = TBframe.construct(TBframe.ACCESS_LOGIN, 'fail')
+                self.connections[sock]['valid'] = False
+            else:
+                content = TBframe.construct(TBframe.ACCESS_LOGIN, 'ok')
+                self.connections[sock]['client_port'] = ports['client_port']
+                self.connections[sock]['terminal_port'] = ports['terminal_port']
+                self.connections[sock]['valid'] = True
+            self.send_data(sock, content)
+            return
+        if type == TBframe.ACCESS_REPORT_STATUS:
+            try:
+                status = json.loads(value)
+            except:
+                if DEBUG: traceback.print_exc()
+                status = {}
+            if not status:
+                content = TBframe.construct(TBframe.ACCESS_REPORT_STATUS, 'fail')
+            else:
+                self.connections[sock]['status'] = status
+                content = TBframe.construct(TBframe.ACCESS_REPORT_STATUS, 'ok')
+            self.send_data(sock, content)
+            return
+        if type == TBframe.ACCESS_ADD_CLIENT:
+            try:
+                [ret, uuid, token] = value.split(',')
+            except:
+                if DEBUG: self.netlog_print("error: invalid return value {0}".format(repr(value)))
+                return
+            if ret != 'success':
+                return #TODO: choose another server for the client
+
+            client_sock = None
+            for conn in self.connections:
+                if self.connections[conn]['role'] != 'client':
                     continue
-                if ret != 'success':
-                    continue #TODO: choose another server for the client
-
-                client_sock = None
-                for c_sock in self.clients:
-                    if 'uuid' not in self.clients[c_sock]:
-                        continue
-                    if self.clients[c_sock]['uuid'] != uuid:
-                        continue
-                    client_sock = c_sock
-                    break
-                if client_sock == None:
+                if 'uuid' not in self.connections[conn]:
                     continue
+                if self.connections[conn]['uuid'] != uuid:
+                    continue
+                client_sock = conn
+                break
+            if client_sock == None:
+                return
 
-                server_addr = sock.getpeername()[0]
-                server_port = self.servers[sock]['client_port']
-                content = 'ok,{0},{1},{2}'.format(server_addr, server_port, token)
-                content = TBframe.construct(TBframe.ACCESS_LOGIN, content)
-                self.send_data(client_sock, 'client', content)
-
-    def terminal_serve(self, sel, sock, role):
-        data = sock.recv(CONFIG_MAXMSG_LENTH)
-        if not data:
-            print("terminal {0} disconnect".format(sock.getpeername()))
-            sel.unregister(sock, selector.EVENT_READ)
-            sock.close()
-            self.timeouts[sel].pop(sock)
-            self.terminals.pop(sock)
+            server_addr = sock.getpeername()[0]
+            server_port = self.connections[sock]['client_port']
+            content = 'ok,{0},{1},{2}'.format(server_addr, server_port, token)
+            content = TBframe.construct(TBframe.ACCESS_LOGIN, content)
+            self.send_data(client_sock, content)
             return
-        self.timeouts[sel][sock] = time.time() + CONFIG_TIMEOUT
-        print role, data
+        if type == TBframe.ACCESS_ADD_TERMINAL:
+            try:
+                [ret, uuid, token] = value.split(',')
+            except:
+                if DEBUG: self.netlog_print("error: invalid return value {0}".format(repr(value)))
+                return
+            if ret != 'success':
+                return #TODO: choose another server for the client
 
-    def service_thread(self, port, role):
-        roles = {'client':self.clients, 'server':self.servers, 'terminal':self.terminals}
-        if role not in roles:
+            client_sock = None
+            for conn in self.connections:
+                if self.connections[conn]['role'] != 'client':
+                    continue
+                if 'uuid' not in self.connections[conn]:
+                    continue
+                if self.connections[conn]['uuid'] != uuid:
+                    continue
+                client_sock = conn
+                break
+            if client_sock == None:
+                return
+
+            server_addr = sock.getpeername()[0]
+            server_port = self.connections[sock]['client_port']
+            content = 'ok,{0},{1},{2}'.format(server_addr, server_port, token)
+            content = TBframe.construct(TBframe.ACCESS_LOGIN, content)
+            self.send_data(client_sock, content)
             return
+
+    def get_server_by_client_uuid(self, uuid):
+        for sock in self.connections:
+            if self.connections[sock]['role'] != 'server':
+                continue
+            if self.connections[sock]['valid'] == False:
+                continue
+            if 'status' not in self.connections[sock]:
+                continue
+            if 'clients' not in self.connections[sock]['status']:
+                continue
+            if uuid not in self.connections[sock]['status']['clients']:
+                continue
+            return sock
+        return None
+
+    def terminal_process(self, sock, type, value):
+        self.netlog_print('terminal {0} {1}'.forma(type, value))
+        if type == TBframe.ACCESS_LOGIN:
+            is_valid_uuid = re.match('^[0-9a-f]{16}$', value)
+            if is_valid_uuid == None:
+                content = TBframe.construct(TBframe.ACCESS_LOGIN, 'argerror')
+                self.send_data(sock, content)
+                return
+
+            sqlcmd = "SELECT * FROM Users WHERE uuid = '{0}'".format(value)
+            ret = self.database_excute_sqlcmd(sqlcmd)
+            if ret == None or len(ret) != 1:
+                content = TBframe.construct(TBframe.ACCESS_LOGIN, 'invaliduuid')
+                self.send_data(sock, content)
+                return
+
+            devices = ret[0][3]
+            if devices == '':
+                content = TBframe.construct(TBframe.ACCESS_LOGIN, 'nodevice')
+                self.send_data(sock, content)
+                return
+            client_uuid = devices.split(':')[0]
+            server_sock = self.get_server_by_client_uuid(client_uuid)
+            if server_sock == None:
+                content = TBframe.construct(TBframe.ACCESS_LOGIN, 'not connected')
+                self.send_data(sock, content)
+                return
+
+            uuid = value
+            token = self.generate_random_hexstr(16)
+            content = '{0},{1},{2},{3}'.format(uuid, token, client_uuid, devices)
+            content = TBframe.construct(TBframe.ACCESS_ADD_TERMINAL, content)
+            self.send_data(server_sock, content)
+            self.connections[sock]['uuid'] = uuid
+            return
+
+    def sock_interact_thread(self, port):
         sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         sock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
         sock.setblocking(False)
@@ -248,42 +364,262 @@ class Controller():
         if CONFIG_ENCRYPT:
             sock = ssl.wrap_socket(sock, self.keyfile, self.certfile, True)
         sock.listen(100)
-        sel = selector()
-        if role == 'client': self.client_sel = sel
-        if role == 'server': self.server_sel = sel
-        if role == 'terminal': self.terminal_sel = sel
-        sel.register(sock, selector.EVENT_READ, self.accept)
-        self.timeouts[sel] = {}
+        self.selector = selector()
+        self.connections = {}
+        self.timeouts = {}
+        self.selector.register(sock, selector.EVENT_READ, self.accept)
         while self.keep_running:
-            events = sel.select()
+            events = self.selector.select()
             for [sock, callback] in events:
-                callback(sel, sock, role)
+                callback(sock)
 
             #close timeout connections
             now = time.time()
-            if role == 'client': conlist = self.clients
-            if role == 'server': conlist = self.servers
-            if role == 'terminal': sconlist = self.terminals
-            for conn in list(self.timeouts[sel]):
-                if now < self.timeouts[sel][conn]:
+            for conn in list(self.timeouts):
+                if now < self.timeouts[conn]:
                     continue
-                sel.unregister(conn, selector.EVENT_READ)
+                self.netlog_print("{0} {1} timeout, close connection".format(role, conn.getpeername()))
+                self.selector.unregister(conn, selector.EVENT_READ)
+                self.selector.unregister(conn, selector.EVENT_WRITE)
                 conn.close()
-                self.timeouts[sel].pop(conn)
-                conlist.pop(conn)
+                self.timeouts.pop(conn)
+                self.connections.pop(conn)
+
+    def cmdlog_print(self, log):
+        sys.stdout.write(log + '\r\n')
+
+    def add_cmd_handler(self, args):
+        if len(args) < 2:
+            self.cmdlog_print('usages: add user name [email] [devices]')
+            self.cmdlog_print('        add device uuid devices')
+            return
+        if args[0] == 'user':
+            if len(args) < 2:
+                self.cmdlog_print('usage error, usage: add user name [email] [devices]')
+                return
+            uuid = self.generate_random_hexstr(16)
+            name = args[1]
+            if len(args) > 2:
+                email = args[2]
+            else:
+                email = 'None'
+            if len(args) > 3:
+                devices = args[3]
+            else:
+                devices = ''
+            sqlcmd = "INSERT INTO Users VALUES('{0}', '{1}', '{2}', '{3}')".format(uuid, name, email, devices)
+            ret = self.database_excute_sqlcmd(sqlcmd)
+            if ret == None:
+                self.cmdlog_print("add user '{0}' failed".format(name))
+            else:
+                self.cmdlog_print("add user '{0}' success, email: {1}, uuid: {2}, devices: {3}".format(name, email, uuid, devices))
+        elif args[0] == 'device':
+            if len(args) != 3:
+                self.cmdlog_print('usage error, usage: add device uuid devices')
+                return
+            uuid = args[1]
+            devices = args[2]
+            sqlcmd = "SELECT * FROM Users WHERE uuid = '{0}'".format(uuid)
+            rows = self.database_excute_sqlcmd(sqlcmd)
+            if len(rows) < 1:
+                self.cmdlog_print("error: invalid uuid '{0}'".format(uuid))
+            if len(rows) > 1:
+                self.cmdlog_print("database error: multiple record for single user")
+            if rows[0][3] != '':
+                devices = rows[0][3] + '|' + devices
+            sqlcmd = "UPDATE Users SET devices = '{0}' WHERE uuid = '{1}'".format(devices, uuid)
+            ret = self.database_excute_sqlcmd(sqlcmd)
+            if ret == None:
+                self.cmdlog_print("failed")
+            else:
+                self.cmdlog_print("succeed")
+        else:
+            self.cmdlog_print("error: invalid command {0}".format(self.user_cmd))
+        return
+
+    def del_cmd_handler(self, args):
+        if len(args) != 1:
+            self.cmdlog_print('usage error, usage: del uuid')
+            return
+        uuid = args[0]
+        sqlcmd = "SELECT * FROM Users WHERE uuid = '{0}'".format(uuid)
+        rows = self.database_excute_sqlcmd(sqlcmd)
+        if len(rows) < 1:
+            self.cmdlog_print("error: invalid uuid '{0}'".format(uuid))
+        sqlcmd = "DELETE FROM Users WHERE uuid = '{0}'".format(uuid)
+        ret = self.database_excute_sqlcmd(sqlcmd)
+        if ret == None:
+            self.cmdlog_print("failed")
+        else:
+            self.cmdlog_print("succeed")
+        return
+
+    def list_cmd_handler(self, args):
+        if len(args) == 0:
+            sqlcmd = "SELECT * FROM Users"
+            rows = self.database_excute_sqlcmd(sqlcmd)
+            for row in rows:
+                self.cmdlog_print("{0}".format(row))
+        if len(args) == 1:
+            uuid = args[0]
+            sqlcmd = "SELECT * FROM Users WHERE uuid = '{0}'".format(uuid)
+            rows = self.database_excute_sqlcmd(sqlcmd)
+            if len(rows) == 0:
+                self.cmdlog_print("error: uuid {0} does not exist in database".format(repr(uuid)))
+            for row in rows:
+                self.cmdlog_print("{0}".format(row))
+        return
+
+    def help_cmd_handler(self, args):
+        self.cmdlog_print("Usages:")
+        self.cmdlog_print("       add user name [email] [device1|deice2|...|deviceN]")
+        self.cmdlog_print("       add device uuid device1|deice2|...|deviceN")
+        self.cmdlog_print("       del uuid")
+        self.cmdlog_print("       list [uuid]")
+        return
+
+    def process_cmd(self):
+        cmds = self.user_cmd.split()
+        if cmds[0] == 'add':
+            self.add_cmd_handler(cmds[1:])
+        elif cmds[0] == 'del':
+            self.del_cmd_handler(cmds[1:])
+        elif cmds[0] == 'list':
+            self.list_cmd_handler(cmds[1:])
+        elif cmds[0] == 'help':
+            self.help_cmd_handler(cmds[1:])
+        else:
+            sys.stdout.write("unknow command {0}\r\n".format(repr(self.user_cmd)))
+        sys.stdout.flush()
+        return
+
+    def cmd_print(self):
+        cmd_str = '\r# ' + self.user_cmd
+        cmd_str += '\b' * (len(self.user_cmd) - self.cur_pos)
+        sys.stdout.write(cmd_str)
+        sys.stdout.flush()
+
+    def user_interaction(self):
+        self.user_cmd = ''
+        self.cur_pos = 0
+        saved_cmd = ""
+        history_index = -1
+        escape = None
+        old_settings = termios.tcgetattr(sys.stdin.fileno())
+        tty.setraw(sys.stdin.fileno())
+        self.cmd_print()
+        while self.keep_running:
+            try:
+                c = sys.stdin.read(1)
+            except:
+                break
+            #sys.stdout.write("\rkeycode {0}\r\n".format(ord(c)))
+            if escape != None:
+                escape += c
+                if len(escape) == 2:
+                    if ord(c) == 91:
+                        continue
+                    else:
+                        escape = None
+
+                if len(escape) == 3:
+                    if ord(c) == 65: #KEY_UP
+                        if history_index == -1:
+                            saved_cmd = self.user_cmd
+                        if history_index < (len(self.cmd_history) - 1):
+                            history_index += 1
+                        sys.stdout.write("\r  " + " " * len(self.user_cmd))
+                        self.user_cmd = self.cmd_history[history_index]
+                        self.cur_pos = len(self.user_cmd)
+                        self.cmd_print()
+                        continue
+                    if ord(c) == 66: #KEY_DOWN
+                        if history_index <= -1:
+                            history_index = -1
+                            continue
+                        history_index -= 1
+                        sys.stdout.write("\r  " + " " * len(self.user_cmd))
+                        if history_index >= 0:
+                            self.user_cmd = self.cmd_history[history_index]
+                        else:
+                            self.user_cmd = saved_cmd
+                        self.cur_pos = len(self.user_cmd)
+                        self.cmd_print()
+                        continue
+                    if ord(c) == 68: #KEY_LEFT
+                        if self.cur_pos <= 0:
+                            continue
+                        self.cur_pos -= 1
+                        sys.stdout.write('\b')
+                        sys.stdout.flush()
+                        continue
+                    if ord(c) == 67: #KEY_RIGHT
+                        if self.cur_pos >= len(self.user_cmd):
+                            continue
+                        sys.stdout.write(self.user_cmd[self.cur_pos])
+                        self.cur_pos += 1
+                        sys.stdout.flush()
+                        continue
+
+            if ord(c) == 27: #ESCAPE
+                escape = c
+                continue
+            if ord(c) == 13: #RETURN
+                if self.user_cmd == "q" :
+                    self.keep_running = False
+                    time.sleep(0.2)
+                    break
+                elif self.user_cmd != "":
+                    sys.stdout.write('\r# ' + self.user_cmd + '\r\n')
+                    sys.stdout.flush()
+                    self.process_cmd()
+                    self.cmd_history = [self.user_cmd] + self.cmd_history
+                self.user_cmd = ""
+                saved_cmd = ""
+                history_index = -1
+                self.cur_pos = 0
+                self.cmd_print()
+                continue
+            if c == '\x08' or c == '\x7f': #DELETE
+                if self.user_cmd[0:self.cur_pos] == "":
+                    continue
+                newcmd = self.user_cmd[0:self.cur_pos-1] + self.user_cmd[self.cur_pos:]
+                self.user_cmd = newcmd
+                self.cur_pos -= 1
+                sys.stdout.write('\b \b')
+                sys.stdout.flush()
+                continue
+            if ord(c) == 3: #CTRL+C
+                self.keep_running = False
+                time.sleep(0.2)
+                break
+
+            try:
+                newcmd = self.user_cmd[0:self.cur_pos] + c + self.user_cmd[self.cur_pos:]
+                self.user_cmd = newcmd
+                self.cur_pos += 1
+                self.cmd_print()
+            except:
+                traceback.print_exc()
+                sys.stdout.write("\rError: unsupported unicode character {0}\n".format(c))
+                self.cmd_print()
+                continue
+        termios.tcsetattr(sys.stdin.fileno(), termios.TCSADRAIN, old_settings)
+        try:
+            if len(self.cmd_history) > 0:
+                file = open("controller/.cmd_history",'wb')
+                json.dump(self.cmd_history, file)
+                file.close()
+        except:
+            print("error: save command history failed")
+        print ''
+        return
 
     def run(self):
         signal.signal(signal.SIGINT, signal_handler)
         self.keep_running = True
-        thread.start_new_thread(self.service_thread, (self.port, 'client',))
-        thread.start_new_thread(self.service_thread, (self.port + 2, 'server',))
-        thread.start_new_thread(self.service_thread, (self.port + 1, 'terminal',))
-        while True:
-            try:
-                time.sleep(1)
-            except:
-                self.keep_running = False
-                break
+        thread.start_new_thread(self.sock_interact_thread, (self.port,))
+        self.user_interaction()
 
 if __name__ == '__main__':
     host = ''

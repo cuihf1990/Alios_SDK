@@ -80,7 +80,7 @@ bool is_direct_child(allocator_t hdl, uint16_t sid)
         return false;
     }
     allocator = (ssid_allocator_t *)hdl;
-    if (allocator == NULL) {
+    if (allocator == NULL || allocator->sid_shift < 0) {
         return false;
     }
 
@@ -362,6 +362,8 @@ uint16_t get_free_number(allocator_t hdl)
     ssid_allocator_t *allocator = (ssid_allocator_t *)hdl;
     if (allocator->sid_prefix == LEADER_SID) {
         return 11 - allocator->base.node_num;
+    } else if (allocator->sid_shift == -SID_MASK_LEN) {
+        return 0;
     }
     return 15 - allocator->base.node_num;
 }

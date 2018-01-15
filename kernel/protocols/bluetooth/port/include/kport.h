@@ -9,8 +9,7 @@
 #include "config.h"
 #include "aos/log.h"
 
-#include "esp_log.h"
-
+#include <assert.h>
 #include <stddef.h>
 #include <stdint.h>
 #include <string.h>

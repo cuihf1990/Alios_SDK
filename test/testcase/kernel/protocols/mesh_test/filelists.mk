@@ -29,4 +29,5 @@ MESHYTSFILE = $(MESHYTSPATH)/uradar_test.c \
               $(MESHYTSPATH)/scales_20nodes_test.c \
               $(MESHYTSPATH)/scales_30nodes_test.c \
               $(MESHYTSPATH)/4super_7nodes_test.c \
-              $(MESHYTSPATH)/lowpower_test.c
+              $(MESHYTSPATH)/lowpower_test.c \
+              $(MESHYTSPATH)/leader_discover_test.c
