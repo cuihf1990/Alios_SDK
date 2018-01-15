@@ -26,6 +26,7 @@ CMD_ERROR      = 'CMDE'
 HEARTBEAT      = 'HTBT'
 TYPE_NONE      = 'NONE'
 CLIENT_LOGIN   = 'CLGI'
+TERMINAL_LOGIN = 'TLGI'
 ACCESS_LOGIN         = 'ALGI'
 ACCESS_REPORT_STATUS = 'ARPS'
 ACCESS_ADD_CLIENT    = 'AADC'
@@ -81,6 +82,8 @@ def is_valid_type(type):
     if type == DEVICE_ALLOC:
         return True
     if type == CLIENT_LOGIN:
+        return True
+    if type == TERMINAL_LOGIN:
         return True
     if type == ACCESS_LOGIN:
         return True
