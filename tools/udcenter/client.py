@@ -456,7 +456,7 @@ class Client:
         interface = self.devices[port]['if']
         if interface == None:
             print "error: erasing dose not support model '{0}'".format(model)
-            content = ','.join(term) + ',' + 'unsupported model'
+            content = term + ',' + 'unsupported model'
             self.send_packet(TBframe.DEVICE_ERASE, content)
             return
 
@@ -473,20 +473,20 @@ class Client:
                 self.devices[port]['serial'].open()
             self.devices[port]['slock'].release()
         print 'erasing', port, '...', ret
-        content = ','.join(term) + ',' + ret
+        content = term + ',' + ret
         self.send_packet(TBframe.DEVICE_ERASE, content)
 
     def device_program(self, port, address, file, term):
         if os.path.exists(port) == False or port not in self.devices:
             print "error: progamming nonexist port {0}".format(port)
-            content = ','.join(term) + ',' + 'device nonexist'
+            content = term + ',' + 'device nonexist'
             self.send_packet(TBframe.DEVICE_PROGRAM, content)
             return
 
         interface = self.devices[port]['if']
         if interface == None:
             print "error: programming dose not support model '{0}'".format(model)
-            content = ','.join(term) + ',' + 'unsupported model'
+            content = term + ',' + 'unsupported model'
             self.send_packet(TBframe.DEVICE_PROGRAM, content)
             return
 
@@ -503,21 +503,21 @@ class Client:
                 self.devices[port]['serial'].open()
             self.devices[port]['slock'].release()
         print 'programming', file, 'to', port, '@', address, '...', ret
-        content = ','.join(term) + ',' + ret
+        content = term + ',' + ret
         self.send_packet(TBframe.DEVICE_PROGRAM, content)
 
     def device_control(self, port, type, term):
         operations= {TBframe.DEVICE_RESET:'reset', TBframe.DEVICE_STOP:'stop', TBframe.DEVICE_START:'start'}
         if os.path.exists(port) == False or port not in self.devices:
             print "error: controlling nonexist port {0}".format(port)
-            content = ','.join(term) + ',' + 'device nonexist'
+            content = term + ',' + 'device nonexist'
             self.send_packet(type, content)
             return
 
         interface = self.devices[port]['if']
         if interface == None:
             print "error: controlling dose not support model '{0}'".format(model)
-            content = ','.join(term) + ',' + 'unsupported model'
+            content = term + ',' + 'unsupported model'
             self.send_packet(type, content)
             return
 
@@ -527,13 +527,13 @@ class Client:
             if DEBUG: traceback.print_exc()
             ret = 'fail'
         print operations[type], port, ret
-        content = ','.join(term) + ',' + ret
+        content = term + ',' + ret
         self.send_packet(type, content)
 
     def device_run_cmd(self, port, cmd, term):
         if os.path.exists(port) == False or port not in self.devices:
             print "error: run command at nonexist port {0}".format(port)
-            content = ','.join(term) + ',' + 'device nonexist'
+            content = term + ',' + 'device nonexist'
             self.send_packet(TBframe.DEVICE_CMD, content)
             return
 
@@ -545,7 +545,7 @@ class Client:
             if DEBUG: traceback.print_exc()
             result='fail'
             print "run command '{0}' at {1} failed".format(cmd, port)
-        content = ','.join(term) + ',' + result
+        content = term + ',' + result
         self.send_packet(TBframe.DEVICE_CMD, content)
 
     def heartbeat_func(self):
@@ -603,7 +603,7 @@ class Client:
         type, length, value, data = TBframe.parse(data)
         #print 'controller', type, value
         rets = value.split(',')
-        if type != TBframe.ACCESS_LOGIN or rets[0] != 'ok':
+        if type != TBframe.ACCESS_LOGIN or rets[0] != 'success':
             print "login failed, ret={0}".format(value)
             sock.close()
             return None
@@ -666,59 +666,59 @@ class Client:
 
                     if type == TBframe.FILE_BEGIN:
                         split_value = value.split(':')
-                        terminal = split_value[0]
+                        term = split_value[0]
                         hash = split_value[1]
                         filename = split_value[2]
                         if hash in file_received:
                             if os.path.exists(file_received[hash]) == True:
-                                content = terminal + ',' + 'exist'
+                                content = term + ',' + 'exist'
                                 self.send_packet(type, content)
                                 continue
                             else:
                                 file_received.pop(hash)
 
                         if hash in file_receiving:
-                            content = terminal + ',' + 'busy'
+                            content = term + ',' + 'busy'
                             self.send_packet(type, content)
                             continue
 
                         filename = 'client/' + filename
-                        filename += '-' + terminal.split(',')[0]
+                        filename += '-' + term.split(',')[0]
                         filename += '@' + time.strftime('%Y-%m-%d-%H-%M')
                         filehandle = open(filename, 'wb')
                         timeout = time.time() + 5
                         file_receiving[hash] = {'name':filename, 'seq':0, 'handle':filehandle, 'timeout': timeout}
-                        content = terminal + ',' + 'ok'
+                        content = term + ',' + 'ok'
                         self.send_packet(type, content)
                         if DEBUG:
                             print 'start receiving {0} as {1}'.format(split_value[2], filename)
                     elif type == TBframe.FILE_DATA:
                         split_value = value.split(':')
-                        terminal = split_value[0]
+                        term = split_value[0]
                         hash = split_value[1]
                         seq  = split_value[2]
-                        data = value[(len(terminal) + len(hash) + len(seq) + 3):]
+                        data = value[(len(term) + len(hash) + len(seq) + 3):]
                         seq = int(seq)
                         if hash not in file_receiving:
-                            content = terminal + ',' + 'noexist'
+                            content = term + ',' + 'noexist'
                             self.send_packet(type, content)
                             continue
                         if file_receiving[hash]['seq'] != seq and file_receiving[hash]['seq'] != seq + 1:
-                            content = terminal + ',' + 'seqerror'
+                            content = term + ',' + 'seqerror'
                             self.send_packet(type, content)
                             continue
                         if file_receiving[hash]['seq'] == seq:
                             file_receiving[hash]['handle'].write(data)
                             file_receiving[hash]['seq'] += 1
                             file_receiving[hash]['timeout'] = time.time() + 5
-                        content = terminal + ',' + 'ok'
+                        content = term + ',' + 'ok'
                         self.send_packet(type, content)
                     elif type == TBframe.FILE_END:
                         split_value = value.split(':')
-                        terminal = split_value[0]
+                        term = split_value[0]
                         hash = split_value[1]
                         if hash not in file_receiving:
-                            content = terminal + ',' + 'noexist'
+                            content = term + ',' + 'noexist'
                             self.send_packet(type, content)
                             continue
                         file_receiving[hash]['handle'].close()
@@ -731,14 +731,14 @@ class Client:
                         if DEBUG:
                             print 'finished receiving {0}, result:{1}'.format(file_receiving[hash]['name'], response)
                         file_receiving.pop(hash)
-                        content = terminal + ',' + response
+                        content = term + ',' + response
                         self.send_packet(type, content)
                     elif type == TBframe.DEVICE_ERASE:
                         args = value.split(',')
                         if len(args) != 3:
                             continue
-                        term = args[0:2]
-                        port = args[2]
+                        term = args[0]
+                        port = args[1]
                         if os.path.exists(port) and port in self.devices:
                             if self.devices[port]['ucmd_queue'].full() == False:
                                 self.devices[port]['ucmd_queue'].put([type, term])
@@ -749,18 +749,18 @@ class Client:
                         else:
                             result = 'nonexist'
                             print 'erase', port,  'failed, device nonexist'
-                        content = ','.join(term) + ',' + result
+                        content = term + ',' + result
                         self.send_packet(type, content)
                     elif type == TBframe.DEVICE_PROGRAM:
                         args = value.split(',')
                         if len(args) != 5:
                             continue
-                        term = args[0:2]
-                        port = args[2]
-                        address = args[3]
-                        hash = args[4]
+                        term = args[0]
+                        port = args[1]
+                        address = args[2]
+                        hash = args[3]
                         if hash not in file_received:
-                            content = ','.join(term) + ',' + 'error'
+                            content = term + ',' + 'error'
                             self.send_packet(type, content)
                             continue
                         filename = file_received[hash]
@@ -774,15 +774,15 @@ class Client:
                         else:
                             result = 'error'
                             print 'program {0} to {1} @ {2} failed, device nonexist'.format(filename, port, address)
-                        content = ','.join(term) + ',' + result
+                        content = term + ',' + result
                         self.send_packet(type, content)
                     elif type == TBframe.DEVICE_RESET or type == TBframe.DEVICE_START or type == TBframe.DEVICE_STOP:
                         operations = {TBframe.DEVICE_RESET:'reset', TBframe.DEVICE_START:'start', TBframe.DEVICE_STOP:'stop'}
                         args = value.split(',')
                         if len(args) != 3:
                             continue
-                        term = args[0:2]
-                        port = args[2]
+                        term = args[0]
+                        port = args[1]
                         if os.path.exists(port) and port in self.devices:
                             if self.devices[port]['ucmd_queue'].full() == False:
                                 self.devices[port]['ucmd_queue'].put([type, term])
@@ -793,14 +793,14 @@ class Client:
                         else:
                             result = 'nonexist'
                             print operations[type], port, 'failed, device nonexist'
-                        content = ','.join(term) + ',' + result
+                        content = term + ',' + result
                         self.send_packet(type, content)
                     elif type == TBframe.DEVICE_CMD:
                         args = value.split(':')[0]
                         arglen = len(args) + 1
                         args = args.split(',')
-                        term = args[0:2]
-                        port = args[2]
+                        term = args[0]
+                        port = args[1]
                         cmd = value[arglen:].split('|')
                         cmd = ' '.join(cmd)
                         if os.path.exists(port) and port in self.devices and \
@@ -814,7 +814,7 @@ class Client:
                         else:
                             result = 'nonexist'
                             print "run command '{0}' at {1} failed, device nonexist".format(cmd, port)
-                        content = ','.join(term) + ',' + result
+                        content = term + ',' + result
                         self.send_packet(type, content)
                     elif type == TBframe.CLIENT_LOGIN:
                         if value == 'request':
