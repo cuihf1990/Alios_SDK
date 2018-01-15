@@ -9,6 +9,8 @@
 #include "config.h"
 #include "aos/log.h"
 
+#include <misc/dlist.h>
+
 #include <assert.h>
 #include <stddef.h>
 #include <stdint.h>
@@ -82,10 +84,16 @@ enum {
 /* lifo define*/
 struct k_lifo {
     _queue_t *_queue;
+    sys_dlist_t poll_events;
 #if LIFO_DEBUG
     uint32_t total_count;
     int32_t count;
 #endif
+};
+
+struct k_queue {
+    _queue_t *_queue;
+    sys_dlist_t poll_events;
 };
 
 #define _K_LIFO_INITIALIZER(obj)  { 0 }
@@ -136,6 +144,7 @@ void *k_lifo_get(struct k_lifo *lifo, tick_t timeout);
 /* fifo define*/
 struct k_fifo {
     _queue_t* _queue;
+    sys_dlist_t poll_events;
 #if FIFO_DEBUG
     uint32_t total_count;
     int32_t count;
@@ -192,6 +201,7 @@ void *k_fifo_get(struct k_fifo *fifo, tick_t timeout);
 /* sem define*/
 struct k_sem {
     _sem_t *sem;
+    sys_dlist_t poll_events;
 };
 
 /**
@@ -256,6 +266,17 @@ int k_sem_give(struct k_sem *sem);
  * @return 0 delete semaphore success
  */
 int k_sem_delete(struct k_sem *sem);
+
+/**
+ * @brief Get a semaphore's count.
+ *
+ * This routine returns the current count of @a sem.
+ *
+ * @param sem Address of the semaphore.
+ *
+ * @return Current semaphore count.
+ */
+unsigned int k_sem_count_get(struct k_sem *sem);
 
 typedef void (*k_timer_handler_t)(void *arg);
 typedef struct k_timer {

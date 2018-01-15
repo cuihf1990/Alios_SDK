@@ -75,8 +75,6 @@ struct bt_dev bt_dev = {
 #endif
 };
 
-void hci_tx_event_notify(const void* obj);
-
 static bt_ready_cb_t ready_cb;
 
 const struct bt_storage *bt_storage;
@@ -128,6 +126,8 @@ struct acl_data {
 #define CMD_BUF_SIZE BT_BUF_RX_SIZE
 extern struct net_buf_pool hci_cmd_pool;
 extern struct net_buf_pool hci_rx_pool;
+
+extern struct k_sem g_poll_sem;
 
 #if defined(CONFIG_BT_HCI_ACL_FLOW_CONTROL)
 static void report_completed_packet(struct net_buf *buf)
@@ -236,7 +236,7 @@ int bt_hci_cmd_send(u16_t opcode, struct net_buf *buf)
 	}
 
 	net_buf_put(&bt_dev.cmd_tx_queue, buf);
-        hci_tx_event_notify(&bt_dev.cmd_tx_queue);
+        k_sem_give(&g_poll_sem);
 
 	return 0;
 }
@@ -263,7 +263,7 @@ int bt_hci_cmd_send_sync(u16_t opcode, struct net_buf *buf,
 	net_buf_ref(buf);
 
 	net_buf_put(&bt_dev.cmd_tx_queue, buf);
-        hci_tx_event_notify(&bt_dev.cmd_tx_queue);
+        k_sem_give(&g_poll_sem);
 
 	err = k_sem_take(&sync_sem, HCI_CMD_TIMEOUT);
 	__ASSERT(err == 0, "k_sem_take failed with err %d", err);
@@ -544,6 +544,7 @@ static void hci_num_completed_packets(struct net_buf *buf)
 
 			k_fifo_put(&conn->tx_notify, node);
 			k_sem_give(bt_conn_get_pkts(conn));
+                        k_sem_give(&g_poll_sem);
 		}
 
 		bt_conn_unref(conn);
@@ -3278,65 +3279,33 @@ static void process_events(struct k_poll_event *ev, int count)
 #define EV_COUNT 1
 #endif
 
-static struct k_poll_event g_events[EV_COUNT] = {
-                 K_POLL_EVENT_STATIC_INITIALIZER(K_POLL_TYPE_FIFO_DATA_AVAILABLE,
-                 K_POLL_MODE_NOTIFY_ONLY,
-                 &bt_dev.cmd_tx_queue,
-                 BT_EVENT_CMD_TX),
-             };
-static struct k_fifo g_tx_event;
-
-int k_poll(struct k_poll_event *events, int num_events, int32_t timeout)
-{
-    struct k_poll_event *poll_event = NULL;
-
-    poll_event = k_fifo_get(&g_tx_event, K_FOREVER);
-    while (poll_event) {
-        if (poll_event->type == K_POLL_TYPE_SIGNAL) {
-            poll_event->state = K_POLL_STATE_SIGNALED;
-        } else if (poll_event->type == K_POLL_TYPE_DATA_AVAILABLE) {
-            poll_event->state = K_POLL_STATE_DATA_AVAILABLE;
-        }
-        process_events(poll_event, 1);
-        poll_event = k_fifo_get(&g_tx_event, K_NO_WAIT);
-    }
-
-    return 0;
-}
-
-void hci_tx_event_notify(const void *obj)
-{
-    int index;
-
-    for(index = 0; index < EV_COUNT; index++) {
-        if (g_events[index].obj == obj) {
-            k_fifo_put(&g_tx_event, &g_events[index]);
-            break;
-        }
-    }
-}
-
 static void hci_tx_thread(void *p1, void *p2, void *p3)
 {
+        static struct k_poll_event events[EV_COUNT] = {
+                K_POLL_EVENT_STATIC_INITIALIZER(K_POLL_TYPE_FIFO_DATA_AVAILABLE,
+                                                K_POLL_MODE_NOTIFY_ONLY,
+                                                &bt_dev.cmd_tx_queue,
+                                                BT_EVENT_CMD_TX),
+        };
 
 	BT_DBG("Started");
 
 	while (1) {
 		int ev_count, err;
 
-		g_events[0].state = K_POLL_STATE_NOT_READY;
+		events[0].state = K_POLL_STATE_NOT_READY;
 		ev_count = 1;
 
 		if (IS_ENABLED(CONFIG_BT_CONN)) {
-			ev_count += bt_conn_prepare_events(&g_events[1]);
+			ev_count += bt_conn_prepare_events(&events[1]);
 		}
 
 		BT_DBG("Calling k_poll with %d events", ev_count);
 
-		err = k_poll(g_events, ev_count, K_FOREVER);
+		err = k_poll(events, ev_count, K_FOREVER);
 		BT_ASSERT(err == 0);
 
-		//process_events(g_events, ev_count);
+		process_events(events, ev_count);
 
 		/* Make sure we don't hog the CPU if there's all the time
 		 * some ready events.
@@ -4549,7 +4518,7 @@ int bt_enable(bt_ready_cb_t cb)
         k_lifo_init(&hci_cmd_pool.free);
         k_lifo_init(&hci_rx_pool.free);
 
-        k_fifo_init(&g_tx_event);
+        k_sem_init(&g_poll_sem, 0, 1);
 
 	ready_cb = cb;
 

@@ -144,15 +144,7 @@ struct k_poll_signal {
 
 extern int k_poll_signal(struct k_poll_signal *signal, int result);
 extern int k_poll(struct k_poll_event *events, int num_events, s32_t timeout);
-
-static inline void k_poll_event_init(struct k_poll_event *event, u32_t type, int mode, void *obj)
-{
-    event->type = type;
-    event->state = K_POLL_STATE_NOT_READY;
-    event->mode = mode;
-    event->unused = 0;
-    event->obj = obj;
-}
+extern void k_poll_event_init(struct k_poll_event *event, u32_t type, int mode, void *obj);
 
 /* public - polling modes */
 enum k_poll_modes {
@@ -163,6 +155,11 @@ enum k_poll_modes {
 };
 
 #define k_oops()
+
+static inline int k_queue_is_empty(struct k_queue *queue)
+{
+    return queue->_queue->msg_q.cur_num? 0: 1;
+}
 
 #if defined(__cplusplus)
     }

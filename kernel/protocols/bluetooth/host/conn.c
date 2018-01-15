@@ -34,6 +34,7 @@
 #include "att_internal.h"
 
 extern struct net_buf_pool acl_tx_pool;
+extern struct k_sem g_poll_sem;
 
 /* How long until we cancel HCI_LE_Create_Connection */
 #define CONN_TIMEOUT	K_SECONDS(3)
@@ -1050,7 +1051,6 @@ void bt_conn_recv(struct bt_conn *conn, struct net_buf *buf, u8_t flags)
 	bt_l2cap_recv(conn, buf);
 }
 
-extern void hci_tx_event_notify(const void *obj);
 int bt_conn_send_cb(struct bt_conn *conn, struct net_buf *buf,
 		    bt_conn_tx_cb_t cb)
 {
@@ -1074,7 +1074,7 @@ int bt_conn_send_cb(struct bt_conn *conn, struct net_buf *buf,
 	conn_tx(buf)->cb = cb;
 
 	net_buf_put(&conn->tx_queue, buf);
-        hci_tx_event_notify(&conn->tx_queue);
+        k_sem_give(&g_poll_sem);
 	return 0;
 }
 
@@ -1441,7 +1441,6 @@ void bt_conn_set_state(struct bt_conn *conn, bt_conn_state_t state)
 		k_fifo_init(&conn->tx_queue);
 		k_fifo_init(&conn->tx_notify);
 		k_poll_signal(&conn_change, 0);
-                hci_tx_event_notify(&conn_change);
 
 		sys_slist_init(&conn->channels);
 
@@ -1471,7 +1470,6 @@ void bt_conn_set_state(struct bt_conn *conn, bt_conn_state_t state)
 
 			atomic_set_bit(conn->flags, BT_CONN_CLEANUP);
 			k_poll_signal(&conn_change, 0);
-                        hci_tx_event_notify(&conn_change);
 			/* The last ref will be dropped by the tx_thread */
 		} else if (old_state == BT_CONN_CONNECT) {
 			/* conn->err will be set in this case */
