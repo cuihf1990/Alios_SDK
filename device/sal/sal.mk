@@ -9,6 +9,6 @@ endif
 
 ifeq (wifi.gt202,$(module))
 $(NAME)_COMPONENTS += sal.wifi.gt202
-else ifeq(wifi.mk3060,$(module))
+else ifeq (wifi.mk3060,$(module))
 $(NAME)_COMPONENTS += sal.wifi.mk3060
 endif
