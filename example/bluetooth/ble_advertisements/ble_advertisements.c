@@ -3,6 +3,7 @@
  */
 
 #include <ble_app_framework.h>
+#include <aos/aos.h>
 
 static int connection_handler()
 {
@@ -98,9 +99,9 @@ static int adv_complete_cb(void *arg)
 
 }
 
-#define BLE_DEVICE_NAME "TestDevice"
-#define MANUFACURE_NAME "TestManufacture"
-int application_start( void )
+#define BLE_DEVICE_NAME "BleAdvertismentsSampleDevice"
+#define MANUFACURE_NAME "BleAdvertisementsSampleManufacture"
+static void app_delayed_action(void *arg)
 {
     peripheral_hdl_t hdl;
 
@@ -110,6 +111,12 @@ int application_start( void )
                               adv_gatt_db, sizeof(adv_gatt_db));
 
     ble_adv_start(adv_complete_cb, MANUFACURE_NAME, hdl);
+}
 
+int application_start( void )
+{
+    aos_post_delayed_action(1000, app_delayed_action, NULL);
+    aos_loop_run();
     return 0;
+
 }
