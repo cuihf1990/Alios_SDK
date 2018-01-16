@@ -5,6 +5,7 @@
 #include <stdint.h>
 #include <zephyr.h>
 #include <misc/util.h>
+#include <misc/dlist.h>
 
 #include <aos/aos.h>
 #include "k_sys.h"
@@ -80,6 +81,8 @@ void k_lifo_init(struct k_lifo *lifo)
     if (RHINO_SUCCESS != ret) {
         BT_ERR("lifo %s %p creat fail,%d\n",name, lifo, ret);
     }
+
+    sys_dlist_init(&lifo->poll_events);
 
 #if LIFO_DEBUG
     lifo->total_count = msg_num;
@@ -157,6 +160,8 @@ void k_fifo_init(struct k_fifo *fifo)
         BT_ERR("fifo %s %p creat fail,%d\n", name, fifo, ret);
         return;
     }
+
+    sys_dlist_init(&fifo->poll_events);
 
 #if FIFO_DEBUG
     fifo->total_count = msg_len;
@@ -241,6 +246,7 @@ int k_sem_init(struct k_sem *sem, unsigned int initial_count, unsigned int limit
     if (RHINO_SUCCESS == ret && initial_count != limit) {
         ret = krhino_sem_count_set(sem->sem, (sem_count_t)initial_count);
     }
+    sys_dlist_init(&sem->poll_events);
 
     return ret;
 }
@@ -288,6 +294,10 @@ int k_sem_delete(struct k_sem *sem)
     return ret;
 }
 
+unsigned int k_sem_count_get(struct k_sem *sem)
+{
+    return sem->sem->count;
+}
 
 int64_t k_uptime_get()
 {
@@ -360,11 +370,6 @@ void k_timer_stop(k_timer_t *timer)
     ASSERT(timer, "timer is NULL");
     BT_DBG("timer %p", timer);
     aos_cancel_delayed_action(timer->timeout,timer->handler, timer->args);
-}
-
-int k_poll_signal(struct k_poll_signal *signal, int result)
-{
-    return 0;
 }
 
 #if defined(__cplusplus)

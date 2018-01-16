@@ -14,6 +14,7 @@ $(NAME)_COMPONENTS += yloop
 $(NAME)_SOURCES := core/atomic_c.c \
                    core/buf.c \
                    core/log.c \
+                   core/poll.c \
                    host/uuid.c \
                    host/hci_core.c \
                    core/tinycrypt/source/utils.c \
