@@ -151,6 +151,13 @@ struct db_char_hdr {
 #define TYPE_CMP(typer, typee) (((typer)[0] == ((typee) & 0xff)) && \
                                 ((typer)[1] == (((typee) >> 8) & 0xff)))
 
+/* Place below items in data area */
+static struct bt_uuid *primary_svc_uuid = BT_UUID_GATT_PRIMARY;
+static struct bt_uuid *secondary_svc_uuid = BT_UUID_GATT_PRIMARY;
+static struct bt_uuid *include_svc_uuid = BT_UUID_GATT_SECONDARY;
+static struct bt_uuid *chrc_uuid = BT_UUID_GATT_CHRC;
+static struct bt_uuid *ccc_uuid = BT_UUID_GATT_CCC;
+
 static int make_attr_and_svc(peripheral_hdl_t hdl)
 {
     uint8_t *db = g_peri[hdl].db, *p;
@@ -280,10 +287,10 @@ static int make_attr_and_svc(peripheral_hdl_t hdl)
 
             if (TYPE_CMP(iter->type, GATT_UUID_PRI_SERVICE)) {
                 LOGD(MOD, "Adding a primary service attribute.");
-                a->uuid = BT_UUID_GATT_PRIMARY;
+                a->uuid = primary_svc_uuid;
             } else {
                 LOGD(MOD, "Adding a secondary service attribute.");
-                a->uuid = BT_UUID_GATT_SECONDARY;
+                a->uuid = secondary_svc_uuid;
             }
 
             /* Fill the attribute array */
@@ -344,7 +351,7 @@ static int make_attr_and_svc(peripheral_hdl_t hdl)
 
             /* Fill the charateristic attribute */
             a = &(g_peri[hdl].attr)[attr_idx];
-            a->uuid = BT_UUID_GATT_CHRC;
+            a->uuid = chrc_uuid;
             a->perm = BT_GATT_PERM_READ;
             a->read = bt_gatt_attr_read_chrc;
 
