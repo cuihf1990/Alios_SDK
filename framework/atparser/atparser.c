@@ -519,7 +519,7 @@ static void at_oob(const char *prefix, oob_cb cb, void *arg)
 
     if (inited == 0){
         LOGE(MODULE_NAME, "at have not init yet\r\n");
-        return -1;
+        return;
     }
     
     if (at._oobs_num >= OOB_MAX) {

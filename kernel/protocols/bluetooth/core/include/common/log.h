@@ -56,11 +56,10 @@ __printf_like(2, 3) void bt_log(int prio, const char *fmt, ...);
 #define SYS_LOG_DOMAIN "bt"
 #endif
 #define SYS_LOG_LEVEL SYS_LOG_LEVEL_DEBUG
-#include <logging/sys_log.h>
 
 #define BT_DBG(fmt, ...) \
 	if (BT_DBG_ENABLED) { \
-		SYS_LOG_DBG("(%p) " fmt, k_current_get(), \
+		SYS_LOG_DBG(fmt,\
 			    ##__VA_ARGS__); \
 	}
 

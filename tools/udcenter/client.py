@@ -422,7 +422,7 @@ class Client:
                 thread.start_new_thread(self.device_cmd_process, (port, exit_condition,))
             if devices_new != []:
                 self.send_device_list()
-            time.sleep(0.1)
+            time.sleep(0.5)
         print 'device monitor thread exited'
         self.keep_running = False
 
@@ -665,10 +665,11 @@ class Client:
                             file_receiving.pop(hash)
 
                     if type == TBframe.FILE_BEGIN:
-                        split_value = value.split(':')
-                        term = split_value[0]
-                        hash = split_value[1]
-                        filename = split_value[2]
+                        try:
+                            [term, hash, filename] = value.split(':')
+                        except:
+                            print "argument error: {0} {1}".format(type, value)
+                            continue
                         if hash in file_received:
                             if os.path.exists(file_received[hash]) == True:
                                 content = term + ',' + 'exist'
@@ -693,12 +694,16 @@ class Client:
                         if DEBUG:
                             print 'start receiving {0} as {1}'.format(split_value[2], filename)
                     elif type == TBframe.FILE_DATA:
-                        split_value = value.split(':')
-                        term = split_value[0]
-                        hash = split_value[1]
-                        seq  = split_value[2]
-                        data = value[(len(term) + len(hash) + len(seq) + 3):]
-                        seq = int(seq)
+                        try:
+                            split_value = value.split(':')
+                            term = split_value[0]
+                            hash = split_value[1]
+                            seq  = split_value[2]
+                            data = value[(len(term) + len(hash) + len(seq) + 3):]
+                            seq = int(seq)
+                        except:
+                            print "argument error: {0}".format(type)
+                            continue
                         if hash not in file_receiving:
                             content = term + ',' + 'noexist'
                             self.send_packet(type, content)
@@ -714,9 +719,11 @@ class Client:
                         content = term + ',' + 'ok'
                         self.send_packet(type, content)
                     elif type == TBframe.FILE_END:
-                        split_value = value.split(':')
-                        term = split_value[0]
-                        hash = split_value[1]
+                        try:
+                            [term, hash] = value.split(':')
+                        except:
+                            print "argument error: {0} {1}".format(type, value)
+                            continue
                         if hash not in file_receiving:
                             content = term + ',' + 'noexist'
                             self.send_packet(type, content)
@@ -734,11 +741,11 @@ class Client:
                         content = term + ',' + response
                         self.send_packet(type, content)
                     elif type == TBframe.DEVICE_ERASE:
-                        args = value.split(',')
-                        if len(args) != 3:
+                        try:
+                            [term, port] = value.split(',')
+                        except:
+                            print "argument error: {0} {1}".format(type, value)
                             continue
-                        term = args[0]
-                        port = args[1]
                         if os.path.exists(port) and port in self.devices:
                             if self.devices[port]['ucmd_queue'].full() == False:
                                 self.devices[port]['ucmd_queue'].put([type, term])
@@ -752,13 +759,11 @@ class Client:
                         content = term + ',' + result
                         self.send_packet(type, content)
                     elif type == TBframe.DEVICE_PROGRAM:
-                        args = value.split(',')
-                        if len(args) != 5:
+                        try:
+                            [term, port, address, hash] = value.split(',')
+                        except:
+                            print "argument error: {0} {1}".format(type, value)
                             continue
-                        term = args[0]
-                        port = args[1]
-                        address = args[2]
-                        hash = args[3]
                         if hash not in file_received:
                             content = term + ',' + 'error'
                             self.send_packet(type, content)
@@ -778,11 +783,11 @@ class Client:
                         self.send_packet(type, content)
                     elif type == TBframe.DEVICE_RESET or type == TBframe.DEVICE_START or type == TBframe.DEVICE_STOP:
                         operations = {TBframe.DEVICE_RESET:'reset', TBframe.DEVICE_START:'start', TBframe.DEVICE_STOP:'stop'}
-                        args = value.split(',')
-                        if len(args) != 3:
+                        try:
+                            [term, port] = value.split(',')
+                        except:
+                            print "argument error: {0} {1}".format(type, value)
                             continue
-                        term = args[0]
-                        port = args[1]
                         if os.path.exists(port) and port in self.devices:
                             if self.devices[port]['ucmd_queue'].full() == False:
                                 self.devices[port]['ucmd_queue'].put([type, term])

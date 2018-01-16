@@ -14,6 +14,7 @@ $(NAME)_COMPONENTS += yloop
 $(NAME)_SOURCES := core/atomic_c.c \
                    core/buf.c \
                    core/log.c \
+                   core/poll.c \
                    host/uuid.c \
                    host/hci_core.c \
                    core/tinycrypt/source/utils.c \
@@ -52,15 +53,15 @@ GLOBAL_DEFINES += CONFIG_BLE_50
 
 ## BLE debug log general control macro (Note: still to be affected by DEBUG)
 ## Enable below macros if BLE stack debug needed
-#GLOBAL_DEFINES += CONFIG_BLUETOOTH_DEBUG_LOG
-#GLOBAL_DEFINES += CONFIG_BLUETOOTH_DEBUG
+#GLOBAL_DEFINES += CONFIG_BT_DEBUG_LOG
+#GLOBAL_DEFINES += CONFIG_BT_DEBUG
 
 ## BLE subsystem debug log control macro
 ## Enable below macros if component-specific debug needed
-#GLOBAL_DEFINES += CONFIG_BLUETOOTH_DEBUG_L2CAP
-#GLOBAL_DEFINES += CONFIG_BLUETOOTH_DEBUG_CONN
-#GLOBAL_DEFINES += CONFIG_BLUETOOTH_DEBUG_ATT
-#GLOBAL_DEFINES += CONFIG_BLUETOOTH_DEBUG_GATT
-#GLOBAL_DEFINES += CONFIG_BLUETOOTH_DEBUG_HCI_DRIVER
-#GLOBAL_DEFINES += CONFIG_BLUETOOTH_DEBUG_HCI_CORE
-#GLOBAL_DEFINES += CONFIG_BLUETOOTH_DEBUG_CORE
+#GLOBAL_DEFINES += CONFIG_BT_DEBUG_L2CAP
+#GLOBAL_DEFINES += CONFIG_BT_DEBUG_CONN
+#GLOBAL_DEFINES += CONFIG_BT_DEBUG_ATT
+#GLOBAL_DEFINES += CONFIG_BT_DEBUG_GATT
+#GLOBAL_DEFINES += CONFIG_BT_DEBUG_HCI_DRIVER
+#GLOBAL_DEFINES += CONFIG_BT_DEBUG_HCI_CORE
+#GLOBAL_DEFINES += CONFIG_BT_DEBUG_CORE
