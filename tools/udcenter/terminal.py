@@ -1,7 +1,7 @@
 #!/usr/bin/python
 
-import os, sys, time, curses, socket, ssl, random
-import subprocess, thread, threading, pickle, traceback
+import os, sys, time, curses, socket, ssl, random, re
+import subprocess, thread, threading, json, traceback
 from operator import itemgetter
 import TBframe
 
@@ -41,7 +41,7 @@ class Terminal:
         self.alias_tuples = {}
         self.cmd_history = []
         self.last_runcmd_dev = []
-        self.uuid = '5a6ac4ae8785228b'
+        self.uuid = None
 
     def init(self):
         if os.path.exists('terminal') == False:
@@ -50,7 +50,7 @@ class Terminal:
         if os.path.exists('terminal/.alias') == True:
             try:
                 file = open('terminal/.alias','rb')
-                self.alias_tuples = pickle.load(file)
+                self.alias_tuples = json.load(file)
                 file.close()
             except:
                 print "read alias record failed"
@@ -58,10 +58,31 @@ class Terminal:
         if os.path.exists('terminal/.cmd_history') == True:
             try:
                 file = open('terminal/.cmd_history','rb')
-                self.cmd_history = pickle.load(file)
+                self.cmd_history = json.load(file)
                 file.close()
             except:
                 print "read command history failed"
+
+        if os.path.exists('terminal/.accesskey') == True:
+            try:
+                file = open('terminal/.accesskey','rb')
+                self.uuid = json.load(file)
+                file.close()
+            except:
+                print "read access key failed"
+        while self.uuid == None:
+            uuid = raw_input("please input your access key: ")
+            is_valid_uuid = re.match('^[0-9a-f]{10,20}$', uuid)
+            if is_valid_uuid == None:
+                print "invalid access key {0}, please enter a valid access key".format(uuid)
+                continue
+            self.uuid = uuid
+            try:
+                file = open('terminal/.accesskey','wb')
+                json.dump(self.uuid, file)
+                file.close()
+            except:
+                print "error: save access key to file failed"
 
         #initialize UI
         try:
@@ -358,7 +379,12 @@ class Terminal:
         #print 'controller', type, value
         rets = value.split(',')
         if type != TBframe.ACCESS_LOGIN or rets[0] != 'success':
-            self.cmdrun_status_display("login failed, ret={0}".format(value))
+            if rets[0] == 'invaliduuid':
+                self.cmdrun_status_display("login failed, invalid access key")
+                if os.path.exists('terminal/.accesskey'):
+                    os.remove('terminal/.accesskey')
+            else:
+                self.cmdrun_status_display("login failed, ret={0}".format(value))
             sock.close()
             return None
 
@@ -895,7 +921,7 @@ class Terminal:
             self.alias_tuples[alias[0]] = alias[1]
         try:
             file = open("terminal/.alias",'wb')
-            pickle.dump(self.alias_tuples, file, protocol=pickle.HIGHEST_PROTOCOL)
+            json.dump(self.alias_tuples, file)
             file.close()
         except:
             self.cmdrun_status_display("error: save alias record failed")
@@ -1082,15 +1108,15 @@ class Terminal:
         try:
             if len(self.cmd_history) > 0:
                 file = open("terminal/.cmd_history",'wb')
-                pickle.dump(self.cmd_history, file, protocol=pickle.HIGHEST_PROTOCOL)
+                json.dump(self.cmd_history, file)
                 file.close()
         except:
             self.cmdrun_status_display("error: save command history failed")
 
-    def terminal_func(self, server_ip, server_port):
+    def terminal_func(self, controller_ip, controller_port):
         ret = self.init()
         if ret == "success":
-            self.run(server_ip, server_port)
+            self.run(controller_ip, controller_port)
         if ret == "UI failed":
             print "initilize UI window failed, try increase your terminal window size first"
         self.deinit()
