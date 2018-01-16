@@ -51,7 +51,7 @@ static void test_spiffs_case(void)
         aos_close(fd);      
     }
 
-    /* Fatfs readdir test */
+    /* spiffs readdir test */
     fd = aos_open(g_dirtest_1, O_RDWR | O_CREAT | O_TRUNC);
     YUNIT_ASSERT(fd > 0);
     if (fd > 0)
@@ -133,12 +133,12 @@ static void teardown(void)
 }
 
 static yunit_test_case_t aos_spiffs_testcases[] = {
-    { "fatfs_test", test_spiffs_case},
+    { "spiffs_test", test_spiffs_case},
     YUNIT_TEST_CASE_NULL
 };
 
 static yunit_test_suite_t suites[] = {
-    { "fatfs", init, cleanup, setup, teardown, aos_spiffs_testcases },
+    { "spiffs", init, cleanup, setup, teardown, aos_spiffs_testcases },
     YUNIT_TEST_SUITE_NULL
 };
 
