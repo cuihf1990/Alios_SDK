@@ -46,7 +46,7 @@ struct k_delayed_work {
 void k_delayed_work_init(struct k_delayed_work *work, k_work_handler_t handler);
 int k_delayed_work_submit(struct k_delayed_work *work, uint32_t delay);
 int k_delayed_work_cancel(struct k_delayed_work *work);
-
+s32_t k_delayed_work_remaining_get(struct k_delayed_work *work);
 
 #ifdef __cplusplus
 }

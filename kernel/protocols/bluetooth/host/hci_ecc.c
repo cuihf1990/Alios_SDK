@@ -317,7 +317,8 @@ int default_CSPRNG(u8_t *dst, unsigned int len)
 
 void bt_hci_ecc_init(void)
 {
+        k_sem_init(&cmd_sem, 0, 1);
 	k_thread_create(&ecc_thread_data, ecc_thread_stack,
 			K_THREAD_STACK_SIZEOF(ecc_thread_stack), ecc_thread,
-			NULL, NULL, NULL, K_PRIO_PREEMPT(10), 0, K_NO_WAIT);
+			NULL, NULL, NULL, 41, 0, K_NO_WAIT);
 }
