@@ -1,7 +1,7 @@
 #!/usr/bin/python
 
 import os, sys, time, curses, socket, ssl, random
-import subprocess, thread, threading, pickle
+import subprocess, thread, threading, pickle, traceback
 from operator import itemgetter
 import TBframe
 
@@ -13,7 +13,7 @@ LOG_WINDOW_WIDTH  = 80
 LOG_HISTORY_LENGTH = 5000
 MOUSE_SCROLL_UP = 0x80000
 MOUSE_SCROLL_DOWN = 0x8000000
-ENCRYPT = True
+ENCRYPT = False
 DEBUG = True
 
 class ConnectionLost(Exception):
@@ -41,6 +41,7 @@ class Terminal:
         self.alias_tuples = {}
         self.cmd_history = []
         self.last_runcmd_dev = []
+        self.uuid = '5a6ac4ae8785228b'
 
     def init(self):
         if os.path.exists('terminal') == False:
@@ -320,10 +321,71 @@ class Terminal:
         devices.sort()
         return devices.index(devstr)
 
+    def login_and_get_server(self, controller_ip, controller_port):
+        sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        if ENCRYPT:
+            sock = ssl.wrap_socket(sock, cert_reqs=ssl.CERT_REQUIRED, ca_certs='server_cert.pem')
+        try:
+            sock.connect((controller_ip, controller_port))
+            sock.settimeout(3)
+            msg = ''
+        except:
+            if DEBUG: traceback.print_exc()
+            return None
+
+        content = TBframe.construct(TBframe.ACCESS_LOGIN, 'terminal,' + self.uuid)
+        try:
+            sock.send(content)
+        except:
+            if DEBUG: traceback.print_exc()
+            sock.close()
+            return None
+
+        try:
+            data = sock.recv(MAX_MSG_LENTH)
+        except KeyboardInterrupt:
+            sock.close()
+            raise
+        except:
+            sock.close()
+            return None
+
+        if data == '':
+            sock.close()
+            return None
+
+        type, length, value, data = TBframe.parse(data)
+        #print 'controller', type, value
+        rets = value.split(',')
+        if type != TBframe.ACCESS_LOGIN or rets[0] != 'success':
+            self.cmdrun_status_display("login failed, ret={0}".format(value))
+            sock.close()
+            return None
+
+        sock.close()
+        return rets[1:]
+
+    def connect_to_server(self, server_ip, server_port):
+        sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        if ENCRYPT:
+            sock = ssl.wrap_socket(sock, cert_reqs=ssl.CERT_REQUIRED, ca_certs='server_cert.pem')
+        try:
+            sock.connect((server_ip, server_port))
+            self.service_socket = sock
+            self.connected = True
+            return "success"
+        except:
+            return "fail"
+
     def server_interaction(self):
+        self.connected = False
+        self.service_socket = None
         msg = ''
         while self.keep_running:
             try:
+                if self.connected == False:
+                    raise ConnectionLost
+
                 new_msg = self.service_socket.recv(MAX_MSG_LENTH)
                 if new_msg == '':
                     raise ConnectionLost
@@ -341,12 +403,15 @@ class Terminal:
                             file.close()
                         filename = 'terminal/' + value
                         file = open(filename, 'w')
-                    elif type == TBframe.FILE_DATA:
+                        continue
+                    if type == TBframe.FILE_DATA:
                         if 'file' in locals() and file.closed == False:
                             file.write(value)
-                    elif type == TBframe.FILE_END:
+                        continue
+                    if type == TBframe.FILE_END:
                         if 'file' in locals():
                             file.close()
+                        continue
                     if type == TBframe.ALL_DEV:
                         new_list = {}
                         clients = value.split(':')
@@ -369,6 +434,7 @@ class Terminal:
                             if dev not in list(new_list):
                                 self.device_list.pop(dev)
                         self.device_list_display()
+                        continue
                     if type == TBframe.DEVICE_LOG:
                         dev = value.split(':')[0]
                         logtime = value.split(':')[1]
@@ -383,33 +449,51 @@ class Terminal:
                         if dev in self.log_subscribed:
                             log =  str(index) + log
                             self.log_display(logtime, log)
+                        continue
                     if type == TBframe.CMD_DONE:
                         self.cmd_excute_return = value
                         self.cmd_excute_state = 'done'
                         self.cmd_excute_event.set()
+                        continue
                     if type == TBframe.CMD_ERROR:
                         self.cmd_excute_return = value
                         self.cmd_excute_state = 'error'
                         self.cmd_excute_event.set()
+                        continue
+                    if type == TBframe.TERMINAL_LOGIN:
+                        if value == 'success':
+                            continue
+                        self.cmdrun_status_display("login to server failed, retry later ...")
+                        time.sleep(10)
+                        continue
             except ConnectionLost:
                 self.connected = False
-                self.cmdrun_status_display('connection to server lost, try reconnecting...')
-                self.service_socket.close()
-                self.service_socket = None
-                while True:
-                    result = self.connect_to_server(self.server_ip, self.server_port)
-                    if result == 'success':
-                        break
-                    time.sleep(1)
-                self.cmdrun_status_display('connection to server resumed')
-                random.seed()
-                time.sleep(1.2 + random.random())
-                for dev_str in self.log_subscribed:
-                    data = TBframe.construct(TBframe.LOG_SUB, dev_str)
-                    self.send_data(data)
-                for dev_str in self.using_list:
-                    data = TBframe.construct(TBframe.DEVICE_CMD, dev_str + ':help')
-                    self.send_data(data)
+                if self.service_socket != None:
+                    self.service_socket.close()
+                    self.service_socket = None
+                    self.cmdrun_status_display('connection to server lost, try reconnecting...')
+
+                result = self.login_and_get_server(self.controller_ip, self.controller_port)
+                if result == None:
+                    self.cmdrun_status_display('login to controller failed, retry later...')
+                    time.sleep(5)
+                    continue
+                else:
+                    [server_ip, server_port, token] = result
+                    server_port = int(server_port)
+                    self.cmdrun_status_display('login to controller succees, server_ip-{0} server_port-{1}'.format(server_ip, server_port))
+
+                result = self.connect_to_server(server_ip, server_port)
+                if result == 'success':
+                    self.cmdrun_status_display('connect to server succeeded')
+                else:
+                    self.cmdrun_status_display('connect to server failed, retry later ...')
+                    time.sleep(5)
+                    continue
+
+                data = self.uuid + ',' + token
+                data = TBframe.construct(TBframe.TERMINAL_LOGIN, data)
+                self.send_data(data)
             except:
                 if DEBUG:
                     raise
@@ -972,26 +1056,10 @@ class Terminal:
                     continue
                 self.cmdrun_command_display(cmd, p)
 
-    def connect_to_server(self, server_ip, server_port):
-        sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        if ENCRYPT:
-            sock = ssl.wrap_socket(sock, cert_reqs=ssl.CERT_REQUIRED, ca_certs='server_cert.pem')
-        try:
-            sock.connect((server_ip, server_port))
-            self.service_socket = sock
-            self.connected = True
-            return "success"
-        except:
-            return "fail"
-
-    def run(self, server_ip, server_port):
+    def run(self, controller_ip, controller_port):
         #connect to server
-        self.server_ip = server_ip
-        self.server_port = server_port
-        result = self.connect_to_server(server_ip, server_port)
-        if result != 'success':
-            print "connect to server {0}:{1} failed".format(server_ip, server_port)
-            return
+        self.controller_ip = controller_ip
+        self.controller_port = controller_port
         thread.start_new_thread(self.server_interaction, ())
         thread.start_new_thread(self.heartbeat_func, ())
         while self.keep_running:
@@ -1022,7 +1090,7 @@ class Terminal:
     def terminal_func(self, server_ip, server_port):
         ret = self.init()
         if ret == "success":
-            self.run(server_ip, server_port + 1)
+            self.run(server_ip, server_port)
         if ret == "UI failed":
             print "initilize UI window failed, try increase your terminal window size first"
         self.deinit()

@@ -60,7 +60,7 @@ class Controller():
                             'server':  self.server_process, 'terminal':self.terminal_process}
         self.keyfile = 'server_key.pem'
         self.certfile = 'server_cert.pem'
-        self.dbase = sql.connect('controller.db')
+        self.dbase = sql.connect('controller.db', check_same_thread = False)
         sqlcmd = 'CREATE TABLE IF NOT EXISTS Users(uuid TEXT, name TEXT, email TEXT, devices TEXT)'
         self.database_excute_sqlcmd(sqlcmd)
 
@@ -272,7 +272,7 @@ class Controller():
 
             server_addr = sock.getpeername()[0]
             server_port = self.connections[sock]['client_port']
-            content = 'ok,{0},{1},{2}'.format(server_addr, server_port, token)
+            content = 'success,{0},{1},{2}'.format(server_addr, server_port, token)
             content = TBframe.construct(TBframe.ACCESS_LOGIN, content)
             self.send_data(client_sock, content)
             return
@@ -282,27 +282,30 @@ class Controller():
             except:
                 if DEBUG: self.netlog_print("error: invalid return value {0}".format(repr(value)))
                 return
-            if ret != 'success':
-                return #TODO: choose another server for the client
 
-            client_sock = None
+            terminal_sock = None
             for conn in self.connections:
-                if self.connections[conn]['role'] != 'client':
+                if self.connections[conn]['role'] != 'terminal':
                     continue
                 if 'uuid' not in self.connections[conn]:
                     continue
                 if self.connections[conn]['uuid'] != uuid:
                     continue
-                client_sock = conn
+                terminal_sock = conn
                 break
-            if client_sock == None:
+            if terminal_sock == None:
+                return
+
+            if ret != 'success':
+                content = TBframe.construct(TBframe.ACCESS_LOGIN, 'fail')
+                self.send_data(terminal_sock, content)
                 return
 
             server_addr = sock.getpeername()[0]
-            server_port = self.connections[sock]['client_port']
-            content = 'ok,{0},{1},{2}'.format(server_addr, server_port, token)
+            server_port = self.connections[sock]['terminal_port']
+            content = 'success,{0},{1},{2}'.format(server_addr, server_port, token)
             content = TBframe.construct(TBframe.ACCESS_LOGIN, content)
-            self.send_data(client_sock, content)
+            self.send_data(terminal_sock, content)
             return
 
     def get_server_by_client_uuid(self, uuid):
@@ -321,7 +324,7 @@ class Controller():
         return None
 
     def terminal_process(self, sock, type, value):
-        self.netlog_print('terminal {0} {1}'.forma(type, value))
+        self.netlog_print('terminal {0} {1}'.format(type, value))
         if type == TBframe.ACCESS_LOGIN:
             is_valid_uuid = re.match('^[0-9a-f]{16}$', value)
             if is_valid_uuid == None:
@@ -350,7 +353,7 @@ class Controller():
 
             uuid = value
             token = self.generate_random_hexstr(16)
-            content = '{0},{1},{2},{3}'.format(uuid, token, client_uuid, devices)
+            content = '{0},{1},{2}'.format(uuid, token, devices)
             content = TBframe.construct(TBframe.ACCESS_ADD_TERMINAL, content)
             self.send_data(server_sock, content)
             self.connections[sock]['uuid'] = uuid
@@ -378,6 +381,7 @@ class Controller():
             for conn in list(self.timeouts):
                 if now < self.timeouts[conn]:
                     continue
+                role = self.connections[conn]['role']
                 self.netlog_print("{0} {1} timeout, close connection".format(role, conn.getpeername()))
                 self.selector.unregister(conn, selector.EVENT_READ)
                 self.selector.unregister(conn, selector.EVENT_WRITE)
