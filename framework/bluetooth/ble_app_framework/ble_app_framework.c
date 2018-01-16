@@ -10,6 +10,8 @@
 #define __packed __attribute__((__packed__))
 #endif
 
+struct bt_conn *default_conn;
+
 struct attr_info {
     /* hold the user-handle related to attr */
     uint16_t handle;
@@ -250,6 +252,8 @@ static int make_attr_and_svc(peripheral_hdl_t hdl)
         LOGE(MOD, "Failed to allocate memory for peripheral (%d)", hdl);
         return -1;
     }
+    memset(g_peri[hdl].attr, 0, sizeof(struct bt_gatt_attr) * attr_cnt);
+    memset(g_peri[hdl].itbl, 0, sizeof(struct attr_info) * attr_cnt);
 
     /* Make attr array */
     len = 0;
@@ -298,18 +302,20 @@ static int make_attr_and_svc(peripheral_hdl_t hdl)
             if (iter->len[0] == 4) { /* uuid16 */
                 struct bt_uuid_16 *tmp;
                 tmp = (struct bt_uuid_16 *)aos_malloc(sizeof(struct bt_uuid_16));
+                memset(tmp, 0, sizeof(struct bt_uuid_16));
                 tmp->uuid.type = BT_UUID_TYPE_16;
                 p = (uint8_t *)iter;
                 p += G_HEADER_SIZE;
-                memcpy(&tmp->val, p, 2);
+                tmp->val = (uint16_t)(*p & 0xff) + (((uint16_t)(*(p+1)) << 8) & 0xff00);
                 a->user_data = tmp;
             } else if (iter->len[0] == 18) { /* uui128 */
                 struct bt_uuid_128 *tmp;
                 tmp = (struct bt_uuid_128 *)aos_malloc(sizeof(struct bt_uuid_128));
+                memset(tmp, 0, sizeof(struct bt_uuid_128));
                 tmp->uuid.type = BT_UUID_TYPE_128;
                 p = (uint8_t *)iter;
                 p += G_HEADER_SIZE;
-                memcpy(&tmp->val, p, 16);
+                memcpy(tmp->val, p, 16);
                 a->user_data = tmp;
             } else {
                 LOGE(MOD, "Not supported service uuid for peripheral "
@@ -379,12 +385,14 @@ static int make_attr_and_svc(peripheral_hdl_t hdl)
                          __FILE__, __LINE__);
                     return -1;
                 }
+                memset(tmp, 0, sizeof(struct bt_gatt_chrc) + sizeof(struct bt_uuid_16));
                 tmp_uuid->uuid.type = BT_UUID_TYPE_16;
                 p = (uint8_t *)iter;
                 p += G_HEADER_SIZE;
-                memcpy(&tmp_uuid->val, p, 2);
-                tmp->uuid = (struct bt_uuid *)tmp_uuid;
                 tmp->properties = *p;
+                p += iter->len[0] - 2 - 2;
+                tmp_uuid->val = ((uint16_t)(*p) & 0xff) + ((((uint16_t)(*(p+1))) << 8) & 0xff00);
+                tmp->uuid = (struct bt_uuid *)tmp_uuid;
                 a->user_data = tmp;
                 a2->uuid = (struct bt_uuid *)tmp_uuid;
             } else if (iter->len[0] == 21) { /* uuid128 */
@@ -397,12 +405,14 @@ static int make_attr_and_svc(peripheral_hdl_t hdl)
                          __FILE__, __LINE__);
                     return -1;
                 }
+                memset(tmp, 0, sizeof(struct bt_gatt_chrc) + sizeof(struct bt_uuid_128));
                 tmp_uuid->uuid.type = BT_UUID_TYPE_128;
                 p = (uint8_t *)iter;
                 p += G_HEADER_SIZE;
-                memcpy(&tmp_uuid->val, p, 16);
-                tmp->uuid = (struct bt_uuid *)tmp_uuid;
                 tmp->properties = *p;
+                p += iter->len[0] - 2 - 16;
+                memcpy(tmp_uuid->val, p, 16);
+                tmp->uuid = (struct bt_uuid *)tmp_uuid;
                 a->user_data = tmp;
                 a2->uuid = (struct bt_uuid *)tmp_uuid;
             } else {
@@ -453,6 +463,91 @@ static int make_attr_and_svc(peripheral_hdl_t hdl)
     return 0;
 }
 
+static void connected(struct bt_conn *conn, uint8_t err)
+{
+    char addr[BT_ADDR_LE_STR_LEN];
+
+    bt_addr_le_to_str(bt_conn_get_dst(conn), addr, sizeof(addr));
+
+    if (err) {
+        printf("Failed to connect to %s (%u)\n", addr, err);
+        return;
+    }
+
+    default_conn = bt_conn_ref(conn);
+    printf("Connected %s\n", addr);
+
+    if (bt_conn_security(conn, BT_SECURITY_FIPS)) {
+        printf("Failed to set security\n");
+    }
+}
+
+static void disconnected(struct bt_conn *conn, uint8_t reason)
+{
+    char addr[BT_ADDR_LE_STR_LEN];
+
+    bt_addr_le_to_str(bt_conn_get_dst(conn), addr, sizeof(addr));
+
+    if (default_conn) {
+        bt_conn_unref(default_conn);
+        default_conn = NULL;
+    }
+
+    printf("Disconnected from %s (reason %u)\n", addr, reason);
+}
+
+static void identity_resolved(struct bt_conn *conn, const bt_addr_le_t *rpa,
+                              const bt_addr_le_t *identity)
+{
+    char addr_identity[BT_ADDR_LE_STR_LEN];
+    char addr_rpa[BT_ADDR_LE_STR_LEN];
+
+    bt_addr_le_to_str(identity, addr_identity, sizeof(addr_identity));
+    bt_addr_le_to_str(rpa, addr_rpa, sizeof(addr_rpa));
+
+    printf("Identity resolved %s -> %s\n", addr_rpa, addr_identity);
+}
+
+static void security_changed(struct bt_conn *conn, bt_security_t level)
+{
+    char addr[BT_ADDR_LE_STR_LEN];
+
+    bt_addr_le_to_str(bt_conn_get_dst(conn), addr, sizeof(addr));
+
+    printf("Security changed: %s level %u\n", addr, level);
+}
+
+static struct bt_conn_cb conn_callbacks = {
+    .connected = connected,
+    .disconnected = disconnected,
+    .identity_resolved = identity_resolved,
+    .security_changed = security_changed,
+};
+
+static void auth_passkey_display(struct bt_conn *conn, unsigned int passkey)
+{
+    char addr[BT_ADDR_LE_STR_LEN];
+
+    bt_addr_le_to_str(bt_conn_get_dst(conn), addr, sizeof(addr));
+
+    printf("Passkey for %s: %u\n", addr, passkey);
+}
+
+static void auth_cancel(struct bt_conn *conn)
+{
+    char addr[BT_ADDR_LE_STR_LEN];
+
+    bt_addr_le_to_str(bt_conn_get_dst(conn), addr, sizeof(addr));
+
+    printf("Pairing cancelled: %s\n", addr);
+}
+
+static struct bt_conn_auth_cb auth_cb_display = {
+    .passkey_display = auth_passkey_display,
+    .passkey_entry = NULL,
+    .cancel = auth_cancel,
+};
+
 void ble_adv_start
 (
     ble_adv_complete_cb_t adv_handler,
@@ -470,7 +565,7 @@ void ble_adv_start
 
     struct bt_data sd[] = {
         BT_DATA(BT_DATA_NAME_COMPLETE, g_peri[hdl].dev_name,
-                strlen(g_peri[hdl].dev_name)),
+                strlen(g_peri[0].dev_name)),
     };
 
     strncpy(g_peri[hdl].manu_name, manufacture,
@@ -478,10 +573,17 @@ void ble_adv_start
 
     if (make_attr_and_svc(hdl) != 0) return;
 #ifdef CONFIG_BLE_50
-    bt_gatt_service_register(&(g_peri[hdl].svc));
+    err = bt_gatt_service_register(&(g_peri[hdl].svc));
+    if (err != 0) {
+        LOGE(MOD, "Failed to bt_gatt_service_register");
+        return;
+    }
 #else
     bt_gatt_register(g_peri[hdl].attr, g_peri[hdl].attr_num);
 #endif
+
+    bt_conn_auth_cb_register(&auth_cb_display);
+    bt_conn_cb_register(&conn_callbacks);
 
     err = bt_le_adv_start(BT_LE_ADV_CONN, ad, ARRAY_SIZE(ad),
                           sd, ARRAY_SIZE(sd));
@@ -514,6 +616,7 @@ ble_attr_add
         LOGE(MOD, "Failed to alloca memory %s %d", __FILE__, __LINE__);
         return NULL;
     }
+    memset(vattr, 0, sizeof(ble_gatt_attr_t));
 
     vattr->handle = handle;
     vattr->this_node.next = NULL;
