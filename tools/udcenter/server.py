@@ -16,8 +16,9 @@ class Server:
     def __init__(self):
         self.keyfile = 'server_key.pem'
         self.certfile = 'server_cert.pem'
-        self.client_socket = 0
-        self.terminal_socket = 0
+        self.client_socket = None
+        self.terminal_socket = None
+        self.controller_socket = None
         self.clients = {}
         self.terminals = {}
         self.conn_timeout = {}
@@ -94,17 +95,20 @@ class Server:
                             data = TBframe.construct(TBframe.CLIENT_LOGIN, 'success')
                             conn.send(data)
                             self.conn_timeout[conn]['timeout'] = time.time() + 30
+                            self.report_status_to_controller()
                             print "client {0} connected @ {1}, tag={2}".format(uuid, addr, repr(tag))
                         continue
 
                     self.conn_timeout[conn]['timeout'] = time.time() + 30
                     if type == TBframe.CLIENT_DEV:
                         new_devices = value.split(':')
+                        device_list_changed = False
                         for port in new_devices:
                             if port == "":
                                 continue
                             if port in client['devices'] and client['devices'][port]['valid'] == True:
                                 continue
+                            device_list_changed = True
                             if port not in client['devices']:
                                 print "new device {0} added to client {1}".format(port, client['uuid'])
                                 client['devices'][port] = {
@@ -128,12 +132,16 @@ class Server:
                                 continue
                             if client['devices'][port]['valid'] == False:
                                 continue
+                            device_list_changed = True
                             client['devices'][port]['status'] = '{}'
                             client['devices'][port]['valid'] = False
                             print "device {0} removed from client {1}".format(port, client['uuid'])
                             dev_str = client['uuid'] + ':' + port
                             if dev_str in self.device_subscribe_map:
                                 self.send_device_list_to_terminal(self.device_subscribe_map[dev_str])
+
+                        if device_list_changed:
+                            self.report_status_to_controller()
 
                         for port in list(file):
                             if client['devices'][port]['valid'] == True:
@@ -226,9 +234,14 @@ class Server:
                 client['devices'][port]['status'] = '{}'
                 client['devices'][port]['valid'] = False
                 print "device {0} removed from client {1}".format(port, client['uuid'])
+                dev_str = client['uuid'] + ':' + port
+                if dev_str not in self.device_subscribe_map:
+                    continue
+                uuid = self.device_subscribe_map[dev_str]
+                self.send_device_list_to_terminal(uuid)
             client['valid'] = False
             print "client {0} @ {1} disconnected".format(client['uuid'], addr)
-            self.send_device_list_to_all()
+            self.report_status_to_controller()
         else:
             print "client @ {0} disconnected".format(addr)
 
@@ -408,6 +421,7 @@ class Server:
                             self.conn_timeout[conn]['timeout'] = time.time() + 30
                             print "terminal {0} connected @ {1}".format(uuid, addr)
                             self.send_device_list_to_terminal(terminal['uuid'])
+                            self.report_status_to_controller()
                         continue
 
                     self.conn_timeout[conn]['timeout'] = time.time() + 30
@@ -485,7 +499,9 @@ class Server:
         conn.close()
         if conn in self.conn_timeout: self.conn_timeout.pop(conn)
         print "terminal", addr, "disconnected"
-        if terminal: terminal['valid'] = False
+        if terminal:
+            terminal['valid'] = False
+            self.report_status_to_controller()
 
     def client_listen_thread(self):
         self.client_socket.listen(5)
@@ -510,7 +526,32 @@ class Server:
             except:
                 traceback.print_exc()
 
-    def contoller_interact_thread(self, contoller_ip, controller_port):
+    def report_status_to_controller(self):
+        if self.controller_socket == None:
+            return
+        clients = []; devices = []; terminals = []
+        for uuid in self.clients:
+            if self.clients[uuid]['valid'] == False:
+                continue
+            clients += [uuid]
+            device_list = self.clients[uuid]['devices']
+            for port in device_list:
+                if device_list[port]['valid'] == False:
+                    continue
+                dev_str = uuid + ':' + port
+                devices += [dev_str]
+        for uuid in self.terminals:
+            if self.terminals[uuid]['valid'] == False:
+                continue
+            terminals += [uuid]
+        status = {'clients':clients, 'devices':devices, 'terminals': terminals}
+        content = TBframe.construct(TBframe.ACCESS_REPORT_STATUS, json.dumps(status))
+        try:
+            self.controller_socket.send(content)
+        except:
+            pass
+
+    def controller_interact_thread(self, controller_ip, controller_port):
         sock = None; logedin = False; status_timeout = False
         while self.keep_running:
             if sock == None: #connect to controller
@@ -518,12 +559,13 @@ class Server:
                 if ENCRYPT_CONTROLLER:
                     sock = ssl.wrap_socket(sock, cert_reqs=ssl.CERT_REQUIRED, ca_certs='server_cert.pem')
                 try:
-                    sock.connect((contoller_ip, controller_port))
+                    sock.connect((controller_ip, controller_port))
                     msg = ''; logedin = False; status_timeout = None
                     sock.settimeout(1)
                 except:
                     if DEBUG: traceback.print_exc()
                     sock = None; logedin = False; status_timeout = None
+                    self.controller_socket = sock
                     time.sleep(2)
                     continue
 
@@ -536,30 +578,7 @@ class Server:
                         sock.send(content)
                     except:
                         sock = None; logedin = False; status_timeout = None
-                        continue
-                if status_timeout and time.time() > status_timeout:
-                    clients = []; devices = []; terminals = []
-                    for uuid in self.clients:
-                        if self.clients[uuid]['valid'] == False:
-                            continue
-                        clients += [uuid]
-                        device_list = self.clients[uuid]['devices']
-                        for port in device_list:
-                            if device_list[port]['valid'] == False:
-                                continue
-                            dev_str = uuid + ':' + port
-                            devices += [dev_str]
-                    for uuid in self.terminals:
-                        if self.terminals[uuid]['valid'] == False:
-                            continue
-                        terminals += [uuid]
-                    status = {'clients':clients, 'devices':devices, 'terminals': terminals}
-                    content = TBframe.construct(TBframe.ACCESS_REPORT_STATUS, json.dumps(status))
-                    status_timeout += 10
-                    try:
-                        sock.send(content)
-                    except:
-                        sock = None; logedin = False; status_timeout = None
+                        self.controller_socket = sock
                         continue
 
                 try:
@@ -568,16 +587,18 @@ class Server:
                     continue
                 except:
                     sock = None; logedin = False; status_timeout = None
+                    self.controller_socket = sock
                     break
                 if not data:
-                    print("error: connection to contoller lost")
+                    print("error: connection to controller lost")
                     sock = None; logedin = False; status_timeout = None
+                    self.controller_socket = sock
                     break
 
                 msg += data
                 while msg != '':
                     type, length, value, msg = TBframe.parse(msg)
-                    #print time.time(), 'contoller', type, value
+                    #print time.time(), 'controller', type, value
                     if type == TBframe.TYPE_NONE:
                         break
 
@@ -585,6 +606,8 @@ class Server:
                         if value == 'ok':
                             logedin = True
                             status_timeout = time.time() + 10
+                            self.controller_socket = sock
+                            self.report_status_to_controller()
                         else:
                             time.sleep(5)
                         continue
@@ -612,6 +635,7 @@ class Server:
                             sock.send(content)
                         except:
                             sock = None; logedin = False; status_timeout = None
+                            self.controller_socket = sock
                         continue
                     if type == TBframe.ACCESS_DEL_CLIENT:
                         uuid = value
@@ -655,6 +679,7 @@ class Server:
                             sock.send(content)
                         except:
                             sock = None; logedin = False; status_timeout = None
+                            self.controller_socket = sock
                         continue
                     if type == TBframe.ACCESS_DEL_TERMINAL:
                         continue
@@ -801,7 +826,7 @@ class Server:
         try:
             thread.start_new_thread(self.client_listen_thread, ())
             thread.start_new_thread(self.terminal_listen_thread, ())
-            thread.start_new_thread(self.contoller_interact_thread, ('localhost', 34567,))
+            thread.start_new_thread(self.controller_interact_thread, ('localhost', 34567,))
             thread.start_new_thread(self.house_keeping_thread, ())
             while True:
                 time.sleep(0.1)
@@ -826,8 +851,10 @@ class Server:
             if 'socket' not in self.terminals[uuid]:
                 continue
             sockets.append(self.terminals[uuid]['socket'])
-        sockets.append(self.client_socket)
-        sockets.append(self.terminal_socket)
+        for sock in [self.client_socket, self.terminal_socket, self.controller_socket]:
+            if not sock:
+                continue
+            sockets.append(sock)
         for sock in sockets:
             try:
                 sock.close()
