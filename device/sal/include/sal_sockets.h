@@ -118,15 +118,15 @@ struct addrinfo {
 
 #define MEMP_NUM_NETCONN     5//(MAX_SOCKETS_TCP + MAX_LISTENING_SOCKETS_TCP + MAX_SOCKETS_UDP)
 
+#ifndef SAL_SOCKET_OFFSET
+#define  SAL_SOCKET_OFFSET 0  
+#endif
+
 /* FD_SET used for event_select */
 #ifndef FD_SET
 #undef  FD_SETSIZE
 /* Make FD_SETSIZE match NUM_SOCKETS in socket.c */
 #define FD_SETSIZE    MEMP_NUM_NETCONN
-
-#ifndef SAL_SOCKET_OFFSET
-#define  SAL_SOCKET_OFFSET 0  
-#endif
 
 #define FDSETSAFESET(n, code) do { \
   if (((n) - SAL_SOCKET_OFFSET < MEMP_NUM_NETCONN) && (((int)(n) - SAL_SOCKET_OFFSET) >= 0)) { \
