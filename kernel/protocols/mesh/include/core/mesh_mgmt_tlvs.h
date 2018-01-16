@@ -7,7 +7,7 @@
 
 #include "ip/ip.h"
 #ifdef CONFIG_AOS_MESH_AUTH
-#include "auth_mgmt.h"
+#include "auth_dot1x.h"
 #endif
 
 /* mesh managememt TLV types. */

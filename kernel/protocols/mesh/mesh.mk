@@ -61,6 +61,8 @@ endif
 
 MESHAUTH ?= 0
 ifeq ($(MESHAUTH), 1)
+$(NAME)_SOURCES += src/core/security/auth_dot1x.c
+$(NAME)_SOURCES += src/core/security/auth_eap.c
 $(NAME)_SOURCES += src/core/security/auth_mgmt.c
 $(NAME)_SOURCES += src/core/security/auth_relay.c
 GLOBAL_DEFINES += CONFIG_AOS_MESH_AUTH

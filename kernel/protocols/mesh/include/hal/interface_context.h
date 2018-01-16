@@ -31,8 +31,6 @@ typedef enum auth_state_s {
     AUTH_REQUEST_START,
     AUTH_RELAY_CHALLENGE,
     AUTH_RELAY_AUTH_CODE,
-    AUTH_RELAY_AUTH_RESULT,
-    AUTH_RECV_CHALLENGE,
     AUTH_DONE,
 } auth_state_t;
 

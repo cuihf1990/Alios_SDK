@@ -41,10 +41,7 @@ typedef enum mm_command_s {
     COMMAND_ADDRESS_UNREACHABLE     = 0x14,
     COMMAND_ADDRESS_ERROR           = 0x15,
     COMMAND_ROUTING_INFO_UPDATE     = 0x16,
-    COMMAND_AUTH_REQUEST            = 0x17,
-    COMMAND_AUTH_RESPONSE           = 0x18,
-    COMMAND_AUTH_RELAY              = 0x19,
-    COMMAND_AUTH_ACK                = 0x1a,
+    COMMAND_AUTH_DOT1X              = 0x17,
 
     // diags command
     COMMAND_TRACE_ROUTE_REQUEST     = 0x71,
