@@ -73,7 +73,6 @@ extern "C" {
 // #if defined(AOS_CONFIG_VFS_DEV_NODES)
 // #define SAL_SOCKET_OFFSET              AOS_CONFIG_VFS_DEV_NODES
 // #endif
-#define  SAL_SOCKET_OFFSET      0
 
 #define NETDB_ELEM_SIZE           (sizeof(struct addrinfo) + sizeof(struct sockaddr_storage) + DNS_MAX_NAME_LENGTH + 1)
 
