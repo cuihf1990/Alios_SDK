@@ -62,6 +62,7 @@ $(NAME)_SOURCES     += main/main.c
 $(NAME)_SOURCES     += main/hw.c
 $(NAME)_SOURCES     += main/wifi_port.c
 $(NAME)_SOURCES     += main/ota_port.c
+$(NAME)_SOURCES     += main/nand.c
 
 ifneq (,$(filter modules.fs.fatfs,$(COMPONENTS)))
 $(NAME)_SOURCES     += main/sdmmc.c
