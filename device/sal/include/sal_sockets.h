@@ -123,6 +123,11 @@ struct addrinfo {
 #undef  FD_SETSIZE
 /* Make FD_SETSIZE match NUM_SOCKETS in socket.c */
 #define FD_SETSIZE    MEMP_NUM_NETCONN
+
+#ifndef SAL_SOCKET_OFFSET
+#define  SAL_SOCKET_OFFSET 0  
+#endif
+
 #define FDSETSAFESET(n, code) do { \
   if (((n) - SAL_SOCKET_OFFSET < MEMP_NUM_NETCONN) && (((int)(n) - SAL_SOCKET_OFFSET) >= 0)) { \
   code; }} while(0)
