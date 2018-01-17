@@ -17,7 +17,7 @@ void krhino_tick_proc(void)
     tick_list_update(1);
 
 #if (RHINO_CONFIG_SCHED_RR > 0)
-    time_slice_update(g_active_task[cpu_cur_get()]->prio);
+    time_slice_update();
 #endif
 }
 

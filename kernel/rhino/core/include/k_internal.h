@@ -127,7 +127,7 @@ void ready_list_add_tail(runqueue_t *rq, ktask_t *task);
 void ready_list_rm(runqueue_t *rq, ktask_t *task);
 void ready_list_head_to_tail(runqueue_t *rq, ktask_t *task);
 
-void time_slice_update(uint8_t task_pri);
+void time_slice_update(void);
 void timer_task_sched(void);
 
 void pend_list_reorder(ktask_t *task);
