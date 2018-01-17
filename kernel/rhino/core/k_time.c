@@ -16,31 +16,20 @@ void krhino_tick_proc(void)
 
     tick_list_update();
 
-#if (RHINO_CONFIG_DYNTICKLESS == 0)
 #if (RHINO_CONFIG_SCHED_RR > 0)
     time_slice_update(g_active_task[cpu_cur_get()]->prio);
-#endif
 #endif
 }
 
 sys_time_t krhino_sys_tick_get(void)
 {
-    sys_time_t tick_tmp;
-
-#if (RHINO_CONFIG_DYNTICKLESS > 0)
-    tick_t elapsed_ticks;
-
     CPSR_ALLOC();
 
+    sys_time_t tick_tmp;
+
     RHINO_CPU_INTRPT_DISABLE();
-
-    elapsed_ticks = soc_elapsed_ticks_get();
-    tick_tmp = g_sys_time_tick + (sys_time_t)(elapsed_ticks);
-
-    RHINO_CPU_INTRPT_ENABLE();
-#else
     tick_tmp = g_sys_time_tick;
-#endif
+    RHINO_CPU_INTRPT_ENABLE();
 
     return tick_tmp;
 }

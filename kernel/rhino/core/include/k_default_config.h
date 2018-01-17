@@ -151,10 +151,6 @@
 #define RHINO_CONFIG_HW_COUNT                0
 #endif
 
-#ifndef RHINO_CONFIG_DYNTICKLESS
-#define RHINO_CONFIG_DYNTICKLESS             0
-#endif
-
 #ifndef RHINO_CONFIG_TICKS_PER_SECOND
 #define RHINO_CONFIG_TICKS_PER_SECOND        100
 #endif
@@ -272,10 +268,6 @@
 
 #if ((RHINO_CONFIG_TIMER >= 1) && (RHINO_CONFIG_BUF_QUEUE == 0))
 #error  "RHINO_CONFIG_BUF_QUEUE should be 1 when RHINO_CONFIG_TIMER is enabled."
-#endif
-
-#if ((RHINO_CONFIG_DYNTICKLESS >= 1) && (RHINO_CONFIG_SCHED_RR != 0))
-#error  "RHINO_CONFIG_SCHED_RR should be 0 when RHINO_CONFIG_DYNTICKLESS is enabled."
 #endif
 
 #if ((RHINO_CONFIG_MM_TLF >= 1) && (RHINO_CONFIG_MM_BLK == 0))

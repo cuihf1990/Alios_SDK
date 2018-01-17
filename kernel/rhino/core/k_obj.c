@@ -42,12 +42,6 @@ kbuf_queue_t     g_timer_queue;
 k_timer_queue_cb timer_queue_cb[RHINO_CONFIG_TIMER_MSG_NUM];
 #endif
 
-#if (RHINO_CONFIG_DYNTICKLESS > 0)
-tick_t       g_next_intrpt_ticks;
-tick_t       g_pend_intrpt_ticks;
-tick_t       g_elapsed_ticks;
-#endif
-
 #if (RHINO_CONFIG_DISABLE_SCHED_STATS > 0)
 hr_timer_t   g_sched_disable_time_start;
 hr_timer_t   g_sched_disable_max_time;
