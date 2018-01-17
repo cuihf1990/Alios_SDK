@@ -99,18 +99,27 @@ static int adv_complete_cb(void *arg)
 
 }
 
-#define BLE_DEVICE_NAME "BleAdvertismentsSampleDevice"
-#define MANUFACURE_NAME "BleAdvertisementsSampleManufacture"
+#define DEVICE_MANUFACURE_NAME "BleAdvertisementsSampleManufacture"
+#define DEVICE_MODEL_NUM "BleAdvertismentsSampleDeviceModel"
+static uint8_t sys_id[] = {0x12, 0x34};
+
 static void app_delayed_action(void *arg)
 {
     peripheral_hdl_t hdl;
 
-    peripheral_init_t p = {BLE_DEVICE_NAME, 0, 1};
+    peripheral_init_t p = {CONFIG_BT_DEVICE_NAME, 0, 1};
 
     hdl = ble_peripheral_init(&p, connection_handler, disconnection_handler,
                               adv_gatt_db, sizeof(adv_gatt_db));
 
-    ble_adv_start(adv_complete_cb, MANUFACURE_NAME, hdl);
+    ble_adv_start(adv_complete_cb, DEVICE_MANUFACURE_NAME, hdl);
+
+    ble_attr_add(HDLC_DEV_INFO_MFR_NAME_VALUE,
+                 sizeof(DEVICE_MANUFACURE_NAME) - 1, DEVICE_MANUFACURE_NAME);
+    ble_attr_add(HDLC_DEV_INFO_MODEL_NUM_VALUE,
+                 sizeof(DEVICE_MODEL_NUM) - 1, DEVICE_MODEL_NUM);
+    ble_attr_add(HDLC_DEV_INFO_SYSTEM_ID_VALUE, sizeof(sys_id),
+                 (const uint8_t *)&sys_id);
 }
 
 int application_start( void )
@@ -118,5 +127,4 @@ int application_start( void )
     aos_post_delayed_action(1000, app_delayed_action, NULL);
     aos_loop_run();
     return 0;
-
 }
