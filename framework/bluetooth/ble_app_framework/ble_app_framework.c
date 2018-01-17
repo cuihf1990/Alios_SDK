@@ -223,8 +223,8 @@ static int make_attr_and_svc(peripheral_hdl_t hdl)
 #endif
                 attr_cnt += 2; /* 1 for c, one for c-v */
                 p = (uint8_t *)iter + G_HEADER_SIZE; /* Properties offset */
-                if ((*p | LEGATTDB_CHAR_PROP_NOTIFY) || \
-                    (*p | LEGATTDB_CHAR_PROP_INDICATE)) {
+                if ((*p & LEGATTDB_CHAR_PROP_NOTIFY) || \
+                    (*p & LEGATTDB_CHAR_PROP_INDICATE)) {
                     attr_cnt++; /* attr entry for CCC */
                 }
 #ifdef CONFIG_BLE_50
@@ -462,8 +462,8 @@ static int make_attr_and_svc(peripheral_hdl_t hdl)
 
             /* Deal with CCC if any */
             p = (uint8_t *)iter + G_HEADER_SIZE; /* Properties offset */
-            if ((*p | LEGATTDB_CHAR_PROP_NOTIFY) || \
-                (*p | LEGATTDB_CHAR_PROP_INDICATE)) {
+            if ((*p & LEGATTDB_CHAR_PROP_NOTIFY) || \
+                (*p & LEGATTDB_CHAR_PROP_INDICATE)) {
                 struct _bt_gatt_ccc *c = (struct _bt_gatt_ccc *)aos_malloc(\
                                          sizeof(struct _bt_gatt_ccc) + \
                                          sizeof(struct bt_gatt_ccc_cfg) * \
