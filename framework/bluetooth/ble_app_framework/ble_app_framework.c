@@ -158,6 +158,18 @@ static struct bt_uuid *include_svc_uuid = BT_UUID_GATT_SECONDARY;
 static struct bt_uuid *chrc_uuid = BT_UUID_GATT_CHRC;
 static struct bt_uuid *ccc_uuid = BT_UUID_GATT_CCC;
 
+static void ccc_cfg_changed(const struct bt_gatt_attr *attr,
+                                 u16_t value)
+{
+    LOGI(MOD, "Cfg changed, attr.handle is %d, "
+         "value is %d", attr->handle, value);
+
+    if(value == BT_GATT_CCC_NOTIFY)
+        LOGI(MOD, "Cfg changed, value is BT_GATT_CCC_NOTIFY");
+    if(value == BT_GATT_CCC_INDICATE)
+        LOGI(MOD, "Cfg changed, value is BT_GATT_CCC_INDICATE");
+}
+
 static int make_attr_and_svc(peripheral_hdl_t hdl)
 {
     uint8_t *db = g_peri[hdl].db, *p;
@@ -210,12 +222,18 @@ static int make_attr_and_svc(peripheral_hdl_t hdl)
             LOGD(MOD, "A characteristic item found.");
 
 #ifdef CONFIG_BLE_50
-            if (!attr_ignore_flag) 
+            if (!attr_ignore_flag) {
 #endif
-                attr_cnt += 2; /* 1 for c, one for c-v, do we need ccc? <TODO> */
+                attr_cnt += 2; /* 1 for c, one for c-v */
+                p = (uint8_t *)iter + G_HEADER_SIZE; /* Properties offset */
+                if ((*p & LEGATTDB_CHAR_PROP_NOTIFY) || \
+                    (*p & LEGATTDB_CHAR_PROP_INDICATE)) {
+                    attr_cnt++; /* attr entry for CCC */
+                }
 #ifdef CONFIG_BLE_50
-            else
+            } else {
                 LOGD(MOD, "GAP/GATT characteristic, ignore it.");
+            }
 #endif
 
             p = (uint8_t *)iter;
@@ -244,7 +262,6 @@ static int make_attr_and_svc(peripheral_hdl_t hdl)
                  "(type: 0x%04x)!!!", iter->type);
             return -1;
         }
-        LOGD(MOD, "After a new round, iter addr is %p", iter);
     }
 
     LOGI(MOD, "%d attributes added.", attr_cnt);
@@ -444,6 +461,45 @@ static int make_attr_and_svc(peripheral_hdl_t hdl)
             }
 
             attr_idx += 2;
+
+            /* Deal with CCC if any */
+            p = (uint8_t *)iter + G_HEADER_SIZE; /* Properties offset */
+            if ((*p & LEGATTDB_CHAR_PROP_NOTIFY) || \
+                (*p & LEGATTDB_CHAR_PROP_INDICATE)) {
+                LOGD(MOD, "Adding a CCC attribute.");
+
+                struct _bt_gatt_ccc *c = (struct _bt_gatt_ccc *)aos_malloc(\
+                                         sizeof(struct _bt_gatt_ccc) + \
+                                         sizeof(struct bt_gatt_ccc_cfg) * \
+                                         BT_GATT_CCC_MAX);
+                struct bt_gatt_ccc_cfg *c_cfg;
+                if (!c) {
+                    LOGE(MOD, "%s %d malloc failed", __FILE__, __LINE__);
+                    return -1;
+                }
+
+                memset(c, 0, sizeof(struct _bt_gatt_ccc) + \
+                       sizeof(struct bt_gatt_ccc_cfg) * BT_GATT_CCC_MAX);
+                c_cfg = (struct bt_gatt_ccc_cfg *)((uint8_t *)c +
+                        sizeof(struct _bt_gatt_ccc));
+                c->cfg = c_cfg;
+                c->cfg_len = BT_GATT_CCC_MAX;
+                c->cfg_changed = ccc_cfg_changed;
+
+                a = &(g_peri[hdl].attr)[attr_idx];
+                a->uuid = ccc_uuid;
+                a->perm = BT_GATT_PERM_READ | BT_GATT_PERM_WRITE;
+                a->read = bt_gatt_attr_read_ccc;
+                a->write = bt_gatt_attr_write_ccc;
+                a->user_data = c;
+
+                g_peri[hdl].itbl[attr_idx].handle = -1; /* Special handle for CCC */
+
+                LOGD(MOD, "CCC handle (0x%04x, idx: %d) added in attr info table.",
+                     g_peri[hdl].itbl[attr_idx].handle, attr_idx);
+
+                attr_idx++;
+            }
 
 #ifdef CONFIG_BLE_50
             } /* if (!attr_ignore_flag) */
@@ -789,7 +845,7 @@ static void indicate_cb
     if (err != 0) {
         LOGE(MOD, "Indication fail (err: %d, %p).", err, attr);
     } else {
-        LOGD(MOD, "Indication success (%p).", attr);
+        LOGI(MOD, "Indication success (%p).", attr);
     }
 }
 

@@ -117,24 +117,33 @@ static void indicate_handler(void *arg)
     struct indicate_arg_s *ind = (struct indicate_arg_s *)arg;
     long long time = aos_now_ms();
 
-    ble_attr_indicate(ind->attr, ind->hdl, sizeof(time), (uint8_t *)&time);
+    ble_attr_notify(ind->attr, ind->hdl, sizeof(time), (uint8_t *)&time);
     aos_post_delayed_action(1000, indicate_handler, arg);
 }
 
-#define BLE_DEVICE_NAME "TestDevice"
-#define MANUFACURE_NAME "TestManufacture"
+#define DEVICE_MANUFACURE_NAME "BleAdvertisementsSampleManufacture"
+#define DEVICE_MODEL_NUM "BleAdvertismentsSampleDeviceModel"
+static uint8_t sys_id[] = {0x12, 0x34};
+
 int application_start( void )
 {
     peripheral_hdl_t hdl;
     ble_gatt_attr_t *attr;
     struct indicate_arg_s ind_arg;
 
-    peripheral_init_t p = {BLE_DEVICE_NAME, 0, 1};
+    peripheral_init_t p = {CONFIG_BT_DEVICE_NAME, 0, 1};
 
     hdl = ble_peripheral_init(&p, connection_handler, disconnection_handler,
                               adv_gatt_db, sizeof(adv_gatt_db));
 
-    ble_adv_start(adv_complete_cb, MANUFACURE_NAME, hdl);
+    ble_adv_start(adv_complete_cb, DEVICE_MANUFACURE_NAME, hdl);
+
+    ble_attr_add(HDLC_DEV_INFO_MFR_NAME_VALUE,
+                 sizeof(DEVICE_MANUFACURE_NAME) - 1, DEVICE_MANUFACURE_NAME);
+    ble_attr_add(HDLC_DEV_INFO_MODEL_NUM_VALUE,
+                 sizeof(DEVICE_MODEL_NUM) - 1, DEVICE_MODEL_NUM);
+    ble_attr_add(HDLC_DEV_INFO_SYSTEM_ID_VALUE, sizeof(sys_id),
+                 (const uint8_t *)&sys_id);
 
     attr = ble_attr_add(HDLC_TIME_OUT_VALUE, 0, NULL);
 
