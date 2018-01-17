@@ -161,10 +161,13 @@ static struct bt_uuid *ccc_uuid = BT_UUID_GATT_CCC;
 static void ccc_cfg_changed(const struct bt_gatt_attr *attr,
                                  u16_t value)
 {
-    LOGI(MOD, "Cfg changed, value is %d", value);
+    LOGI(MOD, "Cfg changed, attr.handle is %d, "
+         "value is %d", attr->handle, value);
 
     if(value == BT_GATT_CCC_NOTIFY)
         LOGI(MOD, "Cfg changed, value is BT_GATT_CCC_NOTIFY");
+    if(value == BT_GATT_CCC_INDICATE)
+        LOGI(MOD, "Cfg changed, value is BT_GATT_CCC_INDICATE");
 }
 
 static int make_attr_and_svc(peripheral_hdl_t hdl)
@@ -259,7 +262,6 @@ static int make_attr_and_svc(peripheral_hdl_t hdl)
                  "(type: 0x%04x)!!!", iter->type);
             return -1;
         }
-        LOGD(MOD, "After a new round, iter addr is %p", iter);
     }
 
     LOGI(MOD, "%d attributes added.", attr_cnt);
@@ -464,6 +466,8 @@ static int make_attr_and_svc(peripheral_hdl_t hdl)
             p = (uint8_t *)iter + G_HEADER_SIZE; /* Properties offset */
             if ((*p & LEGATTDB_CHAR_PROP_NOTIFY) || \
                 (*p & LEGATTDB_CHAR_PROP_INDICATE)) {
+                LOGD(MOD, "Adding a CCC attribute.");
+
                 struct _bt_gatt_ccc *c = (struct _bt_gatt_ccc *)aos_malloc(\
                                          sizeof(struct _bt_gatt_ccc) + \
                                          sizeof(struct bt_gatt_ccc_cfg) * \
@@ -488,6 +492,11 @@ static int make_attr_and_svc(peripheral_hdl_t hdl)
                 a->read = bt_gatt_attr_read_ccc;
                 a->write = bt_gatt_attr_write_ccc;
                 a->user_data = c;
+
+                g_peri[hdl].itbl[attr_idx].handle = -1; /* Special handle for CCC */
+
+                LOGD(MOD, "CCC handle (0x%04x, idx: %d) added in attr info table.",
+                     g_peri[hdl].itbl[attr_idx].handle, attr_idx);
 
                 attr_idx++;
             }
