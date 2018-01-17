@@ -255,14 +255,7 @@ kstat_t krhino_task_sleep(tick_t ticks)
     }
 
     g_active_task[cur_cpu_num]->task_state = K_SLEEP;
-
-#if (RHINO_CONFIG_DYNTICKLESS > 0)
-    g_elapsed_ticks = soc_elapsed_ticks_get();
-    tick_list_insert(g_active_task[cur_cpu_num], ticks + g_elapsed_ticks);
-#else
     tick_list_insert(g_active_task[cur_cpu_num], ticks);
-#endif
-
     ready_list_rm(&g_ready_queue, g_active_task[cur_cpu_num]);
 
     TRACE_TASK_SLEEP(g_active_task[cur_cpu_num], ticks);
