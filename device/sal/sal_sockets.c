@@ -1632,7 +1632,7 @@ static void sal_packet_output(void *arg)
         
     while(true){
         //if there is packet to be send in the mbox ,then send it 
-        if (sal_arch_mbox_fetch(&sal_xmit_mbox, &outputmem, 0) != SAL_ARCH_TIMEOUT){
+        if (sal_arch_mbox_fetch(&sal_xmit_mbox, (void **)&outputmem, 0) != SAL_ARCH_TIMEOUT){
             if (outputmem == NULL){
                 continue;
             }

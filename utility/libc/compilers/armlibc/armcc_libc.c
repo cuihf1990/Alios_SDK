@@ -7,6 +7,8 @@
 #include <sys/time.h>
 #include "k_config.h"
 
+int errno;
+
 #if defined (__CC_ARM) && defined(__MICROLIB)
 void __aeabi_assert(const char *expr, const char *file, int line)
 {

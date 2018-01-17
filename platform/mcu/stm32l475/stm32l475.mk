@@ -51,7 +51,7 @@ GLOBAL_CFLAGS += -mcpu=cortex-m4 \
 endif
 
 ifeq ($(COMPILER),armcc)
-GLOBAL_ASMFLAGS += --cpu=7E-M -g --apcs=interwork --pd "__MICROLIB SETA 1" --pd "STM32L475xx SETA 1"
+GLOBAL_ASMFLAGS += --cpu=7E-M -g --apcs=interwork -D__MICROLIB -DSTM32L475xx
 else ifeq ($(COMPILER),iar)
 GLOBAL_ASMFLAGS += --cpu Cortex-M4 \
                    --cpu_mode thumb \
