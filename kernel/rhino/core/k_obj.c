@@ -27,7 +27,6 @@ cpu_stack_t  g_idle_task_stack[RHINO_CONFIG_CPU_NUM][RHINO_CONFIG_IDLE_TASK_STAC
 /* tick attribute */
 tick_t       g_tick_count;
 klist_t      g_tick_head;
-sys_time_t   g_sys_time_tick;
 
 #if (RHINO_CONFIG_SYSTEM_STATS > 0)
 kobj_list_t  g_kobj_list;
