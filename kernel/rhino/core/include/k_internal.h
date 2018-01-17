@@ -28,7 +28,6 @@ extern cpu_stack_t  g_idle_task_stack[RHINO_CONFIG_CPU_NUM][RHINO_CONFIG_IDLE_TA
 /* tick attribute */
 extern tick_t     g_tick_count;
 extern klist_t    g_tick_head;
-extern sys_time_t g_sys_time_tick;
 
 #if (RHINO_CONFIG_SYSTEM_STATS > 0)
 extern kobj_list_t g_kobj_list;
@@ -146,7 +145,7 @@ void tick_list_init(void);
 void tick_task_start(void);
 void tick_list_rm(ktask_t *task);
 void tick_list_insert(ktask_t *task, tick_t time);
-void tick_list_update(void);
+void tick_list_update(tick_i_t ticks);
 
 uint8_t mutex_pri_limit(ktask_t *tcb, uint8_t pri);
 void    mutex_task_pri_reset(ktask_t *tcb);

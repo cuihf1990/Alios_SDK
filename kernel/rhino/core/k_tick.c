@@ -54,7 +54,7 @@ void tick_list_rm(ktask_t *task)
     }
 }
 
-void tick_list_update(void)
+void tick_list_update(tick_i_t ticks)
 {
     CPSR_ALLOC();
 
@@ -66,8 +66,7 @@ void tick_list_update(void)
 
     RHINO_CRITICAL_ENTER();
 
-    g_tick_count++;
-    g_sys_time_tick++;
+    g_tick_count += ticks;
 
     tick_head_ptr = &g_tick_head;
     iter          =  tick_head_ptr->next;
