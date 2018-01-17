@@ -371,7 +371,22 @@ static int make_attr_and_svc(peripheral_hdl_t hdl)
             p = (uint8_t *)iter;
             p += G_HEADER_SIZE + iter->len[0] -2;
             c = (struct db_char_hdr *)p;
-            a2->perm = c->perm[0];
+            LOGD(MOD, "c->perm[0]: %d", c->perm[0]);
+            switch (c->perm[0] & LEGATTDB_PERM_MASK) {
+                case LEGATTDB_PERM_NONE:
+                    a2->perm = BT_GATT_PERM_NONE;
+                    break;
+                case LEGATTDB_PERM_READABLE:
+                    a2->perm = BT_GATT_PERM_READ;
+                    break;
+                case LEGATTDB_PERM_WRITABLE:
+                    a2->perm = BT_GATT_PERM_WRITE;
+                    break;
+                default:
+                    LOGW(MOD, "Unsupported chrc permission, default to READ.");
+                    a2->perm = BT_GATT_PERM_READ;
+                    break;
+            }
 
             /* characteristic value handle into attr info table */
             //memcpy(g_peri[hdl].itbl[attr_idx+1].handle, c->val_handle, 2);
@@ -607,6 +622,44 @@ void ble_adv_stop()
     bt_le_adv_stop();
 }
 
+static ssize_t vattr_read
+(
+struct bt_conn *conn,
+const struct bt_gatt_attr *attr,
+void *buf,
+u16_t len,
+u16_t offset
+)
+{
+    void *value = attr->user_data;
+    uint16_t val_len = 0, attr_idx = 0;
+    peripheral_hdl_t hdl = 0; /* <TODO> */
+
+    if (attr->perm & BT_GATT_PERM_READ == 0) {
+        LOGE(MOD, "READ is not supported for this attribute.");
+        return 0;
+    }
+
+    if (attr->user_data == NULL) {
+        LOGI(MOD, "No data to read for this attribute");
+        return 0;
+    }
+
+    for (attr_idx = 0; attr_idx < g_peri[hdl].attr_num; attr_idx++) {
+        if (attr == &(g_peri[hdl].attr[attr_idx])) break;
+    }
+
+    if (attr_idx >= g_peri[hdl].attr_num) {
+        LOGE(MOD, "No corresponding attribute entry found.");
+        return 0;
+    }
+
+    val_len = g_peri[hdl].itbl[attr_idx].user_data_len;
+    LOGD(MOD, "Data length to read is %d", val_len);
+
+    return bt_gatt_attr_read(conn, attr, buf, len, offset, value, val_len);
+}
+
 ble_gatt_attr_t *
 ble_attr_add
 (
@@ -671,6 +724,12 @@ ble_attr_add
     struct bt_gatt_attr *a = &(g_peri[hdl].attr[i]);
     a->user_data = (void *)val;
     g_peri[hdl].itbl[i].user_data_len = val_len;
+    if (a->read != NULL) {
+        LOGW(MOD, "There is already a read func for this attr. Do you really "
+             "want to add one more? Something may be wrong?");
+    } else {
+        a->read = vattr_read;
+    }
 
     return vattr;
 }
