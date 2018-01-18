@@ -191,8 +191,6 @@ static int make_attr_and_svc(peripheral_hdl_t hdl)
         return -1;
     }
 
-    LOGD(MOD, "db addr: %p, iter addr: %p", db, iter);
-
     /* get attr count */
     while ((uint32_t)iter < (uint32_t)(db + db_len)) {
         if (TYPE_CMP(iter->type, GATT_UUID_PRI_SERVICE) || /* primary service */
@@ -389,21 +387,17 @@ static int make_attr_and_svc(peripheral_hdl_t hdl)
             p += G_HEADER_SIZE + iter->len[0] -2;
             c = (struct db_char_hdr *)p;
             LOGD(MOD, "c->perm[0]: %d", c->perm[0]);
-            switch (c->perm[0] & LEGATTDB_PERM_MASK) {
-                case LEGATTDB_PERM_NONE:
-                    a2->perm = BT_GATT_PERM_NONE;
-                    break;
-                case LEGATTDB_PERM_READABLE:
-                    a2->perm = BT_GATT_PERM_READ;
-                    break;
-                case LEGATTDB_PERM_WRITABLE:
-                    a2->perm = BT_GATT_PERM_WRITE;
-                    break;
-                default:
-                    LOGW(MOD, "Unsupported chrc permission, default to READ.");
-                    a2->perm = BT_GATT_PERM_READ;
-                    break;
+            uint8_t perm = c->perm[0] & LEGATTDB_PERM_MASK;
+            if ((perm == LEGATTDB_PERM_NONE) || ((perm & \
+                (LEGATTDB_PERM_READABLE|LEGATTDB_PERM_WRITABLE)) == 0)) {
+                a2->perm = BT_GATT_PERM_NONE;
+            } else {
+                if (perm & LEGATTDB_PERM_READABLE)
+                    a2->perm |= BT_GATT_PERM_READ;
+                if (perm & LEGATTDB_PERM_WRITABLE)
+                    a2->perm |= BT_GATT_PERM_WRITE;
             }
+            LOGD(MOD, "Perimission for this attribute: %d", a2->perm);
 
             /* characteristic value handle into attr info table */
             //memcpy(g_peri[hdl].itbl[attr_idx+1].handle, c->val_handle, 2);
@@ -678,17 +672,37 @@ void ble_adv_stop()
     bt_le_adv_stop();
 }
 
+static uint16_t find_val_len_by_attr
+(
+    const struct bt_gatt_attr *attr,
+    peripheral_hdl_t hdl
+)
+{
+    uint16_t attr_idx;
+
+    for (attr_idx = 0; attr_idx < g_peri[hdl].attr_num; attr_idx++) {
+        if (attr == &(g_peri[hdl].attr[attr_idx])) break;
+    }
+
+    if (attr_idx >= g_peri[hdl].attr_num) {
+        LOGE(MOD, "No corresponding attribute entry found.");
+        return -1;
+    }
+
+    return g_peri[hdl].itbl[attr_idx].user_data_len;
+}
+
 static ssize_t vattr_read
 (
-struct bt_conn *conn,
-const struct bt_gatt_attr *attr,
-void *buf,
-u16_t len,
-u16_t offset
+    struct bt_conn *conn,
+    const struct bt_gatt_attr *attr,
+    void *buf,
+    uint16_t len,
+    uint16_t offset
 )
 {
     void *value = attr->user_data;
-    uint16_t val_len = 0, attr_idx = 0;
+    uint16_t val_len = 0;
     peripheral_hdl_t hdl = 0; /* <TODO> */
 
     if (attr->perm & BT_GATT_PERM_READ == 0) {
@@ -701,19 +715,50 @@ u16_t offset
         return 0;
     }
 
-    for (attr_idx = 0; attr_idx < g_peri[hdl].attr_num; attr_idx++) {
-        if (attr == &(g_peri[hdl].attr[attr_idx])) break;
-    }
+    if ((val_len = find_val_len_by_attr(attr, hdl)) == -1)
+        return 0;
+    else
+        LOGD(MOD, "Data length to read is %d", val_len);
 
-    if (attr_idx >= g_peri[hdl].attr_num) {
-        LOGE(MOD, "No corresponding attribute entry found.");
+    return bt_gatt_attr_read(conn, attr, buf, len, offset, value, val_len);
+}
+
+static ssize_t vattr_write
+(
+    struct bt_conn *conn,
+    const struct bt_gatt_attr *attr,
+    const void *buf,
+    uint16_t len,
+    uint16_t offset,
+    uint8_t flags
+)
+{
+    uint8_t *value = attr->user_data;
+    uint16_t val_len = 0;
+    peripheral_hdl_t hdl = 0; /* <TODO> */
+
+    if (attr->perm & BT_GATT_PERM_WRITE == 0) {
+        LOGE(MOD, "WRITE is not supported for this attribute.");
         return 0;
     }
 
-    val_len = g_peri[hdl].itbl[attr_idx].user_data_len;
-    LOGD(MOD, "Data length to read is %d", val_len);
+    if (attr->user_data == NULL) {
+        LOGI(MOD, "Not writable for this attribute");
+        return 0;
+    }
 
-    return bt_gatt_attr_read(conn, attr, buf, len, offset, value, val_len);
+    if ((val_len = find_val_len_by_attr(attr, hdl)) == -1)
+        return 0;
+    else
+        LOGD(MOD, "Max writable data length is %d", val_len);
+
+    if (offset + len > val_len) {
+        return BT_GATT_ERR(BT_ATT_ERR_INVALID_OFFSET);
+    }
+
+    memcpy(value + offset, buf, len);
+
+    return len;
 }
 
 ble_gatt_attr_t *
@@ -782,9 +827,15 @@ ble_attr_add
     g_peri[hdl].itbl[i].user_data_len = val_len;
     if (a->read != NULL) {
         LOGW(MOD, "There is already a read func for this attr. Do you really "
-             "want to add one more? Something may be wrong?");
+             "want to add one more? Something may be wrong!");
     } else {
         a->read = vattr_read;
+    }
+    if (a->write != NULL) {
+        LOGW(MOD, "There is already a write func for this attr. Do you really "
+             "want to add one more? Something may be wrong!");
+    } else {
+        a->write = vattr_write;
     }
 
     return vattr;
