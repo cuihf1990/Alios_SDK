@@ -154,7 +154,7 @@ $(NAME)_SOURCES := src/B-L475E-IOT01/runapp/stm32l4xx_hal_msp.c      \
 
 ifeq ($(COMPILER),armcc)
 $(NAME)_SOURCES += src/B-L475E-IOT01/runapp/startup_stm32l475xx_armcc.s
-$(NAME)_LINK_FILES += src/B-L475E-IOT01/runapp/startup_stm32l475xx_armcc.o
+$(NAME)_LINK_FILES := src/B-L475E-IOT01/runapp/startup_stm32l475xx_armcc.o
 else ifeq ($(COMPILER),iar)
 $(NAME)_SOURCES += src/B-L475E-IOT01/runapp/startup_stm32l475xx_icc.s
 else
