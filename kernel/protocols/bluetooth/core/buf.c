@@ -69,17 +69,35 @@ static struct {
     u8_t ud[ROUND_UP(CONFIG_BT_L2CAP_TX_USER_DATA_SIZE, 4)] __net_buf_align;
 } _net_buf_acl_tx_pool_name[CONFIG_BT_L2CAP_TX_BUF_COUNT];
 
-struct net_buf_pool hci_cmd_pool = NET_BUF_POOL_INITIALIZER(hci_cmd_pool, \
+#ifdef CONFIG_BT_MESH
+#define BT_MESH_ADV_DATA_SIZE 29
+#define BT_MESH_ADV_USER_DATA_SIZE 4
+static struct {
+    struct net_buf buf;
+    u8_t data[BT_MESH_ADV_DATA_SIZE] __net_buf_align;
+    u8_t ud[ROUND_UP(BT_MESH_ADV_USER_DATA_SIZE, 4)] __net_buf_align;
+} _net_buf_adv_buf_pool_name[CONFIG_BT_MESH_ADV_BUF_COUNT];
+#endif
+
+struct net_buf_pool hci_cmd_pool __net_buf_align = NET_BUF_POOL_INITIALIZER(hci_cmd_pool, \
                                   _net_buf_hci_cmd_pool_name, CONFIG_BT_HCI_CMD_COUNT, \
                                   CMD_BUF_SIZE, sizeof(struct cmd_data), NULL);
-struct net_buf_pool hci_rx_pool = NET_BUF_POOL_INITIALIZER(hci_rx_pool, \
+struct net_buf_pool hci_rx_pool __net_buf_align = NET_BUF_POOL_INITIALIZER(hci_rx_pool, \
                                   _net_buf_hci_rx_pool_name, CONFIG_BT_RX_BUF_COUNT, \
                                   BT_BUF_RX_SIZE, BT_BUF_USER_DATA_MIN, NULL);
-struct net_buf_pool acl_tx_pool = NET_BUF_POOL_INITIALIZER(acl_tx_pool, \
+struct net_buf_pool acl_tx_pool __net_buf_align = NET_BUF_POOL_INITIALIZER(acl_tx_pool, \
                                   _net_buf_acl_tx_pool_name, CONFIG_BT_L2CAP_TX_BUF_COUNT, \
                                   BT_L2CAP_BUF_SIZE(CONFIG_BT_L2CAP_TX_MTU), \
                                   CONFIG_BT_L2CAP_TX_USER_DATA_SIZE, NULL);
+#ifdef CONFIG_BT_MESH
+struct net_buf_pool adv_buf_pool __net_buf_align = NET_BUF_POOL_INITIALIZER(adv_buf_pool, \
+                                  _net_buf_adv_buf_pool_name, CONFIG_BT_MESH_ADV_BUF_COUNT, \
+                                  BT_MESH_ADV_DATA_SIZE, BT_MESH_ADV_USER_DATA_SIZE, NULL);
+
+struct net_buf_pool *net_buf_pool_list[] = { &hci_cmd_pool, &hci_rx_pool, &acl_tx_pool, &adv_buf_pool };
+#else
 struct net_buf_pool *net_buf_pool_list[] = { &hci_cmd_pool, &hci_rx_pool, &acl_tx_pool };
+#endif
 
 struct net_buf_pool *net_buf_pool_get(int id)
 {

@@ -6,8 +6,6 @@
 #include <common/log.h>
 #include "errno.h"
 
-struct timer *g_timer_list;
-
 #if defined(__cplusplus)
 extern "C"
 {
@@ -62,7 +60,7 @@ void k_work_submit(struct k_work *work)
     k_work_submit_to_queue(&g_work_queue_main, work);
 }
 
-static void work_timeout(void *args)
+static void work_timeout(void *timer, void *args)
 {
     struct k_delayed_work *w = (struct k_delayed_work *)args;
 
@@ -125,6 +123,7 @@ int k_delayed_work_submit(struct k_delayed_work *work, uint32_t delay)
 {
     return k_delayed_work_submit_to_queue(&g_work_queue_main, work, delay);
 }
+
 int k_delayed_work_cancel(struct k_delayed_work *work)
 {
     int key = irq_lock();
@@ -148,6 +147,23 @@ int k_delayed_work_cancel(struct k_delayed_work *work)
     irq_unlock(key);
 
     return 0;
+}
+
+s32_t k_delayed_work_remaining_get(struct k_delayed_work *work)
+{
+    int32_t remain;
+    k_timer_t *timer;
+
+    if (work == NULL) {
+        return 0;
+    }
+
+    timer = &work->timer;
+    remain = timer->timeout - (aos_now_ms() - timer->start_ms);
+    if (remain < 0) {
+        remain = 0;
+    }
+    return remain;
 }
 
 #if defined(__cplusplus)

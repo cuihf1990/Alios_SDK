@@ -58,7 +58,14 @@ typedef ksem_t  _sem_t;
 typedef ktask_t _task_t;
 typedef cpu_stack_t _stack_element_t;
 
-#define _K_SEM_INITIALIZER(obj, initial_count, count_limit)  { 0 }
+#define _K_SEM_INITIALIZER(obj, initial_count, count_limit)  { }
+
+#define K_SEM_INITIALIZER DEPRECATED_MACRO _K_SEM_INITIALIZER
+
+#define K_SEM_DEFINE(name, initial_count, count_limit) \
+        struct k_sem name \
+                __in_section(_k_sem, static, name) = \
+                _K_SEM_INITIALIZER(name, initial_count, count_limit)
 
 /* Log define*/
 enum {
@@ -70,7 +77,24 @@ enum {
     LOG_LEVEL_DEBUG,
     LOG_LEVEL_MAX_BIT
 };
-#define BT_MOD  "ZEPHYRBT"
+#define BT_MOD  "AOSBT"
+
+#ifdef CONFIG_OBJECT_TRACING
+#define _OBJECT_TRACING_NEXT_PTR(type) struct type *__next
+#define _OBJECT_TRACING_INIT .__next = NULL,
+#else
+#define _OBJECT_TRACING_INIT
+#define _OBJECT_TRACING_NEXT_PTR(type)
+#endif
+
+#ifdef CONFIG_POLL
+#define _POLL_EVENT_OBJ_INIT(obj) \
+        .poll_events = SYS_DLIST_STATIC_INIT(&obj.poll_events),
+#define _POLL_EVENT sys_dlist_t poll_events
+#else
+#define _POLL_EVENT_OBJ_INIT(obj)
+#define _POLL_EVENT
+#endif
 
 #define SYS_LOG_DBG(...) LOGD(BT_MOD,##__VA_ARGS__)
 #define SYS_LOG_INF(...) LOGI(BT_MOD,##__VA_ARGS__)
@@ -80,6 +104,18 @@ enum {
 
 #define LIFO_DEBUG 0
 #define FIFO_DEBUG 0
+
+#if 0
+#define _K_QUEUE_INITIALIZER(obj) \
+        { \
+        .wait_q = SYS_DLIST_STATIC_INIT(&obj.wait_q), \
+        .data_q = SYS_SLIST_STATIC_INIT(&obj.data_q), \
+        _POLL_EVENT_OBJ_INIT(obj) \
+        _OBJECT_TRACING_INIT \
+        }
+
+#define K_QUEUE_INITIALIZER DEPRECATED_MACRO _K_QUEUE_INITIALIZER
+#endif
 
 /* lifo define*/
 struct k_lifo {
@@ -141,6 +177,21 @@ void k_lifo_put(struct k_lifo *lifo, void *data);
  */
 void *k_lifo_get(struct k_lifo *lifo, tick_t timeout);
 
+#if 0
+#define _K_FIFO_INITIALIZER(obj) \
+        { \
+        ._queue = _K_QUEUE_INITIALIZER(obj._queue) \
+        }
+#endif
+#define _K_FIFO_INITIALIZER(obj) { 0 }
+
+#define K_FIFO_INITIALIZER DEPRECATED_MACRO _K_FIFO_INITIALIZER
+
+#define K_FIFO_DEFINE(name) \
+        struct k_fifo name \
+                __in_section(_k_queue, static, name) = \
+                _K_FIFO_INITIALIZER(name)
+
 /* fifo define*/
 struct k_fifo {
     _queue_t* _queue;
@@ -150,10 +201,6 @@ struct k_fifo {
     int32_t count;
 #endif
 };
-
-#define _K_FIFO_INITIALIZER(obj)  { 0 }
-
-#define K_FIFO_INITIALIZER DEPRECATED_MACRO _K_FIFO_INITIALIZER
 
 /**
  * @brief Initialize a fifo.
@@ -200,7 +247,7 @@ void *k_fifo_get(struct k_fifo *fifo, tick_t timeout);
 
 /* sem define*/
 struct k_sem {
-    _sem_t *sem;
+    _sem_t sem;
     sys_dlist_t poll_events;
 };
 
@@ -278,12 +325,13 @@ int k_sem_delete(struct k_sem *sem);
  */
 unsigned int k_sem_count_get(struct k_sem *sem);
 
-typedef void (*k_timer_handler_t)(void *arg);
+typedef void (*k_timer_handler_t)(void *timer, void *args);
 typedef struct k_timer {
-    void *timer;
+    ktimer_t timer;
     k_timer_handler_t handler;
     void *args;
-	uint32_t timeout;
+    uint32_t timeout;
+    uint32_t start_ms;
 } k_timer_t;
 
 /**
@@ -322,6 +370,8 @@ void k_timer_stop(k_timer_t *timer);
 #define MSEC_PER_SEC 1000
 #define K_MSEC(ms)     (ms)
 #define K_SECONDS(s)   K_MSEC((s) * MSEC_PER_SEC)
+#define K_MINUTES(m)   K_SECONDS((m) * 60)
+#define K_HOURS(h)     K_MINUTES((h) * 60)
 
 #define K_PRIO_COOP(x)  x
 
@@ -331,6 +381,10 @@ void k_timer_stop(k_timer_t *timer);
  * @return time(in milliseconds)
  */
 int64_t k_uptime_get();
+inline u32_t k_uptime_get_32(void)
+{
+    return (u32_t)krhino_sys_time_get();
+}
 
 struct k_thread {
     _task_t *task;

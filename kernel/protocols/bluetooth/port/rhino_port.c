@@ -241,10 +241,10 @@ int k_sem_init(struct k_sem *sem, unsigned int initial_count, unsigned int limit
         return -EINVAL;
     }
 
-    ret = krhino_sem_dyn_create(&sem->sem, "", limit);
+    ret = krhino_sem_create(&sem->sem, "", limit);
 
     if (RHINO_SUCCESS == ret && initial_count != limit) {
-        ret = krhino_sem_count_set(sem->sem, (sem_count_t)initial_count);
+        ret = krhino_sem_count_set(&sem->sem, (sem_count_t)initial_count);
     }
     sys_dlist_init(&sem->poll_events);
 
@@ -263,7 +263,7 @@ int k_sem_take(struct k_sem *sem, uint32_t timeout)
         t =  krhino_ms_to_ticks(timeout);
     }
 
-    return krhino_sem_take(sem->sem, t);
+    return krhino_sem_take(&sem->sem, t);
 }
 
 int k_sem_give(struct k_sem *sem)
@@ -273,7 +273,7 @@ int k_sem_give(struct k_sem *sem)
         return -EINVAL;
     }
 
-    return krhino_sem_give(sem->sem);
+    return krhino_sem_give(&sem->sem);
 }
 
 int k_sem_delete(struct k_sem *sem)
@@ -285,7 +285,7 @@ int k_sem_delete(struct k_sem *sem)
         return -EINVAL;
     }
 
-    ret = krhino_sem_dyn_del(sem->sem);
+    ret = krhino_sem_del(&sem->sem);
 
     if (RHINO_SUCCESS != ret) {
         BT_ERR("delete sem fail,%d", ret);
@@ -296,7 +296,7 @@ int k_sem_delete(struct k_sem *sem)
 
 unsigned int k_sem_count_get(struct k_sem *sem)
 {
-    return sem->sem->count;
+    return sem->sem.count;
 }
 
 int64_t k_uptime_get()
@@ -348,28 +348,69 @@ void _SysFatalErrorHandler(unsigned int reason,
 {
 };
 
+#define ms2tick(ms) \
+    ((ms * RHINO_CONFIG_TICKS_PER_SECOND + 999) / 1000)
+
 void k_timer_init(k_timer_t *timer, k_timer_handler_t handle, void *args)
 {
     ASSERT(timer, "timer is NULL");
     BT_DBG("timer %p,handle %p,args %p", timer, handle, args);
     timer->handler = handle;
     timer->args = args;
-    timer->timer = NULL;
+    krhino_timer_create(&timer->timer, "bttimer", timer->handler, ms2tick(1000), ms2tick(1000), timer->args, 0);
 }
 
 void k_timer_start(k_timer_t *timer, uint32_t timeout)
 {
     ASSERT(timer, "timer is NULL");
     BT_DBG("timer %p,timeout %u", timer, timeout);
-	timer->timeout = timeout;
-    aos_post_delayed_action(timeout, timer->handler, timer->args);
+    timer->timeout = timeout;
+    timer->start_ms = aos_now_ms();
+    krhino_timer_change(&timer->timer, ms2tick(timeout), ms2tick(timeout));
+    krhino_timer_start(&timer->timer);
 }
 
 void k_timer_stop(k_timer_t *timer)
 {
     ASSERT(timer, "timer is NULL");
     BT_DBG("timer %p", timer);
-    aos_cancel_delayed_action(timer->timeout,timer->handler, timer->args);
+    krhino_timer_stop(&timer->timer);
+}
+
+void k_sleep(s32_t duration)
+{
+    aos_msleep(duration);
+}
+
+
+unsigned int find_msb_set(u32_t data)
+{
+    uint32_t count = 0;
+    uint32_t mask = 0x80000000;
+
+    if (!data) {
+        return 0;
+    }
+    while((data & mask) == 0) {
+        count += 1u;
+        mask = mask >> 1u;
+    }
+    return (32 - count);
+}
+
+unsigned int find_lsb_set(u32_t data)
+{
+    uint32_t count = 0;
+    uint32_t mask = 0x00000001;
+
+    if (!data) {
+        return 0;
+    }
+    while((data & mask) == 0) {
+        count += 1u;
+        mask = mask >> 1u;
+    }
+    return (32 - count);
 }
 
 #if defined(__cplusplus)

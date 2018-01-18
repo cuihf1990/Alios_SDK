@@ -167,7 +167,7 @@ static bool polling_events(struct k_poll_event *events, int num_events,
         if (is_condition_met(&events[ii], &state)) {
             set_event_ready(&events[ii], state);
             polling = false;
-        } else if (timeout != K_NO_WAIT) {
+        } else if (timeout != K_NO_WAIT && polling) {
             rc = register_event(&events[ii], NULL);
             if (rc == 0) {
                 ++(*last_registered);

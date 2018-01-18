@@ -11,12 +11,19 @@ $(NAME)_INCLUDES += core/tinycrypt/include \
 
 $(NAME)_COMPONENTS += yloop
 
+ifeq ($(bt_mesh), 1)
+$(NAME)_COMPONENTS += protocols.bluetooth.host.bt_mesh
+$(NAME)_INCLUDES += include/bluetooth/mesh
+GLOBAL_DEFINES += CONFIG_BT_MESH
+endif
+
 $(NAME)_SOURCES := core/atomic_c.c \
                    core/buf.c \
                    core/log.c \
                    core/poll.c \
                    host/uuid.c \
                    host/hci_core.c \
+                   host/hci_ecc.c \
                    core/tinycrypt/source/utils.c \
                    core/tinycrypt/source/sha256.c \
                    core/tinycrypt/source/hmac.c \
@@ -33,6 +40,10 @@ $(NAME)_SOURCES := core/atomic_c.c \
                    core/rpa.c \
                    core/work.c \
                    port/rhino_port.c
+
+$(NAME)_SOURCES += host/hci_ecc.c \
+                   core/tinycrypt/source/ecc.c \
+                   core/tinycrypt/source/ecc_dh.c
 
 ifeq ($(hci_h4),1)
 $(NAME)_SOURCES += hci_drivers/h4.c
