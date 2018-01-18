@@ -821,12 +821,12 @@ class Server:
             os.mkdir('server')
         return "success"
 
-    def run(self):
+    def run(self, host_name, host_port):
         signal.signal(signal.SIGINT, signal_handler)
         try:
             thread.start_new_thread(self.client_listen_thread, ())
             thread.start_new_thread(self.terminal_listen_thread, ())
-            thread.start_new_thread(self.controller_interact_thread, ('localhost', 34567,))
+            thread.start_new_thread(self.controller_interact_thread, (host_name, host_port,))
             thread.start_new_thread(self.house_keeping_thread, ())
             while True:
                 time.sleep(0.1)
@@ -861,7 +861,7 @@ class Server:
             except:
                 pass
 
-    def server_func(self, server_port):
+    def server_func(self, host_name, host_port):
         if self.init() == "success":
-            self.run()
+            self.run(host_name, host_port)
         self.deinit()
