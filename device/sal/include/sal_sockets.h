@@ -7,6 +7,7 @@
 
 #include <stddef.h> /* for size_t */
 #include <sys/time.h>
+#include <sys/select.h>
 
 #ifdef __cplusplus
 extern "C" {
