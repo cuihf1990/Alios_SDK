@@ -10,14 +10,17 @@
 #define __packed __attribute__((__packed__))
 #endif
 
-struct bt_conn *default_conn;
-
 struct attr_info {
     /* hold the user-handle related to attr */
     uint16_t handle;
     /* user_data length info related to bt_gatt_attr.user_data*/
     uint16_t user_data_len; /* used by value attr */
 };
+
+typedef struct peri_cb_s {
+    ble_peripheral_conn_cb_t connected;
+    ble_peripheral_disconn_cb_t disconnected;
+} peri_cb_t;
 
 #define BLE_PERI_HDL_MAX 1 /* support only 1 peripheral */
 #define DEV_NAME_MAX_LEN 32
@@ -44,6 +47,7 @@ typedef struct ble_peri_s {
 #endif
     char dev_name[DEV_NAME_MAX_LEN];
     char manu_name[MANUFACTURE_NAME_MAX_LEN];
+    peri_cb_t cb;
 } ble_peri_t;
 
 static uint32_t g_ble_hdl = 0;
@@ -89,6 +93,8 @@ ble_peripheral_init
     g_peri[hdl].db = (uint8_t *)gatt_db;
     g_peri[hdl].db_len = db_len;
     strncpy(g_peri[hdl].dev_name, p->dev_name, sizeof(g_peri[hdl].dev_name) - 1);
+    g_peri[hdl].cb.connected = c;
+    g_peri[hdl].cb.disconnected = disc;
 
     LOG("BLE Peripheral initialization completed");
 
@@ -538,6 +544,7 @@ static int make_attr_and_svc(peripheral_hdl_t hdl)
 static void connected(struct bt_conn *conn, uint8_t err)
 {
     char addr[BT_ADDR_LE_STR_LEN];
+    peripheral_hdl_t hdl = 0;
 
     bt_addr_le_to_str(bt_conn_get_dst(conn), addr, sizeof(addr));
 
@@ -546,26 +553,29 @@ static void connected(struct bt_conn *conn, uint8_t err)
         return;
     }
 
-    default_conn = bt_conn_ref(conn);
-    printf("Connected %s\n", addr);
+    LOGI(MOD, "Connected %s\n", addr);
 
     if (bt_conn_security(conn, BT_SECURITY_FIPS)) {
         printf("Failed to set security\n");
+    }
+
+    if (g_peri[hdl].cb.connected) {
+        g_peri[hdl].cb.connected();
     }
 }
 
 static void disconnected(struct bt_conn *conn, uint8_t reason)
 {
     char addr[BT_ADDR_LE_STR_LEN];
+    peripheral_hdl_t hdl = 0;
 
     bt_addr_le_to_str(bt_conn_get_dst(conn), addr, sizeof(addr));
 
-    if (default_conn) {
-        bt_conn_unref(default_conn);
-        default_conn = NULL;
-    }
+    LOGI(MOD, "Disconnected from %s (reason %u)\n", addr, reason);
 
-    printf("Disconnected from %s (reason %u)\n", addr, reason);
+    if (g_peri[hdl].cb.disconnected) {
+        g_peri[hdl].cb.disconnected();
+    }
 }
 
 static void identity_resolved(struct bt_conn *conn, const bt_addr_le_t *rpa,
