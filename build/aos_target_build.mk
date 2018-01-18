@@ -254,11 +254,15 @@ $(LDS_FILE_DIR):
 
 %/.i:
 	$(QUIET)$(call MKDIR, $(dir $@))
+
+LINK_LIBS_FLAGS := $(addprefix --whole_archive , $(LINK_LIBS))	
 # FIXME GCC Whole archive not ready in all platform
 $(LINK_OPTS_FILE): $(OUTPUT_DIR)/config.mk $(LDS_FILES)
 ifeq ($(COMPILER),armcc)
 	$(QUIET)$(call WRITE_FILE_CREATE, $@ ,$(AOS_SDK_LINK_SCRIPT_CMD) $(call COMPILER_SPECIFIC_LINK_MAP,$(MAP_OUTPUT_FILE)) $(AOS_SDK_LDFLAGS) $(call COMPILER_SPECIFIC_LINK_FILES, $(AOS_SDK_LINK_FILES) $(filter %.a,$^) $(LINK_LIBS)))
-else 
+else ifeq ($(COMPILER),iar)
+	$(QUIET)$(call WRITE_FILE_CREATE, $@ ,$(AOS_SDK_LINK_SCRIPT_CMD) $(call COMPILER_SPECIFIC_LINK_MAP,$(MAP_OUTPUT_FILE))  $(call COMPILER_SPECIFIC_LINK_FILES, $(AOS_SDK_LINK_FILES) $(filter %.a,$^) $(LINK_LIBS_FLAGS)) $(AOS_SDK_LDFLAGS) )
+else
 	$(QUIET)$(call WRITE_FILE_CREATE, $@ ,$(AOS_SDK_LINK_SCRIPT_CMD) $(call COMPILER_SPECIFIC_LINK_MAP,$(MAP_OUTPUT_FILE))  $(call COMPILER_SPECIFIC_LINK_FILES, $(AOS_SDK_LINK_FILES) $(filter %.a,$^) $(LINK_LIBS)) $(AOS_SDK_LDFLAGS) )
 endif
 
