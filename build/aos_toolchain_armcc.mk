@@ -41,6 +41,7 @@ COMPILER_SPECIFIC_RELEASE_ASFLAGS      :=
 COMPILER_SPECIFIC_RELEASE_LDFLAGS      := 
 
 COMPILER_SPECIFIC_DEPS_FLAG                := --md
+COMPILER_SPECIFIC_DEPS_FILE                 = --depend="$(1)"
 COMPILER_SPECIFIC_COMP_ONLY_FLAG           := -c
 COMPILER_SPECIFIC_LINK_MAP                  = -L --map -L --list=$(1)
 COMPILER_SPECIFIC_LINK_FILES                = $(1)
