@@ -35,8 +35,6 @@ endif
 
 ifeq ($(COMPILER),armcc)
 $(NAME)_PREBUILT_LIBRARY := lib/$(HOST_ARCH)/KEIL/libmbedtls.lib
-else ifeq  ($(COMPILER),iar)
-$(NAME)_PREBUILT_LIBRARY := lib/$(HOST_ARCH)/IAR/libmbedtls.a
 endif
 
 $(NAME)_COMPONENTS  := alicrypto
