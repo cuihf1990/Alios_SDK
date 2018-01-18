@@ -22,6 +22,13 @@ typedef struct peri_cb_s {
     ble_peripheral_disconn_cb_t disconnected;
 } peri_cb_t;
 
+struct adv_data_s {
+    struct adv_data *ad;
+    size_t ad_siz;
+    struct adv_data *sd;
+    size_t sd_siz;
+};
+
 #define BLE_PERI_HDL_MAX 1 /* support only 1 peripheral */
 #define DEV_NAME_MAX_LEN 32
 #define MANUFACTURE_NAME_MAX_LEN 32
@@ -48,6 +55,7 @@ typedef struct ble_peri_s {
     char dev_name[DEV_NAME_MAX_LEN];
     char manu_name[MANUFACTURE_NAME_MAX_LEN];
     peri_cb_t cb;
+    struct adv_data_s advdata;
 } ble_peri_t;
 
 static uint32_t g_ble_hdl = 0;
@@ -639,16 +647,27 @@ void ble_adv_start
 {
     int err;
 
-    /* Add adv data dynamically <TODO> */
-    struct bt_data ad[] = {
-        BT_DATA_BYTES(BT_DATA_FLAGS, (BT_LE_AD_GENERAL | BT_LE_AD_NO_BREDR)),
-        BT_DATA_BYTES(BT_DATA_UUID16_ALL, 0x0a, 0x18),
+    struct adv_data ad_default[] = {
+        ADV_DATA_BYTES(EIRADV_DATA_FLAGS, (AD_FLAG_GENERAL | AD_FLAG_NO_BREDR)),
+        ADV_DATA_BYTES(EIRADV_DATA_UUID16_ALL, 0x0a, 0x18),
     };
 
-    struct bt_data sd[] = {
-        BT_DATA(BT_DATA_NAME_COMPLETE, g_peri[hdl].dev_name,
-                strlen(g_peri[0].dev_name)),
+    struct adv_data sd_default[] = {
+        ADV_DATA(EIRADV_DATA_NAME_COMPLETE, g_peri[hdl].dev_name,
+                 strlen(g_peri[0].dev_name)),
     };
+
+    (void *)adv_handler;
+
+    if (g_peri[hdl].advdata.ad_siz == 0) {
+        g_peri[hdl].advdata.ad_siz = ARRAY_SIZE(ad_default);
+        g_peri[hdl].advdata.ad = ad_default;
+    }
+
+    if (g_peri[hdl].advdata.sd_siz == 0) {
+        g_peri[hdl].advdata.sd_siz = ARRAY_SIZE(sd_default);
+        g_peri[hdl].advdata.sd = sd_default;
+    }
 
     strncpy(g_peri[hdl].manu_name, manufacture,
             sizeof(g_peri[hdl].manu_name) - 1);
@@ -667,8 +686,15 @@ void ble_adv_start
     bt_conn_auth_cb_register(&auth_cb_display);
     bt_conn_cb_register(&conn_callbacks);
 
-    err = bt_le_adv_start(BT_LE_ADV_CONN, ad, ARRAY_SIZE(ad),
-                          sd, ARRAY_SIZE(sd));
+    LOGD(MOD, "ad size is %d, sd size is %d",
+         g_peri[hdl].advdata.ad_siz, g_peri[hdl].advdata.sd_siz);
+
+    err = bt_le_adv_start(BT_LE_ADV_CONN,
+                          (struct bt_data *)g_peri[hdl].advdata.ad,
+                          g_peri[hdl].advdata.ad_siz,
+                          (struct bt_data *)g_peri[hdl].advdata.sd,
+                          g_peri[hdl].advdata.sd_siz);
+
     if (err) {
         LOGE(MOD, "Advertising failed to start (err %d).", err);
         return;
@@ -947,4 +973,36 @@ void ble_attr_notify
 
     /* attr found, notify it */
     bt_gatt_notify(NULL, a, (const void *)data, len);
+}
+
+void ble_set_ad_data
+(
+    peripheral_hdl_t hdl,
+    const struct adv_data *ad,
+    size_t ad_siz
+)
+{
+    if (!ad || (ad_siz < 1)) {
+        LOGE(MOD, "%s invalid argument. Adv data not set!", __func__);
+        return;
+    }
+
+    g_peri[hdl].advdata.ad = (struct adv_data *)ad;
+    g_peri[hdl].advdata.ad_siz = ad_siz;
+}
+
+void ble_set_sd_data
+(
+    peripheral_hdl_t hdl,
+    const struct adv_data *sd,
+    size_t sd_siz
+)
+{
+    if (!sd || (sd_siz < 1)) {
+        LOGE(MOD, "%s invalid argument. Adv data not set!", __func__);
+        return;
+    }
+
+    g_peri[hdl].advdata.sd = (struct adv_data *)sd;
+    g_peri[hdl].advdata.sd_siz = sd_siz;
 }

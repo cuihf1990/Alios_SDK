@@ -7,12 +7,12 @@
 
 static int connection_handler()
 {
-
+    LOG("Hello %s", __func__);
 }
 
 static int disconnection_handler()
 {
-
+    LOG("Hello %s", __func__);
 }
 
 /* UUID value of the TIME Service */
@@ -99,7 +99,7 @@ static const uint8_t adv_gatt_db[] = {
     /* Handle 0x52: characteristic System ID */
     CHARACTERISTIC_UUID16( HDLC_DEV_INFO_SYSTEM_ID, HDLC_DEV_INFO_SYSTEM_ID_VALUE,
     GATT_UUID_SYSTEM_ID,
-    LEGATTDB_CHAR_PROP_READ, LEGATTDB_PERM_READABLE ),
+    LEGATTDB_CHAR_PROP_READ|LEGATTDB_CHAR_PROP_WRITE, LEGATTDB_PERM_READABLE|LEGATTDB_PERM_WRITABLE ),
 };
 
 static int adv_complete_cb(void *arg)
@@ -125,6 +125,15 @@ static void indicate_handler(void *arg)
 #define DEVICE_MODEL_NUM "BleAdvertismentsSampleDeviceModel"
 static uint8_t sys_id[] = {0x12, 0x34};
 
+static const struct adv_data ad[] = {
+    ADV_DATA_BYTES(EIRADV_DATA_FLAGS, (AD_FLAG_GENERAL | AD_FLAG_NO_BREDR)),
+    ADV_DATA_BYTES(EIRADV_DATA_UUID16_ALL, 0x0a, 0x18),
+};
+
+static const struct adv_data sd[] = {
+    ADV_DATA(EIRADV_DATA_NAME_COMPLETE, CONFIG_BT_DEVICE_NAME, sizeof(CONFIG_BT_DEVICE_NAME) - 1),
+};
+
 int application_start( void )
 {
     peripheral_hdl_t hdl;
@@ -135,6 +144,9 @@ int application_start( void )
 
     hdl = ble_peripheral_init(&p, connection_handler, disconnection_handler,
                               adv_gatt_db, sizeof(adv_gatt_db));
+
+    ble_set_ad_data(hdl, ad, sizeof(ad) / sizeof(ad[0]));
+    ble_set_sd_data(hdl, sd, sizeof(sd) / sizeof(sd[0]));
 
     ble_adv_start(adv_complete_cb, DEVICE_MANUFACURE_NAME, hdl);
 
