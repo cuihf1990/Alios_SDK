@@ -153,15 +153,15 @@ struct db_genreral_hdr {
     uint8_t type[2];
 } __packed;
 
-struct db_char_hdr {
-    uint8_t val_handle[2];
+struct db_desc_hdr {
+    uint8_t handle[2];
     uint8_t perm[1];
     uint8_t len[1];
 } __packed;
 //#pragma pack()
 
 #define G_HEADER_SIZE sizeof(struct db_genreral_hdr)
-#define C_HEADER_SIZE sizeof(struct db_char_hdr)
+#define C_HEADER_SIZE sizeof(struct db_desc_hdr)
 #define TYPE_CMP(typer, typee) (((typer)[0] == ((typee) & 0xff)) && \
                                 ((typer)[1] == (((typee) >> 8) & 0xff)))
 
@@ -171,6 +171,9 @@ static struct bt_uuid *secondary_svc_uuid = BT_UUID_GATT_PRIMARY;
 static struct bt_uuid *include_svc_uuid = BT_UUID_GATT_SECONDARY;
 static struct bt_uuid *chrc_uuid = BT_UUID_GATT_CHRC;
 static struct bt_uuid *ccc_uuid = BT_UUID_GATT_CCC;
+static struct bt_uuid *cep_uuid = BT_UUID_GATT_CEP;
+static struct bt_uuid *cud_uuid = BT_UUID_GATT_CUD;
+static struct bt_uuid *cpf_uuid = BT_UUID_GATT_CPF;
 
 static void ccc_cfg_changed(const struct bt_gatt_attr *attr,
                                  u16_t value)
@@ -192,8 +195,9 @@ static int make_attr_and_svc(peripheral_hdl_t hdl)
 #endif
     int db_len = g_peri[hdl].db_len, len = 0, attr_cnt = 0, attr_idx = 0;
     struct db_genreral_hdr *iter = (struct db_genreral_hdr *)db;
-    struct db_char_hdr *c;
+    struct db_desc_hdr *c;
     struct bt_gatt_attr *a, *a2;
+    uint16_t handle;
 
     if (hdl >= BLE_PERI_HDL_MAX) {
         LOGE(MOD, "hdl number is not within valid range.");
@@ -237,11 +241,6 @@ static int make_attr_and_svc(peripheral_hdl_t hdl)
             if (!attr_ignore_flag) {
 #endif
                 attr_cnt += 2; /* 1 for c, one for c-v */
-                p = (uint8_t *)iter + G_HEADER_SIZE; /* Properties offset */
-                if ((*p & LEGATTDB_CHAR_PROP_NOTIFY) || \
-                    (*p & LEGATTDB_CHAR_PROP_INDICATE)) {
-                    attr_cnt++; /* attr entry for CCC */
-                }
 #ifdef CONFIG_BLE_50
             } else {
                 LOGD(MOD, "GAP/GATT characteristic, ignore it.");
@@ -250,23 +249,26 @@ static int make_attr_and_svc(peripheral_hdl_t hdl)
 
             p = (uint8_t *)iter;
             p += G_HEADER_SIZE + iter->len[0] - 2; /* eat until uuid */
-            c = (struct db_char_hdr *)p;
+            c = (struct db_desc_hdr *)p;
             p += C_HEADER_SIZE + c->len[0];
             /* writable charateristic? */
             if (c->perm[0] & (uint8_t)LEGATTDB_PERM_WRITABLE)
                 p++;
 
-            c = (struct db_char_hdr *)p;
+            c = (struct db_desc_hdr *)p;
 
-            /* Is there a desciptor? skip it for now, need an attr for it. <TODO> */
-            if (c->len[0] == (uint8_t)LEGATTDB_UUID16_SIZE) {
-                /* attr_cnt++; */
+            /* Check descriptor, [0 - n] elments may exist. */
+            while ((c->len[0] == (uint8_t)LEGATTDB_UUID16_SIZE) ||
+                   (c->len[0] == (uint8_t)LEGATTDB_UUID128_SIZE)) {
+                LOGD(MOD, "A characteristic descriptor item found.");
+                /* Update index. */
+                attr_cnt++;
+                /* Update the position pointer. */
                 p += C_HEADER_SIZE + c->len[0];
                 if (c->perm[0] & (uint8_t)LEGATTDB_PERM_WRITABLE)
                     p++;
+                c = (struct db_desc_hdr *)p;
             }
-
-            /* More descriptor followed? <TODO> */
 
             iter = (struct db_genreral_hdr *)p;
         } else {
@@ -276,7 +278,7 @@ static int make_attr_and_svc(peripheral_hdl_t hdl)
         }
     }
 
-    LOGI(MOD, "%d attributes added.", attr_cnt);
+    LOGI(MOD, "%d attributes detected.", attr_cnt);
 
     /* Allocate memory for attribute array*/
     g_peri[hdl].attr_num = attr_cnt;
@@ -327,12 +329,12 @@ static int make_attr_and_svc(peripheral_hdl_t hdl)
             a->read = bt_gatt_attr_read_service;
 
             /* service handle into attr info table */
-            //memcpy(g_peri[hdl].itbl[attr_idx].handle, iter->handle, 2);
-            g_peri[hdl].itbl[attr_idx].handle = ((uint16_t)iter->handle[0] |\
-                 ((uint16_t)iter->handle[1] << 8));
+            handle = ((uint16_t)iter->handle[0] | ((uint16_t)iter->handle[1] << 8));
+            g_peri[hdl].itbl[attr_idx].handle = handle;
+            a->handle = handle;
 
             LOGD(MOD, "New handle (0x%04x, idx: %d) added in attr info table.",
-                 g_peri[hdl].itbl[attr_idx].handle, attr_idx);
+                 handle, attr_idx);
 
             /* determine the user data */
             if (iter->len[0] == 4) { /* uuid16 */
@@ -385,12 +387,12 @@ static int make_attr_and_svc(peripheral_hdl_t hdl)
             a->read = bt_gatt_attr_read_chrc;
 
             /* characteristic handle into attr info table */
-            //memcpy(g_peri[hdl].itbl[attr_idx].handle, iter->handle, 2);
-            g_peri[hdl].itbl[attr_idx].handle = ((uint16_t)iter->handle[0] |\
-                 ((uint16_t)iter->handle[1] << 8));
+            handle = ((uint16_t)iter->handle[0] | ((uint16_t)iter->handle[1] << 8));
+            g_peri[hdl].itbl[attr_idx].handle = handle;
+            a->handle = handle;
 
             LOGD(MOD, "New handle (0x%04x, idx: %d) added in attr info table.",
-                 g_peri[hdl].itbl[attr_idx].handle, attr_idx);
+                 handle, attr_idx);
 
             /* Fill the charateristic value attribute */
             a2 = &(g_peri[hdl].attr)[attr_idx+1];
@@ -399,8 +401,8 @@ static int make_attr_and_svc(peripheral_hdl_t hdl)
             a2->user_data = NULL;
             p = (uint8_t *)iter;
             p += G_HEADER_SIZE + iter->len[0] -2;
-            c = (struct db_char_hdr *)p;
-            LOGD(MOD, "c->perm[0]: %d", c->perm[0]);
+            c = (struct db_desc_hdr *)p;
+            //LOGD(MOD, "c->perm[0]: %d", c->perm[0]);
             uint8_t perm = c->perm[0] & LEGATTDB_PERM_MASK;
             if ((perm == LEGATTDB_PERM_NONE) || ((perm & \
                 (LEGATTDB_PERM_READABLE|LEGATTDB_PERM_WRITABLE)) == 0)) {
@@ -411,15 +413,15 @@ static int make_attr_and_svc(peripheral_hdl_t hdl)
                 if (perm & LEGATTDB_PERM_WRITABLE)
                     a2->perm |= BT_GATT_PERM_WRITE;
             }
-            LOGD(MOD, "Perimission for this attribute: %d", a2->perm);
+            //LOGD(MOD, "Perimission for this value attribute: %d", a2->perm);
 
             /* characteristic value handle into attr info table */
-            //memcpy(g_peri[hdl].itbl[attr_idx+1].handle, c->val_handle, 2);
-            g_peri[hdl].itbl[attr_idx+1].handle = ((uint16_t)c->val_handle[0] |\
-                 ((uint16_t)c->val_handle[1] << 8));
+            handle = ((uint16_t)c->handle[0] | ((uint16_t)c->handle[1] << 8));
+            g_peri[hdl].itbl[attr_idx+1].handle = handle;
+            a2->handle = handle;
 
             LOGD(MOD, "New handle (0x%04x, idx: %d) added in attr info table.",
-                 g_peri[hdl].itbl[attr_idx+1].handle, attr_idx+1);
+                 handle, attr_idx+1);
 
             /* user data */
             if (iter->len[0] == 7) { /* uui16 */
@@ -470,6 +472,7 @@ static int make_attr_and_svc(peripheral_hdl_t hdl)
 
             attr_idx += 2;
 
+#if 0
             /* Deal with CCC if any */
             p = (uint8_t *)iter + G_HEADER_SIZE; /* Properties offset */
             if ((*p & LEGATTDB_CHAR_PROP_NOTIFY) || \
@@ -508,24 +511,108 @@ static int make_attr_and_svc(peripheral_hdl_t hdl)
 
                 attr_idx++;
             }
-
+#endif
 #ifdef CONFIG_BLE_50
             } /* if (!attr_ignore_flag) */
 #endif
 
             /* update pointer */
             p = (uint8_t *)iter;
-            c = (struct db_char_hdr *)(p + G_HEADER_SIZE + iter->len[0] - 2);
+            c = (struct db_desc_hdr *)(p + G_HEADER_SIZE + iter->len[0] - 2);
             p += G_HEADER_SIZE + iter->len[0] - 2 + C_HEADER_SIZE + c->len[0];
             if (c->perm[0] & (uint8_t)LEGATTDB_PERM_WRITABLE)
                 p++;
 
-            /* Is there a descriptor? If yes, skip it for now. <TODO> */
-            c = (struct db_char_hdr *)p;
-            if (c->len[0] == (uint8_t)LEGATTDB_UUID16_SIZE)
-                p += C_HEADER_SIZE + c->len[0];
+            c = (struct db_desc_hdr *)p;
 
-            /* More descriptor followed? <TODO> */
+            /* Deal with descriptors. */
+            uint16_t uuid16;
+            uint8_t *u;
+            while ((c->len[0] == (uint8_t)LEGATTDB_UUID16_SIZE) ||
+                   (c->len[0] == (uint8_t)LEGATTDB_UUID128_SIZE)) {
+                if (c->len[0] == (uint8_t)LEGATTDB_UUID128_SIZE) {
+                    LOGW(MOD, "UUID128 type descriptor is not supported yet.");
+                    /* <TODO> */
+                    (g_peri[hdl].attr_num)--; /* Not to add to attr list */
+                } else {
+                    u = (uint8_t *)c + C_HEADER_SIZE;
+                    if (c->perm[0] & (uint8_t)LEGATTDB_PERM_WRITABLE)
+                        u++;
+                    uuid16 = ((uint16_t)(*u)) | ((uint16_t)(*(u+1)) << 8);
+                    switch (uuid16) {
+                        case BT_UUID_GATT_CCC_VAL:
+                            {
+                            struct _bt_gatt_ccc *ccc;
+                            struct bt_gatt_ccc_cfg *c_cfg;
+
+                            LOGD(MOD, "Adding a CCC attribute.");
+
+                            /* User data */
+                            ccc = (struct _bt_gatt_ccc *)aos_malloc(\
+                                sizeof(struct _bt_gatt_ccc) + \
+                                sizeof(struct bt_gatt_ccc_cfg) * \
+                                BT_GATT_CCC_MAX);
+                            if (!ccc) {
+                                LOGE(MOD, "%s %d malloc failed", __FILE__, __LINE__);
+                                return -1;
+                            }
+
+                            memset(ccc, 0, sizeof(struct _bt_gatt_ccc) + \
+                                sizeof(struct bt_gatt_ccc_cfg) * BT_GATT_CCC_MAX);
+                            c_cfg = (struct bt_gatt_ccc_cfg *)((uint8_t *)ccc +
+                                sizeof(struct _bt_gatt_ccc));
+                            ccc->cfg = c_cfg;
+                            ccc->cfg_len = BT_GATT_CCC_MAX;
+                            ccc->cfg_changed = ccc_cfg_changed;
+
+                            a = &(g_peri[hdl].attr)[attr_idx];
+                            a->uuid = ccc_uuid;
+                            a->perm = BT_GATT_PERM_READ | BT_GATT_PERM_WRITE;
+                            a->read = bt_gatt_attr_read_ccc;
+                            a->write = bt_gatt_attr_write_ccc;
+                            a->user_data = ccc;
+
+                            /* Attr handle */
+                            handle = ((uint16_t)c->handle[0] | ((uint16_t)c->handle[1] << 8));
+                            a->handle = handle;
+                            g_peri[hdl].itbl[attr_idx].handle = handle;
+
+                            LOGD(MOD, "CCC handle (0x%04x, idx: %d) added in attr info table.",
+                                 handle, attr_idx);
+
+                            attr_idx++;
+                            }
+
+                            break;
+                        case BT_UUID_GATT_CEP_VAL:
+                            LOGW(MOD, "CEP type descriptor is not supported yet!!!");
+                            /* <TODO> */
+                            (g_peri[hdl].attr_num)--; /* Not to add to attr list */
+                            break;
+                        case BT_UUID_GATT_CUD_VAL:
+                            LOGW(MOD, "CUD type descriptor is not supported yet!!!");
+                            /* <TODO> */
+                            (g_peri[hdl].attr_num)--; /* Not to add to attr list */
+                            break;
+                        case BT_UUID_GATT_CPF_VAL:
+                            LOGW(MOD, "CPF type descriptor is not supported yet!!!");
+                            /* <TODO> */
+                            (g_peri[hdl].attr_num)--; /* Not to add to attr list */
+                            break;
+                        default:
+                            LOGW(MOD, "This descriptor (uuid: 0x%04x) is not supported yet!!!", uuid16);
+                            /* <TODO> */
+                            (g_peri[hdl].attr_num)--; /* Not to add to attr list */
+                            break;
+                    }
+                }
+
+                /* Update the position pointer. */
+                p += C_HEADER_SIZE + c->len[0];
+                if (c->perm[0] & (uint8_t)LEGATTDB_PERM_WRITABLE)
+                    p++;
+                c = (struct db_desc_hdr *)p;
+            }
 
             /* update the iteration pointer */
             iter = (struct db_genreral_hdr *)p;
@@ -536,7 +623,7 @@ static int make_attr_and_svc(peripheral_hdl_t hdl)
     }
 
     if (attr_idx != g_peri[hdl].attr_num) {
-        LOGE(MOD, "Error accured (attr_idx (%d) not maitch attr_num (%d))",
+        LOGE(MOD, "Error accured (attr_idx (%d) not match attr_num (%d))",
              attr_idx, g_peri[hdl].attr_num);
         return -1;
     }
