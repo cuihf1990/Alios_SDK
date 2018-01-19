@@ -7,15 +7,12 @@
 #include <sys/types.h>
 #include <time.h>
 #include <stdio.h>
-#include <string.h>
-#include "k_config.h"
 
-#if (RHINO_CONFIG_MM_TLF > 0)
-#define AOS_UNSIGNED_INT_MSB (1u << (sizeof(unsigned int) * 8 - 1))
 extern void *aos_malloc(unsigned int size);
 extern void aos_alloc_trace(void *addr, size_t allocator);
 extern void aos_free(void *mem);
 extern void *aos_realloc(void *mem, unsigned int size);
+extern long long aos_now_ms(void);
 
 __ATTRIBUTES void *malloc(unsigned int size)
 {
@@ -64,12 +61,10 @@ __ATTRIBUTES void free(void *mem)
 {
     aos_free(mem);
 }
-#endif
 
-extern long long krhino_sys_time_get(void);
 __ATTRIBUTES time_t time(time_t *tod)
 {
-    uint64_t t = krhino_sys_time_get();
+    uint64_t t = aos_now_ms();
     return (time_t)(t / 1000);
 }
 
@@ -84,9 +79,28 @@ void __assert_func(const char * a, int b, const char * c, const char *d)
 }
 
 /*TO DO*/
-void __write()
+#pragma weak __write
+size_t __write(int handle, const unsigned char *buffer, size_t size)
 {
+    if (buffer == 0)
+    {
+        /*
+         * This means that we should flush internal buffers.  Since we don't we just return.
+         * (Remember, "handle" == -1 means that all handles should be flushed.)
+         */
+        return 0;
+    }
 
+    /* This function only writes to "standard out" and "standard err" for all other file handles it returns failure. */
+    if ((handle != 1) && (handle != 2))
+    {
+        return ((size_t)-1);
+    }
+
+    /* Send data. */
+    aos_uart_send(buffer, size, 1000);
+
+    return size;
 }
 
 void bzero()
@@ -125,4 +139,3 @@ void optarg()
 }
 
  #endif
-
