@@ -4,13 +4,14 @@
 
 #include "core/auth_dot1x.h"
 #include "core/auth_eap.h"
+#include "core/auth_mgmt.h"
 #include "core/mesh_mgmt.h"
 #include "core/mesh_forwarder.h"
 #include "hal/interfaces.h"
 
 static ur_error_t send_eap_identity(dot1x_context_t *context);
 static ur_error_t handle_eap_id2(dot1x_context_t *context, const uint8_t *buf,
-                                 uint16_t len, bool request);
+                                 uint16_t len);
 
 ur_error_t handle_eap_request(dot1x_context_t *context, message_t *message)
 {
@@ -32,7 +33,7 @@ ur_error_t handle_eap_request(dot1x_context_t *context, message_t *message)
 
     // check identifier
     id = eap_hdr->id;
-    if (id - context->identifier != 1) {
+    if (id - context->identifier < 1) {
         return UR_ERROR_FAIL;
     }
     context->identifier = id;
@@ -50,7 +51,7 @@ ur_error_t handle_eap_request(dot1x_context_t *context, message_t *message)
             offset += sizeof(eap_header_t) + 1;
             len = message_get_msglen(message) - offset; 
             message_copy_to(message, offset, cur, len);
-            return handle_eap_id2(context, cur, len, true);
+            return handle_eap_id2(context, cur, len);
         }
         case EAP_TYPE_NOTIFICATION:
         case EAP_TYPE_NAK:
@@ -82,7 +83,7 @@ ur_error_t send_eap_response(dot1x_context_t *context)
     length = eap_hdr->length;
     eapol_hdr->version = EAPOL_VERSION;
     eapol_hdr->type = EAPOL_EAP;
-    eapol_hdr->length = length;
+    eapol_hdr->length = htons(length);
     
     length += sizeof(mm_header_t) + sizeof(eapol_header_t);
     message = mf_build_message(MESH_FRAME_TYPE_CMD, COMMAND_AUTH_DOT1X,
@@ -112,7 +113,7 @@ ur_error_t send_eap_request(dot1x_context_t *context)
     length = eap_hdr->length;
     eapol_hdr->version = EAPOL_VERSION;
     eapol_hdr->type = EAPOL_EAP;
-    eapol_hdr->length = length;
+    eapol_hdr->length = htons(length);
 
     length += sizeof(mm_header_t) + sizeof(eapol_header_t);
     message = mf_build_message(MESH_FRAME_TYPE_CMD, COMMAND_AUTH_DOT1X,
@@ -164,7 +165,7 @@ ur_error_t send_eap_success(dot1x_context_t *context)
         error = mf_send_message(message);
     }
     
-    MESH_LOG_DEBUG("send EAP-Success, len %d", sizeof(eapol_header_t) + 4);
+    MESH_LOG_INFO("send EAP-Success, len %d", sizeof(eapol_header_t) + 4);
     return error;
 }
 
@@ -207,7 +208,7 @@ ur_error_t send_eap_failure(dot1x_context_t *context)
         error = mf_send_message(message);
     }
     
-    MESH_LOG_DEBUG("send EAP-Failure, len %d", sizeof(eapol_header_t) + 4);
+    MESH_LOG_INFO("send EAP-Failure, len %d", sizeof(eapol_header_t) + 4);
     return error;
 }
 
@@ -231,7 +232,7 @@ ur_error_t handle_eap_response(dot1x_context_t *context, message_t *message)
 
     // check identifier
     id = eap_hdr->id;
-    if (context->identifier - id != 0) {
+    if (id - context->identifier > 0) {
         return UR_ERROR_FAIL;
     }
 
@@ -248,7 +249,7 @@ ur_error_t handle_eap_response(dot1x_context_t *context, message_t *message)
             offset += sizeof(eap_header_t) + 1;
             len = message_get_msglen(message) - offset; 
             message_copy_to(message, offset, cur, len);
-            return handle_eap_id2(context, cur, len, false);
+            return handle_eap_id2(context, cur, len);
         }
         case EAP_TYPE_NOTIFICATION:
         case EAP_TYPE_NAK:
@@ -299,6 +300,7 @@ ur_error_t handle_eap_success(dot1x_context_t *context, message_t *message)
 
     MESH_LOG_INFO("handle eap success");
 
+    ur_stop_timer(&context->auth_context.auth_timer, NULL);
     offset = sizeof(mm_header_t) + sizeof(eapol_header_t);
     message_copy_to(message, offset, (uint8_t *)&eap_hdr, sizeof(eap_header_t));
     if (eap_hdr.code != EAP_CODE_SUCCESS) {
@@ -317,6 +319,7 @@ ur_error_t handle_eap_failure(dot1x_context_t *context, message_t *message)
 
     MESH_LOG_INFO("handle eap failure");
 
+    ur_stop_timer(&context->auth_context.auth_timer, NULL);
     offset = sizeof(mm_header_t) + sizeof(eapol_header_t);
     message_copy_to(message, offset, (uint8_t *)&eap_hdr, sizeof(eap_header_t));
     if (eap_hdr.code != EAP_CODE_FAILURE) {
@@ -329,28 +332,20 @@ ur_error_t handle_eap_failure(dot1x_context_t *context, message_t *message)
 }
 
 static ur_error_t handle_eap_id2(dot1x_context_t *context, const uint8_t *buf,
-                                 uint16_t len, bool request)
+                                 uint16_t len)
 {
     eap_id2_header_t *id2_hdr = (eap_id2_header_t *)buf;
 
     switch (id2_hdr->cmd) {
         case EAP_ID2_START:
-            handle_auth_start(context, buf);
-            break;
+            return handle_auth_start(context, buf);
         case EAP_ID2_IDENTITY:
         case EAP_ID2_CHALLENGE:
         case EAP_ID2_AUTH_CODE:
-            handle_auth_relay(context, buf, len);
-            break;
+            return handle_auth_relay(context, buf, len);
         default:
             return UR_ERROR_FAIL;
             break;
-    }
-
-    if (request) {
-        return send_eap_response(context);
-    } else {
-        return send_eap_request(context);
     }
 }
 

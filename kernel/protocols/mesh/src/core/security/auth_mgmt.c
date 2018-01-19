@@ -12,6 +12,7 @@
 #include "core/mesh_forwarder.h"
 #include "core/topology.h"
 #include "hal/interfaces.h"
+#include "umesh_config.h"
 #include "umesh_utils.h"
 #include "umesh_types.h"
 
@@ -27,15 +28,21 @@ auth_context_t g_auth_context = {
 };
 socket_t udp_sock;
 
+static uint8_t vendor_oui[3] = { 0xd8, 0x96, 0xe0 }; // Alibaba Cloud OUI
+static uint8_t vendor_type[4] = { 0x00, 0x00, 0x00, 0x01 }; // EAP-ID2
+
 static void handle_auth_timer(void *args);
+static ur_error_t send_auth_challenge(dot1x_context_t *context);
+static ur_error_t send_auth_code(dot1x_context_t *context);
+
 static void handle_udp_socket(const uint8_t *payload, uint16_t length)
 {
     uint8_t cmd;
     uint8_t *cur = (uint8_t *)payload;
     uint8_t src[EXT_ADDR_SIZE];
-    uint8_t challenge[TFS_CHALLENGE_LEN];
     const mac_address_t *mac = umesh_mm_get_mac_address();
     network_context_t *network = get_default_network_context();
+    dot1x_context_t *dot1x_context = get_dot1x_context();
 
     if (length == 0) {
         return;
@@ -47,15 +54,6 @@ static void handle_udp_socket(const uint8_t *payload, uint16_t length)
                   mac->addr[3], mac->addr[4], mac->addr[5]);
 
     // src
-    if (umesh_mm_get_device_state() == DEVICE_STATE_LEADER ||
-        g_auth_context.is_auth_success) {
-        memcpy(g_auth_context.peer.addr.addr, cur, EXT_ADDR_SIZE);
-
-        MESH_LOG_DEBUG("peer src mac: %02x:%02x:%02x:%02x:%02x:%02x\n",
-                       g_auth_context.peer.addr.addr[0], g_auth_context.peer.addr.addr[1],
-                       g_auth_context.peer.addr.addr[2], g_auth_context.peer.addr.addr[3],
-                       g_auth_context.peer.addr.addr[4], g_auth_context.peer.addr.addr[5]);
-    }
     memcpy(src, cur, EXT_ADDR_SIZE);
     cur += EXT_ADDR_SIZE;
     length -= EXT_ADDR_SIZE;
@@ -70,96 +68,35 @@ static void handle_udp_socket(const uint8_t *payload, uint16_t length)
 
     switch (cmd) {
         case ID2_AUTH_CHALLENGE:
-            if (umesh_mm_get_device_state() == DEVICE_STATE_LEADER &&
-                (memcmp(mac->addr, src, EXT_ADDR_SIZE) == 0)) {
-                MESH_LOG_INFO("sp server -> leader: challenge");
-                ur_stop_timer(&g_auth_context.auth_timer, NULL);
-
-                // challenge
-                memcpy(challenge, cur, TFS_CHALLENGE_LEN);
-                MESH_LOG_DEBUG("challenge: %02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x\
-                                           %02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x",
-                               challenge[0], challenge[1], challenge[2], challenge[3],
-                               challenge[4], challenge[5], challenge[6], challenge[7],
-                               challenge[8], challenge[9], challenge[10], challenge[11],
-                               challenge[12], challenge[13], challenge[14], challenge[15],
-                               challenge[16], challenge[17], challenge[18], challenge[19],
-                               challenge[20], challenge[21], challenge[22], challenge[23],
-                               challenge[24], challenge[25], challenge[26], challenge[27],
-                               challenge[28], challenge[29], challenge[30], challenge[31]);
- 
-                // calculate the auth code
-                tfs_id2_get_challenge_auth_code(challenge, NULL, 0,
-                                                g_auth_context.auth_code,
-                                                &g_auth_context.auth_code_len);
- 
-                mac = umesh_mm_get_mac_address();
-                socket_sendmsg(udp_sock.socket, mac->addr, mac->addr, ID2_AUTH_CODE,
-                               g_auth_context.auth_code, g_auth_context.auth_code_len,
-                               ID2_SERVER_ADDR, ID2_SERVER_PORT);
-
-                MESH_LOG_INFO("leader -> sp server: auth code");
-
-                g_auth_context.auth_state = AUTH_RECV_CHALLENGE;
-                ur_start_timer(&g_auth_context.auth_timer, network->hal->auth_relay_interval,
-                               handle_auth_timer, NULL);
-            } else if (umesh_mm_get_device_state() == DEVICE_STATE_LEADER ||
-                       g_auth_context.is_auth_success) {
+            if (umesh_mm_get_device_state() == DEVICE_STATE_LEADER ||
+                g_auth_context.is_auth_success) {
                 MESH_LOG_INFO("sp server -> joiner router: challenge");
 
                 // challenge
-                memcpy(g_auth_context.id2_challenge, cur, length);
-                MESH_LOG_DEBUG("challenge: %02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x\
-                                           %02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x",
-                               g_auth_context.id2_challenge[0], g_auth_context.id2_challenge[1], g_auth_context.id2_challenge[2],
-                               g_auth_context.id2_challenge[3], g_auth_context.id2_challenge[4], g_auth_context.id2_challenge[5],
-                               g_auth_context.id2_challenge[6], g_auth_context.id2_challenge[7], g_auth_context.id2_challenge[8],
-                               g_auth_context.id2_challenge[9], g_auth_context.id2_challenge[10], g_auth_context.id2_challenge[11],
-                               g_auth_context.id2_challenge[12], g_auth_context.id2_challenge[13], g_auth_context.id2_challenge[14],
-                               g_auth_context.id2_challenge[15], g_auth_context.id2_challenge[16], g_auth_context.id2_challenge[17],
-                               g_auth_context.id2_challenge[18], g_auth_context.id2_challenge[19], g_auth_context.id2_challenge[20],
-                               g_auth_context.id2_challenge[21], g_auth_context.id2_challenge[22], g_auth_context.id2_challenge[23],
-                               g_auth_context.id2_challenge[24], g_auth_context.id2_challenge[25], g_auth_context.id2_challenge[26],
-                               g_auth_context.id2_challenge[27], g_auth_context.id2_challenge[28], g_auth_context.id2_challenge[29],
-                               g_auth_context.id2_challenge[30], g_auth_context.id2_challenge[31]);
+                memcpy(dot1x_context->auth_context.id2_challenge, cur, length);
  
                 // send challenge to joiner
                 ur_stop_timer(&g_auth_context.auth_timer, NULL);
                 g_auth_context.auth_state = AUTH_RELAY_CHALLENGE;
-                send_auth_relay(network, &g_auth_context.peer);
+                send_auth_challenge(dot1x_context);
                 ur_start_timer(&g_auth_context.auth_timer, network->hal->auth_relay_interval,
                                handle_auth_timer, NULL);
             }
             break;
-
         case ID2_AUTH_RESULT:
-            if (umesh_mm_get_device_state() == DEVICE_STATE_LEADER &&
-                (memcmp(mac->addr, src, EXT_ADDR_SIZE) == 0)) {
-                MESH_LOG_INFO("sp server -> leader: auth result");
-                ur_stop_timer(&g_auth_context.auth_timer, NULL);
-
-                // auth result
-                g_auth_context.is_auth_success = *cur;
-                g_auth_context.auth_state = AUTH_DONE;
-                g_auth_context.auth_candidate = NULL;
-                g_auth_context.auth_handler(NULL, g_auth_context.is_auth_success);
-            } else if (umesh_mm_get_device_state() == DEVICE_STATE_LEADER ||
-                       g_auth_context.is_auth_success) {
- 
+            if (umesh_mm_get_device_state() == DEVICE_STATE_LEADER ||
+                g_auth_context.is_auth_success) {
                 MESH_LOG_INFO("sp server -> joiner router: joiner's auth result");
 
-                // auth result
                 g_auth_context.peer_auth_result = *cur;
-
-                // send auth result to joiner
                 ur_stop_timer(&g_auth_context.auth_timer, NULL);
-                g_auth_context.auth_state = AUTH_RELAY_AUTH_RESULT;
-                send_auth_response(network, &g_auth_context.peer);
-                ur_start_timer(&g_auth_context.auth_timer, network->hal->auth_response_interval,
-                               handle_auth_timer, NULL);
+                if (g_auth_context.peer_auth_result) {
+                    send_eap_success(dot1x_context);
+                } else {
+                    send_eap_failure(dot1x_context);
+                }
             }
             break;
-
          default:
             MESH_LOG_DEBUG("unknown cmd\n");
             break;
@@ -168,6 +105,7 @@ static void handle_udp_socket(const uint8_t *payload, uint16_t length)
 
 static void handle_auth_timer(void *args)
 {
+    dot1x_context_t *dot1x_context = get_dot1x_context();
     network_context_t *network = get_default_network_context();
 
     MESH_LOG_INFO("handle auth timer");
@@ -176,71 +114,29 @@ static void handle_auth_timer(void *args)
         case AUTH_REQUEST_START:
             if (g_auth_context.auth_retry_times < AUTH_REQUEST_RETRY_TIMES) {
                 ++g_auth_context.auth_retry_times;
-                if (umesh_mm_get_device_state() == DEVICE_STATE_LEADER) {
-                    const mac_address_t *mac;
-                    mac = umesh_mm_get_mac_address();
-
-                    // send id2 to sp server
-                    socket_sendmsg(udp_sock.socket, mac->addr, mac->addr,
-                                   ID2_AUTH_REQUEST, g_auth_context.local_id2, TFS_ID2_LEN,
-                                   ID2_SERVER_ADDR, ID2_SERVER_PORT);
-
-                    MESH_LOG_INFO("leader -> sp server: id2");
-                } else if (!g_auth_context.is_auth_busy) {
-                    MESH_LOG_INFO("joiner -> joiner router: auth request");
-                    send_auth_request(network);
+                if (!g_auth_context.is_auth_busy) {
+                    MESH_LOG_INFO("joiner -> joiner router: EAPoL Start");
+                    send_eapol_start(dot1x_context);
                     g_auth_context.is_auth_busy = true;
                 }
-
-                ur_start_timer(&g_auth_context.auth_timer, network->hal->auth_request_interval,
-                               handle_auth_timer, NULL);
             }
             break;
-
         case AUTH_RELAY_CHALLENGE:
             if (g_auth_context.auth_retry_times < AUTH_RELAY_RETRY_TIMES) {
                 ++g_auth_context.auth_retry_times;
-                send_auth_relay(network, &g_auth_context.peer);
+                send_auth_challenge(dot1x_context);
                 ur_start_timer(&g_auth_context.auth_timer, network->hal->auth_relay_interval,
                                handle_auth_timer, NULL);
             }
             break;
-
         case AUTH_RELAY_AUTH_CODE:
             if (g_auth_context.auth_retry_times < AUTH_RELAY_RETRY_TIMES) {
                 ++g_auth_context.auth_retry_times;
-                send_auth_relay(network, NULL);
+                send_auth_code(dot1x_context);
                 ur_start_timer(&g_auth_context.auth_timer, network->hal->auth_relay_interval,
                                handle_auth_timer, NULL);
             }
             break;
-
-        case AUTH_RELAY_AUTH_RESULT:
-            if (g_auth_context.auth_retry_times < AUTH_RELAY_RETRY_TIMES) {
-                ++g_auth_context.auth_retry_times;
-                send_auth_response(network, &g_auth_context.peer);
-                ur_start_timer(&g_auth_context.auth_timer, network->hal->auth_response_interval,
-                               handle_auth_timer, NULL);
-            }
-            break;
-
-        case AUTH_RECV_CHALLENGE:
-             if (g_auth_context.auth_retry_times < AUTH_REQUEST_RETRY_TIMES) {
-                ++g_auth_context.auth_retry_times;
-
-                const mac_address_t *mac;
-                mac = umesh_mm_get_mac_address();
-
-                socket_sendmsg(udp_sock.socket, mac->addr, mac->addr,ID2_AUTH_CODE,
-                               g_auth_context.auth_code, g_auth_context.auth_code_len,
-                               ID2_SERVER_ADDR, ID2_SERVER_PORT);
-
-                ur_start_timer(&g_auth_context.auth_timer, network->hal->auth_response_interval,
-                               handle_auth_timer, NULL);
-                MESH_LOG_INFO("leader -> sp server: auth code");
-             }
-             break;
-
         case AUTH_DONE:
         default:
             break;
@@ -319,6 +215,7 @@ ur_error_t start_auth(neighbor_t *nbr, auth_handler_t handler)
 {
     uint32_t random;
     network_context_t *network = get_default_network_context();
+    dot1x_context_t *dot1x_context = get_dot1x_context();
 
     if (g_auth_context.is_auth_busy ||
         g_auth_context.auth_candidate ||
@@ -333,7 +230,7 @@ ur_error_t start_auth(neighbor_t *nbr, auth_handler_t handler)
             umesh_mm_set_channel(network->hal, nbr->channel);
         }
 
-        network->candidate_meshnetid = nbr->netid;
+        network->meshnetid = nbr->netid;
     }
 
     if (!g_auth_context.is_auth_enable) {
@@ -346,12 +243,13 @@ ur_error_t start_auth(neighbor_t *nbr, auth_handler_t handler)
 
     g_auth_context.auth_candidate = nbr;
     g_auth_context.auth_state = AUTH_REQUEST_START;
+    g_auth_context.auth_handler = handler;
+    dot1x_context->auth_context = g_auth_context;
 
     random = umesh_get_random();
     ur_start_timer(&g_auth_context.auth_timer,
                    (random % network->hal->auth_request_interval + 1),
                    handle_auth_timer, NULL);
-    g_auth_context.auth_handler = handler;
 
     return UR_ERROR_NONE;
 }
@@ -371,435 +269,282 @@ ur_error_t stop_auth(void)
     return UR_ERROR_NONE;
 }
 
-ur_error_t send_auth_request(network_context_t *network)
+ur_error_t send_auth_start(dot1x_context_t *context)
 {
-    ur_error_t error = UR_ERROR_NONE;
-    uint16_t length;
-    mm_node_id2_tv_t *id2;
-    uint8_t *data;
-    uint8_t *data_orig;
-    message_t *message = NULL;
-    message_info_t *info;
+    uint8_t *cur;
+    uint16_t offset;
+    eap_header_t *eap_hdr;
+    eap_id2_header_t *id2_hdr;
 
-    length = sizeof(mm_header_t) + sizeof(mm_node_id2_tv_t);
-    data = ur_mem_alloc(length);
-    if (data == NULL) {
-        return UR_ERROR_MEM;
-    }
-    data_orig = data;
-    data += sizeof(mm_header_t);
+    offset = sizeof(mm_header_t) + sizeof(eapol_header_t);
+    eap_hdr = (eap_header_t *)(context->request + offset);
+    eap_hdr->code = EAP_CODE_REQUEST;
+    eap_hdr->id = ++context->identifier;
+    cur = (uint8_t *)eap_hdr + sizeof(eap_header_t);
 
-    // ID2
-    id2 = (mm_node_id2_tv_t *)data;
-    umesh_mm_init_tv_base((mm_tv_t *)id2, TYPE_NODE_ID2);
-    memcpy(id2->device_id, g_auth_context.local_id2, TFS_ID2_LEN);
-    data += sizeof(mm_node_id2_tv_t);
+    *cur++ = EAP_TYPE_EXPANDED_TYPES;
+    id2_hdr = (eap_id2_header_t *)cur;
+    memcpy(id2_hdr->oui, vendor_oui, 3);
+    memcpy(id2_hdr->type, vendor_type, 4);
+    id2_hdr->cmd = EAP_ID2_START;
+    cur += sizeof(eap_id2_header_t);
 
-    message = mf_build_message(MESH_FRAME_TYPE_CMD, COMMAND_AUTH_REQUEST,
-                               data_orig, length, NETWORK_MGMT_2);
-    if (message == NULL) {
-        ur_mem_free(data_orig, length);
-        return UR_ERROR_MEM;
-    }
-
-    info = message->info;
-    info->network = network;
-
-    if (g_auth_context.auth_candidate) {
-        MESH_LOG_DEBUG("send to auth candidate: %04x, netid: %04x", g_auth_context.auth_candidate->sid,
-                       g_auth_context.auth_candidate->netid);
-        set_mesh_short_addr(&info->dest, g_auth_context.auth_candidate->netid,
-                            g_auth_context.auth_candidate->sid);
-    } else {
-        MESH_LOG_DEBUG("send to network");
-        set_mesh_short_addr(&info->dest, network->candidate_meshnetid,
-                            BCAST_SID);
-    }
-
-    error = mf_send_message(message);
-    ur_mem_free(data_orig, length);
-
-    MESH_LOG_INFO("send authenticate request in channel %d, len %d",
-                   umesh_mm_get_channel(network->hal), length);
-
-    return error;
+    eap_hdr->length = cur - (uint8_t *)eap_hdr;
+    MESH_LOG_INFO("send EAP-ID2 start");
+    return send_eap_request(context);
 }
 
-ur_error_t send_auth_response(network_context_t *network,
-                              ur_addr_t *dest)
+static ur_error_t send_auth_identity(dot1x_context_t *context)
 {
-    ur_error_t error = UR_ERROR_NONE;
-    message_t *message;
-    uint8_t *data;
-    uint16_t length;
-    message_info_t *info;
-    uint8_t *data_orig;
+    uint8_t *cur;
+    uint16_t offset;
     mm_node_id2_tv_t *id2;
-    mm_id2_auth_result_tv_t *id2_auth_result;
+    eap_header_t *eap_hdr;
+    eap_id2_header_t *id2_hdr;
 
-    length = sizeof(mm_header_t) + sizeof(mm_node_id2_tv_t) +
-             sizeof(mm_id2_auth_result_tv_t);
-    data = ur_mem_alloc(length);
-    if (data == NULL) {
-        return UR_ERROR_MEM;
-    }
-    data_orig = data;
-    data += sizeof(mm_header_t);
+    offset = sizeof(mm_header_t) + sizeof(eapol_header_t);
+    eap_hdr = (eap_header_t *)(context->response + offset);
+    eap_hdr->code = EAP_CODE_RESPONSE;
+    eap_hdr->id = context->identifier;
+    cur = (uint8_t *)eap_hdr + sizeof(eap_header_t);
+
+    // type
+    *cur++ = EAP_TYPE_EXPANDED_TYPES;
+
+    // vendor data
+    id2_hdr = (eap_id2_header_t *)cur;
+    memcpy(id2_hdr->oui, vendor_oui, 3);
+    memcpy(id2_hdr->type, vendor_type, 4);
+    id2_hdr->cmd = EAP_ID2_IDENTITY;
+    cur += sizeof(eap_id2_header_t);
 
     // ID2
-    id2 = (mm_node_id2_tv_t *)data;
+    id2 = (mm_node_id2_tv_t *)cur;
     umesh_mm_init_tv_base((mm_tv_t *)id2, TYPE_NODE_ID2);
-    memcpy(id2->device_id, g_auth_context.peer_id2, TFS_ID2_LEN);
-    data += sizeof(mm_node_id2_tv_t);
+    memcpy(id2->device_id, context->auth_context.local_id2, TFS_ID2_LEN);
+    cur += sizeof(mm_node_id2_tv_t);
 
-    // auth result
-    id2_auth_result = (mm_id2_auth_result_tv_t *)data;
-    umesh_mm_init_tv_base((mm_tv_t *)id2_auth_result, TYPE_ID2_AUTH_RESULT);
-    id2_auth_result->result = g_auth_context.peer_auth_result;
-    data += sizeof(mm_id2_auth_result_tv_t);
-
-    message = mf_build_message(MESH_FRAME_TYPE_CMD, COMMAND_AUTH_RESPONSE,
-                               data_orig, length, NETWORK_MGMT_2);
-    if (message) {
-        info = message->info;
-        info->network = network;
-        memcpy(&info->dest, dest, sizeof(info->dest));
-        info->dest.netid = BCAST_NETID;
-        info->dest.addr.len = EXT_ADDR_SIZE;
-        error = mf_send_message(message);
-    }
-    ur_mem_free(data_orig, length);
-
-    MESH_LOG_DEBUG("send authenticate response, len %d", length);
-
-    return error;
+    eap_hdr->length = cur - (uint8_t *)eap_hdr;
+    MESH_LOG_INFO("send EAP-ID2 identity");
+    return send_eap_response(context);
 }
 
-ur_error_t send_auth_relay(network_context_t *network, ur_addr_t *dest)
+static ur_error_t send_auth_challenge(dot1x_context_t *context)
 {
-    ur_error_t error = UR_ERROR_NONE;
-    uint16_t length;
+    uint8_t *cur;
+    uint16_t offset;
+    eap_header_t *eap_hdr;
+    eap_id2_header_t *id2_hdr;
     mm_node_id2_tv_t *id2;
     mm_id2_challenge_tv_t *id2_challenge;
-    mm_id2_auth_code_tlv_t *id2_auth_code;
-    uint8_t *data;
-    uint8_t *data_orig;
-    message_t *message = NULL;
-    message_info_t *info;
 
-    length = sizeof(mm_header_t) + sizeof(mm_node_id2_tv_t);
-    if (dest) {
-        length += sizeof(mm_id2_challenge_tv_t);
-    } else {
-        length += sizeof(mm_id2_auth_code_tlv_t) + g_auth_context.auth_code_len;
-    }
- 
-    data = ur_mem_alloc(length);
-    if (data == NULL) {
-        return UR_ERROR_MEM;
-    }
-    data_orig = data;
-    data += sizeof(mm_header_t);
+    offset = sizeof(mm_header_t) + sizeof(eapol_header_t);
+    eap_hdr = (eap_header_t *)(context->request + offset);
+    eap_hdr->code = EAP_CODE_REQUEST;
+    eap_hdr->id = ++context->identifier;
+    cur = (uint8_t *)eap_hdr + sizeof(eap_header_t);
+
+    // type
+    *cur++ = EAP_TYPE_EXPANDED_TYPES;
+
+    // vendor data
+    id2_hdr = (eap_id2_header_t *)cur;
+    memcpy(id2_hdr->oui, vendor_oui, 3);
+    memcpy(id2_hdr->type, vendor_type, 4);
+    id2_hdr->cmd = EAP_ID2_CHALLENGE;
+    cur += sizeof(eap_id2_header_t);
+
+    // challenge
+    id2_challenge = (mm_id2_challenge_tv_t *)cur;
+    umesh_mm_init_tv_base((mm_tv_t *)id2_challenge, TYPE_ID2_CHALLENGE);
+    memcpy(id2_challenge->challenge, context->auth_context.id2_challenge, TFS_CHALLENGE_LEN);
+    cur += sizeof(mm_id2_challenge_tv_t);
 
     // ID2
-    id2 = (mm_node_id2_tv_t *)data;
+    id2 = (mm_node_id2_tv_t *)cur;
     umesh_mm_init_tv_base((mm_tv_t *)id2, TYPE_NODE_ID2);
-    memcpy(id2->device_id, (dest ? g_auth_context.peer_id2 : g_auth_context.local_id2), TFS_ID2_LEN);
-    data += sizeof(mm_node_id2_tv_t);
+    memcpy(id2->device_id, context->auth_context.peer_id2, TFS_ID2_LEN);
+    cur += sizeof(mm_node_id2_tv_t);
 
-    if (dest) {
-        // challenge
-        id2_challenge = (mm_id2_challenge_tv_t *)data;
-        umesh_mm_init_tv_base((mm_tv_t *)id2_challenge, TYPE_ID2_CHALLENGE);
-        memcpy(id2_challenge->challenge, g_auth_context.id2_challenge, TFS_CHALLENGE_LEN);
-        data += sizeof(mm_id2_challenge_tv_t);
-    } else {
-        // auth code
-        id2_auth_code = (mm_id2_auth_code_tlv_t *)data;
-        umesh_mm_init_tlv_base((mm_tlv_t *)id2_auth_code, TYPE_ID2_AUTH_CODE, g_auth_context.auth_code_len);
-        data += sizeof(mm_id2_auth_code_tlv_t);
-        memcpy(data, g_auth_context.auth_code, g_auth_context.auth_code_len);
-        data += g_auth_context.auth_code_len;
-    }
-
-    message = mf_build_message(MESH_FRAME_TYPE_CMD, COMMAND_AUTH_RELAY,
-                               data_orig, length, NETWORK_MGMT_2);
-    if (message == NULL) {
-        ur_mem_free(data_orig, length);
-        return UR_ERROR_MEM;
-    }
-
-    info = message->info;
-    info->network = network;
-
-    if (dest) {
-        memcpy(&info->dest, dest, sizeof(info->dest));
-        MESH_LOG_DEBUG("relay dest: %02x:%02x:%02x:%02x:%02x:%02x\n",
-                       dest->addr.addr[0], dest->addr.addr[1], dest->addr.addr[2],
-                       dest->addr.addr[3], dest->addr.addr[4], dest->addr.addr[5]);
-        info->dest.netid = BCAST_NETID;
-        info->dest.addr.len = EXT_ADDR_SIZE;
-    } else {
-        if (g_auth_context.auth_candidate) {
-            MESH_LOG_DEBUG("send to auth candidate: %04x, netid: %04x", g_auth_context.auth_candidate->sid,
-                           g_auth_context.auth_candidate->netid);
-            set_mesh_short_addr(&info->dest, g_auth_context.auth_candidate->netid,
-                                g_auth_context.auth_candidate->sid);
-        } else {
-            MESH_LOG_DEBUG("send to network");
-            set_mesh_short_addr(&info->dest, network->candidate_meshnetid,
-                                BCAST_SID);
-        }
-    }
-
-    error = mf_send_message(message);
-    ur_mem_free(data_orig, length);
-
-    MESH_LOG_INFO("send authenticate relay in channel %d, len %d",
-                   umesh_mm_get_channel(network->hal), length);
-
-    return error;
+    eap_hdr->length = cur - (uint8_t *)eap_hdr;
+    MESH_LOG_INFO("send EAP-ID2 challenge");
+    return send_eap_request(context);
 }
 
-ur_error_t send_auth_ack(network_context_t *network)
+static ur_error_t send_auth_code(dot1x_context_t *context)
 {
-    ur_error_t error = UR_ERROR_NONE;
-    uint16_t length;
-    uint8_t *data;
-    uint8_t *data_orig;
-    message_t *message = NULL;
-    message_info_t *info;
+    uint8_t *cur;
+    uint16_t offset;
+    eap_header_t *eap_hdr;
+    eap_id2_header_t *id2_hdr;
+    mm_id2_auth_code_tlv_t *id2_auth_code;
 
-    length = sizeof(mm_header_t);
-    data = ur_mem_alloc(length);
-    if (data == NULL) {
-        return UR_ERROR_MEM;
-    }
-    data_orig = data;
-    data += sizeof(mm_header_t);
+    offset = sizeof(mm_header_t) + sizeof(eapol_header_t);
+    eap_hdr = (eap_header_t *)(context->response + offset);
+    eap_hdr->code = EAP_CODE_RESPONSE;
+    eap_hdr->id = context->identifier;
+    cur = (uint8_t *)eap_hdr + sizeof(eap_header_t);
 
-    message = mf_build_message(MESH_FRAME_TYPE_CMD, COMMAND_AUTH_ACK,
-                               data_orig, length, NETWORK_MGMT_2);
-    if (message == NULL) {
-        ur_mem_free(data_orig, length);
-        return UR_ERROR_MEM;
-    }
+    // type
+    *cur++ = EAP_TYPE_EXPANDED_TYPES;
 
-    info = message->info;
-    info->network = network;
+    // vendor data
+    id2_hdr = (eap_id2_header_t *)cur;
+    memcpy(id2_hdr->oui, vendor_oui, 3);
+    memcpy(id2_hdr->type, vendor_type, 4);
+    id2_hdr->cmd = EAP_ID2_AUTH_CODE;
+    cur += sizeof(eap_id2_header_t);
 
-    if (g_auth_context.auth_candidate) {
-        MESH_LOG_DEBUG("send to auth candidate: %04x, netid: %04x", g_auth_context.auth_candidate->sid,
-                       g_auth_context.auth_candidate->netid);
-        set_mesh_short_addr(&info->dest, g_auth_context.auth_candidate->netid,
-                            g_auth_context.auth_candidate->sid);
-    } else {
-        MESH_LOG_DEBUG("send to network");
-        set_mesh_short_addr(&info->dest, network->candidate_meshnetid,
-                            BCAST_SID);
-    }
+    // auth code
+    id2_auth_code = (mm_id2_auth_code_tlv_t *)cur;
+    umesh_mm_init_tlv_base((mm_tlv_t *)id2_auth_code, TYPE_ID2_AUTH_CODE,
+                           context->auth_context.auth_code_len);
+    cur += sizeof(mm_id2_auth_code_tlv_t);
+    memcpy(cur, context->auth_context.auth_code, context->auth_context.auth_code_len);
+    cur += context->auth_context.auth_code_len;
 
-    error = mf_send_message(message);
-    ur_mem_free(data_orig, length);
-
-    MESH_LOG_INFO("send authenticate ack in channel %d, len %d",
-                   umesh_mm_get_channel(network->hal), length);
-
-    return error;
+    eap_hdr->length = cur - (uint8_t *)eap_hdr;
+    MESH_LOG_INFO("send EAP-ID2 auth code");
+    return send_eap_response(context);
 }
 
-ur_error_t handle_auth_request(message_t *message)
+ur_error_t handle_auth_start(dot1x_context_t *context, const uint8_t *buf)
+{
+    eap_id2_header_t *id2_hdr = (eap_id2_header_t *)buf;
+
+    MESH_LOG_INFO("handle EAP-ID2 Start");
+
+    if (id2_hdr->cmd != EAP_ID2_START)
+        return UR_ERROR_FAIL;
+    
+    if (memcmp(id2_hdr->oui, vendor_oui, 3) != 0)
+        return UR_ERROR_FAIL;
+
+    if (memcmp(id2_hdr->type, vendor_type, 4) != 0)
+        return UR_ERROR_FAIL;
+
+    return send_auth_identity(context);
+}
+
+ur_error_t handle_auth_relay(dot1x_context_t *context,
+                             const uint8_t *buf, uint16_t len)
 {
     ur_error_t error = UR_ERROR_NONE;
+    eap_id2_header_t *id2_hdr;
+    mm_id2_challenge_tv_t *id2_challenge;
+    mm_id2_auth_code_tlv_t *id2_auth_code;
     mm_node_id2_tv_t *id2;
-    uint8_t *tlvs;
+    const uint8_t *tlvs;
     uint16_t tlvs_length;
-    const mac_address_t *mac;
-    message_info_t *info;
-
-    MESH_LOG_INFO("recv auth request");
-
-    info = message->info;
-    tlvs_length = message_get_msglen(message) - sizeof(mm_header_t);
-    tlvs = ur_mem_alloc(tlvs_length);
-    if (tlvs == NULL) {
-        return UR_ERROR_MEM;
-    }
-    message_copy_to(message, sizeof(mm_header_t), tlvs, tlvs_length);
-
-    if (update_neighbor(info, tlvs, tlvs_length, false) == NULL) {
-        error = UR_ERROR_FAIL;
-        goto exit;
-    }
-
-    id2 = (mm_node_id2_tv_t *)umesh_mm_get_tv(tlvs, tlvs_length,
-                                              TYPE_NODE_ID2);
-    if (id2 == NULL) {
-        error = UR_ERROR_FAIL;
-        goto exit;
-    } else {
-        memcpy(g_auth_context.peer_id2, id2->device_id, TFS_ID2_LEN);
-    }
-
-    mac = umesh_mm_get_mac_address();
-
-    // send id2 to sp server
-    socket_sendmsg(udp_sock.socket, message->info->src_mac.addr.addr, mac->addr,
-                   ID2_AUTH_REQUEST, id2->device_id, TFS_ID2_LEN,
-                   ID2_SERVER_ADDR, ID2_SERVER_PORT);
+    bool joiner = false;
+    
+    MESH_LOG_INFO("handle EAP-ID2 Relay");
  
-    MESH_LOG_INFO("send auth request to sp server");
-
-exit:
-    ur_mem_free(tlvs, tlvs_length);
-    return error;
-}
-
-ur_error_t handle_auth_response(message_t *message)
-{
-    ur_error_t error = UR_ERROR_NONE;
-    mm_node_id2_tv_t *id2;
-    mm_id2_auth_result_tv_t *id2_auth_result;
-    uint8_t *tlvs;
-    uint16_t tlvs_length;
-    network_context_t *network;
-    message_info_t *info;
-
-    MESH_LOG_INFO("recv the auth response message");
-
-    info = message->info;
-    network = (network_context_t *)info->network;
-    send_auth_ack(network);
-
-    tlvs_length = message_get_msglen(message) - sizeof(mm_header_t);
-    tlvs = ur_mem_alloc(tlvs_length);
-    if (tlvs == NULL) {
-        return UR_ERROR_MEM;
-    }
-    message_copy_to(message, sizeof(mm_header_t), tlvs, tlvs_length);
-
-    if (update_neighbor(info, tlvs, tlvs_length, false) == NULL) {
-        error = UR_ERROR_FAIL;
-        goto exit;
-    }
-
-    id2 = (mm_node_id2_tv_t *)umesh_mm_get_tv(tlvs, tlvs_length,
-                                              TYPE_NODE_ID2);
-    // check ID2
-    if (memcmp(g_auth_context.local_id2, id2->device_id, TFS_ID2_LEN) != 0) {
-        error = UR_ERROR_FAIL;
-        goto exit;
-    }
-
-    id2_auth_result = (mm_id2_auth_result_tv_t *)umesh_mm_get_tv(tlvs, tlvs_length,
-                                                                 TYPE_ID2_AUTH_RESULT);
-    if (id2_auth_result != NULL) {
-        g_auth_context.is_auth_success = id2_auth_result->result;
-        g_auth_context.auth_handler(g_auth_context.auth_candidate, id2_auth_result->result);
+    id2_hdr = (eap_id2_header_t *)buf;
+    if (id2_hdr->cmd != EAP_ID2_IDENTITY &&
+        id2_hdr->cmd != EAP_ID2_CHALLENGE &&
+        id2_hdr->cmd != EAP_ID2_AUTH_CODE) {
+        MESH_LOG_INFO("1");
+        return UR_ERROR_FAIL;
     }
     
-    ur_stop_timer(&g_auth_context.auth_timer, NULL);
-    //set_auth_state(AUTH_DONE);
-    //network->auth_candidate = NULL;
-    g_auth_context.is_auth_busy = false;
+    if (memcmp(id2_hdr->oui, vendor_oui, 3) != 0) {
+        MESH_LOG_INFO("2");
+        return UR_ERROR_FAIL;
+    }
 
-exit:
-    ur_mem_free(tlvs, tlvs_length);
-    return error;
-}
-
-ur_error_t handle_auth_ack(message_t *message)
-{
-    MESH_LOG_INFO("recv auth ack");
-
-    set_auth_state(AUTH_DONE);
-    //network_context_t *network = get_default_network_context();
-    ur_stop_timer(&g_auth_context.auth_timer, NULL);
-    return UR_ERROR_NONE;
-}
-
-ur_error_t handle_auth_relay(message_t *message)
-{
-    ur_error_t error = UR_ERROR_NONE;
-    mm_node_id2_tv_t *id2;
-    mm_id2_challenge_tv_t *id2_challenge;
-    mm_id2_auth_code_tlv_t *id2_auth_code;
-    uint8_t *tlvs;
-    uint16_t tlvs_length;
-    network_context_t *network;
-    message_info_t *info;
-    bool joiner = false;
-
-    info = message->info;
-    network = (network_context_t *)info->network;
+    if (memcmp(id2_hdr->type, vendor_type, 4) != 0) {
+        MESH_LOG_INFO("3");
+        return UR_ERROR_FAIL;
+    }
 
     if (!get_auth_result() &&
         umesh_mm_get_device_state() != DEVICE_STATE_LEADER) {
+        MESH_LOG_INFO("joiner is true");
         joiner = true;
     }
 
-    MESH_LOG_INFO("recv the auth relay message");
+    tlvs = buf + sizeof(eap_id2_header_t);
+    tlvs_length = len - sizeof(eap_id2_header_t);
 
-    tlvs_length = message_get_msglen(message) - sizeof(mm_header_t);
-    tlvs = ur_mem_alloc(tlvs_length);
-    if (tlvs == NULL) {
-        return UR_ERROR_MEM;
-    }
-    message_copy_to(message, sizeof(mm_header_t), tlvs, tlvs_length);
- 
-    if (update_neighbor(info, tlvs, tlvs_length, false) == NULL) {
-        error = UR_ERROR_FAIL;
-        goto exit;
-    }
+    switch (id2_hdr->cmd) {
+        case EAP_ID2_IDENTITY: {
+            MESH_LOG_INFO("handle EAP-ID2 Identity");
+            mm_node_id2_tv_t *id2;
+            const mac_address_t *mac;
+            mac = umesh_mm_get_mac_address();
+            id2 = (mm_node_id2_tv_t *)umesh_mm_get_tv(tlvs, tlvs_length,
+                                                      TYPE_NODE_ID2);
+            if (id2) {
+                memcpy(context->auth_context.peer_id2, id2->device_id, TFS_ID2_LEN);
+            } else {
+                error = UR_ERROR_FAIL;
+                goto exit;
+            }
 
-    // found id2_auth_code and act as joiner router
-    if (!joiner &&
-        (id2_auth_code = (mm_id2_auth_code_tlv_t *)umesh_mm_get_tv(tlvs, tlvs_length,
-                                                                   TYPE_ID2_AUTH_CODE))) {
-        const mac_address_t *mac;
-        mac = umesh_mm_get_mac_address();
-        uint8_t *data = (uint8_t *)id2_auth_code + sizeof(mm_tlv_t);
-        
-        // send joiner's auth code to sp server
-        socket_sendmsg(udp_sock.socket, info->src_mac.addr.addr, mac->addr,
-                       ID2_AUTH_CODE, data, id2_auth_code->base.length,
-                       ID2_SERVER_ADDR, ID2_SERVER_PORT);
-
-        MESH_LOG_INFO("joiner router -> sp server: joiner's auth code");
-
-        error = UR_ERROR_NONE;
-        goto exit;
-    }
-
-    id2 = (mm_node_id2_tv_t *)umesh_mm_get_tv(tlvs, tlvs_length,
-                                              TYPE_NODE_ID2);
-    // check ID2
-    if (joiner && (memcmp(g_auth_context.local_id2, id2->device_id, TFS_ID2_LEN) == 0)) {
-        id2_challenge = (mm_id2_challenge_tv_t *)umesh_mm_get_tv(tlvs, tlvs_length,
-                                                                 TYPE_ID2_CHALLENGE);
-        MESH_LOG_INFO("joiner router -> joiner: challenge");
-
-        if (id2_challenge) {
-            // calculate the auth code
-            tfs_id2_get_challenge_auth_code(id2_challenge->challenge, NULL, 0,
-                                            g_auth_context.auth_code,
-                                            &g_auth_context.auth_code_len);
-            MESH_LOG_INFO("auth code len: %d\n", g_auth_context.auth_code_len);
-        } else {
-            error = UR_ERROR_FAIL;
-            goto exit;
+            // send id2 to sp server
+            socket_sendmsg(udp_sock.socket, context->auth_context.peer.addr.addr, mac->addr,
+                           ID2_AUTH_REQUEST, id2->device_id, TFS_ID2_LEN,
+                           ID2_SERVER_ADDR, ID2_SERVER_PORT);
+            MESH_LOG_INFO("joiner router -> sp server: joiner's ID2");
+            break;
         }
+        case EAP_ID2_CHALLENGE: {
+            MESH_LOG_INFO("handle EAP-ID2 Challenge");
+            network_context_t *network = get_default_network_context();
+            id2 = (mm_node_id2_tv_t *)umesh_mm_get_tv(tlvs, tlvs_length,
+                                                     TYPE_NODE_ID2);
+            // check ID2
+            if (joiner && (memcmp(context->auth_context.local_id2, id2->device_id, TFS_ID2_LEN) == 0)) {
+                id2_challenge = (mm_id2_challenge_tv_t *)umesh_mm_get_tv(tlvs, tlvs_length,
+                                                                         TYPE_ID2_CHALLENGE);
+                if (id2_challenge) {
+                    // the first parameter "challenge" is a pointer of string type
+                    // here we pass the ascii hex of each character array instead
+                    // and also need to supplement the last '\0' as the ending, hence
+                    // the total length of "challenge" array should be 33 bytes.
+                    uint8_t challenge[TFS_CHALLENGE_LEN+1];
+                    memset(challenge, 0, sizeof(challenge));
+                    memcpy(challenge, id2_challenge->challenge, TFS_CHALLENGE_LEN);
+                    tfs_id2_get_challenge_auth_code(challenge, NULL, 0,
+                                                    context->auth_context.auth_code,
+                                                    &context->auth_context.auth_code_len);
+                    MESH_LOG_INFO("auth code len: %d", context->auth_context.auth_code_len);
+                } else {
+                    error = UR_ERROR_FAIL;
+                    goto exit;
+                }
 
-        ur_stop_timer(&g_auth_context.auth_timer, NULL);
-        set_auth_state(AUTH_RELAY_AUTH_CODE);
-        send_auth_relay(network, NULL);
-        ur_start_timer(&g_auth_context.auth_timer, network->hal->auth_relay_interval,
-                       handle_auth_timer, NULL);
-
-        MESH_LOG_INFO("joiner -> joiner router: auth code");
+                ur_stop_timer(&context->auth_context.auth_timer, NULL);
+                set_auth_state(AUTH_RELAY_AUTH_CODE);
+                send_auth_code(context);
+                ur_start_timer(&context->auth_context.auth_timer, network->hal->auth_relay_interval,
+                               handle_auth_timer, NULL);
+                MESH_LOG_INFO("joiner -> joiner router: auth code");
+                break;
+            }
+        }
+        case EAP_ID2_AUTH_CODE: {
+            MESH_LOG_INFO("handle EAP-ID2 auth code");
+            if (!joiner &&
+                (id2_auth_code = (mm_id2_auth_code_tlv_t *)umesh_mm_get_tv(tlvs, tlvs_length,
+                                                                   TYPE_ID2_AUTH_CODE))) {
+                const mac_address_t *mac;
+                mac = umesh_mm_get_mac_address();
+                uint8_t *data = (uint8_t *)id2_auth_code + sizeof(mm_tlv_t);
+        
+                // send joiner's auth code to sp server
+                socket_sendmsg(udp_sock.socket, context->auth_context.peer.addr.addr, mac->addr,
+                               ID2_AUTH_CODE, data, id2_auth_code->base.length,
+                               ID2_SERVER_ADDR, ID2_SERVER_PORT);
+                MESH_LOG_INFO("joiner router -> sp server: joiner's auth code");
+            }
+            break;
+        }
+        default:
+            break;
     }
 
 exit:
-    ur_mem_free(tlvs, tlvs_length);
     return error;
 }

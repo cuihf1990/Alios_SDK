@@ -1471,17 +1471,8 @@ ur_error_t umesh_mm_handle_frame_received(message_t *message)
             error = handle_router_message_received(message);
             break;
 #ifdef CONFIG_AOS_MESH_AUTH
-        case COMMAND_AUTH_REQUEST:
-            error = handle_auth_request(message);
-            break;
-        case COMMAND_AUTH_RESPONSE:
-            error = handle_auth_response(message);
-            break;
-        case COMMAND_AUTH_RELAY:
-            error = handle_auth_relay(message);
-            break;
-        case COMMAND_AUTH_ACK:
-            error = handle_auth_ack(message);
+        case COMMAND_AUTH_DOT1X:
+            error = handle_eapol(message);
             break;
 #endif
         default:

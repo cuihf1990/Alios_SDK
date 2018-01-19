@@ -21,28 +21,18 @@ ur_error_t send_eapol_start(dot1x_context_t *context)
     ur_error_t error = UR_ERROR_NONE;
     eapol_header_t *eapol_hdr;
     uint16_t length;
-    uint8_t *data;
-    uint8_t *data_orig;
     message_t *message = NULL;
     message_info_t *info;
 
-    length = sizeof(mm_header_t) + sizeof(eapol_header_t);
-    data = ur_mem_alloc(length);
-    if (data == NULL) {
-        return UR_ERROR_MEM;
-    }
-    data_orig = data;
-    data += sizeof(mm_header_t);
-
-    eapol_hdr = (eapol_header_t *)data;
+    eapol_hdr = (eapol_header_t *)(context->request + sizeof(mm_header_t));
     eapol_hdr->version = EAPOL_VERSION;
     eapol_hdr->type = EAPOL_START;
     eapol_hdr->length = 0; // eapol_start has no packet body
 
+    length = sizeof(mm_header_t) + sizeof(eapol_header_t);
     message = mf_build_message(MESH_FRAME_TYPE_CMD, COMMAND_AUTH_DOT1X,
-                               data_orig, length, NETWORK_MGMT_2);
+                               context->request, length, NETWORK_MGMT_2);
     if (message == NULL) {
-        ur_mem_free(data_orig, length);
         return UR_ERROR_MEM;
     }
 
@@ -50,10 +40,7 @@ ur_error_t send_eapol_start(dot1x_context_t *context)
     set_mesh_short_addr(&info->dest, context->auth_context.auth_candidate->netid,
                         context->auth_context.auth_candidate->sid);
     error = mf_send_message(message);
-    ur_mem_free(data_orig, length);
-
     MESH_LOG_INFO("send eapol start");
-
     return error;
 }
 
@@ -66,8 +53,8 @@ ur_error_t handle_eapol(message_t *message)
     message_copy_to(message, sizeof(mm_header_t), (uint8_t *)&eapol_hdr,
                     sizeof(eapol_header_t));
     MESH_LOG_DEBUG("version: %d, type: %d, length: %d",
-                   eapol_hdr.version, eapol_hdr.type, eapol_hdr.length);
-    
+                   eapol_hdr.version, eapol_hdr.type, ntohs(eapol_hdr.length));
+
     switch (eapol_hdr.type) {
         case EAPOL_START:
             return handle_eapol_start(message);
@@ -120,7 +107,7 @@ static ur_error_t handle_eapol_eap(message_t *message)
 
     message_copy_to(message, offset, (uint8_t *)&eap_hdr, sizeof(eap_header_t));
     MESH_LOG_DEBUG("code: %d, id: %d, length: %d",
-                   eap_hdr.code, eap_hdr.id, eap_hdr.length);
+                   eap_hdr.code, eap_hdr.id, ntohs(eap_hdr.length));
 
     switch (eap_hdr.code) {
         case EAP_CODE_REQUEST:

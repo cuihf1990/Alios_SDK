@@ -744,10 +744,7 @@ static void set_dest_encrypt_flag(message_info_t *info)
             info->command == COMMAND_DISCOVERY_RESPONSE ||
             info->command == COMMAND_ATTACH_REQUEST ||
 #ifdef CONFIG_AOS_MESH_AUTH
-            info->command == COMMAND_AUTH_REQUEST ||
-            info->command == COMMAND_AUTH_RESPONSE ||
-            info->command == COMMAND_AUTH_RELAY ||
-            info->command == COMMAND_AUTH_ACK ||
+            info->command == COMMAND_AUTH_DOT1X ||
 #endif
             info->command == COMMAND_LINK_ACCEPT) {
             info->key_index = INVALID_KEY_INDEX;
