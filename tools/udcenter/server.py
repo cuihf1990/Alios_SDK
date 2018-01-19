@@ -200,15 +200,15 @@ class Server:
                             continue
                         client['devices'][port]['status'] = value[len(port)+1:]
                         dev_str = client['uuid'] + ':' + port
-                        if dev_str in self.device_subscribe_map:
-                            log = client['uuid'] + ',' + port
-                            log += value[len(port):]
-                            data = TBframe.construct(type, log)
-                            uuid = self.device_subscribe_map[dev_str]
-                            try:
-                                self.terminals[uuid]['socket'].send(data)
-                            except:
-                                continue
+                        if dev_str not in self.device_subscribe_map:
+                            continue
+                        log = client['uuid'] + ',' + value
+                        data = TBframe.construct(type, log)
+                        uuid = self.device_subscribe_map[dev_str]
+                        try:
+                            self.terminals[uuid]['socket'].send(data)
+                        except:
+                            continue
                     elif type == TBframe.DEVICE_ERASE or type == TBframe.DEVICE_PROGRAM or \
                          type == TBframe.DEVICE_START or type == TBframe.DEVICE_STOP or \
                          type == TBframe.DEVICE_RESET or type == TBframe.DEVICE_CMD or \
@@ -421,6 +421,20 @@ class Server:
                             self.conn_timeout[conn]['timeout'] = time.time() + 30
                             print "terminal {0} connected @ {1}".format(uuid, addr)
                             self.send_device_list_to_terminal(terminal['uuid'])
+                            for device in terminal['devices']:
+                                try:
+                                    [uuid, port] = device.split(':')
+                                except:
+                                    continue
+                                if uuid not in self.clients:
+                                    continue
+                                if port not in self.clients[uuid]['devices']:
+                                    continue
+                                if self.clients[uuid]['devices'][port]['valid'] == False:
+                                    continue
+                                data = uuid + ',' + port + ',' + self.clients[uuid]['devices'][port]['status']
+                                data = TBframe.construct(TBframe.DEVICE_STATUS, data)
+                                conn.send(data)
                             self.report_status_to_controller()
                         continue
 
