@@ -391,14 +391,10 @@ static void timer_task(void *pa)
     (void)pa;
 
     while (RHINO_TRUE) {
-        err = krhino_buf_queue_recv(&g_timer_queue, RHINO_CONFIG_NEXT_INTRPT_TICKS, &cb_msg, &msg_size);
+        err = krhino_buf_queue_recv(&g_timer_queue, RHINO_WAIT_FOREVER, &cb_msg, &msg_size);
         tick_end   = krhino_sys_tick_get();
 
-        if (err == RHINO_BLK_TIMEOUT) {
-            g_timer_count = tick_end;
-            continue;
-        }
-        else if (err == RHINO_SUCCESS) {
+        if (err == RHINO_SUCCESS) {
             g_timer_count = tick_end;
         }
         else {
