@@ -189,15 +189,17 @@ class Controller():
             return
 
         self.connections[sock]['role'] = role
-        value = value[len(role)+1:]
         self.serve_funcs[role](sock, type, value)
 
     def client_process(self, sock, type, value):
         self.netlog_print('client {0} {1}'.format(type, value))
-        self.timeouts[sock] = time.time() + CONFIG_TIMEOUT
         if type == TBframe.ACCESS_LOGIN:
-            is_valid_uuid = re.match('^[0-9a-f]{12}$', value)
-            server_sock = self.choose_random_server()
+            if value.startswith('client,'):
+                uuid = value[len('client,'):]
+                is_valid_uuid = re.match('^[0-9a-f]{12}$', uuid)
+                server_sock = self.choose_random_server()
+            else:
+                is_valid_uuid = None
             if is_valid_uuid == None:
                 content = TBframe.construct(TBframe.ACCESS_LOGIN, 'argerror')
                 self.send_data(sock, content)
@@ -208,22 +210,27 @@ class Controller():
                 self.send_data(sock, content)
                 return
 
-            uuid = value
             token = self.generate_random_hexstr(16)
             content = '{0},{1}'.format(uuid, token)
             content = TBframe.construct(TBframe.ACCESS_ADD_CLIENT, content)
             self.send_data(server_sock, content)
             self.connections[sock]['uuid'] = uuid
+            self.timeouts[sock] = time.time() + CONFIG_TIMEOUT
             return
 
     def server_process(self, sock, type, value):
-        self.netlog_print('server {0} {1}'.format(type, value))
         self.timeouts[sock] = time.time() + CONFIG_TIMEOUT
+        if type == TBframe.HEARTBEAT:
+            return
+        self.netlog_print('server {0} {1}'.format(type, value))
         if type == TBframe.ACCESS_LOGIN:
-            try:
-                ports = json.loads(value)
-            except:
-                if DEBUG: traceback.print_exc()
+            if value.startswith('server,'):
+                value = value[len('server,'):]
+                try:
+                    ports = json.loads(value)
+                except:
+                    ports = {}
+            else:
                 ports = {}
             if 'client_port' not in ports or 'terminal_port' not in ports:
                 content = TBframe.construct(TBframe.ACCESS_LOGIN, 'fail')
@@ -326,13 +333,17 @@ class Controller():
     def terminal_process(self, sock, type, value):
         self.netlog_print('terminal {0} {1}'.format(type, value))
         if type == TBframe.ACCESS_LOGIN:
-            is_valid_uuid = re.match('^[0-9a-f]{16}$', value)
+            if value.startswith('terminal,'):
+                uuid = value[len('terminal,'):]
+                is_valid_uuid = re.match('^[0-9a-f]{16}$', uuid)
+            else:
+                is_valid_uuid = None
             if is_valid_uuid == None:
                 content = TBframe.construct(TBframe.ACCESS_LOGIN, 'argerror')
                 self.send_data(sock, content)
                 return
 
-            sqlcmd = "SELECT * FROM Users WHERE uuid = '{0}'".format(value)
+            sqlcmd = "SELECT * FROM Users WHERE uuid = '{0}'".format(uuid)
             ret = self.database_excute_sqlcmd(sqlcmd)
             if ret == None or len(ret) != 1:
                 content = TBframe.construct(TBframe.ACCESS_LOGIN, 'invaliduuid')
@@ -351,7 +362,6 @@ class Controller():
                 self.send_data(sock, content)
                 return
 
-            uuid = value
             token = self.generate_random_hexstr(16)
             content = '{0},{1},{2}'.format(uuid, token, devices)
             content = TBframe.construct(TBframe.ACCESS_ADD_TERMINAL, content)
@@ -458,20 +468,73 @@ class Controller():
             self.cmdlog_print("succeed")
         return
 
-    def list_cmd_handler(self, args):
-        if len(args) == 0:
+    def print_user(self, uuid=None):
+        if uuid == None:
             sqlcmd = "SELECT * FROM Users"
-            rows = self.database_excute_sqlcmd(sqlcmd)
+        else:
+            sqlcmd = "SELECT * FROM Users where uuid = {0}".format(uuid)
+
+        rows = self.database_excute_sqlcmd(sqlcmd)
+
+        if uuid == None:
+            self.cmdlog_print("users:")
             for row in rows:
-                self.cmdlog_print("{0}".format(row))
-        if len(args) == 1:
-            uuid = args[0]
-            sqlcmd = "SELECT * FROM Users WHERE uuid = '{0}'".format(uuid)
-            rows = self.database_excute_sqlcmd(sqlcmd)
+                key = row[0]; name = row[1]; email=row[2]
+                devices = row[3].split('|')
+                self.cmdlog_print("|--{0} {1} {2}".format(key, name, email))
+                for device in devices:
+                    self.cmdlog_print("|  |--{0}".format(device))
+        else:
             if len(rows) == 0:
                 self.cmdlog_print("error: uuid {0} does not exist in database".format(repr(uuid)))
+            self.cmdlog_print("users:")
             for row in rows:
-                self.cmdlog_print("{0}".format(row))
+                key = row[0]; name = row[1]; email=row[2]
+                devices = row[3].split('|')
+                self.cmdlog_print("|--{0} {1} {2}".format(key, name, email))
+                for device in devices:
+                    self.cmdlog_print("|  |--{0}".format(device))
+
+    def print_server(self):
+        self.cmdlog_print("servers:")
+        tab = '  |'
+        for conn in self.connections:
+            if self.connections[conn]['valid'] == False:
+                continue
+            if self.connections[conn]['role'] != 'server':
+                continue
+            server_addr = conn.getpeername()
+            self.cmdlog_print("|" + tab*0 + '--' + '{0}-{1}:'.format(server_addr[0], server_addr[1]))
+            if 'clients' not in self.connections[conn]['status']:
+                continue
+            self.cmdlog_print("|" + tab*1 + '--' + 'terminals:')
+            for terminal in self.connections[conn]['status']['terminals']:
+                self.cmdlog_print('|' + tab*2 + '--' + terminal)
+            if len(self.connections[conn]['status']['clients']) == 0:
+                continue
+            self.cmdlog_print("|" + tab*1 + '--' + 'clients:')
+            for client in self.connections[conn]['status']['clients']:
+                self.cmdlog_print('|' + tab*2 + '--' + client)
+            if len(self.connections[conn]['status']['devices']) == 0:
+                continue
+            self.cmdlog_print("|" + tab*1 + '--' + 'devices:')
+            for device in self.connections[conn]['status']['devices']:
+                self.cmdlog_print('|     |--' + device)
+
+    def list_cmd_handler(self, args):
+        if len(args) == 0:
+            self.print_user(None)
+            self.cmdlog_print('')
+            self.print_server()
+
+        if len(args) >= 1:
+            if args[0] == 'user':
+                uuid = None
+                if len(args) >= 2:
+                    uuid = args[1]
+                self.print_user(uuid)
+            elif args[0] == 'server':
+                self.print_server()
         return
 
     def help_cmd_handler(self, args):
@@ -479,7 +542,9 @@ class Controller():
         self.cmdlog_print("       add user name [email] [device1|deice2|...|deviceN]")
         self.cmdlog_print("       add device uuid device1|deice2|...|deviceN")
         self.cmdlog_print("       del uuid")
-        self.cmdlog_print("       list [uuid]")
+        self.cmdlog_print("       list")
+        self.cmdlog_print("       list user [uuid]")
+        self.cmdlog_print("       list server")
         return
 
     def process_cmd(self):
@@ -554,15 +619,13 @@ class Controller():
                         if self.cur_pos <= 0:
                             continue
                         self.cur_pos -= 1
-                        sys.stdout.write('\b')
-                        sys.stdout.flush()
+                        self.cmd_print()
                         continue
                     if ord(c) == 67: #KEY_RIGHT
                         if self.cur_pos >= len(self.user_cmd):
                             continue
-                        sys.stdout.write(self.user_cmd[self.cur_pos])
                         self.cur_pos += 1
-                        sys.stdout.flush()
+                        self.cmd_print()
                         continue
 
             if ord(c) == 27: #ESCAPE

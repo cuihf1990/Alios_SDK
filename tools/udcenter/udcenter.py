@@ -87,4 +87,4 @@ elif mode == "controller":
     os.remove(tmpfile)
 else:
     print_usage()
-    sys.exit(0)
+sys.exit(0)

@@ -200,15 +200,15 @@ class Server:
                             continue
                         client['devices'][port]['status'] = value[len(port)+1:]
                         dev_str = client['uuid'] + ':' + port
-                        if dev_str in self.device_subscribe_map:
-                            log = client['uuid'] + ',' + port
-                            log += value[len(port):]
-                            data = TBframe.construct(type, log)
-                            uuid = self.device_subscribe_map[dev_str]
-                            try:
-                                self.terminals[uuid]['socket'].send(data)
-                            except:
-                                continue
+                        if dev_str not in self.device_subscribe_map:
+                            continue
+                        log = client['uuid'] + ',' + value
+                        data = TBframe.construct(type, log)
+                        uuid = self.device_subscribe_map[dev_str]
+                        try:
+                            self.terminals[uuid]['socket'].send(data)
+                        except:
+                            continue
                     elif type == TBframe.DEVICE_ERASE or type == TBframe.DEVICE_PROGRAM or \
                          type == TBframe.DEVICE_START or type == TBframe.DEVICE_STOP or \
                          type == TBframe.DEVICE_RESET or type == TBframe.DEVICE_CMD or \
@@ -421,6 +421,20 @@ class Server:
                             self.conn_timeout[conn]['timeout'] = time.time() + 30
                             print "terminal {0} connected @ {1}".format(uuid, addr)
                             self.send_device_list_to_terminal(terminal['uuid'])
+                            for device in terminal['devices']:
+                                try:
+                                    [uuid, port] = device.split(':')
+                                except:
+                                    continue
+                                if uuid not in self.clients:
+                                    continue
+                                if port not in self.clients[uuid]['devices']:
+                                    continue
+                                if self.clients[uuid]['devices'][port]['valid'] == False:
+                                    continue
+                                data = uuid + ',' + port + ',' + self.clients[uuid]['devices'][port]['status']
+                                data = TBframe.construct(TBframe.DEVICE_STATUS, data)
+                                conn.send(data)
                             self.report_status_to_controller()
                         continue
 
@@ -552,7 +566,7 @@ class Server:
             pass
 
     def controller_interact_thread(self, controller_ip, controller_port):
-        sock = None; logedin = False; status_timeout = False
+        sock = None; logedin = False; heartbeat_timeout = False
         while self.keep_running:
             if sock == None: #connect to controller
                 sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
@@ -560,11 +574,11 @@ class Server:
                     sock = ssl.wrap_socket(sock, cert_reqs=ssl.CERT_REQUIRED, ca_certs='server_cert.pem')
                 try:
                     sock.connect((controller_ip, controller_port))
-                    msg = ''; logedin = False; status_timeout = None
+                    msg = ''; logedin = False; heartbeat_timeout = None
                     sock.settimeout(1)
+                    print("connection to controller established")
                 except:
-                    if DEBUG: traceback.print_exc()
-                    sock = None; logedin = False; status_timeout = None
+                    sock = None; logedin = False; heartbeat_timeout = None
                     self.controller_socket = sock
                     time.sleep(2)
                     continue
@@ -577,21 +591,32 @@ class Server:
                     try:
                         sock.send(content)
                     except:
-                        sock = None; logedin = False; status_timeout = None
+                        sock = None; logedin = False; heartbeat_timeout = None
                         self.controller_socket = sock
                         continue
+
+                if heartbeat_timeout and time.time() > heartbeat_timeout:
+                    content = TBframe.construct(TBframe.HEARTBEAT, '')
+                    try:
+                        sock.send(content)
+                    except:
+                        sock = None; logedin = False; heartbeat_timeout = None
+                        self.controller_socket = sock
+                        continue
+                    else:
+                        heartbeat_timeout += 10
 
                 try:
                     data = sock.recv(MAX_MSG_LENTH)
                 except socket.timeout:
                     continue
                 except:
-                    sock = None; logedin = False; status_timeout = None
+                    sock = None; logedin = False; heartbeat_timeout = None
                     self.controller_socket = sock
                     break
                 if not data:
                     print("error: connection to controller lost")
-                    sock = None; logedin = False; status_timeout = None
+                    sock = None; logedin = False; heartbeat_timeout = None
                     self.controller_socket = sock
                     break
 
@@ -605,10 +630,12 @@ class Server:
                     if type == TBframe.ACCESS_LOGIN:
                         if value == 'ok':
                             logedin = True
-                            status_timeout = time.time() + 10
+                            heartbeat_timeout = time.time() + 10
                             self.controller_socket = sock
                             self.report_status_to_controller()
+                            print("login to controller succeed")
                         else:
+                            print("login to controller failed, ret={0}, retry later...".format(value))
                             time.sleep(5)
                         continue
                     if type == TBframe.ACCESS_REPORT_STATUS:
@@ -634,7 +661,7 @@ class Server:
                         try:
                             sock.send(content)
                         except:
-                            sock = None; logedin = False; status_timeout = None
+                            sock = None; logedin = False; heartbeat_timeout = None
                             self.controller_socket = sock
                         continue
                     if type == TBframe.ACCESS_DEL_CLIENT:
@@ -678,7 +705,7 @@ class Server:
                         try:
                             sock.send(content)
                         except:
-                            sock = None; logedin = False; status_timeout = None
+                            sock = None; logedin = False; heartbeat_timeout = None
                             self.controller_socket = sock
                         continue
                     if type == TBframe.ACCESS_DEL_TERMINAL:
