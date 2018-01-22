@@ -700,7 +700,7 @@ static ur_error_t send_attach_response(network_context_t *network,
         length += sizeof(mm_symmetric_key_tv_t);
     }
 
-    if (node_id->sid != INVALID_SID && node_id->sid != BCAST_SID) {
+    if (is_unique_sid(node_id->sid)) {
         length += (sizeof(mm_sid_tv_t) + sizeof(mm_node_type_tv_t) +
                    sizeof(mm_netinfo_tv_t) + sizeof(mm_mcast_addr_tv_t));
     } else if ((node_id->mode & MODE_MOBILE) == 0 && network->router->sid_type == STRUCTURED_SID) {
@@ -733,7 +733,7 @@ static ur_error_t send_attach_response(network_context_t *network,
         memcpy(symmetric_key->symmetric_key, get_key(GROUP_KEY1_INDEX), KEY_SIZE);
         data += sizeof(mm_symmetric_key_tv_t);
     }
-    if (node_id->sid != INVALID_SID && node_id->sid != BCAST_SID) {
+    if (is_unique_sid(node_id->sid)) {
         data += set_mm_sid_tv(data, TYPE_ALLOCATE_SID, node_id->sid);
         data += set_mm_allocated_node_type_tv(data, node_id->type);
         data += set_mm_netinfo_tv(network, data);
@@ -927,7 +927,7 @@ static ur_error_t send_sid_request(void)
 
     length = sizeof(mm_header_t) + sizeof(mm_node_id_tv_t) + sizeof(mm_uuid_tv_t) +
              sizeof(mm_mode_tv_t);
-    if (g_mm_state.attach_context.sid != INVALID_SID &&
+    if (is_unique_sid(g_mm_state.attach_context.sid) &&
         g_mm_state.attach_context.attach_candidate->netid == network->meshnetid) {
         length += sizeof(mm_sid_tv_t);
     }
@@ -945,8 +945,7 @@ static ur_error_t send_sid_request(void)
     data += set_mm_uuid_tv(data, TYPE_SRC_UUID, g_mm_state.device.uuid);
     data += set_mm_mode_tv(data);
 
-    if (g_mm_state.attach_context.sid != INVALID_SID &&
-        g_mm_state.attach_context.attach_candidate->netid == network->meshnetid) {
+    if ((data - data_orig) < length) {
         data += set_mm_sid_tv(data, TYPE_SRC_SID, g_mm_state.attach_context.sid);
     }
 
@@ -1235,8 +1234,8 @@ static neighbor_t *choose_attach_candidate(neighbor_t *nbr)
         cmp_mode = umesh_mm_compare_mode(g_mm_state.device.mode, nbr->mode);
         if (cmp_mode < 0 || nbr->attach_candidate_timeout > 0 || (nbr->mode & MODE_MOBILE) ||
             (network->router->sid_type == STRUCTURED_SID && nbr->ssid_info.free_slots < 1) ||
-            is_unique_netid(nbr->netid) == false || nbr->sid == BCAST_SID ||
-            nbr->sid == INVALID_SID || (is_unique_netid(netid) && nbr->netid != netid)) {
+            is_unique_netid(nbr->netid) == false || is_unique_sid(nbr->sid) == false ||
+            (is_unique_netid(netid) && nbr->netid != netid)) {
             continue;
         }
         if (attach_candidate == NULL) {

@@ -39,7 +39,7 @@ uint16_t router_get_next_hop_shortid(uint16_t dest)
     uint16_t mask;
     uint16_t sid;
 
-    if (g_sr_state.local_sid == INVALID_SID) {
+    if (is_unique_sid(g_sr_state.local_sid) == false) {
         return INVALID_SID;
     }
 

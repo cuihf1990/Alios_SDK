@@ -76,7 +76,7 @@ bool is_direct_child(allocator_t hdl, uint16_t sid)
     uint16_t sidmask = 0;
     uint8_t index;
 
-    if (sid == LEADER_SID || sid == INVALID_SID) {
+    if (sid == LEADER_SID || is_unique_sid(sid) == false) {
         return false;
     }
     allocator = (ssid_allocator_t *)hdl;
@@ -145,7 +145,7 @@ ur_error_t update_sid_mapping(allocator_t hdl,
     }
 
     if (new_node) {
-        if (node_id->sid != INVALID_SID && node_id->sid != new_node->node_id.sid) {
+        if (is_unique_sid(node_id->sid) && node_id->sid != new_node->node_id.sid) {
             free_sid(hdl, new_node->node_id.sid);
         }
     } else {
@@ -270,12 +270,12 @@ ur_error_t allocate_sid(allocator_t hdl, ur_node_id_t *node_id)
         return UR_ERROR_NONE;
     }
 
-    if (node_id->sid != INVALID_SID &&
+    if (is_unique_sid(node_id->sid) &&
         allocate_expected_sid(hdl, node_id) == UR_ERROR_FAIL) {
         goto new_sid;
     }
 
-    if (node_id->sid == INVALID_SID) {
+    if (is_unique_sid(node_id->sid) == false) {
         goto new_sid;
     }
 
@@ -376,7 +376,7 @@ slist_t *get_ssid_nodes_list(allocator_t hdl)
 
 bool is_partial_function_sid(uint16_t sid)
 {
-    if (sid == INVALID_SID || sid == BCAST_SID) {
+    if (is_unique_sid(sid) == false) {
         return false;
     }
     if (((sid >> PF_SID_PREFIX_OFFSET) & PF_SID_PREFIX_MASK) >= MOBILE_PREFIX) {

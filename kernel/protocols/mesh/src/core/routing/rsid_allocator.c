@@ -83,7 +83,7 @@ ur_error_t rsid_allocate_sid(allocator_t hdl, ur_node_id_t *node_id)
         len = RSID_NUM;
     }
 
-    if (node_id->sid != INVALID_SID) {
+    if (is_unique_sid(node_id->sid)) {
         if (node_id->sid == new_node->node_id.sid) {
             error = UR_ERROR_NONE;
         } else {

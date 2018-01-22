@@ -298,7 +298,7 @@ static uint16_t calc_ssid_child_num(network_context_t *network)
                 continue;
             }
             if (next_nbr->netid == umesh_mm_get_meshnetid(network) &&
-                nbr->sid != INVALID_SID && nbr->sid == next_nbr->sid) {
+                is_unique_sid(nbr->sid) && nbr->sid == next_nbr->sid) {
                 dup = true;
             }
         }
