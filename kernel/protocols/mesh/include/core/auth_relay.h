@@ -11,7 +11,7 @@
 
 #define ID2_LISTEN_PORT 1234
 #define ID2_SERVER_PORT 2345
-#define ID2_SERVER_ADDR "30.17.40.78"
+#define ID2_SERVER_ADDR "30.4.10.12" // testbed sp server ip
 
 /** sp socket payload format:
  *    8 bytes | 8 bytes | 1 byte  | N bytes

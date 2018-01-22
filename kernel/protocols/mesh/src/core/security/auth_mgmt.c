@@ -250,7 +250,6 @@ ur_error_t start_auth(neighbor_t *nbr, auth_handler_t handler)
     ur_start_timer(&g_auth_context.auth_timer,
                    (random % network->hal->auth_request_interval + 1),
                    handle_auth_timer, NULL);
-
     return UR_ERROR_NONE;
 }
 
@@ -414,14 +413,17 @@ ur_error_t handle_auth_start(dot1x_context_t *context, const uint8_t *buf)
 
     MESH_LOG_INFO("handle EAP-ID2 Start");
 
-    if (id2_hdr->cmd != EAP_ID2_START)
+    if (id2_hdr->cmd != EAP_ID2_START) {
         return UR_ERROR_FAIL;
+    }
     
-    if (memcmp(id2_hdr->oui, vendor_oui, 3) != 0)
+    if (memcmp(id2_hdr->oui, vendor_oui, 3) != 0) {
         return UR_ERROR_FAIL;
+    }
 
-    if (memcmp(id2_hdr->type, vendor_type, 4) != 0)
+    if (memcmp(id2_hdr->type, vendor_type, 4) != 0) {
         return UR_ERROR_FAIL;
+    }
 
     return send_auth_identity(context);
 }
@@ -444,23 +446,19 @@ ur_error_t handle_auth_relay(dot1x_context_t *context,
     if (id2_hdr->cmd != EAP_ID2_IDENTITY &&
         id2_hdr->cmd != EAP_ID2_CHALLENGE &&
         id2_hdr->cmd != EAP_ID2_AUTH_CODE) {
-        MESH_LOG_INFO("1");
         return UR_ERROR_FAIL;
     }
     
     if (memcmp(id2_hdr->oui, vendor_oui, 3) != 0) {
-        MESH_LOG_INFO("2");
         return UR_ERROR_FAIL;
     }
 
     if (memcmp(id2_hdr->type, vendor_type, 4) != 0) {
-        MESH_LOG_INFO("3");
         return UR_ERROR_FAIL;
     }
 
     if (!get_auth_result() &&
         umesh_mm_get_device_state() != DEVICE_STATE_LEADER) {
-        MESH_LOG_INFO("joiner is true");
         joiner = true;
     }
 

@@ -88,8 +88,9 @@ ur_error_t send_eap_response(dot1x_context_t *context)
     length += sizeof(mm_header_t) + sizeof(eapol_header_t);
     message = mf_build_message(MESH_FRAME_TYPE_CMD, COMMAND_AUTH_DOT1X,
                                context->response, length, NETWORK_MGMT_2);
-    if (message == NULL)
+    if (message == NULL) {
         return UR_ERROR_MEM;
+    }
     
     info = message->info;
     set_mesh_short_addr(&info->dest, context->auth_context.auth_candidate->netid,
@@ -278,13 +279,14 @@ ur_error_t handle_eap_identity(dot1x_context_t *context, message_t *message)
     message_copy_to(message, offset, buf, (message_get_msglen(message) - offset));
 
     cur = buf + sizeof(eap_header_t);
-    if (*cur++ != EAP_TYPE_IDENTITY)
+    if (*cur++ != EAP_TYPE_IDENTITY) {
         return UR_ERROR_FAIL;
+    }
 
     // identity
-    if (memcmp(context->auth_context.peer.addr.addr, cur, EXT_ADDR_SIZE) != 0)
+    if (memcmp(context->auth_context.peer.addr.addr, cur, EXT_ADDR_SIZE) != 0) {
         return UR_ERROR_FAIL;
-
+    }
     MESH_LOG_DEBUG("peer src mac: %02x:%02x:%02x:%02x:%02x:%02x",
             context->auth_context.peer.addr.addr[0], context->auth_context.peer.addr.addr[1],
             context->auth_context.peer.addr.addr[2], context->auth_context.peer.addr.addr[3],
