@@ -14,6 +14,8 @@ enum {
     INVALID_SID      = 0xfffe,
 };
 
+#define is_unique_sid(sid) (sid != BCAST_SID && sid != INVALID_SID)
+
 enum {
     STRUCTURED_SID   = 0,
     SHORT_RANDOM_SID = 1,

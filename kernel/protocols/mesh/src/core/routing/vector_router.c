@@ -1116,7 +1116,7 @@ ur_error_t vector_router_event_triggered(uint8_t event, uint8_t *data,
     if (event == EVENT_SID_UPDATED && data != NULL && len == sizeof(netids_t)) {
         netids_t *netids = (netids_t *)data;
 
-        if (netids->meshnetid == INVALID_NETID || netids->sid == INVALID_SID) {
+        if (is_unique_netid(netids->meshnetid) == false || is_unique_sid(netids->sid) == false) {
             return UR_ERROR_NONE;
         }
 
