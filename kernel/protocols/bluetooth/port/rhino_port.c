@@ -210,7 +210,7 @@ void k_fifo_put(struct k_fifo *fifo, void *msg)
     ret = krhino_queue_back_send(fifo->_queue, msg);
 
     if (RHINO_SUCCESS != ret) {
-#if LIFO_DEBUG
+#if FIFO_DEBUG
         BT_ERR("send msg to fifo %p count %d,total_count %d,fail,%d",
                         fifo, fifo->count, fifo->total_count, ret);
 #else
@@ -218,7 +218,7 @@ void k_fifo_put(struct k_fifo *fifo, void *msg)
 #endif
         return;
     }
-#if LIFO_DEBUG
+#if FIFO_DEBUG
     fifo->count++;
 #endif
 }
@@ -230,6 +230,11 @@ void k_fifo_put_list(struct k_fifo *fifo, void *head, void *tail)
     for (buf_tail = (struct net_buf *)head; buf_tail; buf_tail = buf_tail->frags) {
         k_fifo_put(fifo, buf_tail);
     }
+}
+
+void k_fifo_cancel_wait(struct k_fifo *fifo)
+{
+
 }
 
 int k_sem_init(struct k_sem *sem, unsigned int initial_count, unsigned int limit)
@@ -382,7 +387,6 @@ void k_sleep(s32_t duration)
     aos_msleep(duration);
 }
 
-
 unsigned int find_msb_set(u32_t data)
 {
     uint32_t count = 0;
@@ -410,7 +414,7 @@ unsigned int find_lsb_set(u32_t data)
         count += 1u;
         mask = mask >> 1u;
     }
-    return (32 - count);
+    return (count);
 }
 
 #if defined(__cplusplus)

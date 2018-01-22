@@ -23,7 +23,6 @@ $(NAME)_SOURCES := core/atomic_c.c \
                    core/poll.c \
                    host/uuid.c \
                    host/hci_core.c \
-                   host/hci_ecc.c \
                    core/tinycrypt/source/utils.c \
                    core/tinycrypt/source/sha256.c \
                    core/tinycrypt/source/hmac.c \

@@ -29,7 +29,11 @@ struct k_work {
     atomic_t flags[1];
 };
 
-#define _K_WORK_INITIALIZER(work_handler)  { 0 }
+#define _K_WORK_INITIALIZER(work_handler) \
+        { \
+            .handler = work_handler, \
+            .flags = { 0 } \
+        }
 
 #define K_WORK_INITIALIZER DEPRECATED_MACRO _K_WORK_INITIALIZER
 
