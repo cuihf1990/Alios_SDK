@@ -1,5 +1,5 @@
 import os, sys, time, socket, ssl, signal, re
-import thread, threading, json, traceback, shutil
+import thread, threading, json, traceback, shutil, uuid
 import TBframe
 
 MAX_MSG_LENTH = 8192
@@ -14,6 +14,7 @@ def signal_handler(sig, frame):
 
 class Server:
     def __init__(self):
+        self.uuid = '{0:012x}'.format(uuid.getnode())
         self.keyfile = 'server_key.pem'
         self.certfile = 'server_cert.pem'
         self.client_socket = None
@@ -432,7 +433,7 @@ class Server:
                                     continue
                                 if self.clients[uuid]['devices'][port]['valid'] == False:
                                     continue
-                                data = uuid + ',' + port + ',' + self.clients[uuid]['devices'][port]['status']
+                                data = uuid + ',' + port + ':' + self.clients[uuid]['devices'][port]['status']
                                 data = TBframe.construct(TBframe.DEVICE_STATUS, data)
                                 conn.send(data)
                             self.report_status_to_controller()
@@ -569,30 +570,32 @@ class Server:
         sock = None; logedin = False; heartbeat_timeout = False
         while self.keep_running:
             if sock == None: #connect to controller
+                logedin = False; heartbeat_timeout = None
                 sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
                 if ENCRYPT_CONTROLLER:
                     sock = ssl.wrap_socket(sock, cert_reqs=ssl.CERT_REQUIRED, ca_certs='server_cert.pem')
                 try:
                     sock.connect((controller_ip, controller_port))
-                    msg = ''; logedin = False; heartbeat_timeout = None
+                    msg = '';
                     sock.settimeout(1)
                     print("connection to controller established")
                 except:
-                    sock = None; logedin = False; heartbeat_timeout = None
-                    self.controller_socket = sock
+                    sock = None; self.controller_socket = sock
                     time.sleep(2)
                     continue
 
             while sock != None:
                 if logedin == False: #try to login
-                    content = {'client_port':self.client_socket.getsockname()[1], 'terminal_port':self.terminal_socket.getsockname()[1]}
+                    content = {}
+                    content['uuid'] = self.uuid
+                    content['client_port'] = self.client_socket.getsockname()[1]
+                    content['terminal_port'] = self.terminal_socket.getsockname()[1]
                     content = 'server,' + json.dumps(content)
                     content = TBframe.construct(TBframe.ACCESS_LOGIN, content)
                     try:
                         sock.send(content)
                     except:
-                        sock = None; logedin = False; heartbeat_timeout = None
-                        self.controller_socket = sock
+                        sock = None; self.controller_socket = sock
                         continue
 
                 if heartbeat_timeout and time.time() > heartbeat_timeout:
@@ -600,8 +603,7 @@ class Server:
                     try:
                         sock.send(content)
                     except:
-                        sock = None; logedin = False; heartbeat_timeout = None
-                        self.controller_socket = sock
+                        sock = None; self.controller_socket = sock
                         continue
                     else:
                         heartbeat_timeout += 10
@@ -611,13 +613,11 @@ class Server:
                 except socket.timeout:
                     continue
                 except:
-                    sock = None; logedin = False; heartbeat_timeout = None
-                    self.controller_socket = sock
+                    sock = None; self.controller_socket = sock
                     break
                 if not data:
                     print("error: connection to controller lost")
-                    sock = None; logedin = False; heartbeat_timeout = None
-                    self.controller_socket = sock
+                    sock = None; self.controller_socket = sock
                     break
 
                 msg += data
@@ -661,8 +661,7 @@ class Server:
                         try:
                             sock.send(content)
                         except:
-                            sock = None; logedin = False; heartbeat_timeout = None
-                            self.controller_socket = sock
+                            sock = None; self.controller_socket = sock
                         continue
                     if type == TBframe.ACCESS_DEL_CLIENT:
                         uuid = value
@@ -705,10 +704,49 @@ class Server:
                         try:
                             sock.send(content)
                         except:
-                            sock = None; logedin = False; heartbeat_timeout = None
-                            self.controller_socket = sock
+                            sock = None; self.controller_socket = sock
+                        continue
+                    if type == TBframe.ACCESS_UPDATE_TERMINAL:
+                        try:
+                            [uuid, devices] = value.split(',')
+                            devices = devices.split('|')
+                        except:
+                            print "invalid arguments {0}".format(repr(value))
+                            continue
+                        if uuid not in self.terminals:
+                            content = TBframe.construct(TBframe.ACCESS_UPDATE_TERMINAL, 'fail')
+                        else:
+                            terminal = self.terminals[uuid]
+                            for device in devices:
+                                if device in terminal['devices']:
+                                    continue
+                                self.device_subscribe_map[device] = uuid
+                                terminal['devices'] += [device]
+                            for device in list(terminal['devices']):
+                                if device in devices:
+                                    continue
+                                terminal['devices'].remove(device)
+                                self.device_subscribe_map.pop(device)
+                            content = TBframe.construct(TBframe.ACCESS_UPDATE_TERMINAL, 'success')
+                            self.send_device_list_to_terminal(uuid)
+                        try:
+                            sock.send(content)
+                        except:
+                            sock = None; self.controller_socket = sock
                         continue
                     if type == TBframe.ACCESS_DEL_TERMINAL:
+                        uuid = value
+                        if uuid not in self.terminals:
+                            content = TBframe.construct(TBframe.ACCESS_DEL_TERMINAL, 'fail')
+                        else:
+                            if 'socket' in self.terminals[uuid]:
+                                self.terminals[uuid]['socket'].close()
+                            self.terminals[uuid]['token'] = None
+                            content = TBframe.construct(TBframe.ACCESS_DEL_TERMINAL, 'success')
+                        try:
+                            sock.send(content)
+                        except:
+                            sock = None; self.controller_socket = sock
                         continue
 
     def house_keeping_thread(self):

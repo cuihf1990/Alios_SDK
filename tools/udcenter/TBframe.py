@@ -32,6 +32,7 @@ ACCESS_REPORT_STATUS = 'ARPS'
 ACCESS_ADD_CLIENT    = 'AADC'
 ACCESS_DEL_CLIENT    = 'ADLC'
 ACCESS_ADD_TERMINAL  = 'AADT'
+ACCESS_UPDATE_TERMINAL = 'AUPT'
 ACCESS_DEL_TERMINAL  = 'ADLT'
 
 def is_valid_type(type):
@@ -94,6 +95,8 @@ def is_valid_type(type):
     if type == ACCESS_DEL_CLIENT:
         return True
     if type == ACCESS_ADD_TERMINAL:
+        return True
+    if type == ACCESS_UPDATE_TERMINAL:
         return True
     if type == ACCESS_DEL_TERMINAL:
         return True
