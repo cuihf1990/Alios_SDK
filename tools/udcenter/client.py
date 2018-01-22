@@ -720,7 +720,7 @@ class Client:
                         self.send_packet(type, content)
                     elif type == TBframe.FILE_END:
                         try:
-                            [term, hash] = value.split(':')
+                            [term, hash, filename] = value.split(':')
                         except:
                             print "argument error: {0} {1}".format(type, value)
                             continue
