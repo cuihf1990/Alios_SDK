@@ -14,7 +14,7 @@ endif
 $(NAME)_INCLUDES     += ./mbedtls/include/mbedtls
 $(NAME)_INCLUDES     += ./libalicrypto/mbed/inc
 $(NAME)_INCLUDES     += ./libalicrypto/sw
-GLOBAL_INCLUDES      += ./libalicrypto/inc
+GLOBAL_INCLUDES      += ./libalicrypto/inc 
 
 $(NAME)_CFLAGS       += -DCONFIG_CRYPT_MBED=1 -DCONFIG_DBG_CRYPT=1
 GLOBAL_DEFINES       += CONFIG_ALICRYPTO
