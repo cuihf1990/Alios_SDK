@@ -429,6 +429,10 @@
 #define CONFIG_BT_MESH_ADV_PRIO 41
 #endif
 
+#ifndef CONFIG_BT_MESH_PROXY_FILTER_SIZE
+#define CONFIG_BT_MESH_PROXY_FILTER_SIZE 1
+#endif
+
 #endif  /* endof CONFIG_BT_MESH */
 
 #if defined(__cplusplus)

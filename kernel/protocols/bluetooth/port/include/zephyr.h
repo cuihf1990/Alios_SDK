@@ -52,10 +52,6 @@ extern "C"
         __p->__v;                           \
     })
 
-#ifndef BIT
-#define BIT(nr)                 (1UL << (nr))
-#endif
-
 #ifndef UNUSED
 #define UNUSED(x) (void)x
 #endif

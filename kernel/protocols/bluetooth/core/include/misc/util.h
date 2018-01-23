@@ -114,10 +114,6 @@ static inline s64_t arithmetic_shift_right(s64_t value, u8_t shift)
 #define KHZ(x) ((x) * 1000)
 #define MHZ(x) (KHZ(x) * 1000)
 
-#ifndef BIT
-#define BIT(n)  (1UL << (n))
-#endif
-
 #define BIT_MASK(n) (BIT(n) - 1)
 
 /**

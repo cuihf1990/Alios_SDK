@@ -245,6 +245,8 @@ void k_fifo_put_list(struct k_fifo *fifo, void *head, void *tail);
  */
 void *k_fifo_get(struct k_fifo *fifo, tick_t timeout);
 
+void k_fifo_cancel_wait(struct k_fifo *fifo);
+
 /* sem define*/
 struct k_sem {
     _sem_t sem;
@@ -458,6 +460,8 @@ unsigned int irq_lock();
  * @return N/A
  */
 void irq_unlock(unsigned int key);
+
+#define BIT(n)  (1UL << n)
 
 #if defined(__cplusplus)
 }
