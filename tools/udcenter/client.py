@@ -64,6 +64,17 @@ class Client:
             #self.connected = False
             pass
 
+    def send_device_status(self):
+        for port in list(self.devices):
+            if self.devices[port]['valid'] == False:
+                continue
+            content = port + ':' + json.dumps(self.devices[port]['attributes'], sort_keys=True)
+            data = TBframe.construct(TBframe.DEVICE_STATUS, content)
+            try:
+                self.service_socket.send(data)
+            except:
+                break
+
     def run_poll_command(self, port, command, lines_expect, timeout):
         filter = {}
         response = []
@@ -666,7 +677,7 @@ class Client:
 
                     if type == TBframe.FILE_BEGIN:
                         try:
-                            [term, hash, filename] = value.split(':')
+                            [term, hash, fname] = value.split(':')
                         except:
                             print "argument error: {0} {1}".format(type, value)
                             continue
@@ -683,16 +694,15 @@ class Client:
                             self.send_packet(type, content)
                             continue
 
-                        filename = 'client/' + filename
-                        filename += '-' + term.split(',')[0]
-                        filename += '@' + time.strftime('%Y-%m-%d-%H-%M')
+                        filename = 'client/' + fname.split('/')[-1]
+                        filename += '-' + term + '@' + time.strftime('%Y%m%d-%H%M%S')
                         filehandle = open(filename, 'wb')
                         timeout = time.time() + 5
                         file_receiving[hash] = {'name':filename, 'seq':0, 'handle':filehandle, 'timeout': timeout}
                         content = term + ',' + 'ok'
                         self.send_packet(type, content)
                         if DEBUG:
-                            print 'start receiving {0} as {1}'.format(split_value[2], filename)
+                            print 'start receiving {0} as {1}'.format(fname, filename)
                     elif type == TBframe.FILE_DATA:
                         try:
                             split_value = value.split(':')
@@ -720,7 +730,7 @@ class Client:
                         self.send_packet(type, content)
                     elif type == TBframe.FILE_END:
                         try:
-                            [term, hash, filename] = value.split(':')
+                            [term, hash, fname] = value.split(':')
                         except:
                             print "argument error: {0} {1}".format(type, value)
                             continue
@@ -829,6 +839,7 @@ class Client:
                         elif value == 'success':
                             print "login to server succeed"
                             self.send_device_list()
+                            self.send_device_status()
                         else:
                             print "login to server failed, retry later ..."
                             try:
