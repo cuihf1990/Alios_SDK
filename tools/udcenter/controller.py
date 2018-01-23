@@ -328,19 +328,18 @@ class Controller():
             self.send_data(terminal_sock, content)
             return
 
-    def get_server_by_client_uuid(self, uuid):
-        for sock in self.connections:
-            if self.connections[sock]['role'] != 'server':
+    def find_server_for_target(self, target, type):
+        type = type + 's'
+        for conn in self.connections:
+            if self.connections[conn]['valid'] == False:
                 continue
-            if self.connections[sock]['valid'] == False:
+            if self.connections[conn]['role'] != 'server':
                 continue
-            if 'status' not in self.connections[sock]:
+            if type not in self.connections[conn]['status']:
                 continue
-            if 'clients' not in self.connections[sock]['status']:
+            if target not in self.connections[conn]['status'][type]:
                 continue
-            if uuid not in self.connections[sock]['status']['clients']:
-                continue
-            return sock
+            return conn
         return None
 
     def terminal_process(self, sock, type, value):
@@ -352,26 +351,26 @@ class Controller():
             else:
                 is_valid_uuid = None
             if is_valid_uuid == None:
-                content = TBframe.construct(TBframe.ACCESS_LOGIN, 'argerror')
+                content = TBframe.construct(TBframe.ACCESS_LOGIN, 'invalid access key')
                 self.send_data(sock, content)
                 return
 
             sqlcmd = "SELECT * FROM Users WHERE uuid = '{0}'".format(uuid)
             ret = self.database_excute_sqlcmd(sqlcmd)
             if ret == None or len(ret) != 1:
-                content = TBframe.construct(TBframe.ACCESS_LOGIN, 'invaliduuid')
+                content = TBframe.construct(TBframe.ACCESS_LOGIN, 'invalid access key')
                 self.send_data(sock, content)
                 return
 
             devices = ret[0][3]
             if devices == '':
-                content = TBframe.construct(TBframe.ACCESS_LOGIN, 'nodevice')
+                content = TBframe.construct(TBframe.ACCESS_LOGIN, 'no allocated device')
                 self.send_data(sock, content)
                 return
             client_uuid = devices.split(':')[0]
-            server_sock = self.get_server_by_client_uuid(client_uuid)
+            server_sock = self.find_server_for_target(client_uuid, 'client')
             if server_sock == None:
-                content = TBframe.construct(TBframe.ACCESS_LOGIN, 'not connected')
+                content = TBframe.construct(TBframe.ACCESS_LOGIN, 'allocated devices not connected')
                 self.send_data(sock, content)
                 return
 
@@ -449,20 +448,6 @@ class Controller():
 
     def cmdlog_print(self, log):
         sys.stdout.write(log + '\r\n')
-
-    def find_server_for_target(self, target, type):
-        type = type + 's'
-        for conn in self.connections:
-            if self.connections[conn]['valid'] == False:
-                continue
-            if self.connections[conn]['role'] != 'server':
-                continue
-            if type not in self.connections[conn]['status']:
-                continue
-            if target not in self.connections[conn]['status'][type]:
-                continue
-            return conn
-        return None
 
     def add_cmd_handler(self, args):
         if len(args) < 2:
@@ -642,16 +627,26 @@ class Controller():
         if uuid == None:
             sqlcmd = "SELECT * FROM Users"
         else:
-            sqlcmd = "SELECT * FROM Users where uuid = {0}".format(uuid)
+            sqlcmd = "SELECT * FROM Users where uuid = '{0}'".format(uuid)
 
         rows = self.database_excute_sqlcmd(sqlcmd)
 
+        if rows == None:
+            self.cmdlog_print("error: poll database failed")
+            return
+
         if uuid == None:
-            self.cmdlog_print("users:")
+            user_num = len(rows)
+            self.cmdlog_print("users({0}):".format(user_num))
             for row in rows:
                 key = row[0]; name = row[1]; email=row[2]
                 devices = row[3].split('|')
-                self.cmdlog_print("|--{0} {1} {2}".format(key, name, email))
+                device_num = len(devices)
+                if self.find_server_for_target(key, 'terminal') == None:
+                    status = 'offline'
+                else:
+                    status = 'online'
+                self.cmdlog_print("|--{0} {1} {2} {3} {4}".format(key, name, email, device_num, status))
                 for device in devices:
                     try:
                         timeout = time.strftime("%Y-%m-%d@%H:%M:%S", time.localtime(self.devices[device]['timeout']))
@@ -661,11 +656,17 @@ class Controller():
         else:
             if len(rows) == 0:
                 self.cmdlog_print("error: uuid {0} does not exist in database".format(repr(uuid)))
+                return
             self.cmdlog_print("users:")
             for row in rows:
                 key = row[0]; name = row[1]; email=row[2]
                 devices = row[3].split('|')
-                self.cmdlog_print("|--{0} {1} {2}".format(key, name, email))
+                device_num = len(devices)
+                if self.find_server_for_target(key, 'terminal') == None:
+                    status = 'offline'
+                else:
+                    status = 'online'
+                self.cmdlog_print("|--{0} {1} {2} {3} {4}".format(key, name, email, device_num, status))
                 for device in devices:
                     self.cmdlog_print("|  |--{0}".format(device))
 
@@ -684,17 +685,20 @@ class Controller():
             self.cmdlog_print("|" + tab*0 + '--' + '{0}-{1}:'.format(server_uuid, server_port))
             if 'clients' not in self.connections[conn]['status']:
                 continue
-            self.cmdlog_print("|" + tab*1 + '--' + 'terminals:')
+            terminal_num = len(self.connections[conn]['status']['terminals'])
+            self.cmdlog_print("|" + tab*1 + '--' + 'terminals({0}):'.format(terminal_num))
             for terminal in self.connections[conn]['status']['terminals']:
                 self.cmdlog_print('|' + tab*2 + '--' + terminal)
             if len(self.connections[conn]['status']['clients']) == 0:
                 continue
-            self.cmdlog_print("|" + tab*1 + '--' + 'clients:')
+            client_num = len(self.connections[conn]['status']['clients'])
+            self.cmdlog_print("|" + tab*1 + '--' + 'clients({0}):'.format(client_num))
             for client in self.connections[conn]['status']['clients']:
                 self.cmdlog_print('|' + tab*2 + '--' + client)
             if len(self.connections[conn]['status']['devices']) == 0:
                 continue
-            self.cmdlog_print("|" + tab*1 + '--' + 'devices:')
+            device_num = len(self.connections[conn]['status']['devices'])
+            self.cmdlog_print("|" + tab*1 + '--' + 'devices({0}):'.format(device_num))
             for device in self.connections[conn]['status']['devices']:
                 self.cmdlog_print('|     |--' + device)
 

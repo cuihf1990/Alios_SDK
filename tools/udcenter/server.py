@@ -717,11 +717,13 @@ class Server:
                             content = TBframe.construct(TBframe.ACCESS_UPDATE_TERMINAL, 'fail')
                         else:
                             terminal = self.terminals[uuid]
+                            added_devices = []
                             for device in devices:
                                 if device in terminal['devices']:
                                     continue
                                 self.device_subscribe_map[device] = uuid
                                 terminal['devices'] += [device]
+                                added_devices += [device]
                             for device in list(terminal['devices']):
                                 if device in devices:
                                     continue
@@ -729,6 +731,23 @@ class Server:
                                 self.device_subscribe_map.pop(device)
                             content = TBframe.construct(TBframe.ACCESS_UPDATE_TERMINAL, 'success')
                             self.send_device_list_to_terminal(uuid)
+                            for device in added_devices:
+                                try:
+                                    [uuid, port] = device.split(':')
+                                except:
+                                    continue
+                                if uuid not in self.clients:
+                                    continue
+                                if port not in self.clients[uuid]['devices']:
+                                    continue
+                                if self.clients[uuid]['devices'][port]['valid'] == False:
+                                    continue
+                                data = uuid + ',' + port + ':' + self.clients[uuid]['devices'][port]['status']
+                                data = TBframe.construct(TBframe.DEVICE_STATUS, data)
+                                try:
+                                    terminal['socket'].send(data)
+                                except:
+                                    break
                         try:
                             sock.send(content)
                         except:

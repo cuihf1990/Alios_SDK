@@ -105,7 +105,10 @@ def is_valid_type(type):
 def construct(type, value):
     if is_valid_type(type) == False:
         return ''
-    frame = '{' + type + ',' + '{0:04d}'.format(len(value)) + ',' + value + '}'
+    if len(value) > 99999:
+        print "warning: data size larger than permited"
+        return ''
+    frame = '{' + type + ',' + '{0:05d}'.format(len(value)) + ',' + value + '}'
     return frame
 
 def parse(msg):
@@ -123,15 +126,15 @@ def parse(msg):
         for i in range(len(msg)):
             if msg[i] != '{':
                 continue
-            if (i + 12) > len(msg):
+            if (i + 13) > len(msg):
                 break;
             if is_valid_type(msg[i+1: i+5]) == False:
                 continue
             if msg[i + 5] != ',':
                 continue
-            if msg[i+6 : i+10].isdigit() == False:
+            if msg[i+6 : i+11].isdigit() == False:
                 continue
-            if msg[i+10] != ',':
+            if msg[i+11] != ',':
                 continue
             sync = True
             if DEBUG and i > 0:
@@ -143,19 +146,19 @@ def parse(msg):
             break
 
         type = msg[1:5]
-        length = int(msg[6:10])
-        if len(msg) < length + 12:
+        length = int(msg[6:11])
+        if len(msg) < length + 13:
             type = TYPE_NONE
             length = 0
             value = ''
             break
-        if msg[length + 11] != '}':
+        if msg[length + 12] != '}':
             sync = False
-            if DEBUG: print(msg[0:11] + " Lose sync because of FOOTER error")
+            if DEBUG: print(msg[0:12] + " Lose sync because of FOOTER error")
             msg = msg[1:]
             continue
-        value = msg[11:length+11]
-        msg = msg[length+12:]
+        value = msg[12:length+12]
+        msg = msg[length+13:]
         break;
     return type, length, value, msg
 
