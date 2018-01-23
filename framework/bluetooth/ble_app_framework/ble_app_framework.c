@@ -733,6 +733,9 @@ void ble_adv_start
 )
 {
     int err;
+    static uint8_t first_time = 1;
+
+    if (!first_time) goto adv_operation;
 
     struct adv_data ad_default[] = {
         ADV_DATA_BYTES(EIRADV_DATA_FLAGS, (AD_FLAG_GENERAL | AD_FLAG_NO_BREDR)),
@@ -776,6 +779,7 @@ void ble_adv_start
     LOGD(MOD, "ad size is %d, sd size is %d",
          g_peri[hdl].advdata.ad_siz, g_peri[hdl].advdata.sd_siz);
 
+adv_operation:
     err = bt_le_adv_start(BT_LE_ADV_CONN,
                           (struct bt_data *)g_peri[hdl].advdata.ad,
                           g_peri[hdl].advdata.ad_siz,
@@ -786,6 +790,8 @@ void ble_adv_start
         LOGE(MOD, "Advertising failed to start (err %d).", err);
         return;
     }
+
+    if (first_time) first_time = 0;
 
     LOG("Advertising successfully started.");
 }
