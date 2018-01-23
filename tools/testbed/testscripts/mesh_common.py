@@ -2,7 +2,7 @@ import os, time
 
 #allocate devices
 def allocate_devices(at, model, number, timeout, purpose='general'):
-    models=['mk3060', 'esp32']
+    models = ['mk3060', 'esp32']
     if not model or model.lower() not in models:
         print "error: unsupported model {0}".format(repr(model))
         return []
@@ -32,7 +32,7 @@ def subscribe_and_reboot_devices(at, devices):
 
 #program devices
 def program_devices(at, devices, model, firmware):
-    models={'mk3060':'0x13200', 'esp32':'0x10000'}
+    models = {'mk3060':'0x13200', 'esp32':'0x10000'}
     if model not in models:
         print "error: unsupported device model {0}".format(repr(model))
         return False
@@ -61,7 +61,7 @@ def reboot_and_get_mac(at, device_list, device_attr):
         for i in range(retry):
             at.device_run_cmd(device, ['netmgr', 'clear'])
             at.device_run_cmd(device, ['kv', 'del', 'alink'])
-            mac =  at.device_run_cmd(device, ['mac'], 1, 0.8, ['MAC address:'])
+            mac = at.device_run_cmd(device, ['mac'], 1, 0.8, ['MAC address:'])
             at.device_control(device, 'reset')
             if mac and len(mac) == 1:
                 mac = mac[0].split()[-1]
@@ -180,6 +180,31 @@ def ping_test(at, device_list, device_attr):
                     else:
                         pass_num += 1
                         break
+    print 'ping: pass-{0}, fail-{1}\n'.format(pass_num, fail_num)
+    return [pass_num, fail_num]
+
+#ping external ip test
+def ping_ext_test(at, device_list, dst_ip):
+    retry = 5
+    print 'test connectivity of external ip with icmp:'
+    pass_num = 0
+    fail_num = 0
+    for device in device_list:
+        for pkt_len in ['20', '500', '1000']:
+            filter = ['bytes from']
+            for i in range(retry):
+                response = at.device_run_cmd(device, ['umesh', 'ping', dst_ip, pkt_len], 1, 0.5, filter)
+                expected_response = '{0} bytes from {1}'.format(pkt_len, dst_ip)
+                if response is False or response == [] or expected_response not in response[0]:
+                    if i < retry - 1:
+                        continue
+                    else:
+                        print '{0} ping {1} with {2} bytes by local ip addr failed'.format(device, dst_ip, pkt_len)
+                        fail_num += 1
+                        break
+                else:
+                    pass_num += 1
+                    break
     print 'ping: pass-{0}, fail-{1}\n'.format(pass_num, fail_num)
     return [pass_num, fail_num]
 
