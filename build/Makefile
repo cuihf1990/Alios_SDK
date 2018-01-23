@@ -140,6 +140,8 @@ ifneq ($(BUILD_STRING),)
 # Now we know the target architecture - include all toolchain makefiles and check one of them can handle the architecture
 ifeq ($(COMPILER),armcc)
  include $(MAKEFILES_PATH)/aos_toolchain_armcc.mk
+else ifeq ($(COMPILER),iar)
+ include $(MAKEFILES_PATH)/aos_toolchain_iar.mk
 else
  include $(MAKEFILES_PATH)/aos_toolchain_gcc.mk
 endif
@@ -159,7 +161,9 @@ $(TEST_COMPONENT_COLLECTION):
 
 ifeq ($(COMPILER),armcc)
  TOOLCHAIN_MK = aos_toolchain_armcc.mk
-else
+else ifeq ($(COMPILER),iar)
+ TOOLCHAIN_MK = aos_toolchain_iar.mk
+else 
  TOOLCHAIN_MK = aos_toolchain_gcc.mk
 endif
 
