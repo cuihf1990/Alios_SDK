@@ -735,7 +735,7 @@ void ble_adv_start
     int err;
     static uint8_t first_time = 1;
 
-    if (first_time) goto adv_operation;
+    if (!first_time) goto adv_operation;
 
     struct adv_data ad_default[] = {
         ADV_DATA_BYTES(EIRADV_DATA_FLAGS, (AD_FLAG_GENERAL | AD_FLAG_NO_BREDR)),
