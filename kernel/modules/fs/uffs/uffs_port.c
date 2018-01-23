@@ -554,7 +554,7 @@ static void _uffs_deinit(void)
         return;
 
     if (g_uffs_mgr->dev) {
-        hal_nand_deinit(g_uffs_mgr->dev);
+        hal_nand_finalize(g_uffs_mgr->dev);
         aos_free(g_uffs_mgr->dev);
     }
 

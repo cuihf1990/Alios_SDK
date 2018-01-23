@@ -41,7 +41,7 @@ int32_t hal_nand_init(nand_dev_t *nand);
  *
  * @return  0 : on success, EIO : if an error occurred with any step
  */
-int32_t hal_nand_deinit(nand_dev_t *nand);
+int32_t hal_nand_finalize(nand_dev_t *nand);
 
 /**
  * Read nand page(s)
