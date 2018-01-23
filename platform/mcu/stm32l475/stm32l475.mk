@@ -51,7 +51,7 @@ GLOBAL_CFLAGS += -mcpu=cortex-m4 \
 endif
 
 ifeq ($(COMPILER),armcc)
-GLOBAL_ASMFLAGS += --cpu=7E-M -g --apcs=interwork -D__MICROLIB -DSTM32L475xx
+GLOBAL_ASMFLAGS += --cpu=7E-M -g --apcs=interwork --library_type=microlib --pd "__MICROLIB SETA 1"
 else ifeq ($(COMPILER),iar)
 GLOBAL_ASMFLAGS += --cpu Cortex-M4 \
                    --cpu_mode thumb \
@@ -155,6 +155,7 @@ $(NAME)_SOURCES := src/B-L475E-IOT01/runapp/stm32l4xx_hal_msp.c      \
 ifeq ($(COMPILER),armcc)
 $(NAME)_SOURCES += src/B-L475E-IOT01/runapp/startup_stm32l475xx_armcc.s
 $(NAME)_LINK_FILES := src/B-L475E-IOT01/runapp/startup_stm32l475xx_armcc.o
+$(NAME)_LINK_FILES += src/B-L475E-IOT01/runapp/stm32l4xx_it.o
 else ifeq ($(COMPILER),iar)
 $(NAME)_SOURCES += src/B-L475E-IOT01/runapp/startup_stm32l475xx_icc.s
 else
