@@ -56,6 +56,7 @@ $(NAME)_SOURCES  += bsp/driver/interrupt.c
 $(NAME)_SOURCES  += bsp/driver/uart.c
 
 $(NAME)_SOURCES  += hal/uart.c
+$(NAME)_SOURCES  += hal/flash.c
 
 $(NAME)_CFLAGS   := -std=gnu99
 
