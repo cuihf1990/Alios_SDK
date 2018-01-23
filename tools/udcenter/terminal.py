@@ -1,11 +1,11 @@
 #!/usr/bin/python
 
 import os, sys, time, curses, socket, ssl, random, re
-import subprocess, thread, threading, json, traceback
+import subprocess, thread, threading, json, traceback, Queue
 from operator import itemgetter
 import TBframe
 
-MAX_MSG_LENTH = 8192
+MAX_MSG_LENGTH = 65536
 CMD_WINDOW_HEIGHT = 2
 DEV_WINDOW_WIDTH  = 36
 LOG_WINDOW_HEIGHT = 30
@@ -13,7 +13,7 @@ LOG_WINDOW_WIDTH  = 80
 LOG_HISTORY_LENGTH = 5000
 MOUSE_SCROLL_UP = 0x80000
 MOUSE_SCROLL_DOWN = 0x8000000
-ENCRYPT = False
+ENCRYPT = True
 DEBUG = True
 
 class ConnectionLost(Exception):
@@ -32,6 +32,7 @@ class Terminal:
         self.cmd_excute_state = 'idle'
         self.cmd_excute_return = ''
         self.cmd_excute_event = threading.Event()
+        self.output_queue = Queue.Queue(256)
         self.log_content = []
         self.log_curr_line = -1
         self.log_subscribed = []
@@ -173,7 +174,10 @@ class Terminal:
     def log_parse_oneline(self, log):
         log_buffer = []
 
-        log_index = log.split(':')[0] + ':'
+        if ':' in log:
+            log_index = log.split(':')[0] + ':'
+        else:
+            log_index = ''
         log = log[len(log_index):]
         log = log.replace('\t', ' ' * 8)
         line_length = len(log)
@@ -317,20 +321,38 @@ class Terminal:
         self.cmd_window.refresh()
         self.curseslock.release()
 
-    def send_data(self, data):
-        try:
-            self.service_socket.send(data)
-        except:
-            self.connected = False
-
-    def heartbeat_func(self):
+    def packet_send_thread(self):
         heartbeat_timeout = time.time() + 10
         while self.keep_running:
-            time.sleep(0.05)
-            if time.time() < heartbeat_timeout:
+            try:
+                [type, content] = self.output_queue.get(block=True, timeout=0.1)
+            except Queue.Empty:
+                type = None
+                pass
+            if self.service_socket == None:
                 continue
-            self.send_data(TBframe.construct(TBframe.HEARTBEAT, ''))
-            heartbeat_timeout += 10
+            if type == None:
+                if time.time() < heartbeat_timeout:
+                    continue
+                heartbeat_timeout += 10
+                data = TBframe.construct(TBframe.HEARTBEAT,'')
+            else:
+                data = TBframe.construct(type, content)
+            try:
+                self.service_socket.send(data)
+            except:
+                self.connected = False
+                continue
+
+    def send_packet(self, type, content, timeout=0.1):
+        if self.service_socket == None:
+            return False
+        try:
+            self.output_queue.put([type, content], True, timeout)
+            return True
+        except Queue.Full:
+            if DEBUG: self.log_display(time.time(), "error: ouput buffer full, drop packet [{0] {1}]".format(type, content))
+        return False
 
     def get_devstr_by_index(self, index):
         devices = list(self.device_list)
@@ -345,7 +367,7 @@ class Terminal:
     def login_and_get_server(self, controller_ip, controller_port):
         sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         if ENCRYPT:
-            sock = ssl.wrap_socket(sock, cert_reqs=ssl.CERT_REQUIRED, ca_certs='server_cert.pem')
+            sock = ssl.wrap_socket(sock, cert_reqs=ssl.CERT_REQUIRED, ca_certs='controller_certificate.pem')
         try:
             sock.connect((controller_ip, controller_port))
             sock.settimeout(3)
@@ -363,7 +385,7 @@ class Terminal:
             return None
 
         try:
-            data = sock.recv(MAX_MSG_LENTH)
+            data = sock.recv(MAX_MSG_LENGTH)
         except KeyboardInterrupt:
             sock.close()
             raise
@@ -379,24 +401,33 @@ class Terminal:
         #print 'controller', type, value
         rets = value.split(',')
         if type != TBframe.ACCESS_LOGIN or rets[0] != 'success':
-            if rets[0] == 'invaliduuid':
-                self.cmdrun_status_display("login failed, invalid access key")
+            if rets[0] == 'invalid access key':
+                self.log_display(time.time(), "login to controller failed, invalid access key")
                 if os.path.exists('terminal/.accesskey'):
                     os.remove('terminal/.accesskey')
             else:
-                self.cmdrun_status_display("login failed, ret={0}".format(value))
+                self.log_display(time.time(), "login to controller failed, ret={0}".format(value))
             sock.close()
             return None
 
         sock.close()
         return rets[1:]
 
-    def connect_to_server(self, server_ip, server_port):
+    def connect_to_server(self, server_ip, server_port, certificate):
         sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        if ENCRYPT:
-            sock = ssl.wrap_socket(sock, cert_reqs=ssl.CERT_REQUIRED, ca_certs='server_cert.pem')
+        if certificate != 'None':
+            try:
+                certfile = 'terminal/certificate.pem'
+                f = open(certfile, 'wt')
+                f.write(certificate)
+                f.close()
+                sock = ssl.wrap_socket(sock, cert_reqs=ssl.CERT_REQUIRED, ca_certs=certfile)
+            except:
+                return 'fail'
         try:
             sock.connect((server_ip, server_port))
+            while self.output_queue.empty() == False:
+                self.output_queue.get()
             self.service_socket = sock
             self.connected = True
             return "success"
@@ -412,7 +443,7 @@ class Terminal:
                 if self.connected == False:
                     raise ConnectionLost
 
-                new_msg = self.service_socket.recv(MAX_MSG_LENTH)
+                new_msg = self.service_socket.recv(MAX_MSG_LENGTH)
                 if new_msg == '':
                     raise ConnectionLost
                     break
@@ -504,12 +535,16 @@ class Terminal:
                     self.cmdrun_status_display('login to controller failed, retry later...')
                     time.sleep(5)
                     continue
-                else:
-                    [server_ip, server_port, token] = result
+                try:
+                    [server_ip, server_port, token, certificate] = result
                     server_port = int(server_port)
-                    self.cmdrun_status_display('login to controller succees, server_ip-{0} server_port-{1}'.format(server_ip, server_port))
+                except:
+                    self.log_display(time.time(), 'login to controller failed, invalid return={0}'.format(result))
+                    self.cmdrun_status_display('login to controller failed, retry later...')
+                    time.sleep(5)
+                    continue
 
-                result = self.connect_to_server(server_ip, server_port)
+                result = self.connect_to_server(server_ip, server_port, certificate)
                 if result == 'success':
                     self.cmdrun_status_display('connect to server succeeded')
                 else:
@@ -518,8 +553,7 @@ class Terminal:
                     continue
 
                 data = self.uuid + ',' + token
-                data = TBframe.construct(TBframe.TERMINAL_LOGIN, data)
-                self.send_data(data)
+                self.send_packet(TBframe.TERMINAL_LOGIN, data)
             except:
                 if DEBUG:
                     raise
@@ -573,10 +607,9 @@ class Terminal:
 
         #send file begin
         content = devstr  + ':' + filehash + ':' + filename.split('/')[-1]
-        data = TBframe.construct(TBframe.FILE_BEGIN, content)
         retry = 4
         while retry > 0:
-            self.send_data(data)
+            self.send_packet(TBframe.FILE_BEGIN, content)
             self.wait_cmd_excute_done(0.2)
             if self.cmd_excute_state == 'timeout':
                 retry -= 1;
@@ -604,12 +637,11 @@ class Terminal:
         seq = 0
         file = open(filename,'r')
         header = devstr  + ':' + filehash + ':' + str(seq) + ':'
-        content = file.read(1024)
+        content = file.read(4096)
         while(content):
-            data = TBframe.construct(TBframe.FILE_DATA, header + content)
             retry = 4
             while retry > 0:
-                self.send_data(data)
+                self.send_packet(TBframe.FILE_DATA, header + content)
                 self.wait_cmd_excute_done(0.2)
                 if self.cmd_excute_return == None:
                     retry -= 1;
@@ -634,10 +666,9 @@ class Terminal:
 
         #send file end
         content = devstr  + ':' + filehash + ':' + filename.split('/')[-1]
-        data = TBframe.construct(TBframe.FILE_END, content)
         retry = 4
         while retry > 0:
-            self.send_data(data)
+            self.send_packet(TBframe.FILE_END, content)
             self.wait_cmd_excute_done(0.2)
             if self.cmd_excute_return == None:
                 retry -= 1;
@@ -672,8 +703,7 @@ class Terminal:
                 status_str = 'erasing {0}.{1}...'.format(index, self.get_devstr_by_index(index))
                 self.cmdrun_status_display(status_str)
                 dev_str = self.get_devstr_by_index(index)
-                data = TBframe.construct(TBframe.DEVICE_ERASE, dev_str);
-                self.send_data(data)
+                self.send_packet(TBframe.DEVICE_ERASE, dev_str);
                 self.wait_cmd_excute_done(10)
                 status_str += self.cmd_excute_state
                 self.cmdrun_status_display(status_str)
@@ -734,8 +764,7 @@ class Terminal:
                 status_str = 'programming {0} to {1}.{2}:{3}...'.format(filename, index, uuid, port.replace('/dev/', ''))
                 self.cmdrun_status_display(status_str)
                 content = dev_str + ',' + address + ',' + filehash
-                data = TBframe.construct(TBframe.DEVICE_PROGRAM, content);
-                self.send_data(data)
+                self.send_packet(TBframe.DEVICE_PROGRAM, content);
                 self.wait_cmd_excute_done(270)
                 status_str += self.cmd_excute_state
                 self.cmdrun_status_display(status_str)
@@ -771,8 +800,7 @@ class Terminal:
 
             for index in indexes:
                 dev_str = self.get_devstr_by_index(index)
-                data = TBframe.construct(operate, dev_str)
-                self.send_data(data)
+                self.send_packet(operate, dev_str)
                 self.wait_cmd_excute_done(1.5)
                 if self.cmd_excute_state == "done":
                     succeed.append(index)
@@ -811,12 +839,10 @@ class Terminal:
             for index in indexes:
                 dev_str = self.get_devstr_by_index(index)
                 if type == TBframe.LOG_SUB and dev_str not in self.log_subscribed:
-                    data = TBframe.construct(type, dev_str)
-                    self.send_data(data)
+                    self.send_packet(type, dev_str)
                     self.log_subscribed.append(dev_str)
                 elif type == TBframe.LOG_UNSUB and dev_str in self.log_subscribed:
-                    data = TBframe.construct(type, dev_str)
-                    self.send_data(data)
+                    self.send_packet(type, dev_str)
                     self.log_subscribed.remove(dev_str)
 
     def log_download(self, args):
@@ -835,8 +861,7 @@ class Terminal:
                 status_str = 'downloading log file for {0}.{1}:{2}...'.format(index, device[0], device[1].replace('/dev/', ''))
                 self.cmdrun_status_display(status_str)
                 content = ','.join(device)
-                data = TBframe.construct(TBframe.LOG_DOWNLOAD, content)
-                self.send_data(data)
+                self.send_packet(TBframe.LOG_DOWNLOAD, content)
                 self.wait_cmd_excute_done(480)
                 if self.cmd_excute_state == "done":
                     succeed.append(index)
@@ -883,8 +908,7 @@ class Terminal:
         for index in indexes:
             dev_str = self.get_devstr_by_index(index)
             content = dev_str + ':' + '|'.join(args)
-            data = TBframe.construct(TBframe.DEVICE_CMD, content)
-            self.send_data(data)
+            self.send_packet(TBframe.DEVICE_CMD, content)
             self.wait_cmd_excute_done(1.5)
             if self.cmd_excute_state == "done":
                 succeed.append(index)
@@ -1086,8 +1110,8 @@ class Terminal:
         #connect to server
         self.controller_ip = controller_ip
         self.controller_port = controller_port
+        thread.start_new_thread(self.packet_send_thread, ())
         thread.start_new_thread(self.server_interaction, ())
-        thread.start_new_thread(self.heartbeat_func, ())
         while self.keep_running:
             try:
                 self.user_interaction()

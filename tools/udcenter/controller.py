@@ -5,7 +5,7 @@ import TBframe
 
 CONFIG_TIMEOUT = 30
 CONFIG_MAXMSG_LENTH = 8192
-CONFIG_ENCRYPT = False
+ENCRYPT = True
 DEBUG = True
 
 def signal_handler(sig, frame):
@@ -57,8 +57,8 @@ class Controller():
         self.cur_pos = 0
         self.serve_funcs = {'none':    self.login_process, 'client':  self.client_process,
                             'server':  self.server_process, 'terminal':self.terminal_process}
-        self.keyfile = 'server_key.pem'
-        self.certfile = 'server_cert.pem'
+        self.keyfile = 'controller_key.pem'
+        self.certfile = 'controller_certificate.pem'
         self.dbase = sql.connect('controller.db', check_same_thread = False)
         sqlcmd = 'CREATE TABLE IF NOT EXISTS Users(uuid TEXT, name TEXT, email TEXT, devices TEXT)'
         self.database_excute_sqlcmd(sqlcmd)
@@ -239,19 +239,34 @@ class Controller():
             if value.startswith('server,'):
                 value = value[len('server,'):]
                 try:
-                    info = json.loads(value)
+                    server_info = json.loads(value)
                 except:
-                    info = {}
+                    server_info = {}
             else:
-                info = {}
-            if 'uuid' not in info or 'client_port' not in info or 'terminal_port' not in info:
+                server_info = {}
+
+            fields = ['uuid', 'client_port', 'terminal_port', 'certificate']
+            is_valid_server = True
+            for info in fields:
+                if info in server_info:
+                    continue
+                is_valid_server = False
+                break
+            if is_valid_server and ENCRYPT and server_info['certificate'] == 'None':
+                is_valid_server = False
+
+            if is_valid_server == False:
                 content = TBframe.construct(TBframe.ACCESS_LOGIN, 'fail')
                 self.connections[sock]['valid'] = False
             else:
                 content = TBframe.construct(TBframe.ACCESS_LOGIN, 'ok')
-                self.connections[sock]['uuid'] = info['uuid']
-                self.connections[sock]['client_port'] = info['client_port']
-                self.connections[sock]['terminal_port'] = info['terminal_port']
+                self.connections[sock]['uuid'] = server_info['uuid']
+                self.connections[sock]['client_port'] = server_info['client_port']
+                self.connections[sock]['terminal_port'] = server_info['terminal_port']
+                if ENCRYPT:
+                    self.connections[sock]['certificate'] = server_info['certificate']
+                else:
+                    self.connections[sock]['certificate'] = 'None'
                 self.connections[sock]['valid'] = True
             self.send_data(sock, content)
             return
@@ -292,7 +307,8 @@ class Controller():
 
             server_addr = sock.getpeername()[0]
             server_port = self.connections[sock]['client_port']
-            content = 'success,{0},{1},{2}'.format(server_addr, server_port, token)
+            certificate = self.connections[sock]['certificate']
+            content = 'success,{0},{1},{2},{3}'.format(server_addr, server_port, token, certificate)
             content = TBframe.construct(TBframe.ACCESS_LOGIN, content)
             self.send_data(client_sock, content)
             return
@@ -323,7 +339,8 @@ class Controller():
 
             server_addr = sock.getpeername()[0]
             server_port = self.connections[sock]['terminal_port']
-            content = 'success,{0},{1},{2}'.format(server_addr, server_port, token)
+            certificate = self.connections[sock]['certificate']
+            content = 'success,{0},{1},{2},{3}'.format(server_addr, server_port, token, certificate)
             content = TBframe.construct(TBframe.ACCESS_LOGIN, content)
             self.send_data(terminal_sock, content)
             return
@@ -331,9 +348,9 @@ class Controller():
     def find_server_for_target(self, target, type):
         type = type + 's'
         for conn in self.connections:
-            if self.connections[conn]['valid'] == False:
-                continue
             if self.connections[conn]['role'] != 'server':
+                continue
+            if self.connections[conn]['valid'] == False:
                 continue
             if type not in self.connections[conn]['status']:
                 continue
@@ -386,7 +403,7 @@ class Controller():
         sock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
         sock.setblocking(False)
         sock.bind((self.host, port))
-        if CONFIG_ENCRYPT:
+        if ENCRYPT:
             sock = ssl.wrap_socket(sock, self.keyfile, self.certfile, True)
         sock.listen(100)
         self.selector = selector()

@@ -2,8 +2,8 @@ import os, sys, time, platform, json, traceback, random, re, glob, uuid
 import socket, ssl, thread, threading, subprocess, signal, Queue, importlib
 import TBframe
 
-MAX_MSG_LENTH = 8192
-ENCRYPT = False
+MAX_MSG_LENGTH = 65536
+ENCRYPT = True
 DEBUG = True
 LOCALLOG = False
 
@@ -31,6 +31,7 @@ class ConnectionLost(Exception):
 class Client:
     def __init__(self):
         self.service_socket = None
+        self.output_queue = Queue.Queue(256)
         self.devices = {}
         self.keep_running = True
         self.connected = False
@@ -51,28 +52,54 @@ class Client:
                              "ACCS: disconnected",
                              'GATEWAY: connect to server succeed']
 
+    def packet_send_thread(self):
+        heartbeat_timeout = time.time() + 10
+        while self.keep_running:
+            try:
+                [type, content] = self.output_queue.get(block=True, timeout=0.1)
+            except Queue.Empty:
+                type = None
+                pass
+            if self.service_socket == None:
+                continue
+            if type == None:
+                if time.time() < heartbeat_timeout:
+                    continue
+                heartbeat_timeout += 10
+                data = TBframe.construct(TBframe.HEARTBEAT,'')
+            else:
+                data = TBframe.construct(type, content)
+            try:
+                self.service_socket.send(data)
+            except:
+                self.connected = False
+                continue
+
+    def send_packet(self, type, content, timeout=0.1):
+        if self.service_socket == None:
+            return False
+        try:
+            self.output_queue.put([type, content], True, timeout)
+            return True
+        except Queue.Full:
+            print "error: ouput buffer full, drop packet [{0] {1}]".format(type, content)
+        return False
+
     def send_device_list(self):
         device_list = []
         for port in list(self.devices):
             if self.devices[port]['valid']:
                 device_list.append(port)
         content = ':'.join(device_list)
-        data = TBframe.construct(TBframe.CLIENT_DEV, content);
-        try:
-            self.service_socket.send(data)
-        except:
-            #self.connected = False
-            pass
+        self.send_packet(TBframe.CLIENT_DEV, content)
 
     def send_device_status(self):
         for port in list(self.devices):
             if self.devices[port]['valid'] == False:
                 continue
             content = port + ':' + json.dumps(self.devices[port]['attributes'], sort_keys=True)
-            data = TBframe.construct(TBframe.DEVICE_STATUS, content)
-            try:
-                self.service_socket.send(data)
-            except:
+            ret = self.send_packet(TBframe.DEVICE_STATUS, content)
+            if ret == False:
                 break
 
     def run_poll_command(self, port, command, lines_expect, timeout):
@@ -112,12 +139,7 @@ class Client:
         pcmd_queue = self.devices[port]['pcmd_queue']
         if self.devices[port]['attributes'] != {}:
             content = port + ':' + json.dumps(self.devices[port]['attributes'], sort_keys=True)
-            data = TBframe.construct(TBframe.DEVICE_STATUS, content)
-            try:
-                self.service_socket.send(data)
-            except:
-                #self.connected = False
-                pass
+            self.send_packet(TBframe.DEVICE_STATUS, content)
         poll_timeout = time.time() + 3 + random.uniform(0, self.poll_interval/10)
         while os.path.exists(port) and exit_condition.is_set() == False:
             try:
@@ -273,12 +295,7 @@ class Client:
                 if pcmd_queue.empty() == False:
                     continue
                 content = port + ':' + json.dumps(self.devices[port]['attributes'], sort_keys=True)
-                data = TBframe.construct(TBframe.DEVICE_STATUS, content)
-                try:
-                    self.service_socket.send(data)
-                except:
-                    #self.connected = False
-                    continue
+                self.send_packet(TBframe.DEVICE_STATUS, content)
             except:
                 if os.path.exists(port) == False:
                     exit_condition.set()
@@ -355,13 +372,8 @@ class Client:
                 if LOCALLOG:
                     flog.write('{0:.3f}:'.format(log_time) + log)
                 log = port + ':{0:.3f}:'.format(log_time) + log
-                data = TBframe.construct(TBframe.DEVICE_LOG,log)
+                self.send_packet(TBframe.DEVICE_LOG,log)
                 log = ''
-                try:
-                    self.service_socket.send(data)
-                except:
-                    #self.connected = False
-                    continue
         if LOCALLOG:
             flog.close()
         print 'device {0} removed'.format(port)
@@ -559,29 +571,10 @@ class Client:
         content = term + ',' + result
         self.send_packet(TBframe.DEVICE_CMD, content)
 
-    def heartbeat_func(self):
-        heartbeat_timeout = time.time() + 10
-        while self.keep_running:
-            time.sleep(0.05)
-            if time.time() < heartbeat_timeout:
-                continue
-            try:
-                self.service_socket.send(TBframe.construct(TBframe.HEARTBEAT, ''))
-            except:
-                continue
-            heartbeat_timeout += 10
-
-    def send_packet(self, type, content):
-        data = TBframe.construct(type, content)
-        try:
-            self.service_socket.send(data)
-        except:
-            raise ConnectionLost
-
     def login_and_get_server(self, controller_ip, controller_port):
         sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         if ENCRYPT:
-            sock = ssl.wrap_socket(sock, cert_reqs=ssl.CERT_REQUIRED, ca_certs='server_cert.pem')
+            sock = ssl.wrap_socket(sock, cert_reqs=ssl.CERT_REQUIRED, ca_certs='controller_certificate.pem')
         try:
             sock.connect((controller_ip, controller_port))
             sock.settimeout(3)
@@ -599,7 +592,7 @@ class Client:
             return None
 
         try:
-            data = sock.recv(MAX_MSG_LENTH)
+            data = sock.recv(MAX_MSG_LENGTH)
         except KeyboardInterrupt:
             sock.close()
             raise
@@ -622,12 +615,22 @@ class Client:
         sock.close()
         return rets[1:]
 
-    def connect_to_server(self, server_ip, server_port):
+    def connect_to_server(self, server_ip, server_port, certificate):
         sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        if ENCRYPT:
-            sock = ssl.wrap_socket(sock, cert_reqs=ssl.CERT_REQUIRED, ca_certs='server_cert.pem')
+        if certificate != 'None':
+            try:
+                certfile = 'client/certificate.pem'
+                f = open(certfile, 'wt')
+                f.write(certificate)
+                f.close()
+                sock = ssl.wrap_socket(sock, cert_reqs=ssl.CERT_REQUIRED, ca_certs=certfile)
+            except:
+                if DEBUG: traceback.print_exc()
+                return 'fail'
         try:
             sock.connect((server_ip, server_port))
+            while self.output_queue.empty() == False:
+                self.output_queue.get()
             self.service_socket = sock
             self.connected = True
             return "success"
@@ -642,8 +645,8 @@ class Client:
             os.mkdir('client')
         signal.signal(signal.SIGINT, signal_handler)
 
+        thread.start_new_thread(self.packet_send_thread,())
         thread.start_new_thread(self.device_monitor,())
-        thread.start_new_thread(self.heartbeat_func,())
 
         file_received = {}
         file_receiving = {}
@@ -655,7 +658,7 @@ class Client:
                 if self.connected == False:
                     raise ConnectionLost
 
-                new_msg = self.service_socket.recv(MAX_MSG_LENTH)
+                new_msg = self.service_socket.recv(MAX_MSG_LENGTH)
                 if new_msg == '':
                     raise ConnectionLost
                     break
@@ -864,12 +867,20 @@ class Client:
                     except KeyboardInterrupt:
                         break
                     continue
-                else:
-                    [server_ip, server_port, token] = result
+
+                try:
+                    [server_ip, server_port, token, certificate] = result
                     server_port = int(server_port)
                     print 'login to controller succees, server_ip-{0} server_port-{1}'.format(server_ip, server_port)
+                except:
+                    print 'login to controller failed, invalid return={0}'.format(result)
+                    try:
+                        time.sleep(5)
+                    except KeyboardInterrupt:
+                        break
+                    continue
 
-                result = self.connect_to_server(server_ip, server_port)
+                result = self.connect_to_server(server_ip, server_port, certificate)
                 if result == 'success':
                     print 'connect to server {0}:{1} succeeded'.format(server_ip, server_port)
                 else:
