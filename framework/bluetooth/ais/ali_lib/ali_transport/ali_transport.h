@@ -53,12 +53,14 @@
 #define ALI_TRANSPORT_H__
 
 #include <stdint.h>
-#include "sdk_errors.h"
-#include "ble.h"
-#include "ble_srv_common.h"
-#include "app_timer.h"
+//#include "sdk_errors.h"
+//#include "ble.h"
+//#include "ble_srv_common.h"
+//#include "app_timer.h"
 #include "ali_cmd.h"
-#include "nrf_soc.h"
+//#include "nrf_soc.h"
+#include "ali_common.h"
+#include <aos/aos.h>
 
 #ifdef __cplusplus
 extern "C" {
@@ -164,6 +166,11 @@ typedef struct
 } ali_transport_init_t;
 
 
+typedef struct ecb_hal_data_s {
+    void *data;
+} ecb_hal_data_t;
+
+
 /**@brief Transport layer structure. This contains various status information for the layer. */
 struct ali_transport_s
 {
@@ -182,12 +189,12 @@ struct ali_transport_s
         uint8_t                 zeroes_padded;  /**< Tx: Number of zeroes padded. */
         uint16_t                pkt_req;        /**< Number of packets requested for Tx. */
         uint16_t                pkt_cfm;        /**< Number of packets confirmed for Tx. */
-        app_timer_t             timer;          /**< Timer for Tx timeout. */
+        aos_timer_t             timer;          /**< Timer for Tx timeout. */
         void                  * p_context;      /**< Pointer to context which will be passed as a parameter of tx_func. */
         ali_transport_tx_func_t active_func;    /**< Pointer to the active Tx function. */
         ali_transport_tx_func_t notify_func;    /**< Pointer to Tx function (notify). */
         ali_transport_tx_func_t indicate_func;  /**< Pointer to Tx function (indicate). */
-        nrf_ecb_hal_data_t      ecb_context;    /**< ECB context from softdevice. */
+        ecb_hal_data_t          ecb_context;    /**< ECB context from softdevice. */
     } tx;
     struct
     {
@@ -198,7 +205,7 @@ struct ali_transport_s
         uint8_t     cmd;                  /**< Rx: Command (chapter 5.2.1). */
         uint8_t     total_frame;          /**< Rx: Total frame (chapter 5.2.1). */
         uint8_t     frame_seq;            /**< Rx: Frame sequence (chapter 5.2.1). */
-        app_timer_t timer;                /**< Timer for Rx timeout. */
+        aos_timer_t timer;                /**< Timer for Rx timeout. */
     } rx;
     uint16_t                      max_pkt_size;         /**< MTU - 3 */
     ali_transport_event_handler_t event_handler;        /**< Pointer to event handler. */

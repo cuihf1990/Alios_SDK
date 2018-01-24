@@ -39,10 +39,11 @@
 #include <stdio.h>                  /* Standard input/output definitions */
 #include <string.h>                 /* String function definitions */
 #include <stdbool.h>
-#include "nordic_common.h"
-#include "sdk_macros.h"
-#include "nrf_soc.h"
+//#include "nordic_common.h"
+//#include "sdk_macros.h"
+//#include "nrf_soc.h"
 #include "sha256.h"
+#include "ali_common.h"
 
 #ifdef TEST_VECTORS
 static uint8_t const m_tv_rand[ALI_AUTH_PRS_LEN]    /**< Injected test vector: fixed random number. */
@@ -72,16 +73,23 @@ static void notify_error (ali_auth_t * p_auth, uint32_t src, uint32_t err_code)
 
 
 /**@brief Timeout handler. */
-static void on_timeout (ali_auth_t * p_auth)
+static void on_timeout_helper (ali_auth_t * p_auth)
 {
     notify_error (p_auth, ALI_ERROR_SRC_AUTH_PROC_TIMER_2, NRF_ERROR_TIMEOUT);
+}
+
+
+static void on_timeout (void * arg1, void * arg2)
+{
+    ali_auth_t *p_auth = (ali_auth_t *)arg1;
+    on_timeout_helper(p_auth);
 }
 
 
 /**@brief Notify Authentication result to higher layer. */
 static void notify_result(ali_auth_t * p_auth)
 {
-    uint32_t err_code;
+    int32_t err_code;
     ali_auth_event_t evt;
 
     /* send event to higher layer. */
@@ -92,8 +100,8 @@ static void notify_result(ali_auth_t * p_auth)
     /* stop all related timers */
     if (p_auth->timeout != 0)
     {
-        err_code = app_timer_stop(&p_auth->timer);
-        VERIFY_SUCCESS_VOID(err_code);
+        err_code = aos_timer_stop(&p_auth->timer);
+        if (err_code != 0) LOGE("auth", "aos_timer_stop failed.");
     }
 }
 
@@ -113,6 +121,7 @@ static void notify_key(ali_auth_t * p_auth)
 /**@brief Generate random number using SD calls. */
 static void sd_rand (ali_auth_t * p_auth)
 {
+#if 0
 #ifndef TEST_VECTORS
     uint8_t bytes_available;
 
@@ -125,6 +134,7 @@ static void sd_rand (ali_auth_t * p_auth)
     (void)sd_rand_application_vector_get(p_auth->ikm + p_auth->ikm_len, ALI_AUTH_PRS_LEN);
 #else
     memcpy(p_auth->ikm + p_auth->ikm_len, m_tv_rand, ALI_AUTH_PRS_LEN);
+#endif
 #endif
 }
 
@@ -185,10 +195,9 @@ ret_code_t ali_auth_init(ali_auth_t * p_auth, ali_auth_init_t const * p_init)
     /* Initialize Tx and Rx timeout timers. */
     if (p_auth->timeout != 0)
     {
-        app_timer_id_t timer_id = &p_auth->timer;
-
-        ret = app_timer_create(&timer_id, APP_TIMER_MODE_SINGLE_SHOT, (app_timer_timeout_handler_t)on_timeout);
-        VERIFY_SUCCESS(ret);
+        int err;
+        err = aos_timer_new(&p_auth->timer, on_timeout,
+                  p_auth, p_auth->timeout, 0);
     }
 
     return ret;
@@ -197,10 +206,10 @@ ret_code_t ali_auth_init(ali_auth_t * p_auth, ali_auth_init_t const * p_init)
 
 void ali_auth_reset(ali_auth_t * p_auth)
 {
-    uint32_t err_code;
+    int err;
 
     /* check parameters */
-    VERIFY_PARAM_NOT_NULL_VOID(p_auth);
+    if (p_auth == NULL) assert(1);
 
     /* Reset state machine. */
     p_auth->state = ALI_AUTH_STATE_IDLE;
@@ -208,11 +217,14 @@ void ali_auth_reset(ali_auth_t * p_auth)
     /* stop all related timers */
     if (p_auth->timeout != 0 && p_auth->feature_enable)
     {
-        err_code = app_timer_stop(&p_auth->timer);
-        VERIFY_SUCCESS_VOID(err_code);
+        err = aos_timer_stop(&p_auth->timer);
+        if (err) LOGE("auth", "aos_timer_stop failed in %s", __func__);
     }
 }
 
+#ifndef MIN
+#define MIN(a,b) ((a) < (b) ? (a) : (b))
+#endif
 
 void ali_auth_on_command(ali_auth_t * p_auth, uint8_t cmd, uint8_t * p_data, uint16_t length)
 {
@@ -245,8 +257,9 @@ void ali_auth_on_command(ali_auth_t * p_auth, uint8_t cmd, uint8_t * p_data, uin
                 /* Start procedure timeout timer */
                 if (p_auth->timeout != 0)
                 {
-                    err_code = app_timer_start(&p_auth->timer, p_auth->timeout, p_auth);
-                    if (err_code != NRF_SUCCESS)
+                    int err;
+                    err = aos_timer_start(&p_auth->timer);
+                    if (err)
                     {
                         notify_error(p_auth, ALI_ERROR_SRC_AUTH_PROC_TIMER_1, err_code);
                         return;
@@ -290,7 +303,7 @@ void ali_auth_on_command(ali_auth_t * p_auth, uint8_t cmd, uint8_t * p_data, uin
 
 void ali_auth_on_connected(ali_auth_t * p_auth)
 {
-    uint32_t err_code;
+    int err;
 
     /* check parameters */
     VERIFY_PARAM_NOT_NULL_VOID(p_auth);
@@ -304,10 +317,10 @@ void ali_auth_on_connected(ali_auth_t * p_auth)
     /* Start procedure timeout timer */
     if (p_auth->timeout != 0)
     {
-        err_code = app_timer_start(&p_auth->timer, p_auth->timeout, p_auth);
-        if (err_code != NRF_SUCCESS)
+        err = aos_timer_start(&p_auth->timer);
+        if (err)
         {
-            notify_error(p_auth, ALI_ERROR_SRC_AUTH_PROC_TIMER_0, err_code);
+            notify_error(p_auth, ALI_ERROR_SRC_AUTH_PROC_TIMER_0, err);
             return;
         }
     }

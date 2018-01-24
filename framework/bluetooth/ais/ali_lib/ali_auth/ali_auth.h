@@ -51,11 +51,13 @@
 #define ALI_AUTH_H__
 
 #include <stdint.h>
-#include "sdk_errors.h"
-#include "ble.h"
-#include "ble_srv_common.h"
-#include "app_timer.h"
+//#include "sdk_errors.h"
+//#include "ble.h"
+//#include "ble_srv_common.h"
+//#include "app_timer.h"
 #include "ali_cmd.h"
+#include <aos/aos.h>
+#include "ali_common.h"
 
 #ifdef __cplusplus
 extern "C" {
@@ -160,7 +162,7 @@ typedef void (*ali_auth_event_handler_t)(void * p_context, ali_auth_event_t * p_
 typedef struct
 {
     bool                     feature_enable;    /**< Whether authentication sequence is enabled. */
-    uint32_t                 timeout;           /**< Timeout, in number of ticks. */
+    uint32_t                 timeout;           /**< Timeout, in number of ms. */
     ali_auth_event_handler_t event_handler;     /**< Pointer to event handler. */
     void                   * p_evt_context;     /**< Pointer to context which will be passed as a parameter of event_handler. */
     ali_auth_tx_func_t       tx_func;           /**< Pointer to Tx function. */
@@ -181,7 +183,7 @@ struct ali_auth_s
     ali_auth_tx_func_t       tx_func;                   /**< Pointer to Tx function. */
     void                   * p_tx_func_context;         /**< Pointer to context which will be passed as a parameter of tx_func. */
     uint32_t                 timeout;                   /**< Timeout of procedures, in number of ticks. */
-    app_timer_t              timer;                     /**< Timer for procedure timeout. */
+    aos_timer_t              timer;                     /**< Timer for procedure timeout. */
     uint16_t                 ikm_len;                   /**< Derived length of IKM. */
     uint8_t                  ikm[ALI_AUTH_IKM_MAX_LEN]; /**< Input key material. */
     uint8_t                  okm[ALI_AUTH_KEY_LEN];     /**< Output key material. */

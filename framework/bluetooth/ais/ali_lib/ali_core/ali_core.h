@@ -49,8 +49,15 @@
 #define ALI_CORE_H__
 
 #include <stdint.h>
-#include "ble_srv_common.h"
-#include "sdk_errors.h"
+//#include "ble_srv_common.h"
+//#include "sdk_errors.h"
+#include "ali_common.h"
+#include <stdbool.h>
+#include "ble_ais.h"
+#include "ali_transport.h"
+#include "ali_auth.h"
+#include "ali_gap.h"
+#include "ali_ota.h"
 
 #ifdef __cplusplus
 extern "C" {
@@ -60,16 +67,18 @@ extern "C" {
 #define ALI_COMPANY_ID              0x01A8      /**< Bluetooth company ID of Alibaba (see spec. v1.0.4 ch. 2.2). */
 #define ALI_PROTOCOL_ID             0x03        /**< Protocol ID (see spec. v1.0.4 ch. 2.2). */
 
+#if 0
 #if defined (NRF51)
     #define ALI_BLUETOOTH_VER       0x00        /**< Bluetooth version 4.0 (see spec. v1.0.4 ch. 2.2). */
     #define ALI_MAX_SUPPORTED_MTU   23          /**< Maximum supported MTU. */
     #define ALI_CONTEXT_SIZE        394         /**< Context size required, in number of 4-byte words. */
-#elif defined (NRF52)
+#elif defined (NRF52) || defined(CONFIG_ESP32_WITH_BLE)
     #define ALI_BLUETOOTH_VER       0x01        /**< Bluetooth version 4.2 (see spec. v1.0.4 ch. 2.2). */
     #define ALI_MAX_SUPPORTED_MTU   247         /**< Maximum supported MTU. */
     #define ALI_CONTEXT_SIZE        450         /**< Context size required, in number of 4-byte words. */
 #else
     #error No valid target set for ALI_CONTEXT_SIZE.
+#endif
 #endif
 
 /**
@@ -95,6 +104,7 @@ typedef enum
     ALI_EVT_NEW_FIRMWARE,   /**< New firmware has been received and written to flash, need reboot to update. */
     ALI_EVT_ERROR,          /**< Error reported by lower layers. */
 } ali_evt_type_t;
+
 
 
 /**@brief Structure for Rx data event @ref ALI_EVT_CTRL_RECEIVED and @ref ALI_EVT_QUERY_RECEIVED.
@@ -149,7 +159,7 @@ typedef struct
     uint8_t             secret_len;             /**< Length of secret. */
     uint8_t           * p_sw_ver;               /**< Software version. */
     uint8_t             sw_ver_len;             /**< Length of software version. */
-	uint32_t            timer_prescaler;        /**< Prescaler of timers. */
+    uint32_t            timer_prescaler;        /**< Prescaler of timers. */
     uint32_t            transport_timeout;      /**< Timeout of Tx/Rx, in number of ms. Fill 0 if not used. */
     bool                enable_auth;            /**< Enable authentication. */
     bool                enable_ota;             /**< Enable OTA firmware upgrade. */
@@ -234,7 +244,7 @@ ret_code_t ali_get_manuf_spec_adv_data(void * p_ali, uint8_t * p_data, uint16_t 
  * @param[in] p_ali       Core module structure.
  * @param[in] p_ble_evt   Event received from the SoftDevice.
  */
-void ali_on_ble_evt(void * p_ali, ble_evt_t * p_ble_evt);
+//void ali_on_ble_evt(void * p_ali, ble_evt_t * p_ble_evt);
 
 
 /**@brief Control interface.

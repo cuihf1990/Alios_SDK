@@ -50,8 +50,9 @@
 #define ALI_OTA_H__
 
 #include <stdint.h>
-#include "sdk_errors.h"
+//#include "sdk_errors.h"
 #include "ali_cmd.h"
+#include "ali_common.h"
 
 #ifdef __cplusplus
 extern "C" {

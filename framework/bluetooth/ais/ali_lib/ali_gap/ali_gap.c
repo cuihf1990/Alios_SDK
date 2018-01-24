@@ -39,9 +39,9 @@
 #include <stdio.h>                  /* Standard input/output definitions */
 #include <string.h>                 /* String function definitions */
 #include <stdbool.h>
-#include "nordic_common.h"
-#include "sdk_macros.h"
-#include "nrf_soc.h"
+//#include "nordic_common.h"
+//#include "sdk_macros.h"
+//#include "nrf_soc.h"
 
 
 #define CHECK_PAYLOAD_FORMAT    0   /**< 0: Do not check payload format.  */

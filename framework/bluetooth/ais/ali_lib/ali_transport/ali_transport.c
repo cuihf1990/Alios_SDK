@@ -40,8 +40,8 @@
 #include <stdio.h>                  /* Standard input/output definitions */
 #include <string.h>                 /* String function definitions */
 #include <stdbool.h>
-#include "nordic_common.h"
-#include "sdk_macros.h"
+//#include "nordic_common.h"
+//#include "sdk_macros.h"
 #include "ble_gatt.h"
 
 
@@ -58,6 +58,9 @@
 
 #define rx_active(p)                rx_frames_left(p)           /**< Whether there are frames left behind. */
 
+#ifndef MIN
+#define MIN(a,b) ((a) < (b) ? (a) : (b))
+#endif
 
 /**@brief Reset Tx state machine. */
 static void reset_tx (ali_transport_t * p_transport)
@@ -75,7 +78,7 @@ static void reset_tx (ali_transport_t * p_transport)
 
     if (p_transport->timeout != 0)
     {
-        err_code = app_timer_stop(&p_transport->tx.timer); 
+        err_code = aos_timer_stop(&p_transport->tx.timer); 
         VERIFY_SUCCESS_VOID(err_code);
     }
 }
@@ -93,7 +96,7 @@ static void reset_rx (ali_transport_t * p_transport)
 
     if (p_transport->timeout != 0)
     {
-        err_code = app_timer_stop(&p_transport->rx.timer); 
+        err_code = aos_timer_stop(&p_transport->rx.timer); 
         VERIFY_SUCCESS_VOID(err_code);
     }
 }
@@ -101,7 +104,7 @@ static void reset_rx (ali_transport_t * p_transport)
 
 /**@brief Tx timeout handler.
  */
-static void on_tx_timeout (ali_transport_t * p_transport)
+static void on_tx_timeout_helper(ali_transport_t * p_transport)
 {
     ali_transport_event_t evt;
 
@@ -117,10 +120,17 @@ static void on_tx_timeout (ali_transport_t * p_transport)
     reset_tx(p_transport);
 }
 
+static void on_tx_timeout(void *arg1, void *arg2)
+{
+    ali_transport_t *p_transport = (ali_transport_t *)arg1;
+
+    on_tx_timeout_helper(p_transport);
+}
+
 
 /**@brief Rx timeout handler.
  */
-static void on_rx_timeout (ali_transport_t * p_transport)
+static void on_rx_timeout_helper(ali_transport_t * p_transport)
 {
     ali_transport_event_t evt;
 
@@ -136,6 +146,12 @@ static void on_rx_timeout (ali_transport_t * p_transport)
     reset_rx(p_transport);
 }
 
+static void on_rx_timeout(void *arg1, void *arg2)
+{
+    ali_transport_t *p_transport = (ali_transport_t *)arg1;
+
+    on_rx_timeout_helper(p_transport);
+}
 
 /**@brief Report error. */
 static void notify_error(ali_transport_t * p_transport, uint32_t src, uint32_t err_code)
@@ -150,9 +166,16 @@ static void notify_error(ali_transport_t * p_transport, uint32_t src, uint32_t e
 }
 
 
+static void sd_ecb_block_encrypt(ecb_hal_data_t *ecb_ctx)
+{
+    /* <TODO> */
+}
+
+
 /**@brief Encryption. */
 static void encrypt (ali_transport_t * p_transport, uint8_t * data, uint16_t len)
 {
+#if 0 // <TODO>
     uint16_t bytes_encrypted = 0;
     uint16_t bytes_to_pad, l_len;
 
@@ -172,6 +195,7 @@ static void encrypt (ali_transport_t * p_transport, uint8_t * data, uint16_t len
         memcpy(data + bytes_encrypted, p_transport->tx.ecb_context.ciphertext, AES_BLK_SIZE);
         bytes_encrypted += l_len;
     }
+#endif
 }
 
 
@@ -274,6 +298,7 @@ static ret_code_t try_send (ali_transport_t * p_transport)
             p_transport->tx.bytes_sent += len;
             bytes_left = tx_bytes_left(p_transport);
         }
+#if 0 // Below cases not handled, <TODO>
         else if (ret == BLE_ERROR_NO_TX_PACKETS)
         {
             ret = NRF_SUCCESS;
@@ -284,6 +309,7 @@ static ret_code_t try_send (ali_transport_t * p_transport)
             ret = NRF_SUCCESS;
             break;              // wait until timeout or tx-done
         }
+#endif
         else
         {
             VERIFY_SUCCESS(ret);
@@ -293,7 +319,7 @@ static ret_code_t try_send (ali_transport_t * p_transport)
     /* Start Tx timeout timer */
     if ((bytes_left != 0) && (p_transport->timeout != 0))
     {
-        ret = app_timer_start(&p_transport->tx.timer, p_transport->timeout, p_transport);
+        ret = aos_timer_start(&p_transport->tx.timer);
         VERIFY_SUCCESS(ret);
     }
 
@@ -336,19 +362,20 @@ ret_code_t ali_transport_init(ali_transport_t * p_transport, ali_transport_init_
     /* Initialize ECB context. */
     if (p_transport->p_key != NULL)
     {
-        memcpy(p_transport->tx.ecb_context.key, p_transport->p_key, AES_BLK_SIZE);
+        printf("p_transport->p_key not NULL, need to handle!\r\n");
+        //memcpy(p_transport->tx.ecb_context.key, p_transport->p_key, AES_BLK_SIZE);
     }
 
     /* Initialize Tx and Rx timeout timers. */
     if (p_transport->timeout != 0)
     {
-        app_timer_id_t tx_timer_id = &p_transport->tx.timer;
-        app_timer_id_t rx_timer_id = &p_transport->rx.timer;
+        aos_timer_t *tx_timer = &p_transport->tx.timer;
+        aos_timer_t *rx_timer = &p_transport->rx.timer;
 
-        ret = app_timer_create(&tx_timer_id, APP_TIMER_MODE_SINGLE_SHOT, (app_timer_timeout_handler_t)on_tx_timeout);
+        ret = aos_timer_new(tx_timer, on_tx_timeout, p_transport, p_transport->timeout, 0);
         VERIFY_SUCCESS(ret);
 
-        ret = app_timer_create(&rx_timer_id, APP_TIMER_MODE_SINGLE_SHOT, (app_timer_timeout_handler_t)on_rx_timeout);
+        ret = aos_timer_new(rx_timer, on_rx_timeout, p_transport, p_transport->timeout, 0);
         VERIFY_SUCCESS(ret);
     }
 
@@ -564,7 +591,7 @@ void ali_transport_on_rx_data(ali_transport_t * p_transport, uint8_t * p_data, u
     {
         if (p_transport->timeout != 0)
         {
-            err_code = app_timer_start(&p_transport->rx.timer, p_transport->timeout, p_transport);
+            err_code = aos_timer_start(&p_transport->rx.timer);
             VERIFY_SUCCESS_VOID(err_code);
         }
     }
@@ -637,7 +664,8 @@ uint32_t ali_transport_set_key(ali_transport_t * p_transport, uint8_t * p_key)
 
     /* Copy key, which will take effect when encoding the next fragment. */
     p_transport->p_key = p_key;
-    memcpy(p_transport->tx.ecb_context.key, p_transport->p_key, AES_BLK_SIZE);
+    printf("FIXME: %s %d", __FILE__, __LINE__);
+    //memcpy(p_transport->tx.ecb_context.key, p_transport->p_key, AES_BLK_SIZE);
     return NRF_SUCCESS;
 }
 

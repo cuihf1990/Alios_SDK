@@ -35,21 +35,17 @@
  * THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 #include "ali_core.h"
-#include "ble_ais.h"
-#include "ali_transport.h"
-#include "ali_auth.h"
-#include "ali_gap.h"
-#include "ali_ota.h"
 #include "ali_error_src.h"
 #include <stdio.h>                  /* Standard input/output definitions */
 #include <string.h>                 /* String function definitions */
 #include <stdbool.h>
-#include "nordic_common.h"
-#include "ble_srv_common.h"
-#include "ble_hci.h"
+//#include "nordic_common.h"
+//#include "ble_srv_common.h"
+//#include "ble_hci.h"
+#include <bluetooth/conn.h>
 
 #define MODULE_INITIALIZED      (p_ali->is_initialized)
-#include "sdk_macros.h"
+//#include "sdk_macros.h"
 
 
 #define FMSK_BLUETOOTH_VER_Pos  0                                           /**< Offset of bluetooth version in FMSK (see specification v1.0.4, ch. 2.2). */
@@ -241,12 +237,15 @@ static void auth_event_handler (ali_t * p_ali, ali_auth_event_t * p_event)
     switch (p_event->type)
     {
         case ALI_AUTH_EVT_DONE:
+#ifndef CONFIG_AIS_NO_OTA
             ali_ota_on_auth(&p_ali->ota, p_event->data.auth_done.result);
+#endif
             /* Disconnect if authentication failed. */
             if (!p_event->data.auth_done.result
                  && p_ali->conn_handle != BLE_CONN_HANDLE_INVALID)
             {
-                (void) sd_ble_gap_disconnect(p_ali->conn_handle, BLE_HCI_REMOTE_USER_TERMINATED_CONNECTION);
+                //(void) sd_ble_gap_disconnect(p_ali->conn_handle, BLE_HCI_REMOTE_USER_TERMINATED_CONNECTION);
+                //bt_conn_disconnect(<TODO>Need conn type here, BT_HCI_ERR_REMOTE_USER_TERM_CONN);
             }
             else
             {
@@ -265,7 +264,7 @@ static void auth_event_handler (ali_t * p_ali, ali_auth_event_t * p_event)
         case ALI_AUTH_EVT_ERROR:
             if (p_event->data.error.err_code == NRF_ERROR_TIMEOUT)
             {
-                (void) sd_ble_gap_disconnect(p_ali->conn_handle, BLE_HCI_REMOTE_USER_TERMINATED_CONNECTION);
+                //(void) sd_ble_gap_disconnect(p_ali->conn_handle, BLE_HCI_REMOTE_USER_TERMINATED_CONNECTION);
             }
             notify_error(p_ali, p_event->data.error.source, p_event->data.error.err_code);
             break;
@@ -332,7 +331,9 @@ static void transport_event_handler (ali_t * p_ali, ali_transport_event_t * p_ev
     {
         case ALI_TRANSPORT_EVT_TX_DONE:
             ali_gap_on_tx_done(&p_ali->gap, p_event->data.rxtx.cmd);
+#ifndef CONFIG_AIS_NO_OTA
             ali_ota_on_tx_done(&p_ali->ota, p_event->data.rxtx.cmd);
+#endif
             break;
 
         case ALI_TRANSPORT_EVT_RX_DONE:
@@ -346,8 +347,10 @@ static void transport_event_handler (ali_t * p_ali, ali_transport_event_t * p_ev
                                p_event->data.rxtx.length);
             ali_auth_on_command(&p_ali->auth, p_event->data.rxtx.cmd, p_event->data.rxtx.p_data,
                                 p_event->data.rxtx.length);
+#ifndef CONFIG_AIS_NO_OTA
             ali_ota_on_command(&p_ali->ota, p_event->data.rxtx.cmd, p_event->data.rxtx.p_data,
                                p_event->data.rxtx.length, p_event->data.rxtx.num_frames);
+#endif
             break;
 
         case ALI_TRANSPORT_EVT_TX_TIMEOUT:
@@ -368,7 +371,9 @@ static void transport_event_handler (ali_t * p_ali, ali_transport_event_t * p_ev
 
                 if (p_event->data.error.source == ALI_ERROR_SRC_TRANSPORT_FW_DATA_DISC)
                 {
+#ifndef CONFIG_AIS_NO_OTA
                     ali_ota_on_discontinuous_frame(&p_ali->ota);
+#endif
                 }
             }
             break;
@@ -407,7 +412,9 @@ static void ble_ais_event_handler(ali_t * p_ali, ble_ais_event_t * p_event)
             ali_auth_on_enable_service(&p_ali->auth);
             if (!p_ali->is_auth_enabled)
             {
+#ifndef CONFIG_AIS_NO_OTA
                 ali_ota_on_auth(&p_ali->ota, true);
+#endif
             }
             break;
 
@@ -416,7 +423,7 @@ static void ble_ais_event_handler(ali_t * p_ali, ble_ais_event_t * p_event)
     }
 }
 
-
+#if 0
 /**@brief Core: BLE event handler. */
 static void on_ble_evt(ali_t * p_ali, ble_evt_t * p_ble_evt)
 {
@@ -439,7 +446,7 @@ static void on_ble_evt(ali_t * p_ali, ble_evt_t * p_ble_evt)
             break;
     }
 }
-
+#endif
 
 /*@brief Function for initializing ble_ais module. */
 static uint32_t ais_init (ali_t * p_ali, ali_init_t const * p_init)
@@ -464,7 +471,7 @@ static uint32_t transport_init (ali_t * p_ali, ali_init_t const * p_init)
     init_transport.tx_buffer_len     = TX_BUFF_LEN;
     init_transport.rx_buffer         = (uint8_t *)p_ali->rx_buff;
     init_transport.rx_buffer_len     = RX_BUFF_LEN;
-    init_transport.timeout           = APP_TIMER_TICKS(p_init->transport_timeout, p_init->timer_prescaler);
+    init_transport.timeout           = p_init->transport_timeout;
     init_transport.event_handler     = (ali_transport_event_handler_t)transport_event_handler;
     init_transport.p_evt_context     = p_ali;
     init_transport.tx_func_notify    = (ali_transport_tx_func_t)ble_ais_send_notification;
@@ -482,7 +489,7 @@ static uint32_t auth_init (ali_t * p_ali, ali_init_t const * p_init, uint8_t * m
 
     memset(&init_auth, 0, sizeof(ali_auth_init_t)); 
     init_auth.feature_enable    = p_init->enable_auth;
-    init_auth.timeout           = APP_TIMER_TICKS(AUTH_TIMEOUT, p_init->timer_prescaler);
+    init_auth.timeout           = AUTH_TIMEOUT;
     init_auth.event_handler     = (ali_auth_event_handler_t)auth_event_handler;
     init_auth.p_evt_context     = p_ali;
     init_auth.tx_func           = (ali_auth_tx_func_t)tx_func_indicate;
@@ -511,6 +518,7 @@ static uint32_t gap_init (ali_t * p_ali, ali_init_t const * p_init)
 }
 
 
+#ifndef CONFIG_AIS_NO_OTA
 /*@brief Function for initializing ali_ota, the OTA firmware upgrade module. */
 static uint32_t ota_init (ali_t * p_ali, ali_init_t const * p_init)
 {
@@ -527,7 +535,7 @@ static uint32_t ota_init (ali_t * p_ali, ali_init_t const * p_init)
 
     return ali_ota_init(&p_ali->ota, &init_ota);
 }
-
+#endif
 
 ret_code_t ali_init(void * p_ali_ext, ali_init_t const * p_init)
 {
@@ -588,9 +596,11 @@ ret_code_t ali_init(void * p_ali_ext, ali_init_t const * p_init)
     err_code = gap_init(p_ali, p_init);
     VERIFY_SUCCESS(err_code);
 
+#ifndef CONFIG_AIS_NO_OTA
     /* Initialize OTA module. */
     err_code = ota_init(p_ali, p_init);
     VERIFY_SUCCESS(err_code);
+#endif
 
     p_ali->is_initialized = true;
     return NRF_SUCCESS;
@@ -617,7 +627,9 @@ void ali_reset(void * p_ali_ext)
     p_ali->is_authenticated = false;
 
     /* Reset modules */
+#ifndef CONFIG_AIS_NO_OTA
     ali_ota_reset(&p_ali->ota);
+#endif
     ali_gap_reset(&p_ali->gap);
     ali_auth_reset(&p_ali->auth);
     ali_transport_reset(&p_ali->transport);
@@ -705,7 +717,7 @@ ret_code_t ali_get_manuf_spec_adv_data(void * p_ali_ext, uint8_t * p_data, uint1
     return NRF_SUCCESS;
 }
 
-
+#if 0 // Not applicable
 void ali_on_ble_evt(void * p_ali_ext, ble_evt_t * p_ble_evt)
 {
     ali_t * p_ali = (ali_t *)p_ali_ext;
@@ -727,7 +739,7 @@ void ali_on_ble_evt(void * p_ali_ext, ble_evt_t * p_ble_evt)
     ble_ais_on_ble_evt(&p_ali->ais, p_ble_evt);
     on_ble_evt(p_ali, p_ble_evt);
 }
-
+#endif
 
 ret_code_t ali_ctrl(void * p_ali_ext, ali_ctrl_t ctrl_word, void * p_data)
 {

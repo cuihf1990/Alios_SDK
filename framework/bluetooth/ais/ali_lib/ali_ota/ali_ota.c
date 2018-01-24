@@ -39,14 +39,14 @@
 #include <stdio.h>                  /* Standard input/output definitions */
 #include <string.h>                 /* String function definitions */
 #include <stdbool.h>
-#include "nordic_common.h"
-#include "sdk_macros.h"
-#include "nrf_soc.h"
-#include "crc16.h"
-#include "crc32.h"
-#include "nrf_dfu_types.h"
-#include "nrf_dfu_flash.h"
-#include "nrf_dfu_settings.h"
+//#include "nordic_common.h"
+//#include "sdk_macros.h"
+//#include "nrf_soc.h"
+//#include "crc16.h"
+//#include "crc32.h"
+//#include "nrf_dfu_types.h"
+//#include "nrf_dfu_flash.h"
+//#include "nrf_dfu_settings.h"
 
 
 #define UPDATE_FINISHED         0xAB            /**< Information in s_dfu_settings.init_command[0], which indicates whether application upgrade has been successful. */
@@ -527,6 +527,15 @@ static void on_fw_data (ali_ota_t * p_ota, uint8_t * p_data, uint16_t length, ui
     p_ota->frames_recvd += num_frames;
 }
 
+static uint16_t crc16_compute(uint8_t const *add, uint32_t size, void *p)
+{
+
+}
+
+static uint32_t crc32_compute(uint8_t const *add, uint32_t size, void *p)
+{
+
+}
 
 /**@brief Function for handling command @ref ALI_CMD_FW_XFER_FINISH in state
  *        @ref ALI_OTA_STATE_FW_CHECK.

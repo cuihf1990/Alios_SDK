@@ -57,8 +57,8 @@
 #ifndef BLE_AIS_H__
 #define BLE_AIS_H__
 
-#include "ble.h"
-#include "ble_srv_common.h"
+//#include "ble.h"
+//#include "ble_srv_common.h"
 #include <stdint.h>
 #include <stdbool.h>
 
@@ -129,6 +129,14 @@ typedef struct
     uint16_t                  mtu;              /**< MTU. */
 } ble_ais_init_t;
 
+typedef struct ble_gatts_char_handles_s {
+    uint16_t chrc_handle;
+    uint16_t value_handle;
+    uint16_t user_desc_handle;
+    uint16_t cccd_handle;
+    uint16_t sccd_handle;
+} ble_gatts_char_handles_t;
+
 /**@brief Alibaba IOT Service structure.
  *
  * @details This structure contains status information related to the service.
@@ -195,7 +203,7 @@ uint32_t ble_ais_set_mtu(ble_ais_t * p_ais, uint16_t mtu);
  * @param[in] p_ais       Alibaba IOT Service structure.
  * @param[in] p_ble_evt   Event received from the SoftDevice.
  */
-void ble_ais_on_ble_evt(ble_ais_t * p_ais, ble_evt_t * p_ble_evt);
+//void ble_ais_on_ble_evt(ble_ais_t * p_ais, ble_evt_t * p_ble_evt);
 
 /**@brief Function for sending data to the peer by notification.
  *

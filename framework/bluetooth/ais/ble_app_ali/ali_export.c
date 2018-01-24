@@ -39,15 +39,20 @@
 #include <stdio.h>                  /* Standard input/output definitions */
 #include <string.h>                 /* String function definitions */
 #include <stdbool.h>
-#include "nordic_common.h"
-#include "ble_srv_common.h"
-#include "ble_hci.h"
-#include "nrf_nvic.h"
-#include "nrf_soc.h"
-#include "app_scheduler.h"
+#include "ali_common.h"
+//#include "nordic_common.h"
+//#include "ble_srv_common.h"
+//#include "ble_hci.h"
+//#include "nrf_nvic.h"
+//#include "nrf_soc.h"
+//#include "app_scheduler.h"
 
 #define NRF_LOG_MODULE_NAME "ALI"
-#include "nrf_log.h"
+//#include "nrf_log.h"
+
+#ifndef NRF_LOG_DEBUG
+#define NRF_LOG_DEBUG printf
+#endif
 
 #define TRANSPORT_TIMEOUT                10000          /**< Transport layer inter-packet timeout, in number of ms, applicable to both Tx and Rx. */
 #define APP_TIMER_PRESCALER              0              /**< Value of the RTC1 PRESCALER register. */
@@ -89,7 +94,8 @@ static void ali_event_handler (void * p_context, ali_event_t * p_event)
             notify_status(DISCONNECTED);
             if (m_new_firmware)
             {
-                sd_nvic_SystemReset();
+                printf("FIXME: %s %d ALI_EVT_DISCONNECTED", __FILE__, __LINE__);
+                //sd_nvic_SystemReset();
             }
             break;
 
@@ -122,7 +128,8 @@ static void ali_event_handler (void * p_context, ali_event_t * p_event)
         case ALI_EVT_NEW_FIRMWARE:
             NRF_LOG_DEBUG("ALI_EVT_NEW_FIRMWARE\r\n");
             m_new_firmware = true;
-            err_code = sd_ble_gap_disconnect(m_conn_handle, BLE_HCI_REMOTE_USER_TERMINATED_CONNECTION);
+            printf("FIXME: need disconnect in ALI_EVT_NEW_FIRMWARE event.");
+            //err_code = sd_ble_gap_disconnect(m_conn_handle, BLE_HCI_REMOTE_USER_TERMINATED_CONNECTION);
             APP_ERROR_CHECK(err_code);
             break;
 
@@ -170,7 +177,7 @@ int alink_start (struct device_config * dev_conf)
     init_ali.transport_timeout = TRANSPORT_TIMEOUT;
     init_ali.enable_auth       = dev_conf->enable_auth;
     init_ali.enable_ota        = dev_conf->enable_ota;
-    init_ali.max_mtu           = NRF_BLE_GATT_MAX_MTU_SIZE;
+    init_ali.max_mtu           = ALI_MAX_SUPPORTED_MTU;
 
     err_code = ali_init(m_ali_context, &init_ali);
     return ((err_code == NRF_SUCCESS)? 0: -1);
