@@ -5,7 +5,7 @@ NAME := esp8266
 $(NAME)_TYPE := kernel 
 
 $(NAME)_COMPONENTS := framework.common modules.fs.kv cli libc
-$(NAME)_COMPONENTS += protocols.net alicrypto
+$(NAME)_COMPONENTS += protocols.net alicrypto hal
 
 ESP_INC_PATH     := bsp/include
 GLOBAL_INCLUDES  += $(ESP_INC_PATH)
@@ -57,6 +57,7 @@ $(NAME)_SOURCES  += bsp/driver/uart.c
 
 $(NAME)_SOURCES  += hal/uart.c
 $(NAME)_SOURCES  += hal/flash.c
+#$(NAME)_SOURCES  += hal/wifi_port.c
 
 $(NAME)_CFLAGS   := -std=gnu99
 
