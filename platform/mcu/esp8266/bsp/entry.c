@@ -32,7 +32,7 @@ static void application_start(void *p)
     uart_init_new();
 
     while (1) {
-        printf("tick %d\n", ticks++);
+        /*printf("tick %d\n", ticks++);*/
         system_soft_wdt_feed();
         krhino_task_sleep(RHINO_CONFIG_TICKS_PER_SECOND);
     }
