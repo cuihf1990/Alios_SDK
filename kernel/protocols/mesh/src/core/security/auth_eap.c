@@ -347,7 +347,6 @@ static ur_error_t handle_eap_id2(dot1x_context_t *context, const uint8_t *buf,
             return handle_auth_relay(context, buf, len);
         default:
             return UR_ERROR_FAIL;
-            break;
     }
 }
 
