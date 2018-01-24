@@ -19,12 +19,8 @@ GLOBAL_INCLUDES      += ./libalicrypto/inc
 $(NAME)_CFLAGS       += -DCONFIG_CRYPT_MBED=1 -DCONFIG_DBG_CRYPT=1
 GLOBAL_DEFINES       += CONFIG_ALICRYPTO
 
-ifeq ($(COMPILER),armcc)
-$(NAME)_PREBUILT_LIBRARY := lib/$(HOST_ARCH)/KEIL/libmbedcrypto.lib  \
-		lib/$(HOST_ARCH)/KEIL/libalicrypto.lib
-else ifeq ($(COMPILER),iar)
-$(NAME)_PREBUILT_LIBRARY := lib/$(HOST_ARCH)/IAR/libmbedcrytpo.a  \
-                lib/$(HOST_ARCH)/IAR/libalicrypto.a
+ifeq ($(COMPILER),)
+$(NAME)_CFLAGS      += -W -Wdeclaration-after-statement 
 endif
 
 $(NAME)_SOURCES     += 							\
@@ -35,7 +31,7 @@ $(NAME)_SOURCES     += 							\
            ./libalicrypto/sw/ali_crypto_rand.c 	\
            ./libalicrypto/ali_crypto.c 			\
 
-$(NAME)_CFLAGS      += -W -Wdeclaration-after-statement -D_FILE_OFFSET_BITS=64
+$(NAME)_CFLAGS      += -D_FILE_OFFSET_BITS=64
 
 $(NAME)_INCLUDES 	+= ./mbedtls/include
 
