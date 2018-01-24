@@ -637,7 +637,7 @@ class Terminal:
         seq = 0
         file = open(filename,'r')
         header = devstr  + ':' + filehash + ':' + str(seq) + ':'
-        content = file.read(4096)
+        content = file.read(8192)
         while(content):
             retry = 4
             while retry > 0:
@@ -661,7 +661,7 @@ class Terminal:
 
             seq += 1
             header = devstr  + ':' + filehash + ':' + str(seq) + ':'
-            content = file.read(1024)
+            content = file.read(8192)
         file.close()
 
         #send file end

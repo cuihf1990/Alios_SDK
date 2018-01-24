@@ -2,7 +2,7 @@
 
 import sys, os
 
-DEFAULT_PORT = 34567
+DEFAULT_PORT = 2000
 
 def print_usage():
     print "Usage: {0} mode [-s xxx.xxx.xx.xx] [-p xxxxx]\n".format(sys.argv[0])

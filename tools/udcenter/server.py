@@ -246,7 +246,7 @@ class Server:
                             type = TBframe.CMD_ERROR
                             content = ','.join(values[1:])
                         else:
-                            type = TBframe.CMD_DONE,
+                            type = TBframe.CMD_DONE
                             content = ','.join(values[1:])
                         self.send_packet(sock, type, content)
             except:
@@ -354,7 +354,7 @@ class Server:
                             terminal['valid'] = True
                             self.send_packet(conn, TBframe.TERMINAL_LOGIN, 'success')
                             self.conn_timeout[conn]['timeout'] = time.time() + 30
-                            print "terminal {0} connected @ {1}".format(uuid, addr)
+                            print "terminal {0}@{1} logedin".format(uuid, addr)
                             self.send_device_list_to_terminal(terminal['uuid'])
                             for device in terminal['devices']:
                                 try:
@@ -413,10 +413,12 @@ class Server:
                         ret = self.send_file_to_someone(terminal, filename)
                         if ret == True:
                             self.send_packet(conn, TBframe.CMD_DONE, 'success')
+                            result = 'succeed'
                         else:
                             self.send_packet(conn, TBframe.CMD_ERROR, 'fail')
+                            result = 'failed'
                         print "terminal {0}".format(terminal['uuid']),
-                        print "downloading log of device {0}:{1} ... succeed".format(uuid, port)
+                        print "downloading log of device {0}:{1} ... {2}".format(uuid, port, result)
             except:
                 if DEBUG: traceback.print_exc()
                 break
@@ -436,10 +438,12 @@ class Server:
                         client['devices'][port]['using'] -= 1
         conn.close()
         if conn in self.conn_timeout: self.conn_timeout.pop(conn)
-        print "terminal", addr, "disconnected"
         if terminal:
             terminal['valid'] = False
             self.report_status_to_controller()
+            print "terminal {0}@{1} disconnected".format(terminal['uuid'], addr)
+        else:
+            print "terminal {0} disconnected".format(addr)
 
     def client_listen_thread(self):
         self.client_socket.listen(5)

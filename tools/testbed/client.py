@@ -616,13 +616,14 @@ class Client:
                         break
 
                     for hash in list(file_receiving):
-                        if time.time() > file_receiving[hash]['timeout']:
-                            file_receiving[hash]['handle'].close()
-                            try:
-                                os.remove(file_receiving[hash]['name'])
-                            except:
-                                pass
-                            file_receiving.pop(hash)
+                        if time.time() < file_receiving[hash]['timeout']:
+                            continue
+                        file_receiving[hash]['handle'].close()
+                        try:
+                            os.remove(file_receiving[hash]['name'])
+                        except:
+                            pass
+                        file_receiving.pop(hash)
 
                     if type == TBframe.FILE_BEGIN:
                         split_value = value.split(':')
@@ -646,7 +647,7 @@ class Client:
                         filename += '-' + terminal.split(',')[0]
                         filename += '@' + time.strftime('%Y-%m-%d-%H-%M')
                         filehandle = open(filename, 'wb')
-                        timeout = time.time() + 5
+                        timeout = time.time() + 2
                         file_receiving[hash] = {'name':filename, 'seq':0, 'handle':filehandle, 'timeout': timeout}
                         content = terminal + ',' + 'ok'
                         self.send_packet(type, content)
@@ -670,7 +671,7 @@ class Client:
                         if file_receiving[hash]['seq'] == seq:
                             file_receiving[hash]['handle'].write(data)
                             file_receiving[hash]['seq'] += 1
-                            file_receiving[hash]['timeout'] = time.time() + 5
+                            file_receiving[hash]['timeout'] = time.time() + 2
                         content = terminal + ',' + 'ok'
                         self.send_packet(type, content)
                     elif type == TBframe.FILE_END:
