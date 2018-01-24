@@ -27,9 +27,11 @@ static void application_start(void *p)
     size_t ticks = 0;
     extern void system_soft_wdt_feed(void);
 
-    extern void uart_init_new(void);
+    /*extern void uart_init_new(void);
 
-    uart_init_new();
+    uart_init_new();*/
+    extern int32_t hal_uart_init(uart_dev_t *uart);
+    hal_uart_init(&uart_0);
 
     while (1) {
         /*printf("tick %d\n", ticks++);*/
