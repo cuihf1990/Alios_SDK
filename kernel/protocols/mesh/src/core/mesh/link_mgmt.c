@@ -64,7 +64,6 @@ static ur_error_t update_link_cost(link_nbr_stats_t *stats)
 ur_error_t remove_neighbor(hal_context_t *hal, neighbor_t *neighbor)
 {
     network_context_t *network;
-    ur_node_id_t node_id;
 #ifdef CONFIG_AOS_MESH_LOWPOWER
     message_t *message;
 #endif
@@ -74,11 +73,11 @@ ur_error_t remove_neighbor(hal_context_t *hal, neighbor_t *neighbor)
     }
 
     network = get_network_context_by_meshnetid(neighbor->netid, false);
-    if (network && network->router->sid_type == STRUCTURED_SID &&
-        is_allocated_child(network->sid_base, neighbor)) {
-        node_id.sid = neighbor->sid;
-        memcpy(node_id.uuid, neighbor->mac, sizeof(node_id.uuid));
-        update_sid_mapping(network->sid_base, &node_id, false);
+    if (network && network->router->sid_type == STRUCTURED_SID) {
+        sid_node_t *sid_node = get_allocated_child(network->sid_base, neighbor);
+        if (sid_node) {
+            update_sid_mapping(network->sid_base, &sid_node->node_id, false);
+        }
     }
 
     slist_del(&neighbor->next, &hal->neighbors_list);
@@ -390,7 +389,6 @@ neighbor_t *update_neighbor(const message_info_t *info,
     mm_channel_tv_t *channel;
     hal_context_t *hal;
     network_context_t *network;
-    ur_node_id_t node_id;
 
     MESH_LOG_DEBUG("update neighbor");
 
@@ -444,32 +442,25 @@ neighbor_t *update_neighbor(const message_info_t *info,
     }
 
     nbr->channel = channel? channel->channel: info->src_channel;
-    network = info->network;
-    if (network->router->sid_type == STRUCTURED_SID) {
-        if (ssid_info != NULL) {
-            nbr->ssid_info.child_num = ssid_info->child_num;
-            nbr->ssid_info.free_slots = ssid_info->free_slots;
-        }
 
-        if (network->sid_base && (nbr->flags & (NBR_SID_CHANGED | NBR_NETID_CHANGED))) {
-            if (nbr->state == STATE_CHILD ||
-                (!is_direct_child(network->sid_base, info->src.addr.short_addr) &&
-                 is_allocated_child(network->sid_base, nbr) &&
-                 is_partial_function_sid(info->src.addr.short_addr) == false)) {
-                node_id.sid = nbr->sid;
-                memcpy(node_id.uuid, nbr->mac, sizeof(node_id.uuid));
-                update_sid_mapping(network->sid_base, &node_id, false);
-                nbr->state = STATE_NEIGHBOR;
-            }
-        }
-
-        network = get_network_context_by_meshnetid(info->src.netid, false);
-        if (network && is_direct_child(network->sid_base, info->src.addr.short_addr) &&
-            is_allocated_child(network->sid_base, nbr)) {
-            nbr->state = STATE_CHILD;
-        }
+    if (ssid_info != NULL) {
+        nbr->ssid_info.child_num = ssid_info->child_num;
+        nbr->ssid_info.free_slots = ssid_info->free_slots;
     }
 
+    network = info->network;
+    if (network->router->sid_type == STRUCTURED_SID &&
+        is_partial_function_sid(info->src.addr.short_addr) == false) {
+        sid_node_t *sid_node = get_allocated_child(network->sid_base, nbr);
+        if (sid_node == NULL) {
+            nbr->state = STATE_NEIGHBOR;
+        } else if (is_direct_child(network->sid_base, info->src.addr.short_addr)) {
+            nbr->state = STATE_CHILD;
+        } else {
+            update_sid_mapping(network->sid_base, &sid_node->node_id, false);
+            nbr->state = STATE_NEIGHBOR;
+        }
+    }
     start_update_nbr_timer(hal);
     nbr->sid = info->src.addr.short_addr;
     nbr->netid = info->src.netid;
