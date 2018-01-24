@@ -13,6 +13,7 @@
 #include "lwip/inet.h"
 #include "ip/ip.h"
 #include "umesh_utils.h"
+#include "umesh_config.h"
 
 socket_t g_sock;
 
