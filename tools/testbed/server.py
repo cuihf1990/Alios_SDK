@@ -315,60 +315,60 @@ class Server:
         #if DEBUG and func_set: print purpose, func_set
 
         allocated = []
-        with self.allocated['lock']:
-            for client in self.client_list:
-                allocated = []
-                ports = list(client['devices'])
-                ports.sort()
-                for port in ports:
-                    if client['devices'][port]['valid'] == False: #no exist
+        for client in self.client_list:
+            allocated = []
+            ports = list(client['devices'])
+            ports.sort()
+            for port in ports:
+                if client['devices'][port]['valid'] == False: #no exist
+                    continue
+
+                if client['devices'][port]['using'] != 0: #busy
+                    continue
+
+                if port in self.allocated['devices']: #in allocated buffer
+                    continue
+
+                try:
+                    status = json.loads(client['devices'][port]['status'])
+                except:
+                    print 'parse {0} status failed'.format(port)
+                    status = None
+                if status:
+                    if 'model' not in status or model != status['model'].lower():
+                        continue
+                else:
+                    paths = {'mk3060':'mxchip', 'esp32':'espif'}
+                    if model not in paths:
+                        continue
+                    pathstr = paths[model]
+                    if pathstr not in port:
                         continue
 
-                    if client['devices'][port]['using'] != 0: #busy
-                        continue
-
-                    if port in self.allocated['devices']: #in allocated buffer
-                        continue
-
-                    try:
-                        status = json.loads(client['devices'][port]['status'])
-                    except:
-                        print 'parse {0} status failed'.format(port)
-                        status = None
-                    if status:
-                        if 'model' not in status or model != status['model'].lower():
+                if func_set:
+                    match = False
+                    for devicestr in func_set:
+                        if devicestr not in port:
                             continue
-                    else:
-                        paths = {'mk3060':'mxchip', 'esp32':'espif'}
-                        if model not in paths:
-                            continue
-                        pathstr = paths[model]
-                        if pathstr not in port:
-                            continue
-
-                    if func_set:
-                        match = False
-                        for devicestr in func_set:
-                            if devicestr not in port:
-                                continue
-                            match = True
-                            break
-                        if match == False:
-                            continue
-
-                    allocated.append(port)
-                    if len(allocated) >= number:
+                        match = True
                         break
+                    if match == False:
+                        continue
+
+                allocated.append(port)
                 if len(allocated) >= number:
                     break
             if len(allocated) >= number:
+                break
+        if len(allocated) >= number:
+            with self.allocated['lock']:
                 self.allocated['devices'] += allocated
                 self.allocated['timeout'] = time.time() + 10
-                if DEBUG: print "allocated", allocated
-                return ['success', '|'.join(allocated)]
-            else:
-                if DEBUG: print "allocate failed"
-                return ['fail', 'busy']
+            if DEBUG: print "allocated", allocated
+            return ['success', '|'.join(allocated)]
+        else:
+            if DEBUG: print "allocate failed, purpose={0} allocated={1}".format(purpose, self.allocated)
+            return ['fail', 'busy']
 
     def increase_device_refer(self, client, port, using_list):
         if [client['uuid'], port] not in using_list:

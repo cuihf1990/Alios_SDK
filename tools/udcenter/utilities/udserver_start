@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 
-host="10.218.129.232"
-port="34567"
+host="116.62.229.195"
+port="2000"
 if [ $# -gt 0 ];then
     host=$1
 fi

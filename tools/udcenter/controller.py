@@ -112,7 +112,10 @@ class Controller():
         self.cmd_print()
 
     def accept(self, sock):
-        conn, addr = sock.accept()
+        try:
+            conn, addr = sock.accept()
+        except:
+            return
         self.netlog_print('{0} connected'.format(addr))
         conn.setblocking(False)
         self.selector.register(conn, selector.EVENT_READ, self.data_read)
@@ -120,6 +123,8 @@ class Controller():
         self.timeouts[conn] = time.time() + 0.2
 
     def data_write(self, sock):
+        if sock not in self.connections:
+            return
         queue = self.connections[sock]['outbuff']
         try:
             data = queue.get(False)
@@ -132,7 +137,10 @@ class Controller():
             self.selector.unregister(sock, selector.EVENT_WRITE)
 
     def data_read(self, sock):
-        data = sock.recv(CONFIG_MAXMSG_LENTH)
+        try:
+            data = sock.recv(CONFIG_MAXMSG_LENTH)
+        except:
+            data = None
         role = self.connections[sock]['role']
         if not data:
             self.netlog_print("{0} {1} disconnect".format(role, sock.getpeername()))
