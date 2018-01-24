@@ -95,6 +95,8 @@ void vPortETSIntrUnlock(void)
 void user_init(void)
 {
     static char s_buf[64];
+    extern int aos_cli_init(void);
+    aos_cli_init();
 
     kstat_t ret = krhino_task_dyn_create(&g_aos_init, "aos app", 0, AOS_DEFAULT_APP_PRI, 1, 512, (task_entry_t)application_start, 1);
     if (ret != RHINO_SUCCESS)

@@ -57,6 +57,7 @@ $(NAME)_SOURCES  += bsp/driver/uart.c
 
 $(NAME)_SOURCES  += hal/uart.c
 $(NAME)_SOURCES  += hal/flash.c
+$(NAME)_SOURCES  += hal/misc.c
 #$(NAME)_SOURCES  += hal/wifi_port.c
 
 $(NAME)_CFLAGS   := -std=gnu99
