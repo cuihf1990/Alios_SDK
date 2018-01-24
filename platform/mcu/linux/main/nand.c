@@ -74,7 +74,7 @@ int32_t hal_nand_init(nand_dev_t *nand)
     return 0;
 }
 
-int32_t hal_nand_deinit(nand_dev_t *nand)
+int32_t hal_nand_finalize(nand_dev_t *nand)
 {
     memset(nand, 0, sizeof(nand_dev_t));
     return 0;
