@@ -27,12 +27,14 @@ static void application_start(void *p)
     size_t ticks = 0;
     extern void system_soft_wdt_feed(void);
 
-    extern void uart_init_new(void);
+    /*extern void uart_init_new(void);
 
-    uart_init_new();
+    uart_init_new();*/
+    extern int32_t hal_uart_init(uart_dev_t *uart);
+    hal_uart_init(&uart_0);
 
     while (1) {
-        printf("tick %d\n", ticks++);
+        /*printf("tick %d\n", ticks++);*/
         system_soft_wdt_feed();
         krhino_task_sleep(RHINO_CONFIG_TICKS_PER_SECOND);
     }
@@ -95,6 +97,8 @@ void vPortETSIntrUnlock(void)
 void user_init(void)
 {
     static char s_buf[64];
+    extern int aos_cli_init(void);
+    aos_cli_init();
 
     kstat_t ret = krhino_task_dyn_create(&g_aos_init, "aos app", 0, AOS_DEFAULT_APP_PRI, 1, 512, (task_entry_t)application_start, 1);
     if (ret != RHINO_SUCCESS)
