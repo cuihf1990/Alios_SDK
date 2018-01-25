@@ -84,7 +84,7 @@ uint16_t get_allocated_pf_number(allocator_t);
 uint16_t get_free_number(allocator_t);
 slist_t *get_ssid_nodes_list(allocator_t);
 bool is_direct_child(allocator_t, uint16_t sid);
-bool is_allocated_child(allocator_t, neighbor_t *nbr);
+sid_node_t *get_allocated_child(allocator_t, neighbor_t *nbr);
 bool is_partial_function_sid(uint16_t sid);
 
 // random sid

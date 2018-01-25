@@ -1398,10 +1398,12 @@ static ur_error_t handle_advertisement(message_t *message)
 
     if (network->router->sid_type == STRUCTURED_SID &&
         network->meshnetid == nbr->netid &&
-        is_direct_child(network->sid_base, info->src.addr.short_addr) &&
-        !is_allocated_child(network->sid_base, nbr)) {
-        set_mesh_ext_addr(&dest, nbr->netid, nbr->mac);
-        send_address_error(network, &dest);
+        is_direct_child(network->sid_base, info->src.addr.short_addr)) {
+        sid_node_t *sid_node = get_allocated_child(network->sid_base, nbr);
+        if (sid_node == NULL) {
+            set_mesh_ext_addr(&dest, nbr->netid, nbr->mac);
+            send_address_error(network, &dest);
+        }
     }
     if (network->meshnetid == nbr->netid) {
         update_network_data(network, netinfo);
