@@ -45,7 +45,7 @@ static const u8_t app_key[16] = {
 	0x01, 0x23, 0x45, 0x67, 0x89, 0xab, 0xcd, 0xef,
 	0x01, 0x23, 0x45, 0x67, 0x89, 0xab, 0xcd, 0xef,
 };
-static const u16_t net_idx;
+static u16_t net_idx;
 static const u16_t app_idx;
 static const u32_t iv_index;
 static u8_t flags;
@@ -186,10 +186,36 @@ static void configure(void)
 	printk("Configuration complete\n");
 }
 
-static const u8_t dev_uuid[16] = { 0xdd, 0xdd };
+static const u8_t dev_uuid[16] = { 0xdd, 0xde };
+
+static int output_number(bt_mesh_output_action_t action, uint32_t number)
+{
+        printk("OOB Number: %u\n", number);
+        return 0;
+}
+
+static void prov_complete(u16_t netidx, u16_t laddr)
+{
+#ifndef SELF_PROVISION
+    printk("prov complete, net_idx %x, addr %04x\r\n",netidx, laddr);
+    net_idx = netidx;
+    addr = laddr;
+    configure();
+#endif
+}
+
+static void prov_reset(void)
+{
+        bt_mesh_prov_enable(BT_MESH_PROV_ADV | BT_MESH_PROV_GATT);
+}
 
 static const struct bt_mesh_prov prov = {
 	.uuid = dev_uuid,
+        .output_size = 4,
+        .output_actions = BT_MESH_DISPLAY_NUMBER,
+        .output_number = output_number,
+        .complete = prov_complete,
+        .reset = prov_reset,
 };
 
 static void bt_ready(int err)
@@ -209,6 +235,7 @@ static void bt_ready(int err)
 
 	printk("Mesh initialized\n");
 
+#ifdef SELF_PROVISION
 	err = bt_mesh_provision(net_key, net_idx, flags, iv_index, seq, addr,
 				dev_key);
 	if (err) {
@@ -219,6 +246,9 @@ static void bt_ready(int err)
 	printk("Provisioning completed\n");
 
 	configure();
+#else
+        bt_mesh_prov_enable(BT_MESH_PROV_ADV | BT_MESH_PROV_GATT);
+#endif
 }
 
 static u16_t target = GROUP_ADDR;
