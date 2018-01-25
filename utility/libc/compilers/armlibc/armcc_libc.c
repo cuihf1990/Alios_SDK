@@ -96,4 +96,25 @@ int fputc(int ch, FILE *f)
 }
 #endif
 
+//referred from ota_socket.o
+void bzero()
+{
+
+}
+
+//referred from ssl_cli.o
+time_t time(time_t *t)
+{
+}
+
+//referred from aos_network.o
+int accept(int sock, long *addr, long *addrlen)
+{
+}
+
+int listen(int sock, int backlog)
+{
+
+}
+
 #endif

@@ -42,7 +42,9 @@ COMPILER_SPECIFIC_RELEASE_LDFLAGS      :=
 
 COMPILER_SPECIFIC_DEPS_FLAG                := --md
 COMPILER_SPECIFIC_DEPS_FILE                 = --depend="$(1)"
-COMPILER_SPECIFIC_COMP_ONLY_FLAG           := -c --library_type=microlib
+COMPILER_UNI_CFLAGS                        := --c90 --gnu --library_type=microlib -W
+COMPILER_UNI_SFLAGS                        := --library_type=microlib
+COMPILER_SPECIFIC_COMP_ONLY_FLAG           := -c
 COMPILER_SPECIFIC_LINK_MAP                  = -L --map -L --list=$(1)
 COMPILER_SPECIFIC_LINK_FILES                = $(1)
 COMPILER_SPECIFIC_LINK_SCRIPT_DEFINE_OPTION = 

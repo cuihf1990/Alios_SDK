@@ -8,6 +8,8 @@
 #include <time.h>
 #include <stdio.h>
 
+int errno;
+
 extern void *aos_malloc(unsigned int size);
 extern void aos_alloc_trace(void *addr, size_t allocator);
 extern void aos_free(void *mem);
