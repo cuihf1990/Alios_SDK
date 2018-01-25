@@ -16,7 +16,7 @@ ifeq ($(m32),1)
 CFLAGS += -m32
 endif
 
-LOCAL_CFLAGS = $(WARNING_CFLAGS) -I../include -D_FILE_OFFSET_BITS=64
+LOCAL_CFLAGS = $(WARNING_CFLAGS) -I../include -I../../libalicrypto/inc -D_FILE_OFFSET_BITS=64
 #-DCONFIG_NO_ALIOS=1
 LOCAL_LDFLAGS =
 
@@ -56,15 +56,14 @@ ifdef WINDOWS_BUILD
 DLEXT=dll
 endif
 
-OBJS_CRYPTO=	aes.o	padlock.o\
+OBJS_CRYPTO=	aes.o	\
 		bignum.o asn1parse.o	\
-		ctr_drbg.o	des.o		\
-		md2.o	 oid.o \
-		md.o md4.o md5.o md_wrap.o ripemd160.o	\
-		pkcs12.o	pkcs5.o		\
+		oid.o \
+		md5.o hash_wrap.o	\
 		rsa.o		sha1.o		\
-		sha256.o	sha512.o 	\
+		sha256.o	\
 		threading.o \
+		hmac.o \
 
 LOCAL_CFLAGS += -I../../../yunos_iot/aos/include
 OBJS_CRYPTO += \
