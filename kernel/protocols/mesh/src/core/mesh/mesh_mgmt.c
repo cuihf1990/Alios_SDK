@@ -1689,6 +1689,9 @@ uint16_t umesh_mm_get_channel(hal_context_t *hal)
 
 void umesh_mm_set_channel(hal_context_t *hal, uint16_t channel)
 {
+    if (g_mm_state.device.mode & MODE_LEADER) {
+        channel = hal_umesh_get_channel(hal->module);
+    }
     if (hal_umesh_set_channel(hal->module, channel) == 0) {
         hal->channel = channel;
     }
