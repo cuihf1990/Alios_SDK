@@ -44,6 +44,9 @@
 //#include "nrf_soc.h"
 #include "sha256.h"
 #include "ali_common.h"
+#include <aos/aos.h>
+
+#define MOD "ble_auth"
 
 #ifdef TEST_VECTORS
 static uint8_t const m_tv_rand[ALI_AUTH_PRS_LEN]    /**< Injected test vector: fixed random number. */
@@ -159,6 +162,8 @@ ret_code_t ali_auth_init(ali_auth_t * p_auth, ali_auth_init_t const * p_init)
 {
     ret_code_t ret = NRF_SUCCESS;
 
+    LOGD(MOD, "ali_auth_init entry.");
+
     /* check parameters */
     VERIFY_PARAM_NOT_NULL(p_auth);
     VERIFY_PARAM_NOT_NULL(p_init);
@@ -199,6 +204,8 @@ ret_code_t ali_auth_init(ali_auth_t * p_auth, ali_auth_init_t const * p_init)
         err = aos_timer_new(&p_auth->timer, on_timeout,
                   p_auth, p_auth->timeout, 0);
     }
+
+    LOGD(MOD, "ali_auth_init exit.");
 
     return ret;
 }

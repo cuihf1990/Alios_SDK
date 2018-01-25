@@ -43,10 +43,12 @@
 //#include "ble_srv_common.h"
 //#include "ble_hci.h"
 #include <bluetooth/conn.h>
+#include <aos/aos.h>
 
 #define MODULE_INITIALIZED      (p_ali->is_initialized)
 //#include "sdk_macros.h"
 
+#define MOD "ali_core"
 
 #define FMSK_BLUETOOTH_VER_Pos  0                                           /**< Offset of bluetooth version in FMSK (see specification v1.0.4, ch. 2.2). */
 #define FMSK_SECURITY_Pos       2                                           /**< Offset of security support in FMSK (see specification v1.0.4, ch. 2.2). */
@@ -543,6 +545,8 @@ ret_code_t ali_init(void * p_ali_ext, ali_init_t const * p_init)
     uint8_t  mac_be[ALI_AUTH_MAC_LEN];
     uint32_t err_code;
 
+    LOGD(MOD, "ali_init started.");
+
     /* check parameters */
     VERIFY_PARAM_NOT_NULL(p_ali);
     VERIFY_PARAM_NOT_NULL(p_init);
@@ -565,7 +569,6 @@ ret_code_t ali_init(void * p_ali_ext, ali_init_t const * p_init)
     {
         return NRF_ERROR_INVALID_ADDR;
     }
-
 
     endian_swap(mac_be, p_init->p_mac, ALI_AUTH_MAC_LEN);
 
@@ -603,6 +606,9 @@ ret_code_t ali_init(void * p_ali_ext, ali_init_t const * p_init)
 #endif
 
     p_ali->is_initialized = true;
+
+    LOGD(MOD, "ali_init finished.");
+
     return NRF_SUCCESS;
 }
 
@@ -641,6 +647,8 @@ ret_code_t ali_send_notify(void * p_ali_ext, uint8_t * p_data, uint16_t length)
 {
     ali_t * p_ali = (ali_t *)p_ali_ext;
 
+    LOGD(MOD, "ali_send_notify entry.");
+
     /* Check parameters */
     VERIFY_PARAM_NOT_NULL(p_ali);
     VERIFY_PARAM_NOT_NULL(p_data);
@@ -667,6 +675,8 @@ ret_code_t ali_send_indicate(void * p_ali_ext, uint8_t * p_data, uint16_t length
 {
     ali_t * p_ali = (ali_t *)p_ali_ext;
 
+    LOGD(MOD, "ali_send_indicate entry.");
+
     /* Check parameters */
     VERIFY_PARAM_NOT_NULL(p_ali);
     VERIFY_PARAM_NOT_NULL(p_data);
@@ -692,6 +702,8 @@ ret_code_t ali_send_indicate(void * p_ali_ext, uint8_t * p_data, uint16_t length
 ret_code_t ali_get_manuf_spec_adv_data(void * p_ali_ext, uint8_t * p_data, uint16_t * length)
 {
     ali_t * p_ali = (ali_t *)p_ali_ext;
+
+    LOGD(MOD, "ali_get_manuf_spec_adv_data entry.");
 
     /* Check parameters */
     VERIFY_PARAM_NOT_NULL(p_ali);
@@ -745,6 +757,8 @@ ret_code_t ali_ctrl(void * p_ali_ext, ali_ctrl_t ctrl_word, void * p_data)
 {
     ali_t * p_ali = (ali_t *)p_ali_ext;
     uint32_t err_code;
+
+    LOGD(MOD, "ali_ctrl entry.");
 
     /* Check parameters */
     VERIFY_PARAM_NOT_NULL(p_ali);

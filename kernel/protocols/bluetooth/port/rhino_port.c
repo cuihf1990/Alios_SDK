@@ -150,6 +150,8 @@ void k_fifo_init(struct k_fifo *fifo)
     const char *name = "ble_fifo";
     size_t msg_len = 20;
 
+    BT_DBG("in %d", __func__);
+
     if (NULL == fifo) {
         BT_ERR("fifo is NULL");
         return;
@@ -173,6 +175,8 @@ void *k_fifo_get(struct k_fifo *fifo, tick_t timeout)
 {
     void *msg = NULL;
     tick_t t;
+
+    BT_DBG("in %d", __func__);
 
     if (NULL == fifo) {
         BT_ERR("fifo is NULL");
@@ -201,6 +205,8 @@ void *k_fifo_get(struct k_fifo *fifo, tick_t timeout)
 void k_fifo_put(struct k_fifo *fifo, void *msg)
 {
     kstat_t ret;
+
+    BT_DBG("in %d", __func__);
 
     if (NULL == fifo) {
         BT_ERR("fifo is NULL");
