@@ -111,7 +111,7 @@ def start_devices(at, device_list, device_attr, ap_ssid, ap_pass):
                     break
             else:
                 at.device_run_cmd(device, ['umesh', 'start'])
-                time.sleep(15)
+                time.sleep(30)
                 state = at.device_run_cmd(device, ['umesh', 'state'], 1, 1, filter)
                 if state == [role]:
                     succeed = True
