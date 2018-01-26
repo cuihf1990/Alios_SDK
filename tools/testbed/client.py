@@ -647,7 +647,7 @@ class Client:
                         filename += '-' + terminal.split(',')[0]
                         filename += '@' + time.strftime('%Y-%m-%d-%H-%M')
                         filehandle = open(filename, 'wb')
-                        timeout = time.time() + 2
+                        timeout = time.time() + 4
                         file_receiving[hash] = {'name':filename, 'seq':0, 'handle':filehandle, 'timeout': timeout}
                         content = terminal + ',' + 'ok'
                         self.send_packet(type, content)
@@ -671,7 +671,7 @@ class Client:
                         if file_receiving[hash]['seq'] == seq:
                             file_receiving[hash]['handle'].write(data)
                             file_receiving[hash]['seq'] += 1
-                            file_receiving[hash]['timeout'] = time.time() + 2
+                            file_receiving[hash]['timeout'] = time.time() + 4
                         content = terminal + ',' + 'ok'
                         self.send_packet(type, content)
                     elif type == TBframe.FILE_END:
