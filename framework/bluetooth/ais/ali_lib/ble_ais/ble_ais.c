@@ -197,12 +197,25 @@ typedef enum {
 static struct bt_gatt_ccc_cfg ais_ic_ccc_cfg[BT_GATT_CCC_MAX] = {};
 static struct bt_gatt_ccc_cfg ais_nc_ccc_cfg[BT_GATT_CCC_MAX] = {};
 
+static bool ble_srv_is_notification_enabled(uint16_t value)
+{
+    return value == 1 ? true : false;
+}
+
+static bool ble_srv_is_indication_enabled(uint16_t value)
+{
+    return value == 2 ? true : false;
+}
+
 static void ais_ic_ccc_cfg_changed(const struct bt_gatt_attr *attr,  uint16_t value)
 {
     if (value == BT_GATT_CCC_NOTIFY)
         printf("CCC cfg changed to NOTIFY.\n");
     if (value == BT_GATT_CCC_INDICATE)
         printf("CCC cfg changed to INDICATE.\n");
+
+    g_ais->is_indication_enabled = ble_srv_is_indication_enabled(value);
+    notify_svc_enabled(g_ais);
 }
 
 static void ais_nc_ccc_cfg_changed(const struct bt_gatt_attr *attr, uint16_t value)
@@ -211,55 +224,58 @@ static void ais_nc_ccc_cfg_changed(const struct bt_gatt_attr *attr, uint16_t val
         printf("CCC cfg changed to NOTIFY.\n");
     if (value == BT_GATT_CCC_INDICATE)
         printf("CCC cfg changed to INDICATE.\n");
+
+    g_ais->is_notification_enabled = ble_srv_is_notification_enabled(value);
+    notify_svc_enabled(g_ais);
 }
 
 static ssize_t read_ais_rc(struct bt_conn *conn,
                            const struct bt_gatt_attr *attr, void *buf,
                            uint16_t len, uint16_t offset)
 {
-
+    printf("FIXME: %s %d not implemeted yet!", __func__, __FILE__);
 }
 
 static ssize_t read_ais_wc(struct bt_conn *conn,
                            const struct bt_gatt_attr *attr, void *buf,
                            uint16_t len, uint16_t offset)
 {
-
+    printf("FIXME: %s %d not implemeted yet!", __func__, __FILE__);
 }
 
 static ssize_t write_ais_wc(struct bt_conn *conn,
                             const struct bt_gatt_attr *attr, const void *buf,
                             uint16_t len, uint16_t offset, uint8_t flags)
 {
-
+    notify_data(g_ais, (uint8_t *)buf, len);
 }
 
 static ssize_t read_ais_ic(struct bt_conn *conn,
                            const struct bt_gatt_attr *attr, void *buf,
                            uint16_t len, uint16_t offset)
 {
-
+    printf("FIXME: %s %d not implemeted yet!", __func__, __FILE__);
 }
 
 static ssize_t read_ais_wwnrc(struct bt_conn *conn,
                               const struct bt_gatt_attr *attr, void *buf,
                               uint16_t len, uint16_t offset)
 {
-
+    printf("FIXME: %s %d not implemeted yet!", __func__, __FILE__);
 }
 
 static ssize_t write_ais_wwnrc(struct bt_conn *conn,
                                const struct bt_gatt_attr *attr, const void *buf,
                                uint16_t len, uint16_t offset, uint8_t flags)
 {
-
+    notify_data(g_ais, (uint8_t *)buf, len);
 }
 
 static ssize_t read_ais_nc(struct bt_conn *conn,
                            const struct bt_gatt_attr *attr, void *buf,
                            uint16_t len, uint16_t offset)
 {
-    
+    printf("FIXME: %s %d not implemeted yet!", __func__, __FILE__);
 }
 
 static struct bt_gatt_attr ais_attrs[] = {
@@ -347,6 +363,25 @@ static void asign_ais_handles(ble_ais_t * p_ais)
     p_ais->nc_handles.cccd_handle = HDLC_AIS_NC_CCC;
 }
 
+static void ble_event_handler(input_event_t *event, void *priv_data)
+{
+
+    LOG("%s", __func__);
+
+    if (event->type != EV_BLE) {
+        return;
+    }
+
+    switch (event->code) {
+        case CODE_BLE_NOTIFY_COMPLETED:
+        case CODE_BLE_INDICATE_COMPLETED:
+            notify_pkt_sent(g_ais, event->value);
+            break;
+        default:
+            break;
+    }
+}
+
 extern int hci_driver_init();
 
 uint32_t ble_ais_init(ble_ais_t * p_ais, const ble_ais_init_t * p_ais_init)
@@ -360,6 +395,8 @@ uint32_t ble_ais_init(ble_ais_t * p_ais, const ble_ais_init_t * p_ais_init)
     {
         return NRF_ERROR_INVALID_PARAM;
     }
+
+    aos_register_event_filter(EV_BLE, ble_event_handler, NULL);
 
     g_ais = p_ais;
 
@@ -451,8 +488,12 @@ uint32_t ble_ais_send_notification(ble_ais_t * p_ais, uint8_t * p_data, uint16_t
 
     err = bt_gatt_notify(NULL, &ais_attrs[11], (const void *)p_data, length);
 
-    if (err) return NRF_ERROR_GATT_NOTIFY;
-    else return NRF_SUCCESS;
+    if (err) {
+        return NRF_ERROR_GATT_NOTIFY;
+    } else {
+        aos_post_event(EV_BLE, CODE_BLE_NOTIFY_COMPLETED, (unsigned long)length);
+        return NRF_SUCCESS;
+    }
 }
 
 static void indicate_cb(struct bt_conn *conn, const struct bt_gatt_attr *attr,
@@ -488,6 +529,10 @@ uint32_t ble_ais_send_indication(ble_ais_t * p_ais, uint8_t * p_data, uint16_t l
 
     err = bt_gatt_indicate(NULL, &ind_params);
 
-    if (err) return NRF_ERROR_GATT_INDICATE;
-    else return NRF_SUCCESS;
+    if (err) {
+        return NRF_ERROR_GATT_INDICATE;
+    } else {
+        aos_post_event(EV_BLE, CODE_BLE_INDICATE_COMPLETED, (unsigned long)length);
+        return NRF_SUCCESS;
+    }
 }
