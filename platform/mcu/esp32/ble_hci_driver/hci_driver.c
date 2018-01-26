@@ -247,6 +247,7 @@ int hci_driver_init()
     }
     ESP_ERROR_CHECK( ret );
 
+    bt_cfg.controller_task_prio = 23;  // set valid task priority
     if (esp_bt_controller_init(&bt_cfg) != ESP_OK) {
         return -1;
     }
