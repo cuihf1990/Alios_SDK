@@ -46,7 +46,7 @@ def main(firmware='lb-mk3060.bin', model='mk3060'):
         return [1, 'connect testbed failed']
 
     #request device allocation
-    number = 2
+    number = 1
     timeout = 300
     allocated = allocate_devices(at, model, number, timeout)
     if len(allocated) != number:
@@ -71,28 +71,23 @@ def main(firmware='lb-mk3060.bin', model='mk3060'):
     if result is False:
         return [1, 'program device failed']
 
-    #reboot and get device mac address
-    result = reboot_and_get_mac(at, device_list, device_attr)
-    if result is False:
-        return [1, 'reboot and get macaddr failed']
-
     #set specific extnetid to isolate the network
     extnetid = '000102030405' # raspberry pi mesh extended netid
     for device in device_list:
         at.device_run_cmd(device, ['umesh', 'extnetid', extnetid])
 
+    #reboot and get device mac address
+    result = reboot_and_get_mac(at, device_list, device_attr)
+    if result is False:
+        return [1, 'reboot and get macaddr failed']
+
     #setup whitelist for line topology
     print 'topology:'
-    print "B <--> A <--> Raspi3(Leader)\n"
+    print "A <--> Raspi3(Leader)\n"
     device = 'A'
     raspi3_mac = 'b827eb384ac50000' #raspberry pi mac address
     device_attr[device]['nbrs'] = []
-    device_attr[device]['nbrs'].append(device_attr['B']['mac'])
     device_attr[device]['nbrs'].append(raspi3_mac)
-    device_attr[device]['role'] = 'router'
-    device = 'B'
-    device_attr[device]['nbrs'] = []
-    device_attr[device]['nbrs'].append(device_attr['A']['mac'])
     device_attr[device]['role'] = 'router'
 
     #start devices to form mesh network
