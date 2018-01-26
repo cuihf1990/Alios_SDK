@@ -22,8 +22,8 @@
 #include "bluetooth/mesh/cfg_cli.h"
 
 #define CID_INTEL 0x0002
-#define MOD_INTEL 0x0000
 
+#define NODE_ADDR 0x000f
 #if !defined(NODE_ADDR)
 #define NODE_ADDR 0x0b0c
 #endif
@@ -107,24 +107,7 @@ static struct bt_mesh_model root_models[] = {
 	BT_MESH_MODEL_HEALTH_SRV(&health_srv, &health_pub),
 };
 
-static void vnd_button_pressed(struct bt_mesh_model *model,
-			       struct bt_mesh_msg_ctx *ctx,
-			       struct net_buf_simple *buf)
-{
-	printk("src 0x%04x\n", ctx->addr);
-
-	if (ctx->addr == model->elem->addr) {
-		return;
-	}
-}
-
-static const struct bt_mesh_model_op vnd_ops[] = {
-	{ OP_VENDOR_BUTTON, 0, vnd_button_pressed },
-	BT_MESH_MODEL_OP_END,
-};
-
 static struct bt_mesh_model vnd_models[] = {
-	BT_MESH_MODEL_VND(CID_INTEL, MOD_INTEL, vnd_ops, NULL, NULL),
 };
 
 static struct bt_mesh_elem elements[] = {
@@ -144,17 +127,9 @@ static void configure(void)
 	/* Add Application Key */
 	bt_mesh_cfg_app_key_add(net_idx, addr, net_idx, app_idx, app_key, NULL);
 
-	/* Bind to vendor model */
-	bt_mesh_cfg_mod_app_bind_vnd(net_idx, addr, addr, app_idx,
-				     MOD_INTEL, CID_INTEL, NULL);
-
 	/* Bind to Health model */
 	bt_mesh_cfg_mod_app_bind(net_idx, addr, addr, app_idx,
 				 BT_MESH_MODEL_ID_HEALTH_SRV, NULL);
-
-	/* Add model subscription */
-	bt_mesh_cfg_mod_sub_add_vnd(net_idx, addr, addr, GROUP_ADDR,
-				    MOD_INTEL, CID_INTEL, NULL);
 
 #if NODE_ADDR == PUBLISHER_ADDR
 	{
@@ -196,12 +171,6 @@ static int output_number(bt_mesh_output_action_t action, uint32_t number)
 
 static void prov_complete(u16_t netidx, u16_t laddr)
 {
-#ifndef SELF_PROVISION
-    printk("prov complete, net_idx %x, addr %04x\r\n",netidx, laddr);
-    net_idx = netidx;
-    addr = laddr;
-    configure();
-#endif
 }
 
 static void prov_reset(void)
@@ -235,7 +204,6 @@ static void bt_ready(int err)
 
 	printk("Mesh initialized\n");
 
-#ifdef SELF_PROVISION
 	err = bt_mesh_provision(net_key, net_idx, flags, iv_index, seq, addr,
 				dev_key);
 	if (err) {
@@ -246,49 +214,6 @@ static void bt_ready(int err)
 	printk("Provisioning completed\n");
 
 	configure();
-#else
-        bt_mesh_prov_enable(BT_MESH_PROV_ADV | BT_MESH_PROV_GATT);
-#endif
-}
-
-static u16_t target = GROUP_ADDR;
-
-void board_button_1_pressed(void)
-{
-	struct net_buf_simple *msg = NET_BUF_SIMPLE(3 + 4);
-	struct bt_mesh_msg_ctx ctx = {
-		.net_idx = net_idx,
-		.app_idx = app_idx,
-		.addr = target,
-		.send_ttl = BT_MESH_TTL_DEFAULT,
-	};
-
-	/* Bind to Health model */
-	bt_mesh_model_msg_init(msg, OP_VENDOR_BUTTON);
-
-        vnd_models[0].keys[0] = 0;
-	if (bt_mesh_model_send(&vnd_models[0], &ctx, msg, NULL, NULL)) {
-		printk("Unable to send Vendor Button message\n");
-	}
-
-	printk("Button message sent with OpCode 0x%08x\n", OP_VENDOR_BUTTON);
-}
-
-u16_t board_set_target(void)
-{
-	switch (target) {
-	case GROUP_ADDR:
-		target = 1;
-		break;
-	case 9:
-		target = GROUP_ADDR;
-		break;
-	default:
-		target++;
-		break;
-	}
-
-	return target;
 }
 
 extern int hci_driver_init(void);
