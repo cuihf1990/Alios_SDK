@@ -39,6 +39,7 @@
 //#include "ble_srv_common.h"
 #include "ali_common.h"
 #include "ble_gatt.h"
+#include "ali_core.h"
 
 #include <bluetooth/bluetooth.h>
 #include <bluetooth/hci.h>
@@ -102,10 +103,15 @@ static void connected(struct bt_conn *conn, uint8_t err)
     } else {
         printf("Connected\n");
         printf("FIXME: g_ais->conn_handle not set, you need set it!!!\n");
-        // <TODO> g_ais->conn_handle = conn->handle;
+        g_ais->conn_handle = BLE_CONN_HANDLE_MAGIC;
+        g_ali->conn_handle = BLE_CONN_HANDLE_MAGIC;
         g_ais->is_authenticated = false;
         g_ais->is_indication_enabled   = false;
         g_ais->is_notification_enabled = false;
+
+        ali_auth_on_connected(&g_ali->auth);
+        ble_ais_set_auth(g_ais, true);
+        notify_evt_no_data(g_ali, ALI_EVT_CONNECTED);
     }
 }
 
@@ -116,6 +122,7 @@ static void disconnected(struct bt_conn *conn, u8_t reason)
     g_ais->is_authenticated = false;
     g_ais->is_indication_enabled   = false;
     g_ais->is_notification_enabled = false;
+    notify_evt_no_data(g_ali, ALI_EVT_DISCONNECTED);
 }
 
 static struct bt_conn_cb conn_callbacks = {
@@ -209,10 +216,12 @@ static bool ble_srv_is_indication_enabled(uint16_t value)
 
 static void ais_ic_ccc_cfg_changed(const struct bt_gatt_attr *attr,  uint16_t value)
 {
+    LOGD(MOD, "%s (value: %d)", __func__, value);
+
     if (value == BT_GATT_CCC_NOTIFY)
-        printf("CCC cfg changed to NOTIFY.\n");
+        LOG("CCC cfg changed to NOTIFY.\r\n");
     if (value == BT_GATT_CCC_INDICATE)
-        printf("CCC cfg changed to INDICATE.\n");
+        LOG("CCC cfg changed to INDICATE.\r\n");
 
     g_ais->is_indication_enabled = ble_srv_is_indication_enabled(value);
     notify_svc_enabled(g_ais);
@@ -220,27 +229,40 @@ static void ais_ic_ccc_cfg_changed(const struct bt_gatt_attr *attr,  uint16_t va
 
 static void ais_nc_ccc_cfg_changed(const struct bt_gatt_attr *attr, uint16_t value)
 {
+    LOGD(MOD, "%s (value: %d)", __func__, value);
+
     if (value == BT_GATT_CCC_NOTIFY)
-        printf("CCC cfg changed to NOTIFY.\n");
+        LOG("CCC cfg changed to NOTIFY.\r\n");
     if (value == BT_GATT_CCC_INDICATE)
-        printf("CCC cfg changed to INDICATE.\n");
+        LOG("CCC cfg changed to INDICATE.\r\n");
 
     g_ais->is_notification_enabled = ble_srv_is_notification_enabled(value);
     notify_svc_enabled(g_ais);
 }
 
+#define FIXME_STR "FIXME"
+#define FIXME_STR_SIZ (sizeof(FIXME_STR)-1)
+
 static ssize_t read_ais_rc(struct bt_conn *conn,
                            const struct bt_gatt_attr *attr, void *buf,
                            uint16_t len, uint16_t offset)
 {
-    printf("FIXME: %s %d not implemeted yet!", __func__, __FILE__);
+    printf("FIXME: %s %d not implemeted yet!\r\n", __func__, __LINE__);
+    printf("Length to read: %d, offset: %d\r\n", len, offset);
+    if (len < FIXME_STR_SIZ) return 0;
+    memcpy(buf, FIXME_STR, FIXME_STR_SIZ);
+    return FIXME_STR_SIZ;
 }
 
 static ssize_t read_ais_wc(struct bt_conn *conn,
                            const struct bt_gatt_attr *attr, void *buf,
                            uint16_t len, uint16_t offset)
 {
-    printf("FIXME: %s %d not implemeted yet!", __func__, __FILE__);
+    printf("FIXME: %s %d not implemeted yet!\r\n", __func__, __LINE__);
+    printf("Length to read: %d, offset: %d\r\n", len, offset);
+    if (len < FIXME_STR_SIZ) return 0;
+    memcpy(buf, FIXME_STR, FIXME_STR_SIZ);
+    return FIXME_STR_SIZ;
 }
 
 static ssize_t write_ais_wc(struct bt_conn *conn,
@@ -248,20 +270,29 @@ static ssize_t write_ais_wc(struct bt_conn *conn,
                             uint16_t len, uint16_t offset, uint8_t flags)
 {
     notify_data(g_ais, (uint8_t *)buf, len);
+    return len;
 }
 
 static ssize_t read_ais_ic(struct bt_conn *conn,
                            const struct bt_gatt_attr *attr, void *buf,
                            uint16_t len, uint16_t offset)
 {
-    printf("FIXME: %s %d not implemeted yet!", __func__, __FILE__);
+    printf("FIXME: %s %d not implemeted yet!\r\n", __func__, __LINE__);
+    printf("Length to read: %d, offset: %d\r\n", len, offset);
+    if (len < FIXME_STR_SIZ) return 0;
+    memcpy(buf, FIXME_STR, FIXME_STR_SIZ);
+    return FIXME_STR_SIZ;
 }
 
 static ssize_t read_ais_wwnrc(struct bt_conn *conn,
                               const struct bt_gatt_attr *attr, void *buf,
                               uint16_t len, uint16_t offset)
 {
-    printf("FIXME: %s %d not implemeted yet!", __func__, __FILE__);
+    printf("FIXME: %s %d not implemeted yet!\r\n", __func__, __LINE__);
+    printf("Length to read: %d, offset: %d\r\n", len, offset);
+    if (len < FIXME_STR_SIZ) return 0;
+    memcpy(buf, FIXME_STR, FIXME_STR_SIZ);
+    return FIXME_STR_SIZ;
 }
 
 static ssize_t write_ais_wwnrc(struct bt_conn *conn,
@@ -269,13 +300,18 @@ static ssize_t write_ais_wwnrc(struct bt_conn *conn,
                                uint16_t len, uint16_t offset, uint8_t flags)
 {
     notify_data(g_ais, (uint8_t *)buf, len);
+    return len;
 }
 
 static ssize_t read_ais_nc(struct bt_conn *conn,
                            const struct bt_gatt_attr *attr, void *buf,
                            uint16_t len, uint16_t offset)
 {
-    printf("FIXME: %s %d not implemeted yet!", __func__, __FILE__);
+    printf("FIXME: %s %d not implemeted yet!\r\n", __func__, __LINE__);
+    printf("Length to read: %d, offset: %d\r\n", len, offset);
+    if (len < FIXME_STR_SIZ) return 0;
+    memcpy(buf, FIXME_STR, FIXME_STR_SIZ);
+    return FIXME_STR_SIZ;
 }
 
 static struct bt_gatt_attr ais_attrs[] = {
@@ -284,21 +320,21 @@ static struct bt_gatt_attr ais_attrs[] = {
 
     /* RC */
     BT_GATT_CHARACTERISTIC2(BT_UUID_AIS_RC, BT_GATT_CHRC_READ, HDLC_AIS_RC),
-    BT_GATT_DESCRIPTOR2(BT_UUID_AIS_RC_VALUE, BT_GATT_CHRC_READ | \
+    BT_GATT_DESCRIPTOR2(BT_UUID_AIS_RC, BT_GATT_PERM_READ | \
                         BT_GATT_PERM_READ_AUTHEN, read_ais_rc, \
                         NULL, NULL, HDLC_AIS_RC_VALUE),
 
     /* WC */
     BT_GATT_CHARACTERISTIC2(BT_UUID_AIS_WC, BT_GATT_CHRC_READ | \
                             BT_GATT_CHRC_WRITE, HDLC_AIS_WC),
-    BT_GATT_DESCRIPTOR2(BT_UUID_AIS_WC_VALUE, BT_GATT_PERM_READ | \
+    BT_GATT_DESCRIPTOR2(BT_UUID_AIS_WC, BT_GATT_PERM_READ | \
                         BT_GATT_PERM_WRITE | BT_GATT_PERM_WRITE_AUTHEN, \
                         read_ais_wc, write_ais_wc, NULL, HDLC_AIS_WC_VALUE),
 
     /* IC */
     BT_GATT_CHARACTERISTIC2(BT_UUID_AIS_IC, BT_GATT_CHRC_READ | \
                             BT_GATT_CHRC_INDICATE, HDLC_AIS_IC),
-    BT_GATT_DESCRIPTOR2(BT_UUID_AIS_IC_VALUE, BT_GATT_PERM_READ, \
+    BT_GATT_DESCRIPTOR2(BT_UUID_AIS_IC, BT_GATT_PERM_READ, \
                         read_ais_ic, NULL, NULL, HDLC_AIS_IC_VALUE),
     BT_GATT_CCC2(ais_ic_ccc_cfg, ais_ic_ccc_cfg_changed, HDLC_AIS_IC_CCC),
 
@@ -306,14 +342,14 @@ static struct bt_gatt_attr ais_attrs[] = {
     BT_GATT_CHARACTERISTIC2(BT_UUID_AIS_WWNRC, BT_GATT_CHRC_READ | \
                             BT_GATT_CHRC_WRITE_WITHOUT_RESP, \
                             HDLC_AIS_WWNRC),
-    BT_GATT_DESCRIPTOR2(BT_UUID_AIS_WWNRC_VALUE, BT_GATT_PERM_READ | \
+    BT_GATT_DESCRIPTOR2(BT_UUID_AIS_WWNRC, BT_GATT_PERM_READ | \
                         BT_GATT_PERM_WRITE, read_ais_wwnrc, \
                         write_ais_wwnrc, NULL, HDLC_AIS_WWNRC_VALUE),
 
     /* NC */
     BT_GATT_CHARACTERISTIC2(BT_UUID_AIS_NC, BT_GATT_CHRC_READ | \
                             BT_GATT_CHRC_NOTIFY, HDLC_AIS_NC),
-    BT_GATT_DESCRIPTOR2(BT_UUID_AIS_NC_VALUE, BT_GATT_PERM_READ, \
+    BT_GATT_DESCRIPTOR2(BT_UUID_AIS_NC, BT_GATT_PERM_READ, \
                         read_ais_nc, NULL, NULL, HDLC_AIS_NC_VALUE),
     BT_GATT_CCC2(ais_nc_ccc_cfg, ais_nc_ccc_cfg_changed, HDLC_AIS_NC_CCC),
 };

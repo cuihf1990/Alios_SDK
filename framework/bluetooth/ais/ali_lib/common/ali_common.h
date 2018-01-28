@@ -65,6 +65,7 @@ typedef uint16_t ret_code_t;
 #define NRF_ERROR_INVALID_LENGTH             (18)
 
 #define BLE_CONN_HANDLE_INVALID 0xffff
+#define BLE_CONN_HANDLE_MAGIC 0x1234
 
 #if defined (NRF51)
     #define ALI_BLUETOOTH_VER       0x00        /**< Bluetooth version 4.0 (see spec. v1.0.4 ch. 2.2). */

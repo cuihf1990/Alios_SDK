@@ -674,7 +674,7 @@ uint32_t ali_transport_set_key(ali_transport_t * p_transport, uint8_t * p_key)
 
     /* Copy key, which will take effect when encoding the next fragment. */
     p_transport->p_key = p_key;
-    printf("FIXME: %s %d", __FILE__, __LINE__);
+    printf("FIXME: %s %d\r\n", __FILE__, __LINE__);
     //memcpy(p_transport->tx.ecb_context.key, p_transport->p_key, AES_BLK_SIZE);
     return NRF_SUCCESS;
 }

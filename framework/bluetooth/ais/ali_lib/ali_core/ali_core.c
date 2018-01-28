@@ -54,12 +54,12 @@
 #define FMSK_SECURITY_Pos       2                                           /**< Offset of security support in FMSK (see specification v1.0.4, ch. 2.2). */
 #define FMSK_OTA_Pos            3                                           /**< Offset of OTA firmware upgrade support in FMSK (see specification v1.0.4, ch. 2.2). */
 
-#define MAX_ADV_DATA_LEN        16                                          /**< Maximum length of Manufacturer specific advertising data (12 bytes excluding type and length in specification v1.0.4)  */
+//#define MAX_ADV_DATA_LEN        16                                          /**< Maximum length of Manufacturer specific advertising data (12 bytes excluding type and length in specification v1.0.4)  */
 #define MAC_ASCII_LEN           6                                           /**< Length of MAC, which must be exact.  */
 #define MAX_SECRET_LEN          ALI_AUTH_SECRET_LEN_MAX                     /**< Maximum length of secret. */
 
-#define TX_BUFF_LEN             (ALI_MAX_SUPPORTED_MTU - 3)                 /**< Transport layer: Tx buffer size (see specification v1.0.4, ch.5.9). */
-#define RX_BUFF_LEN             ALI_TRANSPORT_MAX_RX_DATA_LEN               /**< Transport layer: Rx buffer size (see specification v1.0.4, ch.5.9). */
+//#define TX_BUFF_LEN             (ALI_MAX_SUPPORTED_MTU - 3)                 /**< Transport layer: Tx buffer size (see specification v1.0.4, ch.5.9). */
+//#define RX_BUFF_LEN             ALI_TRANSPORT_MAX_RX_DATA_LEN               /**< Transport layer: Rx buffer size (see specification v1.0.4, ch.5.9). */
 
 #define AUTH_TIMEOUT            10000                                       /**< Authentication timeout in number of ms (see specification v1.0.4, ch.4.3). */
 
@@ -69,7 +69,7 @@
     *((uint8_t *)(data) + 1) = (uint8_t)((val >> 8) & 0xFF); \
 }
 
-
+#if 0
 /**@brief Core module structure. */
 typedef struct
 {
@@ -89,7 +89,7 @@ typedef struct
     uint8_t             tx_buff[TX_BUFF_LEN];                   /**< Tx buffer for transport layer. */
     uint32_t            rx_buff[RX_BUFF_LEN/sizeof(uint32_t)];  /**< Rx buffer for transport layer. */
 } ali_t;
-
+#endif
 
 static uint8_t const m_valid_rx_cmd[9]                          /**< Valid command for Rx. */
     = {
@@ -131,7 +131,7 @@ static void notify_error (ali_t * p_ali, uint32_t src, uint32_t err_code)
 
 /**@brief Notify event without data to higher layer.
  * @note  Only for ALI_EVT_CONNECTED, ALI_EVT_DISCONNECTED and ALI_EVT_AUTHENTICATED. */
-static void notify_evt_no_data (ali_t * p_ali, ali_evt_type_t evt_type)
+void notify_evt_no_data (ali_t * p_ali, ali_evt_type_t evt_type)
 {
     ali_event_t evt;
 
@@ -450,10 +450,14 @@ static void on_ble_evt(ali_t * p_ali, ble_evt_t * p_ble_evt)
 }
 #endif
 
+ali_t *g_ali;
+
 /*@brief Function for initializing ble_ais module. */
 static uint32_t ais_init (ali_t * p_ali, ali_init_t const * p_init)
 {
     ble_ais_init_t init_ais;
+
+    g_ali = p_ali;
 
     memset(&init_ais, 0, sizeof(ble_ais_init_t)); 
     init_ais.event_handler = (ble_ais_event_handler_t)ble_ais_event_handler;
@@ -473,7 +477,7 @@ static uint32_t transport_init (ali_t * p_ali, ali_init_t const * p_init)
     init_transport.tx_buffer_len     = TX_BUFF_LEN;
     init_transport.rx_buffer         = (uint8_t *)p_ali->rx_buff;
     init_transport.rx_buffer_len     = RX_BUFF_LEN;
-    init_transport.timeout           = p_init->transport_timeout;
+    init_transport.timeout           = 0;//p_init->transport_timeout;
     init_transport.event_handler     = (ali_transport_event_handler_t)transport_event_handler;
     init_transport.p_evt_context     = p_ali;
     init_transport.tx_func_notify    = (ali_transport_tx_func_t)ble_ais_send_notification;
