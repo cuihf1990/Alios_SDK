@@ -43,7 +43,9 @@
 //#include "nordic_common.h"
 //#include "sdk_macros.h"
 #include "ble_gatt.h"
+#include <aos/aos.h>
 
+#define MOD "ble_transport"
 
 #define HEADER_SIZE                 4       /**< Size of packet header. */
 #define MAX_NUM_OF_FRAMES           16      /**< Maximum number of frames. */
@@ -274,6 +276,8 @@ static ret_code_t try_send (ali_transport_t * p_transport)
     uint16_t len, pkt_len, bytes_left;
     uint16_t pkt_payload_len = p_transport->max_pkt_size - HEADER_SIZE;
 
+    LOGD(MOD, "try_send entry.");
+
     bytes_left = tx_bytes_left(p_transport);
 
     if (p_transport->tx.encrypted != 0)
@@ -323,6 +327,8 @@ static ret_code_t try_send (ali_transport_t * p_transport)
         VERIFY_SUCCESS(ret);
     }
 
+    LOGD(MOD, "try_send entry.");
+
     return ret;
 }
 
@@ -330,6 +336,8 @@ static ret_code_t try_send (ali_transport_t * p_transport)
 ret_code_t ali_transport_init(ali_transport_t * p_transport, ali_transport_init_t const * p_init)
 {
     ret_code_t ret = NRF_SUCCESS;
+
+    LOGD(MOD, "ali_transport_init entry.");
 
     /* check parameters */
     VERIFY_PARAM_NOT_NULL(p_transport);
@@ -378,6 +386,8 @@ ret_code_t ali_transport_init(ali_transport_t * p_transport, ali_transport_init_
         ret = aos_timer_new(rx_timer, on_rx_timeout, p_transport, p_transport->timeout, 0);
         VERIFY_SUCCESS(ret);
     }
+
+    LOGD(MOD, "ali_transport_init exit.");
 
     return ret;
 }

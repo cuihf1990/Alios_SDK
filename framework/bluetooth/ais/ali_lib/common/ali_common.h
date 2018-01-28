@@ -5,13 +5,40 @@
 #include <stdio.h>
 #include <stdint.h>
 
-#define VERIFY_PARAM_NOT_NULL(p)
-#define VERIFY_SUCCESS(e)
-#define VERIFY_PARAM_NOT_NULL_VOID(p)
-#define VERIFY_MODULE_INITIALIZED_VOID()
-#define VERIFY_MODULE_INITIALIZED()
-#define VERIFY_SUCCESS_VOID(e)
-#define APP_ERROR_CHECK(e)
+#define VERIFY_PARAM_NOT_NULL(p) \
+    do {\
+        if (p == NULL) printf("Error: VERIFY_PARAM_NOT_NULL failed (p: %p).\r\n", p);\
+    } while (0)
+
+#define VERIFY_SUCCESS(e) \
+    do {\
+        if (e) printf("Error: VERIFY_SUCCESS failed (e: %d).\r\n", e);\
+    } while (0)
+
+#define VERIFY_PARAM_NOT_NULL_VOID(p) \
+    do {\
+        if (p == NULL) printf("Error: VERIFY_PARAM_NOT_NULL_VOID failed (p: %p).\r\n", p);\
+    } while (0)
+
+#define VERIFY_MODULE_INITIALIZED_VOID() \
+    do {\
+        printf("Info: fake VERIFY_MODULE_INITIALIZED_VOID.\r\n");\
+    } while (0)
+
+#define VERIFY_MODULE_INITIALIZED() \
+    do {\
+        printf("Info: fake VERIFY_MODULE_INITIALIZED.\r\n");\
+    } while (0)
+
+#define VERIFY_SUCCESS_VOID(e) \
+    do {\
+        if (e) printf("Error: VERIFY_SUCCESS failed (e: %d).\r\n", e);\
+    } while (0)
+
+#define APP_ERROR_CHECK(e) \
+    do {\
+        if (e) printf("Error: APP_ERROR_CHECK failed (e: %d).\r\n", e);\
+    } while (0)
 
 #define GATT_MTU_SIZE_DEFAULT 23
 

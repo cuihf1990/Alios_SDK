@@ -42,10 +42,11 @@
 //#include "nordic_common.h"
 //#include "sdk_macros.h"
 //#include "nrf_soc.h"
-
+#include <aos/aos.h>
 
 #define CHECK_PAYLOAD_FORMAT    0   /**< 0: Do not check payload format.  */
 
+#define MOD "ble_gap"
 
 /**@brief Notify error to higher layer. */
 static void notify_error (ali_gap_t * p_gap, uint32_t src, uint32_t err_code)
@@ -157,6 +158,8 @@ static ret_code_t send_msg(ali_gap_t * p_gap, uint8_t * p_data, uint16_t length,
 
 ret_code_t ali_gap_init(ali_gap_t * p_gap, ali_gap_init_t const * p_init)
 {
+    LOGD(MOD, "ali_gap_init entry.");
+
     /* check parameters */
     VERIFY_PARAM_NOT_NULL(p_gap);
     VERIFY_PARAM_NOT_NULL(p_init);
@@ -172,6 +175,9 @@ ret_code_t ali_gap_init(ali_gap_t * p_gap, ali_gap_init_t const * p_init)
     p_gap->tx_func_indicate  = p_init->tx_func_indicate;
     p_gap->p_tx_func_context = p_init->p_tx_func_context;
     p_gap->tx_cmd            = ALI_CMD_STATUS;
+
+    LOGD(MOD, "ali_gap_init exit.");
+
     return NRF_SUCCESS;
 }
 

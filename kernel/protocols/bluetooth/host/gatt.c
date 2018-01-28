@@ -115,8 +115,8 @@ populate:
 			handle = attrs->handle;
 		} else {
 			/* Service has conflicting handles */
-			BT_ERR("Unable to register handle 0x%04x",
-			       attrs->handle);
+			BT_ERR("Unable to register handle 0x%04x (last handle: 0x%04x)",
+			       attrs->handle, handle);
 			return -EINVAL;
 		}
 
