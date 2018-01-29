@@ -143,23 +143,20 @@ tftp_print_usage:
     aos_cli_printf("       tftp get path/to/file\r\n");
 }
 #endif /* CONFIG_NET_LWIP */
-#endif
 
 struct cli_command  tcpip_cli_cmd[] = {
     /* net */
-#ifndef CONFIG_NO_TCPIP
 #ifdef CONFIG_NET_LWIP
     {"tftp",        "tftp server/client control", tftp_cmd},
 #endif /* CONFIG_NET_LWIP */
     {"udp",         "[ip] [port] [string data] send udp data", udp_cmd},
-#endif
 };
 
 void tcpip_cli_init(void)
 {
     aos_cli_register_commands(&tcpip_cli_cmd[0],sizeof(tcpip_cli_cmd) / sizeof(struct cli_command));
 }
-
+#endif
 
 void wifi_debug_cmd(char *buf, int len, int argc, char **argv)
 {
