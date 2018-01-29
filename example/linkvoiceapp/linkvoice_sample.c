@@ -1,8 +1,6 @@
-
-//
-//  pal_sample.c
-//  pal_sdk
-//
+/*
+ * Copyright (C) 2015-2017 Alibaba Group Holding Limited
+ */
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -22,8 +20,8 @@
 #define OPUS_SAMPLE_FILE  "0:/sample.opus"
 #define PCM_SAMPLE_FILE  "0:/sample.wav"
 #else
-#define OPUS_SAMPLE_FILE  "example/palapp/sample.opus"
-#define PCM_SAMPLE_FILE  "example/palapp/sample.wav"
+#define OPUS_SAMPLE_FILE  "example/linkvoiceapp/sample.opus"
+#define PCM_SAMPLE_FILE  "example/linkvoiceapp/sample.wav"
 #endif
 
 
