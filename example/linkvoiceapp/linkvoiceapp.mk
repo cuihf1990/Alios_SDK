@@ -1,6 +1,6 @@
-NAME := palapp
+NAME := linkvoiceapp
 
-$(NAME)_SOURCES := palapp.c pal_sample.c
+$(NAME)_SOURCES := linkvoiceapp.c linkvoice_sample.c
 #pal_test.c 
 #
 ifeq ($(xr871),1)
@@ -23,7 +23,7 @@ endif
 
 
 
-$(NAME)_COMPONENTS := opus yloop cli pal framework.common  netmgr cjson connectivity/websockets
+$(NAME)_COMPONENTS := opus yloop cli linkvoice framework.common  netmgr cjson connectivity/websockets
 
 LWIP:=0
 ifeq ($(LWIP),1)
