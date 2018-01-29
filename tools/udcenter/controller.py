@@ -55,15 +55,19 @@ class Controller():
         self.selector = None
         self.user_cmd = ''
         self.cur_pos = 0
+        self.models = {'mk3060':'mxchip-', 'esp32':'espif-'}
         self.serve_funcs = {'none':    self.login_process, 'client':  self.client_process,
                             'server':  self.server_process, 'terminal':self.terminal_process}
         self.keyfile = 'controller_key.pem'
         self.certfile = 'controller_certificate.pem'
         self.dbase = sql.connect('controller.db', check_same_thread = False)
-        sqlcmd = 'CREATE TABLE IF NOT EXISTS Users(uuid TEXT, name TEXT, email TEXT, devices TEXT)'
+        #sqlcmd = 'CREATE TABLE IF NOT EXISTS Users(uuid TEXT, name TEXT, email TEXT, devices TEXT)' #v0.1
+        sqlcmd = 'CREATE TABLE IF NOT EXISTS Users(uuid TEXT, name TEXT, info TEXT)' #v0.2
         self.database_excute_sqlcmd(sqlcmd)
+
         sqlcmd = 'CREATE TABLE IF NOT EXISTS Devices(device TEXT, uuid TEXT, timeout REAL)'
         self.database_excute_sqlcmd(sqlcmd)
+
         sqlcmd = 'SELECT * FROM Devices'
         rows = self.database_excute_sqlcmd(sqlcmd)
         self.devices = {}
@@ -92,18 +96,16 @@ class Controller():
                 print "read command history failed"
 
     def database_excute_sqlcmd(self, sqlcmd):
-        ret = None
         with self.dbase:
             cur = self.dbase.cursor()
             try:
                 cur.execute(sqlcmd)
             except:
-                traceback.print_exc()
+                #traceback.print_exc()
+                ret = None
             else:
                 ret = cur.fetchall()
         return ret
-
-
 
     def netlog_print(self, log):
         if len(self.user_cmd) >= len(log):
@@ -387,7 +389,12 @@ class Controller():
                 self.send_data(sock, content)
                 return
 
-            devices = ret[0][3]
+            devices = []
+            for device in self.devices:
+                if self.devices[device]['uuid'] != uuid:
+                    continue
+                devices.append(device)
+            devices = '|'.join(devices)
             if devices == '':
                 content = TBframe.construct(TBframe.ACCESS_LOGIN, 'no allocated device')
                 self.send_data(sock, content)
@@ -451,85 +458,46 @@ class Controller():
                 ret = self.database_excute_sqlcmd(sqlcmd)
                 if ret == None:
                     self.cmdlog_print("warning: delete device {0} from Devices database failed".format(device))
-                sqlcmd = "SELECT * FROM Users WHERE uuid = '{0}'".format(uuid)
-                ret = self.database_excute_sqlcmd(sqlcmd)
-                if ret == None:
-                    self.cmdlog_print("warning: database error detected while deleting device {0}".format(device))
-                    continue
-                devs = ret[0][3].split('|')
-                if device not in devs:
-                    continue
-                devs.remove(device)
-                devs = '|'.join(devs)
-                sqlcmd = "UPDATE Users SET devices = '{0}' WHERE uuid = '{1}'".format(devs, uuid)
-                ret = self.database_excute_sqlcmd(sqlcmd)
-                if ret == None:
-                    self.cmdlog_print("warning: delete device {0} from Users database failed".format(device))
-                conn = self.find_server_for_target(uuid, 'terminal')
-                if conn == None:
-                    continue
-                content = TBframe.construct(TBframe.ACCESS_UPDATE_TERMINAL, uuid + ',' + devs)
-                self.send_data(conn, content)
+                self.inform_server_updates(uuid, 'update')
 
     def cmdlog_print(self, log):
         sys.stdout.write(log + '\r\n')
 
+    def inform_server_updates(self, uuid, type):
+        types = ['delete', 'update']
+        if type not in types:
+            return
+        conn = self.find_server_for_target(uuid, 'terminal')
+        if conn == None:
+            return
+        if type == 'delete':
+            content = TBframe.construct(TBframe.ACCESS_DEL_TERMINAL, uuid)
+        elif type == 'update':
+            devices = []
+            for device in self.devices:
+                if self.devices[device]['uuid'] != uuid:
+                    continue
+                devices.append(device)
+            devices = '|'.join(devices)
+            content = TBframe.construct(TBframe.ACCESS_UPDATE_TERMINAL, uuid + ',' + devices)
+        self.send_data(conn, content)
+
     def add_cmd_handler(self, args):
         if len(args) < 2:
-            self.cmdlog_print('usages: add user name [email] [device1|device2|...|deviceN] [days]')
+            self.cmdlog_print('usages: add user name [info1 info2 info3 ... infoN]')
             self.cmdlog_print('        add device uuid device1|device2|...|deviceN [days]')
             return
+
         if args[0] == 'user':
-            if len(args) < 2:
-                self.cmdlog_print('usage error, usage: add user name [email] [devices] [days]')
-                return
             uuid = self.generate_random_hexstr(16)
             name = args[1]
-            if len(args) > 2:
-                email = args[2]
-            else:
-                email = 'None'
-            if len(args) > 3:
-                dev_str = args[3]
-            else:
-                dev_str = ''
-            if len(args) > 4:
-                try:
-                    days = float(args[4])
-                except:
-                    self.cmdlog_print('error: invalid input {0}'.format(repr(args[4])))
-                    return
-            else:
-                days = 7
-            devs = dev_str.split('|')
-            timeout = time.time() + 3600 * 24 * days
-            devices = []
-            for dev in devs:
-                if re.match("^[0-9a-f]{12}:.", dev) == None:
-                    self.cmdlog_print("error: invalid device {0}".format(dev))
-                    continue
-                devices += [dev]
-
-            for device in devices:
-                if device not in self.devices:
-                    sqlcmd = "INSERT INTO Devices VALUES('{0}', '{1}', '{2}')".format(device, uuid, timeout)
-                    ret = self.database_excute_sqlcmd(sqlcmd)
-                else:
-                    sqlcmd = "UPDATE Devices SET timeout = '{0}' WHERE device = '{1}'".format(timeout, device)
-                    ret = self.database_excute_sqlcmd(sqlcmd)
-                if ret == None:
-                    self.cmdlog_print("add user '{0}' failed: error adding device to database".format(name))
-                    return
-                self.devices[device] = {'uuid': uuid, 'timeout': timeout}
-
-            devices = '|'.join(devices)
-            sqlcmd = "INSERT INTO Users VALUES('{0}', '{1}', '{2}', '{3}')".format(uuid, name, email, devices)
+            info = ' '.join(args[2:])
+            sqlcmd = "INSERT INTO Users VALUES('{0}', '{1}', '{2}')".format(uuid, name, info)
             ret = self.database_excute_sqlcmd(sqlcmd)
             if ret == None:
                 self.cmdlog_print("add user '{0}' failed".format(name))
             else:
-                self.cmdlog_print("add user '{0}' success, email: {1}, uuid: {2}, devices: {3}".format(name, email, uuid, devices))
-
+                self.cmdlog_print("add user '{0}' succeed, uuid={1}".format(name, uuid))
         elif args[0] == 'device':
             if len(args) < 3:
                 self.cmdlog_print('usage error, usage: add device uuid devices [days]')
@@ -550,19 +518,18 @@ class Controller():
             sqlcmd = "SELECT * FROM Users WHERE uuid = '{0}'".format(uuid)
             rows = self.database_excute_sqlcmd(sqlcmd)
             if len(rows) < 1:
-                self.cmdlog_print("error: invalid uuid '{0}'".format(uuid))
+                self.cmdlog_print("error: user '{0}' does not exist".format(uuid))
                 return
-            if len(rows) > 1:
-                self.cmdlog_print("database error: multiple record for single user")
-                return
-            ext_devices = rows[0][3].split('|')
 
             devs = dev_str.split('|')
             devices = []
             for dev in devs:
                 if re.match("^[0-9a-f]{12}:.", dev) == None:
                     self.cmdlog_print("error: invalid device {0}".format(dev))
-                    continue
+                    return
+                if dev in self.devices and self.devices[dev]['uuid'] != uuid:
+                    self.cmdlog_print("error: device {0} already alloated".format(dev))
+                    return
                 devices += [dev]
             for device in devices:
                 if device not in self.devices:
@@ -575,78 +542,171 @@ class Controller():
                     self.cmdlog_print("add device '{0}' failed: error adding device to database".format(device))
                     return
                 self.devices[device] = {'uuid': uuid, 'timeout': timeout}
-                if device not in ext_devices:
-                    ext_devices += [device]
 
-            devices = '|'.join(ext_devices)
-            sqlcmd = "UPDATE Users SET devices = '{0}' WHERE uuid = '{1}'".format(devices, uuid)
-            ret = self.database_excute_sqlcmd(sqlcmd)
-            if ret == None:
-                self.cmdlog_print("failed")
-            else:
-                self.cmdlog_print("succeed")
-            conn = self.find_server_for_target(uuid, 'terminal')
-            if conn == None:
-                return
-            content = TBframe.construct(TBframe.ACCESS_UPDATE_TERMINAL, uuid + ',' + devices)
-            self.send_data(conn, content)
+            self.cmdlog_print("succeed")
+            self.inform_server_updates(uuid, 'update')
         else:
-            self.cmdlog_print("error: invalid command {0}".format(self.user_cmd))
+            self.cmdlog_print("error: invalid command option {0}".format(repr(args[0])))
         return
 
     def del_cmd_handler(self, args):
-        if len(args) < 1:
-            self.cmdlog_print('usage error, usage: del uuid [devices]')
+        if len(args) < 2:
+            self.cmdlog_print('usage: del user uuid')
+            self.cmdlog_print('       del device uuid device1|device2|...|deviceN')
             return
-        uuid = args[0]
-        if len(args) > 1:
-            dev_str = args[1]
+
+        option = args[0]
+        uuid   = args[1]
+        if len(args) > 2:
+            dev_str = args[2]
         else:
             dev_str = None
         sqlcmd = "SELECT * FROM Users WHERE uuid = '{0}'".format(uuid)
         rows = self.database_excute_sqlcmd(sqlcmd)
         if len(rows) < 1:
-            self.cmdlog_print("error: invalid uuid '{0}'".format(uuid))
-        devices = rows[0][3].split('|')
-        if dev_str == None:
-            del_devices = devices
-        else:
-            del_devices = []
-            devs = dev_str.split('|')
-            for dev in devs:
-                if re.match("^[0-9a-f]{12}:.", dev) == None:
-                    self.cmdlog_print("warning: invalid device {0}".format(dev))
-                    continue
-                if dev not in devices:
-                    self.cmdlog_print("warning: device {0} none exist".format(dev))
-                    continue
-                del_devices += [dev]
-                devices.remove(dev)
-        for device in del_devices:
-            sqlcmd = "DELETE FROM Devices WHERE device = '{0}'".format(device)
+            self.cmdlog_print("error: user '{0}' does not exist".format(uuid))
+            return
+
+        if option == 'user':
+            sqlcmd = "DELETE FROM Devices WHERE uuid = '{0}'".format(uuid)
             ret = self.database_excute_sqlcmd(sqlcmd)
             if ret == None:
-                self.cmdlog_print("warning: delete device {0} from database failed".format(device))
-            self.devices.pop(device)
-        if dev_str == None:
+                self.cmdlog_print("warning: delete devices of {0} from database failed".format(uuid))
+            for device in list(self.devices):
+                if self.devices[device]['uuid'] != uuid:
+                    continue
+                self.devices.pop(device)
             sqlcmd = "DELETE FROM Users WHERE uuid = '{0}'".format(uuid)
-        else:
-            devices = '|'.join(devices)
-            sqlcmd = "UPDATE Users SET devices = '{0}' WHERE uuid = '{1}'".format(devices, uuid)
-        ret = self.database_excute_sqlcmd(sqlcmd)
-        if ret == None:
-            self.cmdlog_print("failed")
-        else:
-            self.cmdlog_print("succeed")
-        conn = self.find_server_for_target(uuid, 'terminal')
-        if conn == None:
+            ret = self.database_excute_sqlcmd(sqlcmd)
+            if ret == None:
+                self.cmdlog_print("failed")
+            else:
+                self.cmdlog_print("succeed")
+            self.inform_server_updates(uuid, 'delete')
             return
-        if dev_str == None:
-            content = TBframe.construct(TBframe.ACCESS_DEL_TERMINAL, uuid)
+        elif option == 'device':
+            if dev_str == None:
+                self.cmdlog_print("error: please input the devices you want to delete")
+                return
+
+            del_devices = dev_str.split('|')
+            for device in del_devices:
+                if re.match("^[0-9a-f]{12}:.", device) == None:
+                    self.cmdlog_print("error: invalid device {0}".format(device))
+                    return
+                if device not in self.devices or self.devices[device]['uuid'] != uuid:
+                    self.cmdlog_print("error: user {0} does not own device {1} ".format(uuid, device))
+                    return
+            if del_devices == []:
+                return
+            for device in del_devices:
+                sqlcmd = "DELETE FROM Devices WHERE device = '{0}'".format(device)
+                ret = self.database_excute_sqlcmd(sqlcmd)
+                if ret == None:
+                    self.cmdlog_print("warning: delete device {0} from database failed".format(device))
+                self.devices.pop(device)
+            self.cmdlog_print("succeed")
+            self.inform_server_updates(uuid, 'update')
+            return
         else:
-            content = TBframe.construct(TBframe.ACCESS_UPDATE_TERMINAL, uuid + ',' + devices)
-        self.send_data(conn, content)
+            self.cmdlog_print('usage error, invalid argument {0}'.format(repr(option)))
+            return
         return
+
+    def allocate_cmd_handler(self, args):
+        if len(args) < 3:
+            self.cmdlog_print('usage: allocate uuid nubmer model [days]')
+            return
+
+        uuid = args[0]
+        number = args[1]
+        model = args[2]
+        if len(args) > 3:
+            try:
+                days = float(args[3])
+            except:
+                self.cmdlog_print('error: invalid input {0}'.format(repr(args[3])))
+                return
+        else:
+            days = 7
+
+        sqlcmd = "SELECT * FROM Users WHERE uuid = '{0}'".format(uuid)
+        rows = self.database_excute_sqlcmd(sqlcmd)
+        if len(rows) < 1:
+            self.cmdlog_print("error: user '{0}' does not exist".format(uuid))
+            return
+
+        try:
+            number = int(number)
+        except:
+            number = 0
+        if number <= 0:
+            self.cmdlog_print('error: invalid input {0}, input a positive integer'.format(args[1]))
+            return
+
+        if model not in self.models:
+            self.cmdlog_print('error: unsupported model {0}'.format(model))
+            return
+        model_path_str = self.models[model]
+
+        ext_server = None
+        ext_devices = []
+        for device in self.devices:
+            if self.devices[device]['uuid'] != uuid:
+                continue
+            ext_devices.append(device)
+            conn = self.find_server_for_target(device, 'device')
+            if conn == None:
+                continue
+            ext_server = conn
+            break
+        if ext_devices != [] and ext_server == None:
+            self.cmdlog_print('error: can not locate the exist server for {0}'.format(uuid))
+            return
+        if ext_server == None:
+            allocated = []
+            for conn in self.connections:
+                if self.connections[conn]['role'] != 'server':
+                    continue
+                if self.connections[conn]['valid'] == False:
+                    continue
+                if 'devices' not in self.connections[conn]['status']:
+                    continue
+                allocated = []
+                for dev in self.connections[conn]['status']['devices']:
+                    if model_path_str not in dev:
+                        continue
+                    if dev in self.devices:
+                        continue
+                    allocated.append(dev)
+                    if len(allocated) >= number:
+                        break
+                if len(allocated) >= number:
+                    break
+        else:
+            allocated = []
+            for dev in self.connections[ext_server]['status']['devices']:
+                if model_path_str not in dev:
+                    continue
+                if dev in self.devices:
+                    continue
+                allocated.append(dev)
+                if len(allocated) >= number:
+                    break
+
+        if len(allocated) < number:
+            self.cmdlog_print('failed')
+            return
+        timeout = time.time() + 3600 * 24 * days
+        for device in allocated:
+            sqlcmd = "INSERT INTO Devices VALUES('{0}', '{1}', '{2}')".format(device, uuid, timeout)
+            ret = self.database_excute_sqlcmd(sqlcmd)
+            if ret == None:
+                self.cmdlog_print("add device '{0}' failed: error adding device to database".format(device))
+                return
+            self.devices[device] = {'uuid': uuid, 'timeout': timeout}
+        self.cmdlog_print('succeed, allocat: {0}'.format('|'.join(allocated)))
+        self.inform_server_updates(uuid, 'update')
 
     def print_user(self, uuid=None):
         if uuid == None:
@@ -664,14 +724,18 @@ class Controller():
             user_num = len(rows)
             self.cmdlog_print("users({0}):".format(user_num))
             for row in rows:
-                key = row[0]; name = row[1]; email=row[2]
-                devices = row[3].split('|')
+                key = row[0]; name = row[1]; info=row[2]
+                devices = []
+                for device in self.devices:
+                    if self.devices[device]['uuid'] != key:
+                        continue
+                    devices.append(device)
                 device_num = len(devices)
                 if self.find_server_for_target(key, 'terminal') == None:
                     status = 'offline'
                 else:
                     status = 'online'
-                self.cmdlog_print("|--{0} {1} {2} {3} {4}".format(key, name, email, device_num, status))
+                self.cmdlog_print("|--{0} ({1} {2}) {3} {4}".format(key, device_num, status, name, info))
                 for device in devices:
                     try:
                         timeout = time.strftime("%Y-%m-%d@%H:%M:%S", time.localtime(self.devices[device]['timeout']))
@@ -684,14 +748,18 @@ class Controller():
                 return
             self.cmdlog_print("users:")
             for row in rows:
-                key = row[0]; name = row[1]; email=row[2]
-                devices = row[3].split('|')
+                key = row[0]; name = row[1]; info=row[2]
+                devices = []
+                for device in self.devices:
+                    if self.devices[device]['uuid'] != key:
+                        continue
+                    devices.append(device)
                 device_num = len(devices)
                 if self.find_server_for_target(key, 'terminal') == None:
                     status = 'offline'
                 else:
                     status = 'online'
-                self.cmdlog_print("|--{0} {1} {2} {3} {4}".format(key, name, email, device_num, status))
+                self.cmdlog_print("|--{0} ({1} {2}) {3} {4}".format(key, device_num, status, name, info))
                 for device in devices:
                     self.cmdlog_print("|  |--{0}".format(device))
 
@@ -750,7 +818,9 @@ class Controller():
         self.cmdlog_print("Usages:")
         self.cmdlog_print("       add user name [email] [device1|deice2|...|deviceN] [days(7)]")
         self.cmdlog_print("       add device uuid device1|deice2|...|deviceN [days(7)]")
-        self.cmdlog_print("       del uuid [devices]")
+        self.cmdlog_print("       del user uuid")
+        self.cmdlog_print("       del device uuid devic1|device2|...|deviceN")
+        self.cmdlog_print("       allocate uuid number model")
         self.cmdlog_print("       list")
         self.cmdlog_print("       list user [uuid]")
         self.cmdlog_print("       list server [uuid]")
@@ -762,6 +832,8 @@ class Controller():
             self.add_cmd_handler(cmds[1:])
         elif cmds[0] == 'del':
             self.del_cmd_handler(cmds[1:])
+        elif cmds[0] == 'allocate':
+            self.allocate_cmd_handler(cmds[1:])
         elif cmds[0] == 'list':
             self.list_cmd_handler(cmds[1:])
         elif cmds[0] == 'help':
