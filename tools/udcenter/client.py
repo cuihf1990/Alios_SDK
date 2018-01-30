@@ -274,9 +274,15 @@ class Client:
                     else:
                         poll_fail_num += 1
                 elif cmd == 'uuid': #poll uuid
-                    if len(response) == 1 and 'uuid:' in response[0]:
-                        poll_fail_num = 0
-                        self.devices[port]['attributes']['uuid'] = response[0].replace('uuid: ', '')
+                    if len(response) == 1:
+                        if 'uuid:' in response[0]:
+                            poll_fail_num = 0
+                            self.devices[port]['attributes']['uuid'] = response[0].replace('uuid: ', '')
+                        elif 'alink is not connected' in response[0]:
+                            poll_fail_num = 0
+                            self.devices[port]['attributes']['uuid'] = 'N/A'
+                        else:
+                            poll_fail_num += 1
                     else:
                         poll_fail_num += 1
                 else:
