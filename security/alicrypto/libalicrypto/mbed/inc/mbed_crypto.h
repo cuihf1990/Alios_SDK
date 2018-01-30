@@ -101,6 +101,7 @@ typedef struct _aes_ctx_t {
     aes_type_t type;
     uint32_t is_enc;
     uint8_t iv[AES_IV_SIZE];
+    size_t offset;
     union {
         uint8_t sym_ctx[1];
         mbedtls_aes_context ctx;

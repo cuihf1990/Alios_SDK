@@ -39,11 +39,13 @@ typedef enum _sym_padding_t {
 } sym_padding_t;
 
 typedef enum _aes_type_t {
-    AES_ECB = 0,
-    AES_CBC = 1,
-    AES_CTR = 2,
-    AES_CTS = 3,
-    AES_XTS = 4,
+    AES_ECB         = 0,
+    AES_CBC         = 1,
+    AES_CTR         = 2,
+    AES_CTS         = 3,
+    AES_XTS         = 4,
+    AES_CFB8        = 6,
+    AES_CFB128      = 7,
 } aes_type_t;
 
 typedef enum _des_type_t {
