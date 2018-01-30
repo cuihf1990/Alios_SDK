@@ -25,7 +25,7 @@ ktimer_t g_mm_leak_check_timer;
         csp_printf("%s",buf); \
         offset = 0; \
     } \
-    sprintf(buf+offset,"%s",string); \
+    snprintf(buf+offset,strlen(string)+1,"%s",string); \
     offset += strlen(string); \
     } while (0)
 

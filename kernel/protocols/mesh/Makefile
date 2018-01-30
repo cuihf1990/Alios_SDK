@@ -1,7 +1,7 @@
 SDK := 1
 GLOBAL_DEFINES += MESH_SDK
 GLOBAL_INCLUDES += src/platform
-#GLOBAL_INCLUDES += ../../../security/alicrypto/inc
+#GLOBAL_INCLUDES += ../../../security/alicrypto/libalicrypto/inc
 
 platform := $(shell uname)
 

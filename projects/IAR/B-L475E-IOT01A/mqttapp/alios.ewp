@@ -372,8 +372,8 @@
                     <state>$PROJ_DIR$\..\..\..\..\framework\fota\socket\stm32wifi</state>
                     <state>$PROJ_DIR$\..\..\..\..\framework\fota\platform\mqtt</state>
                     <state>$PROJ_DIR$\..\..\..\..\utility\iotx-utils\iotx-system</state>
-                    <state>$PROJ_DIR$\..\..\..\..\security\alicrypto\inc</state>
-                    <state>$PROJ_DIR$\..\..\..\..\security\alicrypto\test</state>
+                    <state>$PROJ_DIR$\..\..\..\..\security\alicrypto\libalicrypto\inc</state>
+                    <state>$PROJ_DIR$\..\..\..\..\security\alicrypto\libalicrypto\test</state>
                     <state>$PROJ_DIR$\..\..\..\..\kernel\modules\fs\kv\include</state>
                     <state>$PROJ_DIR$\..\..\..\..\framework\fota\socket\</state>
                     <state>$PROJ_DIR$\..\..\..\..\framework\fota\platform\</state>
@@ -2323,8 +2323,8 @@
                             <state>$PROJ_DIR$\..\..\..\..\framework\fota\socket\stm32wifi</state>
                             <state>$PROJ_DIR$\..\..\..\..\framework\fota\platform\mqtt</state>
                             <state>$PROJ_DIR$\..\..\..\..\utility\iotx-utils\iotx-system</state>
-                            <state>$PROJ_DIR$\..\..\..\..\security\alicrypto\inc</state>
-                            <state>$PROJ_DIR$\..\..\..\..\security\alicrypto\test</state>
+                            <state>$PROJ_DIR$\..\..\..\..\security\alicrypto\libalicrypto\inc</state>
+                            <state>$PROJ_DIR$\..\..\..\..\security\alicrypto\libalicrypto\test</state>
                             <state>$PROJ_DIR$\..\..\..\..\kernel\modules\fs\kv\include</state>
                             <state>$PROJ_DIR$\..\..\..\..\framework\fota\socket\</state>
                             <state>$PROJ_DIR$\..\..\..\..\framework\fota\platform\</state>
@@ -3106,8 +3106,8 @@
                             <state>$PROJ_DIR$\..\..\..\..\framework\fota\socket\stm32wifi</state>
                             <state>$PROJ_DIR$\..\..\..\..\framework\fota\platform\mqtt</state>
                             <state>$PROJ_DIR$\..\..\..\..\utility\iotx-utils\iotx-system</state>
-                            <state>$PROJ_DIR$\..\..\..\..\security\alicrypto\inc</state>
-                            <state>$PROJ_DIR$\..\..\..\..\security\alicrypto\test</state>
+                            <state>$PROJ_DIR$\..\..\..\..\security\alicrypto\libalicrypto\inc</state>
+                            <state>$PROJ_DIR$\..\..\..\..\security\alicrypto\libalicrypto\test</state>
                             <state>$PROJ_DIR$\..\..\..\..\kernel\modules\fs\kv\include</state>
                             <state>$PROJ_DIR$\..\..\..\..\framework\fota\socket\</state>
                             <state>$PROJ_DIR$\..\..\..\..\framework\fota\platform\</state>
@@ -3466,8 +3466,8 @@
                             <state>$PROJ_DIR$\..\..\..\..\framework\fota\socket\stm32wifi\</state>
                             <state>$PROJ_DIR$\..\..\..\..\framework\fota\platform\mqtt\</state>
                             <state>$PROJ_DIR$\..\..\..\..\utility\iotx-utils\iotx-system\</state>
-                            <state>$PROJ_DIR$\..\..\..\..\security\alicrypto\inc</state>
-                            <state>$PROJ_DIR$\..\..\..\..\security\alicrypto\test</state>
+                            <state>$PROJ_DIR$\..\..\..\..\security\alicrypto\libalicrypto\inc</state>
+                            <state>$PROJ_DIR$\..\..\..\..\security\alicrypto\libalicrypto\test</state>
                             <state>$PROJ_DIR$\..\..\..\..\kernel\modules\fs\kv\include</state>
                             <state>$PROJ_DIR$\..\..\..\..\framework\fota\socket\</state>
                             <state>$PROJ_DIR$\..\..\..\..\framework\fota\platform\</state>
@@ -3832,8 +3832,8 @@
                                 <state>$PROJ_DIR$\..\..\..\..\framework\fota\socket\stm32wifi\</state>
                                 <state>$PROJ_DIR$\..\..\..\..\framework\fota\platform\mqtt\</state>
                                 <state>$PROJ_DIR$\..\..\..\..\utility\iotx-utils\iotx-system\</state>
-                                <state>$PROJ_DIR$\..\..\..\..\security\alicrypto\inc</state>
-                                <state>$PROJ_DIR$\..\..\..\..\security\alicrypto\test</state>
+                                <state>$PROJ_DIR$\..\..\..\..\security\alicrypto\libalicrypto\inc</state>
+                                <state>$PROJ_DIR$\..\..\..\..\security\alicrypto\libalicrypto\test</state>
                                 <state>$PROJ_DIR$\..\..\..\..\kernel\modules\fs\kv\include</state>
                                 <state>$PROJ_DIR$\..\..\..\..\framework\fota\socket\</state>
                                 <state>$PROJ_DIR$\..\..\..\..\framework\fota\platform\</state>
@@ -4175,8 +4175,8 @@
                                 <state>$PROJ_DIR$\..\..\..\..\framework\fota\socket\stm32wifi\</state>
                                 <state>$PROJ_DIR$\..\..\..\..\framework\fota\platform\mqtt\</state>
                                 <state>$PROJ_DIR$\..\..\..\..\utility\iotx-utils\iotx-system\</state>
-                                <state>$PROJ_DIR$\..\..\..\..\security\alicrypto\inc</state>
-                                <state>$PROJ_DIR$\..\..\..\..\security\alicrypto\test</state>
+                                <state>$PROJ_DIR$\..\..\..\..\security\alicrypto\libalicrypto\inc</state>
+                                <state>$PROJ_DIR$\..\..\..\..\security\alicrypto\libalicrypto\test</state>
                                 <state>$PROJ_DIR$\..\..\..\..\kernel\modules\fs\kv\include</state>
                                 <state>$PROJ_DIR$\..\..\..\..\framework\fota\socket\</state>
                                 <state>$PROJ_DIR$\..\..\..\..\framework\fota\platform\</state>
