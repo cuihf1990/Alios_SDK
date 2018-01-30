@@ -1,4 +1,4 @@
-NAME := boneengine_demo
+NAME := javascript_demo
 
 $(NAME)_SOURCES := demo.c
 
@@ -6,7 +6,26 @@ $(NAME)_SOURCES := demo.c
 $(NAME)_INCLUDES += ./include ./
 
 
-$(NAME)_COMPONENTS := log protocol.alink  cli fota netmgr framework.common  bone_engine
+#$(NAME)_COMPONENTS := log protocol.alink  cli fota netmgr framework.common  bone_engine
+
+
+ifneq (,$(filter linuxhost,$(COMPONENTS)))
+gateway ?= 0
+else
+gateway ?= 1
+endif
+
+ifeq ($(findstring ALI_AOS_B-L475E, $(CONFIG_SYSINFO_PRODUCT_MODEL)), ALI_AOS_B-L475E)
+	$(NAME)_COMPONENTS := log cli fota netmgr framework.common  bone_engine
+	#GLOBAL_DEFINES += AOS_NO_WIFI
+	LWIP := 0
+	ywss := 0
+	DDA := 0
+	sds := 0
+	gateway := 0
+else
+	$(NAME)_COMPONENTS := log protocol.alink  cli fota netmgr framework.common  bone_engine
+endif
 
 #default release_log
 #可选 debug release_log release
@@ -29,11 +48,6 @@ ifneq ($(ywss),0)
 $(NAME)_COMPONENTS += ywss
 endif
 
-ifneq (,$(filter linuxhost,$(COMPONENTS)))
-gateway ?= 0
-else
-gateway ?= 1
-endif
 
 ifeq ($(gateway),1)
 
