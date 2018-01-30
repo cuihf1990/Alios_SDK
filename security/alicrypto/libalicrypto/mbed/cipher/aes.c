@@ -51,7 +51,6 @@ static int _get_pkcs_padding(unsigned char *input, size_t input_len,
 
 static ali_crypto_result _ali_aes_ecb_final(const uint8_t *src, size_t src_size,
                                             uint8_t *dst, size_t *dst_size,
-                                            uint32_t is_enc,
                                             sym_padding_t padding,
                                             aes_ctx_t *ctx)
 {
@@ -61,7 +60,6 @@ static ali_crypto_result _ali_aes_ecb_final(const uint8_t *src, size_t src_size,
     size_t round = 0;
     size_t data_len;
 
-    (void)is_enc;
     if (ctx == NULL) {
         PRINT_RET(ALI_CRYPTO_INVALID_CONTEXT, "ecb_final: invalid context!\n");
     }
@@ -245,7 +243,6 @@ static ali_crypto_result _ali_aes_ecb_final(const uint8_t *src, size_t src_size,
 
 static ali_crypto_result _ali_aes_cbc_final(const uint8_t *src, size_t src_size,
                                             uint8_t *dst, size_t *dst_size,
-                                            uint32_t is_enc,
                                             sym_padding_t padding,
                                             aes_ctx_t *ctx)
 {
@@ -254,7 +251,6 @@ static ali_crypto_result _ali_aes_cbc_final(const uint8_t *src, size_t src_size,
     size_t data_len;
     uint8_t *tmp_dst = NULL;
 
-    (void)is_enc;
     if (ctx == NULL) {
         PRINT_RET(ALI_CRYPTO_INVALID_CONTEXT, "cbc_final: invalid context!\n");
     }
@@ -429,13 +425,11 @@ static ali_crypto_result _ali_aes_cbc_final(const uint8_t *src, size_t src_size,
 
 static ali_crypto_result _ali_aes_ctr_final(const uint8_t *src, size_t src_size,
                                             uint8_t *dst, size_t *dst_size,
-                                            uint32_t is_enc, aes_ctx_t *ctx)
+                                            aes_ctx_t *ctx)
 {
     int ret;
-    size_t nc_off = 0;
     uint8_t stream_block[AES_BLOCK_SIZE];
 
-    (void)is_enc;
     if (ctx == NULL) {
         PRINT_RET(ALI_CRYPTO_INVALID_CONTEXT, "ctr_final: invalid context!\n");
     }
@@ -456,7 +450,7 @@ static ali_crypto_result _ali_aes_ctr_final(const uint8_t *src, size_t src_size,
                 (int)src_size, (int)*dst_size);
     }
 
-    ret = mbedtls_aes_crypt_ctr(&(ctx->ctx), src_size, &nc_off,
+    ret = mbedtls_aes_crypt_ctr(&(ctx->ctx), src_size, &(ctx->offset),
                         (unsigned char *)ctx->iv, stream_block,
                         (const unsigned char *)src, (unsigned char *)dst);
 
@@ -464,6 +458,59 @@ static ali_crypto_result _ali_aes_ctr_final(const uint8_t *src, size_t src_size,
 
     return (ali_crypto_result)ret;
 }
+
+#if defined(MBEDTLS_CIPHER_MODE_CFB)
+static ali_crypto_result _ali_aes_cfb_final(const uint8_t *src, size_t src_size,
+                                            uint8_t *dst, size_t *dst_size,
+                                            aes_ctx_t *ctx)
+{
+    int ret;
+    int mode;
+
+    if (ctx == NULL) {
+        PRINT_RET(ALI_CRYPTO_INVALID_CONTEXT, "cfb_final: invalid context!\n");
+    }
+
+    if (src == NULL || src_size == 0) {
+        if (dst_size != NULL) {
+            *dst_size = 0;
+        }
+        return ALI_CRYPTO_SUCCESS;
+    }
+
+    if (dst == NULL || dst_size == NULL) {
+        PRINT_RET(ALI_CRYPTO_INVALID_ARG, "cfb_final: invalid arg!\n");
+    }
+
+    if (src_size > *dst_size) {
+        PRINT_RET(ALI_CRYPTO_SHORT_BUFFER, "cfb_final: short buffer(%d vs %d)\n",
+                (int)src_size, (int)*dst_size);
+    }
+
+    if (ctx->is_enc) {
+        mode = MBEDTLS_AES_ENCRYPT;
+    } else {
+        mode = MBEDTLS_AES_DECRYPT;
+    }
+
+    if (ctx->type == AES_CFB8) {
+        ret = mbedtls_aes_crypt_cfb8(&(ctx->ctx), mode, src_size,
+                        (unsigned char *)ctx->iv,
+                        (const unsigned char *)src, (unsigned char *)dst);
+    } else if (ctx->type == AES_CFB128) {
+        ret = mbedtls_aes_crypt_cfb128(&(ctx->ctx), mode, src_size,
+                        &(ctx->offset),
+                        (unsigned char *)ctx->iv,
+                        (const unsigned char *)src, (unsigned char *)dst);
+    } else {
+        PRINT_RET(ALI_CRYPTO_INVALID_ARG, "cfb_final: invalid cfb type!\n");
+    }
+
+    *dst_size = src_size;
+
+    return (ali_crypto_result)ret;
+}
+#endif
 
 ali_crypto_result ali_aes_get_ctx_size(aes_type_t type, size_t *size)
 {
@@ -474,6 +521,10 @@ ali_crypto_result ali_aes_get_ctx_size(aes_type_t type, size_t *size)
         case AES_ECB:
         case AES_CBC:
         case AES_CTR:
+#if defined(MBEDTLS_CIPHER_MODE_CFB)
+        case AES_CFB8:
+        case AES_CFB128:
+#endif
             break;
         case AES_CTS:
         case AES_XTS:
@@ -534,6 +585,17 @@ ali_crypto_result ali_aes_init(aes_type_t type, bool is_enc,
             OSA_memcpy(aes_ctx->iv, iv, 16);
             break;
         }
+#if defined(MBEDTLS_CIPHER_MODE_CFB)
+        case AES_CFB8:
+        case AES_CFB128: {
+            if (iv == NULL) {
+                PRINT_RET(ALI_CRYPTO_INVALID_ARG,
+                    "ali_aes_init: cfb iv is null\n");
+            }
+            OSA_memcpy(aes_ctx->iv, iv, 16);
+            break;
+        }
+#endif
         case AES_CTS:
         case AES_XTS:
             PRINT_RET(ALI_CRYPTO_NOSUPPORT,
@@ -550,7 +612,7 @@ ali_crypto_result ali_aes_init(aes_type_t type, bool is_enc,
     if (aes_ctx->is_enc) {
         ret = mbedtls_aes_setkey_enc(&(aes_ctx->ctx), key1, keybytes * 8);
     } else {
-        if (AES_CTR == type) {
+        if (AES_CTR == type || AES_CFB8 == type || AES_CFB128 == type) {
             ret = mbedtls_aes_setkey_enc(&(aes_ctx->ctx), key1, keybytes * 8);
         } else {
             ret = mbedtls_aes_setkey_dec(&(aes_ctx->ctx), key1, keybytes * 8);
@@ -562,6 +624,7 @@ ali_crypto_result ali_aes_init(aes_type_t type, bool is_enc,
                     "ALI_aes_init: start mode(%d) fail(%d)\n", type, ret);
     }
 
+    aes_ctx->offset = 0;
     aes_ctx->type = type;
     aes_ctx->status = CRYPTO_STATUS_INITIALIZED;
     INIT_CTX_MAGIC(aes_ctx->magic);
@@ -595,6 +658,11 @@ ali_crypto_result ali_aes_process(const uint8_t *src, uint8_t *dst,
                 (int)aes_ctx->status);
     }
 
+    if (aes_ctx->is_enc) {
+        mode = MBEDTLS_AES_ENCRYPT;
+    } else {
+        mode = MBEDTLS_AES_DECRYPT;
+    }
     switch(aes_ctx->type) {
         /* FIXME, limitation, size must be block size aigned */
         case AES_ECB: {
@@ -605,11 +673,6 @@ ali_crypto_result ali_aes_process(const uint8_t *src, uint8_t *dst,
             }
 
             while (cur_len < size) {
-                if (aes_ctx->is_enc) {
-                    mode = MBEDTLS_AES_ENCRYPT;
-                } else {
-                    mode = MBEDTLS_AES_DECRYPT;
-                }
                 ret = mbedtls_aes_crypt_ecb(&(aes_ctx->ctx), mode,
                                          src + cur_len, dst + cur_len);
                 if (0 != ret) {
@@ -627,12 +690,6 @@ ali_crypto_result ali_aes_process(const uint8_t *src, uint8_t *dst,
                     "ali_aes_process: invalid size(%d)\n", (int)size);
             }
 
-            if (aes_ctx->is_enc) {
-                mode = MBEDTLS_AES_ENCRYPT;
-            } else {
-                mode = MBEDTLS_AES_DECRYPT;
-            }
-
             ret = mbedtls_aes_crypt_cbc(&(aes_ctx->ctx), mode,
                     size, (unsigned char *)aes_ctx->iv,
                     (const unsigned char *)src, (unsigned char *)dst);
@@ -646,13 +703,26 @@ ali_crypto_result ali_aes_process(const uint8_t *src, uint8_t *dst,
             break;
         }
         case AES_CTR: {
-            size_t nc_off = 0;
             uint8_t stream_block[AES_BLOCK_SIZE];
-            ret = mbedtls_aes_crypt_ctr(&(aes_ctx->ctx), size, &nc_off,
+            ret = mbedtls_aes_crypt_ctr(&(aes_ctx->ctx), size, &(aes_ctx->offset),
                         (unsigned char *)aes_ctx->iv, stream_block,
                         (const unsigned char *)src, (unsigned char *)dst);
             break;
         }
+#if defined(MBEDTLS_CIPHER_MODE_CFB)
+        case AES_CFB8: {
+            ret = mbedtls_aes_crypt_cfb8(&(aes_ctx->ctx), mode, size,
+                        (unsigned char *)aes_ctx->iv,
+                        (const unsigned char *)src, (unsigned char *)dst);
+            break;
+        }
+        case AES_CFB128: {
+            ret = mbedtls_aes_crypt_cfb128(&(aes_ctx->ctx), mode, size,
+                        &(aes_ctx->offset), (unsigned char *)aes_ctx->iv,
+                        (const unsigned char *)src, (unsigned char *)dst);
+            break;
+        }
+#endif
         case AES_CTS:
         case AES_XTS:
         default:
@@ -702,21 +772,30 @@ ali_crypto_result ali_aes_finish(const uint8_t *src, size_t src_size,
         case AES_ECB: {
             ret = _ali_aes_ecb_final(
                       src, src_size, dst, dst_size,
-                      aes_ctx->is_enc, padding, aes_ctx);
+                      padding, aes_ctx);
             break;
         }
         case AES_CBC: {
             ret = _ali_aes_cbc_final(
                       src, src_size, dst, dst_size,
-                      aes_ctx->is_enc, padding, aes_ctx);
+                      padding, aes_ctx);
             break;
         }
         case AES_CTR: {
             ret = _ali_aes_ctr_final(
                       src, src_size, dst, dst_size,
-                      aes_ctx->is_enc, aes_ctx);
+                      aes_ctx);
             break;
         }
+#if defined(MBEDTLS_CIPHER_MODE_CFB)
+        case AES_CFB8:
+        case AES_CFB128: {
+            ret = _ali_aes_cfb_final(
+                    src, src_size, dst, dst_size,
+                    aes_ctx);
+            break;
+        }
+#endif
         case AES_CTS:
         case AES_XTS:
         default:
@@ -732,6 +811,7 @@ ali_crypto_result ali_aes_finish(const uint8_t *src, size_t src_size,
 
     CLEAN_CTX_MAGIC(aes_ctx->magic);
     aes_ctx->status = CRYPTO_STATUS_FINISHED;
+    aes_ctx->offset = 0;
 
     mbedtls_aes_free(&(aes_ctx->ctx));
     return ALI_CRYPTO_SUCCESS;
