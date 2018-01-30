@@ -285,7 +285,7 @@ static yunit_test_suite_t mini_suites[] = {
     YUNIT_TEST_SUITE_NULL
 };
 
-void test_uradar(void)
+void test_mesh(void)
 {
     int argc;
     const char **argv;
@@ -300,4 +300,4 @@ void test_uradar(void)
 
     yunit_add_test_suites(suites);
 }
-AOS_TESTCASE(test_uradar);
+AOS_TESTCASE(test_mesh);
