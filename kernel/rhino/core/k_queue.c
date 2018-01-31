@@ -215,11 +215,7 @@ static kstat_t msg_send(kqueue_t *p_q, void *p_void, uint8_t opt_send_method,
             p_q->msg_q.peak_num = p_q->msg_q.cur_num;
         }
 
-        if (opt_send_method == QMSG_SEND_TO_END) {
-            ringbuf_push(&p_q->ringbuf, &p_void, sizeof(void *));
-        } else {
-            ringbuf_head_push(&p_q->ringbuf, &p_void, sizeof(void *));
-        }
+        ringbuf_push(&p_q->ringbuf, &p_void, sizeof(void *));
 
         RHINO_CRITICAL_EXIT();
         return RHINO_SUCCESS;
@@ -239,11 +235,6 @@ static kstat_t msg_send(kqueue_t *p_q, void *p_void, uint8_t opt_send_method,
     RHINO_CRITICAL_EXIT_SCHED();
 
     return RHINO_SUCCESS;
-}
-
-kstat_t krhino_queue_front_send(kqueue_t *queue, void *msg)
-{
-    return msg_send(queue, msg, QMSG_SEND_TO_FRONT, WAKE_ONE_TASK);
 }
 
 kstat_t krhino_queue_back_send(kqueue_t *queue, void *msg)

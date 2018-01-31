@@ -99,7 +99,7 @@ void  k_lifo_put(struct k_lifo *lifo, void *data)
         return;
     }
 
-    ret = krhino_queue_front_send(lifo->_queue, data);
+    ret = krhino_queue_back_send(lifo->_queue, data);
 
     if (RHINO_SUCCESS != ret) {
 #if LIFO_DEBUG
