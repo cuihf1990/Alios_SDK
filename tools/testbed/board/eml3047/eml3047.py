@@ -1,15 +1,23 @@
 import os, sys, time, serial, subprocess, traceback, glob
 
+eml3047_stlink_serials = {
+    '/dev/lora-001':'001_serial_id',
+    '/dev/lora-002':'002_serial_id'
+    }
+
 def list_devices(os):
-    return glob.glob('/dev/mxchip-*')
+    return glob.glob('/dev/lora-*')
 
 def new_device(port):
+    if port not in eml3047_stlink_serials:
+        print('eml3047: unknow board {0}'.format(port))
+        return None
     try:
         ser = serial.Serial(port, 115200, timeout = 0.02)
-        ser.setRTS(False)
+        subprocess.call(['st-flash', '--serial', eml3047_stlink_serials[port], 'reset'])
     except:
         ser = None
-        print 'eml3047: open {0} error'.format(port)
+        print('eml3047: open {0} error'.format(port))
     return ser
 
 def erase(port):
@@ -19,11 +27,11 @@ def erase(port):
 def program(port, address, file):
     retry = 3
     error = 'fail'
-    #  flash_tool_path = os.path.dirname(os.path.realpath(__file__)) + '/mk3060_firmware_update.py'
+    if port not in eml3047_stlink_serials:
+        return error
     while retry > 0:
-        script = ['st-flash', 'write']
-        script += [file]
-        script += [address]
+        script = ['st-flash', '--serial', eml3047_stlink_serials[port]]
+        script += ['write', file, address]
         ret = subprocess.call(script)
         if ret == 0:
             error =  'success'
@@ -33,26 +41,17 @@ def program(port, address, file):
     return error
 
 def control(port, operation):
-    try:
-        ser = serial.Serial(port, 921600)
-    except:
-        traceback.print_exc()
-        print 'mk3060 control error: unable to open {0}'.format(port)
-        return 'fail'
     ret = 'fail'
+    if port not in eml3047_stlink_serials:
+        return ret
     try:
         if operation == 'reset':
-            ser.setRTS(True)
-            time.sleep(0.1)
-            ser.setRTS(False)
+            subprocess.call(['st-flash', '--serial', eml3047_stlink_serials[port], 'reset'])
             ret = 'success'
         elif operation == 'stop':
-            ser.setRTS(True)
-            ret = 'success'
+            ret = 'fail'
         elif operation == 'start':
-            ser.setRTS(False)
-            ret = 'success'
+            ret = 'fail'
     except:
         pass
-    ser.close()
     return ret
