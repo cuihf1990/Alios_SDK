@@ -4,7 +4,6 @@ import string
 
 import xml.etree.ElementTree as etree
 from xml.etree.ElementTree import SubElement
-from utils import _make_path_relative
 from utils import xml_indent
 from config_mk import Projects
 
