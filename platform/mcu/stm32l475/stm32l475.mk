@@ -137,7 +137,7 @@ $(NAME)_SOURCES := src/B-L475E-IOT01/runapp/stm32l4xx_hal_msp.c      \
                    aos/trace_impl.c             \
                    src/B-L475E-IOT01/runapp/aos.c                    \
                    src/common/csp/wifi/src/es_wifi_io.c        \
-                   src/common/csp/wifi/src/wifi.c              \
+                   src/common/csp/wifi/src/wifi_iar.c              \
                    src/B-L475E-IOT01/hal/hw.c                     \
                    src/B-L475E-IOT01/hal/flash_port.c              \
                    src/B-L475E-IOT01/hal/ota_port.c              \

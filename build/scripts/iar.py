@@ -21,7 +21,7 @@ iar_workspace = '''<?xml version="1.0" encoding="UTF-8"?>
 
 '''
 
-def IARAddGroup(parent, name, files, project_path):
+def IARAddGroup(parent, name, files, includes, project_path):
     group = SubElement(parent, 'group')
     group_name = SubElement(group, 'name')
     group_name.text = name
@@ -47,6 +47,15 @@ def IARAddGroup(parent, name, files, project_path):
     group_option_state = SubElement(group_data_option2, 'state')
     group_option_state.text = '-f '+opt_dir+name+".c_opts"
     
+    group_data_option3 = SubElement(group_settings_data, 'option')
+    group_option_name = SubElement(group_data_option3, 'name')
+    group_option_name.text = 'CCIncludePath2'
+  
+    for i in includes:
+        stateTemp = SubElement(group_data_option3, 'state')
+        stateTemp.text = ('$PROJ_DIR$\\' + '../../../' + i).decode(fs_encoding)
+    
+    
     group_config_settings2 = SubElement(group_config, 'settings')
     group_settings_name = SubElement(group_config_settings2, 'name')
     group_settings_name.text = 'AARM'
@@ -63,6 +72,8 @@ def IARAddGroup(parent, name, files, project_path):
     group_option_name.text = 'AExtraOptionsV2'
     group_option_state = SubElement(group_data_option2, 'state')
     group_option_state.text = '-f '+opt_dir+name+".as_opts"
+    
+    
     
     for f in files:
         file = SubElement(group, 'file')
@@ -88,7 +99,7 @@ def IARProject(target, script):
 
     # add group
     for group in script:
-        IARAddGroup(root, group['name'], group['src'], project_path)       
+        IARAddGroup(root, group['name'], group['src'], group['include'], project_path)       
 
     xml_indent(root)
     out.write(etree.tostring(root, encoding='utf-8'))

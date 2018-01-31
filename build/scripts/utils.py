@@ -15,4 +15,3 @@ def xml_indent(elem, level=0):
     else:
         if level and (not elem.tail or not elem.tail.strip()):
             elem.tail = i
-            
