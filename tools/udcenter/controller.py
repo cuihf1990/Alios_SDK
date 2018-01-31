@@ -1,7 +1,7 @@
 import os, sys, re, time, socket, ssl, signal, tty, termios
 import select, thread, Queue, json, traceback
 import sqlite3 as sql
-import TBframe
+import packet as pkt
 
 CONFIG_TIMEOUT = 30
 CONFIG_MAXMSG_LENTH = 8192
@@ -63,6 +63,9 @@ class Controller():
         self.dbase = sql.connect('controller.db', check_same_thread = False)
         #sqlcmd = 'CREATE TABLE IF NOT EXISTS Users(uuid TEXT, name TEXT, email TEXT, devices TEXT)' #v0.1
         sqlcmd = 'CREATE TABLE IF NOT EXISTS Users(uuid TEXT, name TEXT, info TEXT)' #v0.2
+        self.database_excute_sqlcmd(sqlcmd)
+
+        sqlcmd = 'CREATE TABLE IF NOT EXISTS Clients(uuid TEXT, name TEXT, info TEXT)'
         self.database_excute_sqlcmd(sqlcmd)
 
         sqlcmd = 'CREATE TABLE IF NOT EXISTS Devices(device TEXT, uuid TEXT, timeout REAL)'
@@ -155,8 +158,8 @@ class Controller():
         msg = self.connections[sock]['inbuff']
         msg += data
         while msg != '':
-            type, length, value, msg = TBframe.parse(msg)
-            if type == TBframe.TYPE_NONE:
+            type, length, value, msg = pkt.parse(msg)
+            if type == pkt.TYPE_NONE:
                 break
             self.serve_funcs[role](sock, type, value)
 
@@ -195,8 +198,8 @@ class Controller():
         return hexstr[:len]
 
     def login_process(self, sock, type, value):
-        if type != TBframe.ACCESS_LOGIN:
-            content = TBframe.construct(TBframe.ACCESS_LOGIN, 'request')
+        if type != pkt.ACCESS_LOGIN:
+            content = pkt.construct(pkt.ACCESS_LOGIN, 'request')
             self.send_data(sock, content)
             return
 
@@ -206,7 +209,7 @@ class Controller():
             role = None
 
         if role == None or role not in ['client', 'server', 'terminal']:
-            content = TBframe.construct(TBframe.ACCESS_LOGIN, 'argerror')
+            content = pkt.construct(pkt.ACCESS_LOGIN, 'argerror')
             self.send_data(sock, content)
             return
 
@@ -215,26 +218,33 @@ class Controller():
 
     def client_process(self, sock, type, value):
         self.netlog_print('client {0} {1}'.format(type, value))
-        if type == TBframe.ACCESS_LOGIN:
+        if type == pkt.ACCESS_LOGIN:
             if value.startswith('client,'):
                 uuid = value[len('client,'):]
-                is_valid_uuid = re.match('^[0-9a-f]{12}$', uuid)
+                is_valid_uuid = re.match('^[0-9a-f]{16}$', uuid)
                 server_sock = self.choose_random_server()
             else:
                 is_valid_uuid = None
             if is_valid_uuid == None:
-                content = TBframe.construct(TBframe.ACCESS_LOGIN, 'argerror')
+                content = pkt.construct(pkt.ACCESS_LOGIN, 'invalid access key')
+                self.send_data(sock, content)
+                return
+
+            sqlcmd = "SELECT * FROM Clients WHERE uuid = '{0}'".format(uuid)
+            ret = self.database_excute_sqlcmd(sqlcmd)
+            if ret == None or len(ret) != 1:
+                content = pkt.construct(pkt.ACCESS_LOGIN, 'invalid access key')
                 self.send_data(sock, content)
                 return
 
             if server_sock == None:
-                content = TBframe.construct(TBframe.ACCESS_LOGIN, 'noserver')
+                content = pkt.construct(pkt.ACCESS_LOGIN, 'noserver')
                 self.send_data(sock, content)
                 return
 
             token = self.generate_random_hexstr(16)
             content = '{0},{1}'.format(uuid, token)
-            content = TBframe.construct(TBframe.ACCESS_ADD_CLIENT, content)
+            content = pkt.construct(pkt.ACCESS_ADD_CLIENT, content)
             self.send_data(server_sock, content)
             self.connections[sock]['uuid'] = uuid
             self.timeouts[sock] = time.time() + CONFIG_TIMEOUT
@@ -242,10 +252,10 @@ class Controller():
 
     def server_process(self, sock, type, value):
         self.timeouts[sock] = time.time() + CONFIG_TIMEOUT
-        if type in [TBframe.HEARTBEAT, TBframe.ACCESS_UPDATE_TERMINAL, TBframe.ACCESS_DEL_TERMINAL]:
+        if type in [pkt.HEARTBEAT, pkt.ACCESS_UPDATE_TERMINAL, pkt.ACCESS_DEL_TERMINAL, pkt.ACCESS_DEL_CLIENT]:
             return
         self.netlog_print('server {0} {1}'.format(type, value))
-        if type == TBframe.ACCESS_LOGIN:
+        if type == pkt.ACCESS_LOGIN:
             if value.startswith('server,'):
                 value = value[len('server,'):]
                 try:
@@ -266,10 +276,10 @@ class Controller():
                 is_valid_server = False
 
             if is_valid_server == False:
-                content = TBframe.construct(TBframe.ACCESS_LOGIN, 'fail')
+                content = pkt.construct(pkt.ACCESS_LOGIN, 'fail')
                 self.connections[sock]['valid'] = False
             else:
-                content = TBframe.construct(TBframe.ACCESS_LOGIN, 'ok')
+                content = pkt.construct(pkt.ACCESS_LOGIN, 'ok')
                 self.connections[sock]['uuid'] = server_info['uuid']
                 self.connections[sock]['client_port'] = server_info['client_port']
                 self.connections[sock]['terminal_port'] = server_info['terminal_port']
@@ -280,20 +290,20 @@ class Controller():
                 self.connections[sock]['valid'] = True
             self.send_data(sock, content)
             return
-        if type == TBframe.ACCESS_REPORT_STATUS:
+        if type == pkt.ACCESS_REPORT_STATUS:
             try:
                 status = json.loads(value)
             except:
                 if DEBUG: traceback.print_exc()
                 status = {}
             if not status:
-                content = TBframe.construct(TBframe.ACCESS_REPORT_STATUS, 'fail')
+                content = pkt.construct(pkt.ACCESS_REPORT_STATUS, 'fail')
             else:
                 self.connections[sock]['status'] = status
-                content = TBframe.construct(TBframe.ACCESS_REPORT_STATUS, 'ok')
+                content = pkt.construct(pkt.ACCESS_REPORT_STATUS, 'ok')
             self.send_data(sock, content)
             return
-        if type == TBframe.ACCESS_ADD_CLIENT:
+        if type == pkt.ACCESS_ADD_CLIENT:
             try:
                 [ret, uuid, token] = value.split(',')
             except:
@@ -319,10 +329,10 @@ class Controller():
             server_port = self.connections[sock]['client_port']
             certificate = self.connections[sock]['certificate']
             content = 'success,{0},{1},{2},{3}'.format(server_addr, server_port, token, certificate)
-            content = TBframe.construct(TBframe.ACCESS_LOGIN, content)
+            content = pkt.construct(pkt.ACCESS_LOGIN, content)
             self.send_data(client_sock, content)
             return
-        if type == TBframe.ACCESS_ADD_TERMINAL:
+        if type == pkt.ACCESS_ADD_TERMINAL:
             try:
                 [ret, uuid, token] = value.split(',')
             except:
@@ -343,7 +353,7 @@ class Controller():
                 return
 
             if ret != 'success':
-                content = TBframe.construct(TBframe.ACCESS_LOGIN, 'fail')
+                content = pkt.construct(pkt.ACCESS_LOGIN, 'fail')
                 self.send_data(terminal_sock, content)
                 return
 
@@ -351,7 +361,7 @@ class Controller():
             server_port = self.connections[sock]['terminal_port']
             certificate = self.connections[sock]['certificate']
             content = 'success,{0},{1},{2},{3}'.format(server_addr, server_port, token, certificate)
-            content = TBframe.construct(TBframe.ACCESS_LOGIN, content)
+            content = pkt.construct(pkt.ACCESS_LOGIN, content)
             self.send_data(terminal_sock, content)
             return
 
@@ -371,21 +381,21 @@ class Controller():
 
     def terminal_process(self, sock, type, value):
         self.netlog_print('terminal {0} {1}'.format(type, value))
-        if type == TBframe.ACCESS_LOGIN:
+        if type == pkt.ACCESS_LOGIN:
             if value.startswith('terminal,'):
                 uuid = value[len('terminal,'):]
                 is_valid_uuid = re.match('^[0-9a-f]{16}$', uuid)
             else:
                 is_valid_uuid = None
             if is_valid_uuid == None:
-                content = TBframe.construct(TBframe.ACCESS_LOGIN, 'invalid access key')
+                content = pkt.construct(pkt.ACCESS_LOGIN, 'invalid access key')
                 self.send_data(sock, content)
                 return
 
             sqlcmd = "SELECT * FROM Users WHERE uuid = '{0}'".format(uuid)
             ret = self.database_excute_sqlcmd(sqlcmd)
             if ret == None or len(ret) != 1:
-                content = TBframe.construct(TBframe.ACCESS_LOGIN, 'invalid access key')
+                content = pkt.construct(pkt.ACCESS_LOGIN, 'invalid access key')
                 self.send_data(sock, content)
                 return
 
@@ -396,19 +406,19 @@ class Controller():
                 devices.append(device)
             devices = '|'.join(devices)
             if devices == '':
-                content = TBframe.construct(TBframe.ACCESS_LOGIN, 'no allocated device')
+                content = pkt.construct(pkt.ACCESS_LOGIN, 'no allocated device')
                 self.send_data(sock, content)
                 return
             client_uuid = devices.split(':')[0]
             server_sock = self.find_server_for_target(client_uuid, 'client')
             if server_sock == None:
-                content = TBframe.construct(TBframe.ACCESS_LOGIN, 'allocated devices not connected')
+                content = pkt.construct(pkt.ACCESS_LOGIN, 'allocated devices not connected')
                 self.send_data(sock, content)
                 return
 
             token = self.generate_random_hexstr(16)
             content = '{0},{1},{2}'.format(uuid, token, devices)
-            content = TBframe.construct(TBframe.ACCESS_ADD_TERMINAL, content)
+            content = pkt.construct(pkt.ACCESS_ADD_TERMINAL, content)
             self.send_data(server_sock, content)
             self.connections[sock]['uuid'] = uuid
             return
@@ -458,46 +468,57 @@ class Controller():
                 ret = self.database_excute_sqlcmd(sqlcmd)
                 if ret == None:
                     self.cmdlog_print("warning: delete device {0} from Devices database failed".format(device))
-                self.inform_server_updates(uuid, 'update')
+                self.inform_server_updates(uuid, 'update_terminal')
 
     def cmdlog_print(self, log):
         sys.stdout.write(log + '\r\n')
 
     def inform_server_updates(self, uuid, type):
-        types = ['delete', 'update']
+        types = ['delete_terminal', 'delete_client', 'update_terminal']
         if type not in types:
             return
-        conn = self.find_server_for_target(uuid, 'terminal')
+        if 'terminal' in type:
+            conn = self.find_server_for_target(uuid, 'terminal')
+        elif 'client' in type:
+            conn = self.find_server_for_target(uuid, 'client')
+        else:
+            conn = None
         if conn == None:
             return
-        if type == 'delete':
-            content = TBframe.construct(TBframe.ACCESS_DEL_TERMINAL, uuid)
-        elif type == 'update':
+
+        if type == 'delete_terminal':
+            content = pkt.construct(pkt.ACCESS_DEL_TERMINAL, uuid)
+        if type == 'delete_client':
+            content = pkt.construct(pkt.ACCESS_DEL_CLIENT, uuid)
+        elif type == 'update_terminal':
             devices = []
             for device in self.devices:
                 if self.devices[device]['uuid'] != uuid:
                     continue
                 devices.append(device)
             devices = '|'.join(devices)
-            content = TBframe.construct(TBframe.ACCESS_UPDATE_TERMINAL, uuid + ',' + devices)
+            content = pkt.construct(pkt.ACCESS_UPDATE_TERMINAL, uuid + ',' + devices)
         self.send_data(conn, content)
 
     def add_cmd_handler(self, args):
         if len(args) < 2:
             self.cmdlog_print('usages: add user name [info1 info2 info3 ... infoN]')
+            self.cmdlog_print('        add client name [info1 info2 info3 ... infoN]')
             self.cmdlog_print('        add device uuid device1|device2|...|deviceN [days]')
             return
 
-        if args[0] == 'user':
+        if args[0] in ['user', 'client']:
+            Tables = {'user':'Users', 'client':'Clients'}
             uuid = self.generate_random_hexstr(16)
             name = args[1]
             info = ' '.join(args[2:])
-            sqlcmd = "INSERT INTO Users VALUES('{0}', '{1}', '{2}')".format(uuid, name, info)
+            table = Tables[args[0]]
+            sqlcmd = "INSERT INTO {0} VALUES('{1}', '{2}', '{3}')".format(table, uuid, name, info)
             ret = self.database_excute_sqlcmd(sqlcmd)
             if ret == None:
-                self.cmdlog_print("add user '{0}' failed".format(name))
+                self.cmdlog_print("add {0} '{1}' failed".format(args[0], name))
             else:
-                self.cmdlog_print("add user '{0}' succeed, uuid={1}".format(name, uuid))
+                self.cmdlog_print("add {0} '{1}' succeed, uuid={2}".format(args[0], name, uuid))
         elif args[0] == 'device':
             if len(args) < 3:
                 self.cmdlog_print('usage error, usage: add device uuid devices [days]')
@@ -524,7 +545,7 @@ class Controller():
             devs = dev_str.split('|')
             devices = []
             for dev in devs:
-                if re.match("^[0-9a-f]{12}:.", dev) == None:
+                if re.match("^[0-9a-f]{16}:.", dev) == None:
                     self.cmdlog_print("error: invalid device {0}".format(dev))
                     return
                 if dev in self.devices and self.devices[dev]['uuid'] != uuid:
@@ -544,7 +565,7 @@ class Controller():
                 self.devices[device] = {'uuid': uuid, 'timeout': timeout}
 
             self.cmdlog_print("succeed")
-            self.inform_server_updates(uuid, 'update')
+            self.inform_server_updates(uuid, 'update_terminal')
         else:
             self.cmdlog_print("error: invalid command option {0}".format(repr(args[0])))
         return
@@ -552,6 +573,7 @@ class Controller():
     def del_cmd_handler(self, args):
         if len(args) < 2:
             self.cmdlog_print('usage: del user uuid')
+            self.cmdlog_print('       del client uuid')
             self.cmdlog_print('       del device uuid device1|device2|...|deviceN')
             return
 
@@ -561,11 +583,18 @@ class Controller():
             dev_str = args[2]
         else:
             dev_str = None
-        sqlcmd = "SELECT * FROM Users WHERE uuid = '{0}'".format(uuid)
-        rows = self.database_excute_sqlcmd(sqlcmd)
-        if len(rows) < 1:
-            self.cmdlog_print("error: user '{0}' does not exist".format(uuid))
-            return
+        if option == 'client':
+            sqlcmd = "SELECT * FROM Clients WHERE uuid = '{0}'".format(uuid)
+            rows = self.database_excute_sqlcmd(sqlcmd)
+            if len(rows) < 1:
+                self.cmdlog_print("error: client '{0}' does not exist".format(uuid))
+                return
+        else:
+            sqlcmd = "SELECT * FROM Users WHERE uuid = '{0}'".format(uuid)
+            rows = self.database_excute_sqlcmd(sqlcmd)
+            if len(rows) < 1:
+                self.cmdlog_print("error: user '{0}' does not exist".format(uuid))
+                return
 
         if option == 'user':
             sqlcmd = "DELETE FROM Devices WHERE uuid = '{0}'".format(uuid)
@@ -582,7 +611,16 @@ class Controller():
                 self.cmdlog_print("failed")
             else:
                 self.cmdlog_print("succeed")
-            self.inform_server_updates(uuid, 'delete')
+            self.inform_server_updates(uuid, 'delete_terminal')
+            return
+        elif option == 'client':
+            sqlcmd = "DELETE FROM Clients WHERE uuid = '{0}'".format(uuid)
+            ret = self.database_excute_sqlcmd(sqlcmd)
+            if ret == None:
+                self.cmdlog_print("failed")
+            else:
+                self.cmdlog_print("succeed")
+            self.inform_server_updates(uuid, 'delete_client')
             return
         elif option == 'device':
             if dev_str == None:
@@ -591,7 +629,7 @@ class Controller():
 
             del_devices = dev_str.split('|')
             for device in del_devices:
-                if re.match("^[0-9a-f]{12}:.", device) == None:
+                if re.match("^[0-9a-f]{12,16}:.", device) == None:
                     self.cmdlog_print("error: invalid device {0}".format(device))
                     return
                 if device not in self.devices or self.devices[device]['uuid'] != uuid:
@@ -606,7 +644,7 @@ class Controller():
                     self.cmdlog_print("warning: delete device {0} from database failed".format(device))
                 self.devices.pop(device)
             self.cmdlog_print("succeed")
-            self.inform_server_updates(uuid, 'update')
+            self.inform_server_updates(uuid, 'update_terminal')
             return
         else:
             self.cmdlog_print('usage error, invalid argument {0}'.format(repr(option)))
@@ -706,7 +744,7 @@ class Controller():
                 return
             self.devices[device] = {'uuid': uuid, 'timeout': timeout}
         self.cmdlog_print('succeed, allocat: {0}'.format('|'.join(allocated)))
-        self.inform_server_updates(uuid, 'update')
+        self.inform_server_updates(uuid, 'update_terminal')
 
     def print_user(self, uuid=None):
         if uuid == None:
@@ -795,11 +833,30 @@ class Controller():
             for device in self.connections[conn]['status']['devices']:
                 self.cmdlog_print('|     |--' + device)
 
+    def print_client(self):
+        sqlcmd = "SELECT * FROM Clients"
+        rows = self.database_excute_sqlcmd(sqlcmd)
+        if rows == None:
+            self.cmdlog_print("error: poll database failed")
+            return
+
+        num = len(rows)
+        self.cmdlog_print("clients({0}):".format(num))
+        for row in rows:
+            key = row[0]; name = row[1]; info=row[2]
+            if self.find_server_for_target(key, 'client') == None:
+                status = 'offline'
+            else:
+                status = 'online'
+            self.cmdlog_print("|--{0} ({1}) {2} {3}".format(key, status, name, info))
+
     def list_cmd_handler(self, args):
         if len(args) == 0:
             self.print_user(None)
             self.cmdlog_print('')
             self.print_server()
+            self.cmdlog_print('')
+            self.print_client()
 
         if len(args) >= 1:
             if args[0] == 'user':
@@ -812,18 +869,21 @@ class Controller():
                 if len(args) >= 2:
                     uuid = args[1]
                 self.print_server(uuid)
+            elif args[0] == 'client':
+                self.print_client()
         return
 
     def help_cmd_handler(self, args):
         self.cmdlog_print("Usages:")
-        self.cmdlog_print("       add user name [email] [device1|deice2|...|deviceN] [days(7)]")
-        self.cmdlog_print("       add device uuid device1|deice2|...|deviceN [days(7)]")
-        self.cmdlog_print("       del user uuid")
-        self.cmdlog_print("       del device uuid devic1|device2|...|deviceN")
-        self.cmdlog_print("       allocate uuid number model")
-        self.cmdlog_print("       list")
-        self.cmdlog_print("       list user [uuid]")
-        self.cmdlog_print("       list server [uuid]")
+        self.cmdlog_print("    add user name info")
+        self.cmdlog_print("    add client name info")
+        self.cmdlog_print("    add device uuid device1|deice2|...|deviceN [days(7)]")
+        self.cmdlog_print("    del user uuid")
+        self.cmdlog_print("    del device uuid devic1|device2|...|deviceN")
+        self.cmdlog_print("    alloc uuid number model")
+        self.cmdlog_print("    list")
+        self.cmdlog_print("    list user [uuid]")
+        self.cmdlog_print("    list server [uuid]")
         return
 
     def process_cmd(self):
@@ -832,7 +892,7 @@ class Controller():
             self.add_cmd_handler(cmds[1:])
         elif cmds[0] == 'del':
             self.del_cmd_handler(cmds[1:])
-        elif cmds[0] == 'allocate':
+        elif cmds[0] == 'alloc':
             self.allocate_cmd_handler(cmds[1:])
         elif cmds[0] == 'list':
             self.list_cmd_handler(cmds[1:])
@@ -844,7 +904,8 @@ class Controller():
         return
 
     def cmd_print(self):
-        cmd_str = '\r# ' + self.user_cmd
+        cmd_str = '\r# ' + ' ' * (len(self.user_cmd) + 1)
+        cmd_str += '\r# ' + self.user_cmd
         cmd_str += '\b' * (len(self.user_cmd) - self.cur_pos)
         sys.stdout.write(cmd_str)
         sys.stdout.flush()
@@ -934,8 +995,7 @@ class Controller():
                 newcmd = self.user_cmd[0:self.cur_pos-1] + self.user_cmd[self.cur_pos:]
                 self.user_cmd = newcmd
                 self.cur_pos -= 1
-                sys.stdout.write('\b \b')
-                sys.stdout.flush()
+                self.cmd_print()
                 continue
             if ord(c) == 3: #CTRL+C
                 self.keep_running = False

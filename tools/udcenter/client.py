@@ -1,10 +1,11 @@
 import os, sys, time, platform, json, traceback, random, re, glob, uuid
 import socket, ssl, thread, threading, subprocess, signal, Queue, importlib
-import TBframe
+import packet as pkt
 
 MAX_MSG_LENGTH = 65536
 ENCRYPT = True
 DEBUG = True
+EN_STATUS_POLL = True
 LOCALLOG = False
 
 try:
@@ -41,7 +42,7 @@ class Client:
             self.poll_str += '{0:02x}'.format(ord(byte))
         self.poll_str += 'm'
         self.poll_interval = 60
-        self.uuid = '{0:012x}'.format(uuid.getnode())
+        self.uuid = None
         self.model_interface = {}
         self.mesh_changed = [re.compile('become leader'),
                              re.compile('become detached'),
@@ -66,9 +67,9 @@ class Client:
                 if time.time() < heartbeat_timeout:
                     continue
                 heartbeat_timeout += 10
-                data = TBframe.construct(TBframe.HEARTBEAT,'')
+                data = pkt.construct(pkt.HEARTBEAT,'')
             else:
-                data = TBframe.construct(type, content)
+                data = pkt.construct(type, content)
             try:
                 self.service_socket.send(data)
             except:
@@ -91,14 +92,14 @@ class Client:
             if self.devices[port]['valid']:
                 device_list.append(port)
         content = ':'.join(device_list)
-        self.send_packet(TBframe.CLIENT_DEV, content)
+        self.send_packet(pkt.CLIENT_DEV, content)
 
     def send_device_status(self):
         for port in list(self.devices):
             if self.devices[port]['valid'] == False:
                 continue
             content = port + ':' + json.dumps(self.devices[port]['attributes'], sort_keys=True)
-            ret = self.send_packet(TBframe.DEVICE_STATUS, content)
+            ret = self.send_packet(pkt.DEVICE_STATUS, content)
             if ret == False:
                 break
 
@@ -139,11 +140,11 @@ class Client:
         pcmd_queue = self.devices[port]['pcmd_queue']
         if self.devices[port]['attributes'] != {}:
             content = port + ':' + json.dumps(self.devices[port]['attributes'], sort_keys=True)
-            self.send_packet(TBframe.DEVICE_STATUS, content)
+            self.send_packet(pkt.DEVICE_STATUS, content)
         poll_timeout = time.time() + 3 + random.uniform(0, self.poll_interval/10)
         while os.path.exists(port) and exit_condition.is_set() == False:
             try:
-                if time.time() >= poll_timeout:
+                if EN_STATUS_POLL == True and time.time() >= poll_timeout:
                     poll_timeout += self.poll_interval
                     queue_safeput(pcmd_queue, ['devname', 1, 0.2])
                     queue_safeput(pcmd_queue, ['mac', 1, 0.2])
@@ -172,15 +173,15 @@ class Client:
                 if args != None:
                     type = args[0]
                     term = args[1]
-                    if type == TBframe.DEVICE_ERASE:
+                    if type == pkt.DEVICE_ERASE:
                         self.device_erase(port, term)
-                    elif type == TBframe.DEVICE_PROGRAM:
+                    elif type == pkt.DEVICE_PROGRAM:
                         address = args[2]
                         filename = args[3]
                         self.device_program(port, address, filename, term)
-                    elif type == TBframe.DEVICE_RESET or type == TBframe.DEVICE_START or type == TBframe.DEVICE_STOP:
+                    elif type == pkt.DEVICE_RESET or type == pkt.DEVICE_START or type == pkt.DEVICE_STOP:
                         self.device_control(port, type, term)
-                    elif type == TBframe.DEVICE_CMD:
+                    elif type == pkt.DEVICE_CMD:
                         cmd = args[2]
                         self.device_run_cmd(port, cmd, term)
                         if re.search('umesh extnetid [0-9A-Fa-f]{12}', cmd) != None:
@@ -301,7 +302,7 @@ class Client:
                 if pcmd_queue.empty() == False:
                     continue
                 content = port + ':' + json.dumps(self.devices[port]['attributes'], sort_keys=True)
-                self.send_packet(TBframe.DEVICE_STATUS, content)
+                self.send_packet(pkt.DEVICE_STATUS, content)
             except:
                 if os.path.exists(port) == False:
                     exit_condition.set()
@@ -315,6 +316,8 @@ class Client:
 
     def device_log_filter(self, port, log):
         pcmd_queue = self.devices[port]['pcmd_queue']
+        if EN_STATUS_POLL == False:
+            return
         if pcmd_queue.full() == True:
             return
         for flog in self.mesh_changed:
@@ -378,7 +381,7 @@ class Client:
                 if LOCALLOG:
                     flog.write('{0:.3f}:'.format(log_time) + log)
                 log = port + ':{0:.3f}:'.format(log_time) + log
-                self.send_packet(TBframe.DEVICE_LOG,log)
+                self.send_packet(pkt.DEVICE_LOG,log)
                 log = ''
         if LOCALLOG:
             flog.close()
@@ -486,7 +489,7 @@ class Client:
         if interface == None:
             print "error: erasing dose not support model '{0}'".format(model)
             content = term + ',' + 'unsupported model'
-            self.send_packet(TBframe.DEVICE_ERASE, content)
+            self.send_packet(pkt.DEVICE_ERASE, content)
             return
 
         self.devices[port]['slock'].acquire()
@@ -503,20 +506,20 @@ class Client:
             self.devices[port]['slock'].release()
         print 'erasing', port, '...', ret
         content = term + ',' + ret
-        self.send_packet(TBframe.DEVICE_ERASE, content)
+        self.send_packet(pkt.DEVICE_ERASE, content)
 
     def device_program(self, port, address, file, term):
         if os.path.exists(port) == False or port not in self.devices:
             print "error: progamming nonexist port {0}".format(port)
             content = term + ',' + 'device nonexist'
-            self.send_packet(TBframe.DEVICE_PROGRAM, content)
+            self.send_packet(pkt.DEVICE_PROGRAM, content)
             return
 
         interface = self.devices[port]['if']
         if interface == None:
             print "error: programming dose not support model '{0}'".format(model)
             content = term + ',' + 'unsupported model'
-            self.send_packet(TBframe.DEVICE_PROGRAM, content)
+            self.send_packet(pkt.DEVICE_PROGRAM, content)
             return
 
         self.devices[port]['slock'].acquire()
@@ -533,10 +536,10 @@ class Client:
             self.devices[port]['slock'].release()
         print 'programming', file, 'to', port, '@', address, '...', ret
         content = term + ',' + ret
-        self.send_packet(TBframe.DEVICE_PROGRAM, content)
+        self.send_packet(pkt.DEVICE_PROGRAM, content)
 
     def device_control(self, port, type, term):
-        operations= {TBframe.DEVICE_RESET:'reset', TBframe.DEVICE_STOP:'stop', TBframe.DEVICE_START:'start'}
+        operations= {pkt.DEVICE_RESET:'reset', pkt.DEVICE_STOP:'stop', pkt.DEVICE_START:'start'}
         if os.path.exists(port) == False or port not in self.devices:
             print "error: controlling nonexist port {0}".format(port)
             content = term + ',' + 'device nonexist'
@@ -563,7 +566,7 @@ class Client:
         if os.path.exists(port) == False or port not in self.devices:
             print "error: run command at nonexist port {0}".format(port)
             content = term + ',' + 'device nonexist'
-            self.send_packet(TBframe.DEVICE_CMD, content)
+            self.send_packet(pkt.DEVICE_CMD, content)
             return
 
         try:
@@ -575,7 +578,7 @@ class Client:
             result='fail'
             print "run command '{0}' at {1} failed".format(cmd, port)
         content = term + ',' + result
-        self.send_packet(TBframe.DEVICE_CMD, content)
+        self.send_packet(pkt.DEVICE_CMD, content)
 
     def login_and_get_server(self, controller_ip, controller_port):
         sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
@@ -589,7 +592,7 @@ class Client:
             if DEBUG: traceback.print_exc()
             return None
 
-        content = TBframe.construct(TBframe.ACCESS_LOGIN, 'client,' + self.uuid)
+        content = pkt.construct(pkt.ACCESS_LOGIN, 'client,' + self.uuid)
         try:
             sock.send(content)
         except:
@@ -610,10 +613,12 @@ class Client:
             sock.close()
             return None
 
-        type, length, value, data = TBframe.parse(data)
+        type, length, value, data = pkt.parse(data)
         #print 'controller', type, value
         rets = value.split(',')
-        if type != TBframe.ACCESS_LOGIN or rets[0] != 'success':
+        if type != pkt.ACCESS_LOGIN or rets[0] != 'success':
+            if rets[0] == 'invalid access key' and os.path.exists('client/.accesskey'):
+                os.remove('client/.accesskey')
             print "login failed, ret={0}".format(value)
             sock.close()
             return None
@@ -645,11 +650,35 @@ class Client:
             return "fail"
 
     def client_func(self, contoller_ip, controller_port):
-        self.load_interfaces()
-
         if os.path.exists('client') == False:
             os.mkdir('client')
         signal.signal(signal.SIGINT, signal_handler)
+
+        if os.path.exists('client/.accesskey') == True:
+            try:
+                file = open('client/.accesskey','rb')
+                self.uuid = json.load(file)
+                file.close()
+            except:
+                print "read access key failed"
+        while self.uuid == None:
+            try:
+                uuid = raw_input("please input your access key: ")
+            except:
+                return
+            is_valid_uuid = re.match('^[0-9a-f]{10,20}$', uuid)
+            if is_valid_uuid == None:
+                print "invalid access key {0}, please enter a valid access key".format(uuid)
+                continue
+            self.uuid = uuid
+            try:
+                file = open('client/.accesskey','wb')
+                json.dump(self.uuid, file)
+                file.close()
+            except:
+                print "error: save access key to file failed"
+
+        self.load_interfaces()
 
         thread.start_new_thread(self.packet_send_thread,())
         thread.start_new_thread(self.device_monitor,())
@@ -671,8 +700,8 @@ class Client:
 
                 msg += new_msg
                 while msg != '':
-                    type, length, value, msg = TBframe.parse(msg)
-                    if type == TBframe.TYPE_NONE:
+                    type, length, value, msg = pkt.parse(msg)
+                    if type == pkt.TYPE_NONE:
                         break
 
                     for hash in list(file_receiving):
@@ -684,7 +713,7 @@ class Client:
                                 pass
                             file_receiving.pop(hash)
 
-                    if type == TBframe.FILE_BEGIN:
+                    if type == pkt.FILE_BEGIN:
                         try:
                             [term, hash, fname] = value.split(':')
                         except:
@@ -712,7 +741,7 @@ class Client:
                         self.send_packet(type, content)
                         if DEBUG:
                             print 'start receiving {0} as {1}'.format(fname, filename)
-                    elif type == TBframe.FILE_DATA:
+                    elif type == pkt.FILE_DATA:
                         try:
                             split_value = value.split(':')
                             term = split_value[0]
@@ -737,7 +766,7 @@ class Client:
                             file_receiving[hash]['timeout'] = time.time() + 5
                         content = term + ',' + 'ok'
                         self.send_packet(type, content)
-                    elif type == TBframe.FILE_END:
+                    elif type == pkt.FILE_END:
                         try:
                             [term, hash, fname] = value.split(':')
                         except:
@@ -748,7 +777,7 @@ class Client:
                             self.send_packet(type, content)
                             continue
                         file_receiving[hash]['handle'].close()
-                        localhash = TBframe.hash_of_file(file_receiving[hash]['name'])
+                        localhash = pkt.hash_of_file(file_receiving[hash]['name'])
                         if localhash != hash:
                             response = 'hasherror'
                         else:
@@ -759,7 +788,7 @@ class Client:
                         file_receiving.pop(hash)
                         content = term + ',' + response
                         self.send_packet(type, content)
-                    elif type == TBframe.DEVICE_ERASE:
+                    elif type == pkt.DEVICE_ERASE:
                         try:
                             [term, port] = value.split(',')
                         except:
@@ -777,7 +806,7 @@ class Client:
                             print 'erase', port,  'failed, device nonexist'
                         content = term + ',' + result
                         self.send_packet(type, content)
-                    elif type == TBframe.DEVICE_PROGRAM:
+                    elif type == pkt.DEVICE_PROGRAM:
                         try:
                             [term, port, address, hash] = value.split(',')
                         except:
@@ -800,8 +829,8 @@ class Client:
                             print 'program {0} to {1} @ {2} failed, device nonexist'.format(filename, port, address)
                         content = term + ',' + result
                         self.send_packet(type, content)
-                    elif type == TBframe.DEVICE_RESET or type == TBframe.DEVICE_START or type == TBframe.DEVICE_STOP:
-                        operations = {TBframe.DEVICE_RESET:'reset', TBframe.DEVICE_START:'start', TBframe.DEVICE_STOP:'stop'}
+                    elif type == pkt.DEVICE_RESET or type == pkt.DEVICE_START or type == pkt.DEVICE_STOP:
+                        operations = {pkt.DEVICE_RESET:'reset', pkt.DEVICE_START:'start', pkt.DEVICE_STOP:'stop'}
                         try:
                             [term, port] = value.split(',')
                         except:
@@ -819,7 +848,7 @@ class Client:
                             print operations[type], port, 'failed, device nonexist'
                         content = term + ',' + result
                         self.send_packet(type, content)
-                    elif type == TBframe.DEVICE_CMD:
+                    elif type == pkt.DEVICE_CMD:
                         args = value.split(':')[0]
                         arglen = len(args) + 1
                         args = args.split(',')
@@ -840,11 +869,11 @@ class Client:
                             print "run command '{0}' at {1} failed, device nonexist".format(cmd, port)
                         content = term + ',' + result
                         self.send_packet(type, content)
-                    elif type == TBframe.CLIENT_LOGIN:
+                    elif type == pkt.CLIENT_LOGIN:
                         if value == 'request':
                             print 'server request login'
                             data = self.uuid + ',' + self.poll_str + ',' + token
-                            self.send_packet(TBframe.CLIENT_LOGIN, data)
+                            self.send_packet(pkt.CLIENT_LOGIN, data)
                         elif value == 'success':
                             print "login to server succeed"
                             self.send_device_list()
@@ -898,7 +927,7 @@ class Client:
                     continue
 
                 data = self.uuid + ',' + self.poll_str + ',' + token
-                self.send_packet(TBframe.CLIENT_LOGIN, data)
+                self.send_packet(pkt.CLIENT_LOGIN, data)
             except KeyboardInterrupt:
                 break
             except:
