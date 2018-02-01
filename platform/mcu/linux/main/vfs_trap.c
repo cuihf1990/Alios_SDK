@@ -7,6 +7,7 @@
 #include <stdlib.h>
 #include <fcntl.h>
 #include <errno.h>
+#include <unistd.h>
 
 int trap_open(const char *path, int flags)
 {
