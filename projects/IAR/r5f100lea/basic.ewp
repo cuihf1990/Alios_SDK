@@ -359,9 +359,9 @@
                 <option>
                     <name>CCIncludePath2</name>
                     <state>$PROJ_DIR$\..\..\..\kernel\rhino\core\include</state>
-                    <state>$PROJ_DIR$\..\..\..\platform\mcu\r5f100lea</state>
+                    <state>$PROJ_DIR$\..\..\..\platform\mcu\r5f100lea\iar</state>
                     <state>$PROJ_DIR$\..\..\..\example\r5f_test</state>
-                    <state>$PROJ_DIR$\..\..\..\platform\arch\rl78</state>
+                    <state>$PROJ_DIR$\..\..\..\platform\arch\rl78\iar</state>
                 </option>
                 <option>
                     <name>CCStdIncCheck</name>
@@ -493,7 +493,7 @@
                 </option>
                 <option>
                     <name>AsmIncludePath</name>
-                    <state>$PROJ_DIR$\..\..\..\platform\arch\rl78</state>
+                    <state>$PROJ_DIR$\..\..\..\platform\arch\rl78\iar</state>
                 </option>
                 <option>
                     <name>AsmDefines</name>
@@ -1896,13 +1896,13 @@
     <group>
         <name>bsp</name>
         <file>
-            <name>$PROJ_DIR$\..\..\..\platform\mcu\r5f100lea\bsp.c</name>
+            <name>$PROJ_DIR$\..\..\..\platform\mcu\r5f100lea\iar\bsp.c</name>
         </file>
         <file>
-            <name>$PROJ_DIR$\..\..\..\platform\mcu\r5f100lea\bsp_vect_a.asm</name>
+            <name>$PROJ_DIR$\..\..\..\platform\mcu\r5f100lea\iar\bsp_vect_a.asm</name>
         </file>
         <file>
-            <name>$PROJ_DIR$\..\..\..\platform\mcu\r5f100lea\soc_impl.c</name>
+            <name>$PROJ_DIR$\..\..\..\platform\mcu\r5f100lea\iar\soc_impl.c</name>
         </file>
     </group>
     <group>
@@ -1980,10 +1980,10 @@
     <group>
         <name>port</name>
         <file>
-            <name>$PROJ_DIR$\..\..\..\platform\arch\rl78\port_c.c</name>
+            <name>$PROJ_DIR$\..\..\..\platform\arch\rl78\iar\port_c.c</name>
         </file>
         <file>
-            <name>$PROJ_DIR$\..\..\..\platform\arch\rl78\port_cpu.s</name>
+            <name>$PROJ_DIR$\..\..\..\platform\arch\rl78\iar\port_cpu.s</name>
         </file>
     </group>
     <file>
