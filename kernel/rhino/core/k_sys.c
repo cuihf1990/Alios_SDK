@@ -131,6 +131,11 @@ kstat_t krhino_intrpt_enter(void)
 
     RHINO_CPU_INTRPT_DISABLE();
 
+    /* RHINO_CONFIG_CPU_PWR_MGMT */
+#if (RHINO_CONFIG_CPU_PWR_MGMT > 0)
+    cpu_pwr_up();
+#endif
+
     if (g_intrpt_nested_level[cpu_cur_get()] >= RHINO_CONFIG_INTRPT_MAX_NESTED_LEVEL) {
         k_err_proc(RHINO_INTRPT_NESTED_LEVEL_OVERFLOW);
         RHINO_CPU_INTRPT_ENABLE();
