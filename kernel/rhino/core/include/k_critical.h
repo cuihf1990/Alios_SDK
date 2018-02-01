@@ -15,8 +15,19 @@ typedef struct {
 
 #if (RHINO_CONFIG_CPU_NUM > 1)
 /* SMP spin lock */
-#define krhino_spin_lock(lock)              cpu_spin_lock((lock));
-#define krhino_spin_unlock(lock)            cpu_spin_unlock((lock));
+#define krhino_spin_lock(lock)              do {                                       \
+                                                kspinlock_t *s = (kspinlock_t*)(lock); \
+                                                cpu_spin_lock((lock));                 \
+                                                s->cnt++;                              \
+                                            } while (0)                                \
+
+#define krhino_spin_unlock(lock)            do {                                       \
+                                                kspinlock_t *s = (kspinlock_t*)(lock); \
+                                                s->cnt--;                              \
+                                                if (s->cnt == 0u) {                    \
+                                                    cpu_spin_unlock((lock));           \
+                                                }                                      \
+                                            } while (0)
 
 #define krhino_spin_lock_irq_save(lock)     do {                                       \
                                                 kspinlock_t *s = (kspinlock_t*)(lock); \
