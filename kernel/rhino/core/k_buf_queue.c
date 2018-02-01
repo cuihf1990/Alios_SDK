@@ -187,8 +187,7 @@ kstat_t krhino_buf_queue_dyn_del(kbuf_queue_t *queue)
 }
 #endif
 
-static kstat_t buf_queue_send(kbuf_queue_t *queue, void *msg, size_t msg_size,
-                              int front)
+static kstat_t buf_queue_send(kbuf_queue_t *queue, void *msg, size_t msg_size)
 {
     CPSR_ALLOC();
 
@@ -228,16 +227,13 @@ static kstat_t buf_queue_send(kbuf_queue_t *queue, void *msg, size_t msg_size,
 
     /* buf queue is not full here, if there is no blocked receive task */
     if (is_klist_empty(head)) {
-        if (front) {
-            err = ringbuf_head_push(&(queue->ringbuf), msg, msg_size);
-        } else {
-            err = ringbuf_push(&(queue->ringbuf), msg, msg_size);
-        }
+
+        err = ringbuf_push(&(queue->ringbuf), msg, msg_size);
 
         if (err != RHINO_SUCCESS) {
             RHINO_CRITICAL_EXIT();
-            if (err ==  RHINO_RINGBUF_FULL) {
-                err = RHINO_BUF_QUEUE_FULL;
+            if (err == RHINO_RINGBUF_FULL) {
+                err =  RHINO_BUF_QUEUE_FULL;
             }
             return err;
         }
@@ -276,7 +272,7 @@ kstat_t krhino_buf_queue_send(kbuf_queue_t *queue, void *msg, size_t size)
     NULL_PARA_CHK(queue);
     NULL_PARA_CHK(msg);
 
-    return buf_queue_send(queue, msg, size, RHINO_FALSE);
+    return buf_queue_send(queue, msg, size);
 }
 
 kstat_t krhino_buf_queue_recv(kbuf_queue_t *queue, tick_t ticks, void *msg,
