@@ -136,7 +136,10 @@ $(eval $(1)_LIB_OBJS := $(addprefix $(strip $(OUTPUT_DIR)/Modules/$(call GET_BAR
 
 $(LIBS_DIR)/$(1).c_opts: $($(1)_PRE_BUILD_TARGETS) $(CONFIG_FILE) | $(LIBS_DIR)
 	$(eval $(1)_C_OPTS:=$(subst $(COMMA),$$(COMMA), $(COMPILER_SPECIFIC_COMP_ONLY_FLAG) $(COMPILER_SPECIFIC_DEPS_FLAG) $(COMPILER_UNI_CFLAGS) $($(1)_CFLAGS) $($(1)_INCLUDES) $($(1)_DEFINES) $(AOS_SDK_INCLUDES) $(AOS_SDK_DEFINES)))
-	$$(file >$$@, $(subst \",",$($(1)_C_OPTS)) )
+	$(eval C_OPTS_TMP := $(subst =\",="\",$($(1)_C_OPTS)) ) 
+	$(eval C_OPTS_TMP := $(subst \" ,\"" ,$(C_OPTS_TMP) ) )
+	$(eval C_OPTS_TMP := $(filter-out -I% --cpu=% --endian% --dlib_config%,$(C_OPTS_TMP)) )
+	$$(file >$$@, $(C_OPTS_TMP) )
 
 $(LIBS_DIR)/$(1).cpp_opts: $($(1)_PRE_BUILD_TARGETS) $(CONFIG_FILE) | $(LIBS_DIR)
 	$(eval $(1)_CPP_OPTS:=$(COMPILER_SPECIFIC_COMP_ONLY_FLAG) $(COMPILER_SPECIFIC_DEPS_FLAG) $($(1)_CXXFLAGS)  $($(1)_INCLUDES) $($(1)_DEFINES) $(AOS_SDK_INCLUDES) $(AOS_SDK_DEFINES))
@@ -144,7 +147,8 @@ $(LIBS_DIR)/$(1).cpp_opts: $($(1)_PRE_BUILD_TARGETS) $(CONFIG_FILE) | $(LIBS_DIR
 
 $(LIBS_DIR)/$(1).as_opts: $(CONFIG_FILE) | $(LIBS_DIR)
 	$(eval $(1)_S_OPTS:=$(CPU_ASMFLAGS) $(COMPILER_SPECIFIC_COMP_ONLY_FLAG) $(COMPILER_UNI_SFLAGS) $($(1)_ASMFLAGS) $($(1)_INCLUDES) $(AOS_SDK_INCLUDES))
-	$$(file >$$@, $($(1)_S_OPTS) )
+	$(eval S_OPTS_TMP := $(filter-out --cpu Cortex-M4, $($(1)_S_OPTS) ) )
+	$$(file >$$@, $(S_OPTS_TMP) )
 
 $(LIBS_DIR)/$(1).ar_opts: $(CONFIG_FILE) | $(LIBS_DIR)
 	$$(file >$$@, $($(1)_LIB_OBJS) )

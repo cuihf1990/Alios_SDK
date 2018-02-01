@@ -458,7 +458,13 @@ $(call WRITE_FILE_APPEND, $(CONFIG_PY_FILE) ,{'name':'$(comp)'$(COMMA) )
 $(call WRITE_FILE_APPEND, $(CONFIG_PY_FILE) ,'src':[ )
 $(eval SOURCES_FULLPATH := $(addprefix $($(comp)_LOCATION), $($(comp)_SOURCES)))
 $(foreach src,$(SOURCES_FULLPATH), $(call WRITE_FILE_APPEND, $(CONFIG_PY_FILE) ,'$(src)'$(COMMA)))
-$(call WRITE_FILE_APPEND, $(CONFIG_PY_FILE) ,])
+$(call WRITE_FILE_APPEND, $(CONFIG_PY_FILE) ,]$(COMMA))
+
+$(call WRITE_FILE_APPEND, $(CONFIG_PY_FILE) ,'include':[ )
+$(eval INCLUDE_FULLPATH := $(subst -I.,.,$(call unique,$(AOS_SDK_INCLUDES))) )
+$(eval INCLUDE_FULLPATH += $(addprefix $($(comp)_LOCATION),$($(comp)_INCLUDES)) )
+$(foreach inc,$(INCLUDE_FULLPATH), $(call WRITE_FILE_APPEND, $(CONFIG_PY_FILE) ,'$(inc)'$(COMMA)))
+$(call WRITE_FILE_APPEND, $(CONFIG_PY_FILE) ,]$(COMMA))
 $(call WRITE_FILE_APPEND, $(CONFIG_PY_FILE) ,}$(COMMA))
 endef
 
