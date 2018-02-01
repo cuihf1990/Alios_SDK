@@ -89,14 +89,6 @@ kstat_t krhino_buf_queue_dyn_del(kbuf_queue_t *queue);
  */
 kstat_t krhino_buf_queue_send(kbuf_queue_t *queue, void *msg, size_t size);
 
-/**
- * This function will send a msg at the head of queue
- * @param[in]  queue  pointer to the queue
- * @param[in]  msg    pointer to msg to be send
- * @param[in]  size   size of the msg
- * @return  the operation status, RHINO_SUCCESS is OK, others is error
- */
-kstat_t krhino_buf_queue_send_front(kbuf_queue_t *queue, void *msg, size_t size);
 
 /**
  * This function will receive msg form aqueue

@@ -279,14 +279,6 @@ kstat_t krhino_buf_queue_send(kbuf_queue_t *queue, void *msg, size_t size)
     return buf_queue_send(queue, msg, size, RHINO_FALSE);
 }
 
-kstat_t krhino_buf_queue_send_front(kbuf_queue_t *queue, void *msg, size_t size)
-{
-    NULL_PARA_CHK(queue);
-    NULL_PARA_CHK(msg);
-
-    return buf_queue_send(queue, msg, size, RHINO_TRUE);
-}
-
 kstat_t krhino_buf_queue_recv(kbuf_queue_t *queue, tick_t ticks, void *msg,
                               size_t *size)
 {
