@@ -27,12 +27,5 @@ typedef uint8_t  suspend_nested_t; /* 8 bit normally */
 typedef uint64_t ctx_switch_t;     /* 32 bit or 64 bit unsigned value */
 typedef sigset_t cpu_cpsr_t;
 
-#if (RHINO_CONFIG_CPU_NUM > 1)
-typedef struct {
-    uint32_t cnt;
-    uint32_t owner;
-} arch_spinlock_t;
-#endif
-
 #endif /* K_TYPES_H */
 
