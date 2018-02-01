@@ -178,8 +178,7 @@ kstat_t krhino_queue_dyn_del(kqueue_t *queue)
 }
 #endif
 
-static kstat_t msg_send(kqueue_t *p_q, void *p_void, uint8_t opt_send_method,
-                        uint8_t opt_wake_all)
+static kstat_t msg_send(kqueue_t *p_q, void *p_void, uint8_t opt_wake_all)
 {
     CPSR_ALLOC();
 
@@ -239,12 +238,12 @@ static kstat_t msg_send(kqueue_t *p_q, void *p_void, uint8_t opt_send_method,
 
 kstat_t krhino_queue_back_send(kqueue_t *queue, void *msg)
 {
-    return msg_send(queue, msg, QMSG_SEND_TO_END, WAKE_ONE_TASK);
+    return msg_send(queue, msg, WAKE_ONE_TASK);
 }
 
-kstat_t krhino_queue_all_send(kqueue_t *queue, void *msg, uint8_t opt)
+kstat_t krhino_queue_all_send(kqueue_t *queue, void *msg)
 {
-    return msg_send(queue, msg, opt, WAKE_ALL_TASK);
+    return msg_send(queue, msg, WAKE_ALL_TASK);
 }
 
 kstat_t krhino_queue_recv(kqueue_t *queue, tick_t ticks, void **msg)
