@@ -133,10 +133,20 @@ clean:
 	$(QUIET)$(ECHO) Cleaning...
 	$(QUIET)$(CLEAN_COMMAND)
 	$(QUIET)$(RM) -rf .gdbinit .gdbinitkernel .gdbinitframework .gdbinitapp
+	$(QUIET)rm -rf build/scripts/config_mk.py build/scripts/*.pyc
 	$(QUIET)$(ECHO) Done
 
 ifneq ($(BUILD_STRING),)
 -include $(OUTPUT_DIR)/config.mk
+
+ifeq ($(IDE),iar)
+COMPILER := iar
+CLEANED_BUILD_STRING += COMPILER=iar
+else ifeq ($(IDE),keil)
+COMPILER := armcc
+CLEANED_BUILD_STRING += COMPILER=armcc
+endif
+
 # Now we know the target architecture - include all toolchain makefiles and check one of them can handle the architecture
 ifeq ($(COMPILER),armcc)
  include $(MAKEFILES_PATH)/aos_toolchain_armcc.mk

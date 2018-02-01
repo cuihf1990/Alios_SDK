@@ -26,3 +26,5 @@ example/flash/README.md
 settings.json
 build/cmd/win32/Python27/Lib/encodings/*.pyc
 *.d
+build/scripts/config_mk.py
+build/scripts/*.pyc

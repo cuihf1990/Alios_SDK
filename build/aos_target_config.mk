@@ -449,3 +449,29 @@ $(CONFIG_FILE): $(AOS_SDK_MAKEFILES) | $(CONFIG_FILE_DIR)
 	$(QUIET)$(call WRITE_FILE_APPEND, $(CONFIG_FILE) ,AOS_SDK_FINAL_OUTPUT_FILE 		:= $(AOS_SDK_FINAL_OUTPUT_FILE))
 	$(QUIET)$(call WRITE_FILE_APPEND, $(CONFIG_FILE) ,AOS_RAM_STUB_LIST_FILE 			:= $(AOS_RAM_STUB_LIST_FILE))
 endif
+
+CONFIG_PY_FILE := build/scripts/config_mk.py
+
+# write a component name in python format
+define WRITE_COMPOENT_PY
+$(call WRITE_FILE_APPEND, $(CONFIG_PY_FILE) ,{'name':'$(comp)'$(COMMA) )
+$(call WRITE_FILE_APPEND, $(CONFIG_PY_FILE) ,'src':[ )
+$(eval SOURCES_FULLPATH := $(addprefix $($(comp)_LOCATION), $($(comp)_SOURCES)))
+$(foreach src,$(SOURCES_FULLPATH), $(call WRITE_FILE_APPEND, $(CONFIG_PY_FILE) ,'$(src)'$(COMMA)))
+$(call WRITE_FILE_APPEND, $(CONFIG_PY_FILE) ,])
+$(call WRITE_FILE_APPEND, $(CONFIG_PY_FILE) ,}$(COMMA))
+endef
+
+
+ifeq ($(IDE),iar)
+$(MAKECMDGOALS): $(CONFIG_PY_FILE)
+$(CONFIG_PY_FILE): build/aos_target_config.mk $(CONFIG_FILE) build/scripts/iar.py
+	$(QUIET)echo Making $(IDE) Project
+	$(QUIET)$(call WRITE_FILE_CREATE, $(CONFIG_PY_FILE) ,Projects = [)
+	$(QUIET)$(foreach comp,$(PROCESSED_COMPONENTS), $(call WRITE_COMPOENT_PY ))
+	$(QUIET)$(call WRITE_FILE_APPEND, $(CONFIG_PY_FILE) ,])
+	$(QUIET)$(call MKDIR, $(OUTPUT_DIR)/iar_project)
+	python build/scripts/iar.py $(CLEANED_BUILD_STRING)
+	$(QUIET)echo ----------- iar_project has generated in $(OUTPUT_DIR)/iar_project ----------- 
+endif
+
