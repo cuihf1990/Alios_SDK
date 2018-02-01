@@ -477,6 +477,7 @@ $(CONFIG_PY_FILE): build/aos_target_config.mk $(CONFIG_FILE) build/scripts/iar.p
 	$(QUIET)$(foreach comp,$(PROCESSED_COMPONENTS), $(call WRITE_COMPOENT_PY ))
 	$(QUIET)$(call WRITE_FILE_APPEND, $(CONFIG_PY_FILE) ,])
 	$(QUIET)$(call MKDIR, $(OUTPUT_DIR)/iar_project)
+	$(QUIET)cp -f build/scripts/template.ewd $(OUTPUT_DIR)/iar_project/$(CLEANED_BUILD_STRING).ewd
 	python build/scripts/iar.py $(CLEANED_BUILD_STRING)
 	$(QUIET)echo ----------- iar_project has generated in $(OUTPUT_DIR)/iar_project ----------- 
 endif
