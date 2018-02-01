@@ -85,7 +85,7 @@ extern cpu_stack_t   g_workqueue_stack[RHINO_CONFIG_WORKQUEUE_STACK_SIZE];
 #endif
 
 #if (RHINO_CONFIG_MM_TLF > 0)
-extern k_mm_head         *g_kmm_head;
+extern k_mm_head    *g_kmm_head;
 #endif
 
 extern kspinlock_t   g_sys_lock;
@@ -108,12 +108,12 @@ extern kspinlock_t   g_sys_lock;
             }                                      \
         } while (0)
 
-#define RES_FREE_NUM 5
+#define RES_FREE_NUM 4
 
 typedef struct {
+    uint8_t cnt;
     void   *res[RES_FREE_NUM];
     klist_t res_list;
-    uint8_t cnt;
 } res_free_t;
 
 void preferred_cpu_ready_task_get(runqueue_t *rq, uint8_t cpu_num);
