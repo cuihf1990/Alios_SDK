@@ -5,6 +5,10 @@
 #ifndef K_DEFAULT_CONFIG_H
 #define K_DEFAULT_CONFIG_H
 
+#ifndef RHINO_CONFIG_CPU_PWR_MGMT
+#define RHINO_CONFIG_CPU_PWR_MGMT            0
+#endif
+
 /* leave this option as default unless your compiler does not support 64 bit data such as uint64_t */
 #ifndef RHINO_CONFIG_64_BIT_TYPE
 #define RHINO_CONFIG_64_BIT_TYPE             1

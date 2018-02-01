@@ -53,6 +53,11 @@ void idle_task(void *arg)
 #if (RHINO_CONFIG_USER_HOOK > 0)
         krhino_idle_hook();
 #endif
+
+    /* RHINO_CONFIG_CPU_PWR_MGMT */
+#if (RHINO_CONFIG_CPU_PWR_MGMT > 0)
+        cpu_pwr_down();
+#endif
     }
 }
 
