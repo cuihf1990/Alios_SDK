@@ -20,6 +20,7 @@ typedef uint32_t mutex_nested_t;
 typedef uint8_t  suspend_nested_t;
 
 typedef uint64_t ctx_switch_t;
+typedef uint8_t  cpu_cpsr_t;
 
 
 #endif /* TYPES_H */
