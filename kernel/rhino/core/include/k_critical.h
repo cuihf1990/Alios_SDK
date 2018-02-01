@@ -6,12 +6,14 @@
 #define K_CRITICAL_H
 
 typedef struct {
+#if (RHINO_CONFIG_CPU_NUM > 1)
     uint32_t    owner;  /* cpu index of owner */
+    uint32_t    cnt;
+#endif
     cpu_cpsr_t  cpsr;   /* the int key for this lock */
 } kspinlock_t;
 
 #if (RHINO_CONFIG_CPU_NUM > 1)
-
 /* SMP spin lock */
 #define krhino_spin_lock(lock)              cpu_spin_lock((lock));
 #define krhino_spin_unlock(lock)            cpu_spin_unlock((lock));
@@ -28,10 +30,12 @@ typedef struct {
                                                 cpu_intrpt_restore(s->cpsr);           \
                                             } while (0)
 
-#define krhino_spin_init(lock)              do{}while(0)
-
+#define krhino_spin_init(lock)              do{                                        \
+                                                kspinlock_t *s = (kspinlock_t*)(lock); \
+                                                s->owner = (uint32_t)-1;               \
+                                                s->cnt   = 0u;                         \
+                                            } while(0)
 #else
-
 /* UP spin lock */
 #define krhino_spin_lock(lock)              krhino_sched_disable();
 #define krhino_spin_unlock(lock)            krhino_sched_enable();
@@ -46,8 +50,7 @@ typedef struct {
                                                 cpu_intrpt_restore(s->cpsr);           \
                                             } while (0)
 
-#define krhino_spin_init(lock)              do{}while(0)
-
+#define krhino_spin_init(lock)
 #endif
 
 #if (RHINO_CONFIG_DISABLE_INTRPT_STATS > 0)
