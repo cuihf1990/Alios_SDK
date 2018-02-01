@@ -56,9 +56,9 @@ struct yaffs_dev *yaffs_install_drv(const char *name)
     dev = malloc(sizeof(*dev));
 
     if(dev == NULL)
-		{
+    {
         return NULL;
-		}
+    }
 
     memset(dev, 0, sizeof(*dev));
 

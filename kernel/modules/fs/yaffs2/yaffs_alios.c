@@ -77,9 +77,9 @@ static void bg_gc_func(void *dummy)
 
         if (next_urgent) {
             krhino_task_sleep(1);
-				} else {
+        } else {
             krhino_task_sleep(5);
-				}
+        }
     }
 }
 
