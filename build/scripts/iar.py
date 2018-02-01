@@ -1,9 +1,11 @@
 import os
 import sys
 import string
+import shutil 
 
 import xml.etree.ElementTree as etree
 from xml.etree.ElementTree import SubElement
+from os.path import basename
 from utils import xml_indent
 from config_mk import Projects
 
@@ -74,8 +76,15 @@ def IARAddGroup(parent, name, files, includes, project_path):
     group_option_state.text = '-f '+opt_dir+name+".as_opts"
     
     
-    
     for f in files:
+        if repeat_path.count(f):
+            fnewName = f.replace('./','')
+            fnewName = fnewName.replace('/','_')
+            fnewDir = 'out/'+buildstring+'/iar_project'
+            fnewPath = fnewDir+'/'+fnewName
+            #print 'copy', f, 'to', fnewPath
+            shutil.copyfile(f,fnewPath)
+            f = fnewPath
         file = SubElement(group, 'file')
         file_name = SubElement(file, 'name')
         file_name.text = ('$PROJ_DIR$\\' + '../../../' + f).decode(fs_encoding)
@@ -89,6 +98,7 @@ def IARWorkspace(target):
     out.write(xml)
     out.close()
     
+repeat_path=[]
 def IARProject(target, script):
     project_path = os.path.dirname(os.path.abspath(target))
 
@@ -96,7 +106,18 @@ def IARProject(target, script):
     root = tree.getroot()
 
     out = file(target, 'wb')
-
+    
+    existedFileNameString=[]
+    # find repeat source file
+    for group in script:
+        for filePath in group['src']:
+            filename = os.path.splitext(basename(filePath))
+            if existedFileNameString.count(filename):
+                repeat_path.append(filePath)
+            else:
+                existedFileNameString.append(filename)        
+    print 'repeat files:', repeat_path
+    
     # add group
     for group in script:
         IARAddGroup(root, group['name'], group['src'], group['include'], project_path)       

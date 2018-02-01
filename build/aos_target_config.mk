@@ -461,8 +461,8 @@ $(foreach src,$(SOURCES_FULLPATH), $(call WRITE_FILE_APPEND, $(CONFIG_PY_FILE) ,
 $(call WRITE_FILE_APPEND, $(CONFIG_PY_FILE) ,]$(COMMA))
 
 $(call WRITE_FILE_APPEND, $(CONFIG_PY_FILE) ,'include':[ )
-$(eval INCLUDE_FULLPATH := $(subst -I.,.,$(call unique,$(AOS_SDK_INCLUDES))) )
-$(eval INCLUDE_FULLPATH += $(addprefix $($(comp)_LOCATION),$($(comp)_INCLUDES)) )
+$(eval INCLUDE_FULLPATH := $(addprefix $($(comp)_LOCATION),$($(comp)_INCLUDES)) )
+$(eval INCLUDE_FULLPATH += $(subst -I.,.,$(call unique,$(AOS_SDK_INCLUDES))) )
 $(foreach inc,$(INCLUDE_FULLPATH), $(call WRITE_FILE_APPEND, $(CONFIG_PY_FILE) ,'$(inc)'$(COMMA)))
 $(call WRITE_FILE_APPEND, $(CONFIG_PY_FILE) ,]$(COMMA))
 $(call WRITE_FILE_APPEND, $(CONFIG_PY_FILE) ,}$(COMMA))
@@ -471,7 +471,7 @@ endef
 
 ifeq ($(IDE),iar)
 $(MAKECMDGOALS): $(CONFIG_PY_FILE)
-$(CONFIG_PY_FILE): build/aos_target_config.mk $(CONFIG_FILE) build/scripts/iar.py
+$(CONFIG_PY_FILE): build/scripts/iar.py build/aos_target_config.mk $(CONFIG_FILE)
 	$(QUIET)echo Making $(IDE) Project
 	$(QUIET)$(call WRITE_FILE_CREATE, $(CONFIG_PY_FILE) ,Projects = [)
 	$(QUIET)$(foreach comp,$(PROCESSED_COMPONENTS), $(call WRITE_COMPOENT_PY ))
