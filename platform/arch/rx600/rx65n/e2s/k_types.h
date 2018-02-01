@@ -21,6 +21,7 @@ typedef uint32_t lr_timer_t;
 typedef uint32_t mutex_nested_t;
 typedef uint8_t  suspend_nested_t;
 typedef uint64_t ctx_switch_t;
+typedef uint8_t  cpu_cpsr_t;
 
                                                         /* ---------------------- CPU WORD SIZE ----------------------- */
 #define  CPU_WORD_SIZE_08                          1u   /*  8-bit word size (in octets).                                */
