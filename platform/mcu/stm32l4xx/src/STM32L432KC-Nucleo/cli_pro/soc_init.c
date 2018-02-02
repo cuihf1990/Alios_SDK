@@ -9,7 +9,7 @@
   * inserted by the user or by software development tools
   * are owned by their respective copyright owners.
   *
-  * COPYRIGHT(c) 2017 STMicroelectronics
+  * COPYRIGHT(c) 2018 STMicroelectronics
   *
   * Redistribution and use in source and binary forms, with or without modification,
   * are permitted provided that the following conditions are met:
@@ -37,32 +37,19 @@
   */
 
 /* Includes ------------------------------------------------------------------*/
+#include <stdint.h>
 #include "soc_init.h"
 #include "k_config.h"
-#include "stm32l0xx_hal.h"
-#include "hal/soc/uart.h"
-
-#if defined (__CC_ARM) && defined(__MICROLIB)
-#define PUTCHAR_PROTOTYPE int fputc(int ch, FILE *f)
-#define GETCHAR_PROTOTYPE int fgetc(FILE *f)
-#elif defined(__ICCARM__)
-#define PUTCHAR_PROTOTYPE int fputc(int ch, FILE *f)
-#define GETCHAR_PROTOTYPE int fgetc(FILE *f)
-#else
-/* With GCC/RAISONANCE, small printf (option LD Linker->Libraries->Small printf
-   set to 'Yes') calls __io_putchar() */
-#define PUTCHAR_PROTOTYPE int __io_putchar(int ch)
-#define GETCHAR_PROTOTYPE int __io_getchar(void)
-#endif /* defined (__CC_ARM) && defined(__MICROLIB) */
-
-
+#include "stm32l4xx_hal.h"
+#include "hal_uart_stm32l4.h"
 /* USER CODE BEGIN Includes */
 
 /* USER CODE END Includes */
 
 /* Private variables ---------------------------------------------------------*/
-UART_HandleTypeDef huart2;
-uart_dev_t   uart_0;
+/*UART_HandleTypeDef huart2;*/
+uart_dev_t dev_uart2;
+
 
 /* USER CODE BEGIN PV */
 /* Private variables ---------------------------------------------------------*/
@@ -72,7 +59,9 @@ uart_dev_t   uart_0;
 /* Private function prototypes -----------------------------------------------*/
 void SystemClock_Config(void);
 static void MX_GPIO_Init(void);
-static void MX_USART2_UART_Init(void);
+/*static void MX_USART2_UART_Init(void);*/
+static void uart2_init(void);
+
 
 /* USER CODE BEGIN PFP */
 /* Private function prototypes -----------------------------------------------*/
@@ -108,7 +97,8 @@ void stm32_soc_init(void)
 
   /* Initialize all configured peripherals */
   MX_GPIO_Init();
-  MX_USART2_UART_Init();
+  /*MX_USART2_UART_Init();*/
+  uart2_init();
 }
 
 /** System Clock Configuration
@@ -120,17 +110,19 @@ void SystemClock_Config(void)
   RCC_ClkInitTypeDef RCC_ClkInitStruct;
   RCC_PeriphCLKInitTypeDef PeriphClkInit;
 
-    /**Configure the main internal regulator output voltage 
-    */
-  __HAL_PWR_VOLTAGESCALING_CONFIG(PWR_REGULATOR_VOLTAGE_SCALE1);
-
     /**Initializes the CPU, AHB and APB busses clocks 
     */
   RCC_OscInitStruct.OscillatorType = RCC_OSCILLATORTYPE_MSI;
   RCC_OscInitStruct.MSIState = RCC_MSI_ON;
   RCC_OscInitStruct.MSICalibrationValue = 0;
-  RCC_OscInitStruct.MSIClockRange = RCC_MSIRANGE_5;
-  RCC_OscInitStruct.PLL.PLLState = RCC_PLL_NONE;
+  RCC_OscInitStruct.MSIClockRange = RCC_MSIRANGE_6;
+  RCC_OscInitStruct.PLL.PLLState = RCC_PLL_ON;
+  RCC_OscInitStruct.PLL.PLLSource = RCC_PLLSOURCE_MSI;
+  RCC_OscInitStruct.PLL.PLLM = 1;
+  RCC_OscInitStruct.PLL.PLLN = 40;
+  RCC_OscInitStruct.PLL.PLLP = RCC_PLLP_DIV7;
+  RCC_OscInitStruct.PLL.PLLQ = RCC_PLLQ_DIV2;
+  RCC_OscInitStruct.PLL.PLLR = RCC_PLLR_DIV2;
   if (HAL_RCC_OscConfig(&RCC_OscInitStruct) != HAL_OK)
   {
     _Error_Handler(__FILE__, __LINE__);
@@ -140,12 +132,12 @@ void SystemClock_Config(void)
     */
   RCC_ClkInitStruct.ClockType = RCC_CLOCKTYPE_HCLK|RCC_CLOCKTYPE_SYSCLK
                               |RCC_CLOCKTYPE_PCLK1|RCC_CLOCKTYPE_PCLK2;
-  RCC_ClkInitStruct.SYSCLKSource = RCC_SYSCLKSOURCE_MSI;
+  RCC_ClkInitStruct.SYSCLKSource = RCC_SYSCLKSOURCE_PLLCLK;
   RCC_ClkInitStruct.AHBCLKDivider = RCC_SYSCLK_DIV1;
   RCC_ClkInitStruct.APB1CLKDivider = RCC_HCLK_DIV1;
   RCC_ClkInitStruct.APB2CLKDivider = RCC_HCLK_DIV1;
 
-  if (HAL_RCC_ClockConfig(&RCC_ClkInitStruct, FLASH_LATENCY_0) != HAL_OK)
+  if (HAL_RCC_ClockConfig(&RCC_ClkInitStruct, FLASH_LATENCY_4) != HAL_OK)
   {
     _Error_Handler(__FILE__, __LINE__);
   }
@@ -153,6 +145,13 @@ void SystemClock_Config(void)
   PeriphClkInit.PeriphClockSelection = RCC_PERIPHCLK_USART2;
   PeriphClkInit.Usart2ClockSelection = RCC_USART2CLKSOURCE_PCLK1;
   if (HAL_RCCEx_PeriphCLKConfig(&PeriphClkInit) != HAL_OK)
+  {
+    _Error_Handler(__FILE__, __LINE__);
+  }
+
+    /**Configure the main internal regulator output voltage 
+    */
+  if (HAL_PWREx_ControlVoltageScaling(PWR_REGULATOR_VOLTAGE_SCALE1) != HAL_OK)
   {
     _Error_Handler(__FILE__, __LINE__);
   }
@@ -170,6 +169,7 @@ void SystemClock_Config(void)
 }
 
 /* USART2 init function */
+/*
 static void MX_USART2_UART_Init(void)
 {
 
@@ -188,40 +188,30 @@ static void MX_USART2_UART_Init(void)
     _Error_Handler(__FILE__, __LINE__);
   }
 
+}*/
+
+
+static void uart2_init(void)
+{
+    dev_uart2.port = PORT_UART2;
+    dev_uart2.config.baud_rate = 115200;
+    dev_uart2.config.data_width = DATA_WIDTH_8BIT;
+    dev_uart2.config.flow_control = FLOW_CONTROL_DISABLED;
+    dev_uart2.config.mode = MODE_TX_RX;
+    dev_uart2.config.parity = NO_PARITY;
+    dev_uart2.config.stop_bits = STOP_BITS_1;
+	
+    hal_uart_init(&dev_uart2);
 }
 
-/** Configure pins as 
-        * Analog 
-        * Input 
-        * Output
-        * EVENT_OUT
-        * EXTI
+
+/** Pinout Configuration
 */
 static void MX_GPIO_Init(void)
 {
 
-  GPIO_InitTypeDef GPIO_InitStruct;
-
   /* GPIO Ports Clock Enable */
-  __HAL_RCC_GPIOC_CLK_ENABLE();
-  __HAL_RCC_GPIOH_CLK_ENABLE();
   __HAL_RCC_GPIOA_CLK_ENABLE();
-
-  /*Configure GPIO pin Output Level */
-  HAL_GPIO_WritePin(LD2_GPIO_Port, LD2_Pin, GPIO_PIN_RESET);
-
-  /*Configure GPIO pin : B1_Pin */
-  GPIO_InitStruct.Pin = B1_Pin;
-  GPIO_InitStruct.Mode = GPIO_MODE_IT_FALLING;
-  GPIO_InitStruct.Pull = GPIO_NOPULL;
-  HAL_GPIO_Init(B1_GPIO_Port, &GPIO_InitStruct);
-
-  /*Configure GPIO pin : LD2_Pin */
-  GPIO_InitStruct.Pin = LD2_Pin;
-  GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
-  GPIO_InitStruct.Pull = GPIO_NOPULL;
-  GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
-  HAL_GPIO_Init(LD2_GPIO_Port, &GPIO_InitStruct);
 
 }
 
@@ -277,45 +267,43 @@ HAL_StatusTypeDef HAL_InitTick(uint32_t TickPriority)
 }
 
 /**
-  * @brief  Retargets the C library printf function to the USART.
-  * @param  None
-  * @retval None
+  * @brief  Retargets the C library printf/puts/putchar... function to the USART.
+  * @param  char to put
+  * @retval EOF or char
   */
-PUTCHAR_PROTOTYPE
-{
-  if (ch == '\n') {
-    //hal_uart_send(&console_uart, (void *)"\r", 1, 30000);
-    HAL_UART_Transmit(&huart2, (void *)"\r", 1,30000);
+int libc_putc(char ch)
+{  
+  if (ch == '\n') 
+  {
+    /*status = HAL_UART_Transmit(&huart2, (void *)"\r", 1,30000);*/
+    hal_uart_send(&dev_uart2, (void *)"\r", 1, 30000);
+
   }
-  HAL_UART_Transmit(&huart2, (uint8_t *)&ch, 1, 0xFFFF);
+  hal_uart_send(&dev_uart2, &ch, 1, 30000);
   return ch;
 }
 
 /**
-  * @brief  Retargets the C library scanf function to the USART.
+  * @brief  Retargets the C library gets/getc/getchar function from the USART.
   * @param  None
-  * @retval None
+  * @retval EOF or char
   */
-GETCHAR_PROTOTYPE
+int libc_getc()
 {
   /* Place your implementation of fgetc here */
   /* e.g. readwrite a character to the USART2 and Loop until the end of transmission */
-  uint8_t ch = 0;
-  //uint32_t recv_size;
-  HAL_UART_Receive(&huart2, &ch, 1,30000);
+  uint8_t ch = EOF;
+	int32_t ret = -1;
+  
+  uint32_t recv_size;
+  ret = hal_uart_recv(&dev_uart2, &ch, 1, &recv_size, 0xFFFFFFFF);
+	if(ret)
+	{
+		return ret;
+	}
+
   return ch;
 }
-
-int32_t hal_uart_send(uart_dev_t *uart, const void *data, uint32_t size, uint32_t timeout) {
-
-    return 0;
-}
-
-int32_t hal_uart_recv(uart_dev_t *uart, void *data, uint32_t expect_size, uint32_t *recv_size, uint32_t timeout) {
-
-    return 0;
-}
-
 
 /**
   * @}
