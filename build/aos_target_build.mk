@@ -151,7 +151,7 @@ $(LIBS_DIR)/$(1).as_opts: $(CONFIG_FILE) | $(LIBS_DIR)
 	$$(file >$$@, $(S_OPTS_TMP) )
 
 $(LIBS_DIR)/$(1).ar_opts: $(CONFIG_FILE) | $(LIBS_DIR)
-	$$(file >$$@, $($(1)_LIB_OBJS) )
+	$(QUIET)$$(call WRITE_FILE_CREATE, $$@ ,$($(1)_LIB_OBJS))
 
 
 # Allow checking of completeness of headers
