@@ -5,6 +5,7 @@ import TBframe
 MAX_MSG_LENTH = 8192
 ENCRYPT = False
 DEBUG = True
+EN_STATUS_POLL = True
 LOCALLOG = False
 
 try:
@@ -110,7 +111,7 @@ class Client:
         poll_timeout = time.time() + 3 + random.uniform(0, self.poll_interval/10)
         while os.path.exists(port) and exit_condition.is_set() == False:
             try:
-                if time.time() >= poll_timeout:
+                if EN_STATUS_POLL == True and time.time() >= poll_timeout:
                     poll_timeout += self.poll_interval
                     queue_safeput(pcmd_queue, ['devname', 1, 0.2])
                     queue_safeput(pcmd_queue, ['mac', 1, 0.2])
@@ -281,6 +282,8 @@ class Client:
 
     def device_log_filter(self, port, log):
         pcmd_queue = self.devices[port]['pcmd_queue']
+        if EN_STATUS_POLL == False:
+            return
         if pcmd_queue.full() == True:
             return
         for flog in self.mesh_changed:

@@ -60,13 +60,13 @@ Usage: make <target> [download] [run | debug] [JTAG=xxx] [total] [VERBOSE=1] [BI
 
   Example Usage
     Build for Debug
-      $> make helloworld@mk108
+      $> make helloworld@mk3060
 
     Build, Download and Run using the default USB-JTAG programming interface
-      $> make helloworld@mk108 download run
+      $> make helloworld@mk3060 download run
 
     Build for Release
-      $> make helloworld@mk108@release
+      $> make helloworld@mk3060@release
 
     Reset and run an application on the target hardware
       $> make run
@@ -173,7 +173,7 @@ ifeq ($(COMPILER),armcc)
  TOOLCHAIN_MK = aos_toolchain_armcc.mk
 else ifeq ($(COMPILER),iar)
  TOOLCHAIN_MK = aos_toolchain_iar.mk
-else 
+else
  TOOLCHAIN_MK = aos_toolchain_gcc.mk
 endif
 

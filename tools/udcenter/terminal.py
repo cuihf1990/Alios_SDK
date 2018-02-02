@@ -3,7 +3,7 @@
 import os, sys, time, curses, socket, ssl, random, re
 import subprocess, thread, threading, json, traceback, Queue
 from operator import itemgetter
-import TBframe
+import packet as pkt
 
 MAX_MSG_LENGTH = 65536
 CMD_WINDOW_HEIGHT = 2
@@ -72,7 +72,10 @@ class Terminal:
             except:
                 print "read access key failed"
         while self.uuid == None:
-            uuid = raw_input("please input your access key: ")
+            try:
+                uuid = raw_input("please input your access key: ")
+            except:
+                return 'read access key fail'
             is_valid_uuid = re.match('^[0-9a-f]{10,20}$', uuid)
             if is_valid_uuid == None:
                 print "invalid access key {0}, please enter a valid access key".format(uuid)
@@ -335,9 +338,9 @@ class Terminal:
                 if time.time() < heartbeat_timeout:
                     continue
                 heartbeat_timeout += 10
-                data = TBframe.construct(TBframe.HEARTBEAT,'')
+                data = pkt.construct(pkt.HEARTBEAT,'')
             else:
-                data = TBframe.construct(type, content)
+                data = pkt.construct(type, content)
             try:
                 self.service_socket.send(data)
             except:
@@ -376,7 +379,7 @@ class Terminal:
             if DEBUG: traceback.print_exc()
             return None
 
-        content = TBframe.construct(TBframe.ACCESS_LOGIN, 'terminal,' + self.uuid)
+        content = pkt.construct(pkt.ACCESS_LOGIN, 'terminal,' + self.uuid)
         try:
             sock.send(content)
         except:
@@ -397,10 +400,10 @@ class Terminal:
             sock.close()
             return None
 
-        type, length, value, data = TBframe.parse(data)
+        type, length, value, data = pkt.parse(data)
         #print 'controller', type, value
         rets = value.split(',')
-        if type != TBframe.ACCESS_LOGIN or rets[0] != 'success':
+        if type != pkt.ACCESS_LOGIN or rets[0] != 'success':
             if rets[0] == 'invalid access key':
                 self.log_display(time.time(), "login to controller failed, invalid access key")
                 if os.path.exists('terminal/.accesskey'):
@@ -450,26 +453,26 @@ class Terminal:
 
                 msg += new_msg
                 while msg != '':
-                    type, length, value, msg = TBframe.parse(msg)
-                    if type == TBframe.TYPE_NONE:
+                    type, length, value, msg = pkt.parse(msg)
+                    if type == pkt.TYPE_NONE:
                         break
 
                     #print type, length
-                    if type == TBframe.FILE_BEGIN:
+                    if type == pkt.FILE_BEGIN:
                         if 'file' in locals() and file.closed == False:
                             file.close()
                         filename = 'terminal/' + value
                         file = open(filename, 'w')
                         continue
-                    if type == TBframe.FILE_DATA:
+                    if type == pkt.FILE_DATA:
                         if 'file' in locals() and file.closed == False:
                             file.write(value)
                         continue
-                    if type == TBframe.FILE_END:
+                    if type == pkt.FILE_END:
                         if 'file' in locals():
                             file.close()
                         continue
-                    if type == TBframe.ALL_DEV:
+                    if type == pkt.ALL_DEV:
                         new_list = {}
                         clients = value.split(':')
                         for c in clients:
@@ -492,7 +495,7 @@ class Terminal:
                                 self.device_list.pop(dev)
                         self.device_list_display()
                         continue
-                    if type == TBframe.DEVICE_LOG:
+                    if type == pkt.DEVICE_LOG:
                         dev = value.split(':')[0]
                         logtime = value.split(':')[1]
                         log = value[len(dev) + 1 + len(logtime):]
@@ -507,17 +510,17 @@ class Terminal:
                             log =  str(index) + log
                             self.log_display(logtime, log)
                         continue
-                    if type == TBframe.CMD_DONE:
+                    if type == pkt.CMD_DONE:
                         self.cmd_excute_return = value
                         self.cmd_excute_state = 'done'
                         self.cmd_excute_event.set()
                         continue
-                    if type == TBframe.CMD_ERROR:
+                    if type == pkt.CMD_ERROR:
                         self.cmd_excute_return = value
                         self.cmd_excute_state = 'error'
                         self.cmd_excute_event.set()
                         continue
-                    if type == TBframe.TERMINAL_LOGIN:
+                    if type == pkt.TERMINAL_LOGIN:
                         if value == 'success':
                             continue
                         self.cmdrun_status_display("login to server failed, retry later ...")
@@ -553,7 +556,7 @@ class Terminal:
                     continue
 
                 data = self.uuid + ',' + token
-                self.send_packet(TBframe.TERMINAL_LOGIN, data)
+                self.send_packet(pkt.TERMINAL_LOGIN, data)
             except:
                 if DEBUG:
                     raise
@@ -602,14 +605,14 @@ class Terminal:
     def send_file_to_client(self, filename, index):
         status_str = 'sending file {0} to {1}...'.format(filename, self.get_devstr_by_index(index).split(',')[0])
         self.cmdrun_status_display(status_str)
-        filehash = TBframe.hash_of_file(filename)
+        filehash = pkt.hash_of_file(filename)
         devstr = self.get_devstr_by_index(index)
 
         #send file begin
         content = devstr  + ':' + filehash + ':' + filename.split('/')[-1]
         retry = 4
         while retry > 0:
-            self.send_packet(TBframe.FILE_BEGIN, content)
+            self.send_packet(pkt.FILE_BEGIN, content)
             self.wait_cmd_excute_done(0.2)
             if self.cmd_excute_state == 'timeout':
                 retry -= 1;
@@ -641,7 +644,7 @@ class Terminal:
         while(content):
             retry = 4
             while retry > 0:
-                self.send_packet(TBframe.FILE_DATA, header + content)
+                self.send_packet(pkt.FILE_DATA, header + content)
                 self.wait_cmd_excute_done(0.2)
                 if self.cmd_excute_return == None:
                     retry -= 1;
@@ -668,7 +671,7 @@ class Terminal:
         content = devstr  + ':' + filehash + ':' + filename.split('/')[-1]
         retry = 4
         while retry > 0:
-            self.send_packet(TBframe.FILE_END, content)
+            self.send_packet(pkt.FILE_END, content)
             self.wait_cmd_excute_done(0.2)
             if self.cmd_excute_return == None:
                 retry -= 1;
@@ -703,7 +706,7 @@ class Terminal:
                 status_str = 'erasing {0}.{1}...'.format(index, self.get_devstr_by_index(index))
                 self.cmdrun_status_display(status_str)
                 dev_str = self.get_devstr_by_index(index)
-                self.send_packet(TBframe.DEVICE_ERASE, dev_str);
+                self.send_packet(pkt.DEVICE_ERASE, dev_str);
                 self.wait_cmd_excute_done(10)
                 status_str += self.cmd_excute_state
                 self.cmdrun_status_display(status_str)
@@ -740,7 +743,7 @@ class Terminal:
         if os.path.exists(expandname) == False:
             self.cmdrun_status_display("{0} does not exist".format(filename))
             return False
-        filehash = TBframe.hash_of_file(expandname)
+        filehash = pkt.hash_of_file(expandname)
 
         devs = args[2:]
         file_exist_at = []
@@ -764,7 +767,7 @@ class Terminal:
                 status_str = 'programming {0} to {1}.{2}:{3}...'.format(filename, index, uuid, port.replace('/dev/', ''))
                 self.cmdrun_status_display(status_str)
                 content = dev_str + ',' + address + ',' + filehash
-                self.send_packet(TBframe.DEVICE_PROGRAM, content);
+                self.send_packet(pkt.DEVICE_PROGRAM, content);
                 self.wait_cmd_excute_done(270)
                 status_str += self.cmd_excute_state
                 self.cmdrun_status_display(status_str)
@@ -789,7 +792,7 @@ class Terminal:
             self.cmdrun_status_display("Usage error, usage: reset devices")
             return False
 
-        operations = {"start":TBframe.DEVICE_START, "stop":TBframe.DEVICE_STOP, "reset":TBframe.DEVICE_RESET}
+        operations = {"start":pkt.DEVICE_START, "stop":pkt.DEVICE_STOP, "reset":pkt.DEVICE_RESET}
         operate = operations[operate]
         succeed = []; failed = []
         for dev in args:
@@ -824,9 +827,9 @@ class Terminal:
             return False
 
         if args[0] == "on":
-            type = TBframe.LOG_SUB
+            type = pkt.LOG_SUB
         elif args[0] == "off":
-            type = TBframe.LOG_UNSUB
+            type = pkt.LOG_UNSUB
         else:
             self.cmdrun_status_display("Usage error, usage: log on/off devices")
             return False
@@ -838,10 +841,10 @@ class Terminal:
                 continue
             for index in indexes:
                 dev_str = self.get_devstr_by_index(index)
-                if type == TBframe.LOG_SUB and dev_str not in self.log_subscribed:
+                if type == pkt.LOG_SUB and dev_str not in self.log_subscribed:
                     self.send_packet(type, dev_str)
                     self.log_subscribed.append(dev_str)
-                elif type == TBframe.LOG_UNSUB and dev_str in self.log_subscribed:
+                elif type == pkt.LOG_UNSUB and dev_str in self.log_subscribed:
                     self.send_packet(type, dev_str)
                     self.log_subscribed.remove(dev_str)
 
@@ -861,7 +864,7 @@ class Terminal:
                 status_str = 'downloading log file for {0}.{1}:{2}...'.format(index, device[0], device[1].replace('/dev/', ''))
                 self.cmdrun_status_display(status_str)
                 content = ','.join(device)
-                self.send_packet(TBframe.LOG_DOWNLOAD, content)
+                self.send_packet(pkt.LOG_DOWNLOAD, content)
                 self.wait_cmd_excute_done(480)
                 if self.cmd_excute_state == "done":
                     succeed.append(index)
@@ -908,7 +911,7 @@ class Terminal:
         for index in indexes:
             dev_str = self.get_devstr_by_index(index)
             content = dev_str + ':' + '|'.join(args)
-            self.send_packet(TBframe.DEVICE_CMD, content)
+            self.send_packet(pkt.DEVICE_CMD, content)
             self.wait_cmd_excute_done(1.5)
             if self.cmd_excute_state == "done":
                 succeed.append(index)
@@ -1139,6 +1142,9 @@ class Terminal:
 
     def terminal_func(self, controller_ip, controller_port):
         ret = self.init()
+        if ret == 'read access key fail':
+            print ''
+            return
         if ret == "success":
             self.run(controller_ip, controller_port)
         if ret == "UI failed":

@@ -37,7 +37,18 @@ def new_device(port):
     return ser
 
 def erase(port):
+    retry = 3
     error = 'fail'
+    if port not in nucleo_stlink_serials:
+        return error
+    while retry > 0:
+        script = ['st-flash', '--serial', nucleo_stlink_serials[port], 'erase']
+        ret = subprocess.call(script)
+        if ret == 0:
+            error =  'success'
+            break
+        retry -= 1
+        time.sleep(4)
     return error
 
 def program(port, address, file):
