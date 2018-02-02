@@ -954,6 +954,16 @@
               <FileType>1</FileType>
               <FilePath>..\..\..\..\kernel\vfs\vfs_register.c</FilePath>
             </File>
+            <File>
+              <FileName>select.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\..\..\..\kernel\vfs\select.c</FilePath>
+            </File>
+            <File>
+              <FileName>vfs_file.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\..\..\..\kernel\vfs\vfs_file.c</FilePath>
+            </File>
           </Files>
         </Group>
         <Group>
@@ -1318,6 +1328,11 @@
               <FileName>mbedtls_ssl.c</FileName>
               <FileType>1</FileType>
               <FilePath>..\..\..\..\security\mbedtls\src\mbedtls_ssl.c</FilePath>
+            </File>
+            <File>
+              <FileName>mbedtls_alt.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\..\..\..\security\mbedtls\src\mbedtls_alt.c</FilePath>
             </File>
           </Files>
         </Group>
