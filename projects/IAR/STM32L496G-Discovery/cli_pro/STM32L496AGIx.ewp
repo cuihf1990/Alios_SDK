@@ -365,6 +365,7 @@
                     <state>$PROJ_DIR$\..\..\..\..\kernel\vcall\aos</state>
                     <state>$PROJ_DIR$\..\..\..\..\utility\libc\compilers\iar</state>
                     <state>$PROJ_DIR$\..\..\..\..\tools\cli</state>
+                    <state>$PROJ_DIR$\..\..\..\..\kernel\vfs\include</state>
                 </option>
                 <option>
                     <name>CCStdIncCheck</name>
@@ -1138,6 +1139,12 @@
             <name>Utility</name>
             <file>
                 <name>$PROJ_DIR$\..\..\..\..\utility\log\log.c</name>
+            </file>
+        </group>
+        <group>
+            <name>vfs</name>
+            <file>
+                <name>$PROJ_DIR$\..\..\..\..\kernel\vfs\vfs.c</name>
             </file>
         </group>
     </group>

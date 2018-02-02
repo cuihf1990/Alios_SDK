@@ -2381,6 +2381,12 @@
             <file>
                 <name>$PROJ_DIR$\..\..\..\..\kernel\vfs\vfs_register.c</name>
             </file>
+			<file>
+                <name>$PROJ_DIR$\..\..\..\..\kernel\vfs\select.c</name>
+            </file>
+			<file>
+                <name>$PROJ_DIR$\..\..\..\..\kernel\vfs\vfs_file.c</name>
+            </file>
         </group>
         <group>
             <name>yloop</name>
@@ -2608,6 +2614,9 @@
             </file>
             <file>
                 <name>$PROJ_DIR$\..\..\..\..\security\mbedtls\src\mbedtls_ssl.c</name>
+            </file>
+			<file>
+                <name>$PROJ_DIR$\..\..\..\..\security\mbedtls\src\mbedtls_alt.c</name>
             </file>
             <configuration>
                 <name>Debug</name>
