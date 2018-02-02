@@ -1363,7 +1363,9 @@ int sal_write(int s, const void *data, size_t size)
         event->counts += *(uint64_t *)data;
         if (event->counts) {
             event->reads = event->counts;
-            sal_sem_signal(event->psem);
+	    if (event->psem) {
+                sal_sem_signal(event->psem);
+	    }
         }
         SAL_ARCH_UNPROTECT(lev);
         return size;
