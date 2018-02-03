@@ -23,7 +23,7 @@ class emulator:
             for byte in bytes:
                 self.uuid += '{0:02X}'.format(ord(byte))
         self.macaddr = self.macaddr[:-1]
-        self.kernel_version = 'AOS-R-1.1.2'
+        self.kernel_version = 'AOS-R-1.2.1'
         self.app_version = 'app-1.1.0-' + time.strftime("%Y%m%d.%H%M")
         self.ser = None
         try:
