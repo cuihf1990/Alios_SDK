@@ -294,11 +294,16 @@ ifeq ($(COMPILER),iar)
 else
 	$(QUIET)$(STRIP) $(STRIP_OUTPUT_PREFIX)$@ $(STRIPFLAGS) $<
 endif
-	
+
+PROJ_GEN_DIR   := projects/auto_gen_projects/$(CLEANED_BUILD_STRING)
+
 # Bin file target - uses objcopy to convert the stripped elf into a binary file
 $(BIN_OUTPUT_FILE): $(STRIPPED_LINK_OUTPUT_FILE)
 	$(QUIET)$(ECHO) Making $(notdir $@)
 	$(QUIET)$(OBJCOPY) $(OBJCOPY_BIN_FLAGS) $< $(OBJCOPY_OUTPUT_PREFIX)$@ 
+ifeq ($(IDE),iar)
+	$(QUIET)cp -rf $(OUTPUT_DIR)/libraries $(PROJ_GEN_DIR)/iar_project
+endif	
 	
 $(HEX_OUTPUT_FILE): $(STRIPPED_LINK_OUTPUT_FILE)
 	$(QUIET)$(ECHO) Making $(notdir $@)
