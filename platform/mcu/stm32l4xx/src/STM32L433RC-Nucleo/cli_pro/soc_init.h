@@ -1,8 +1,7 @@
 /**
   ******************************************************************************
-  * File Name          : stm32l4xx_hal_msp.c
-  * Description        : This file provides code for the MSP Initialization 
-  *                      and de-Initialization codes.
+  * File Name          : main.hpp
+  * Description        : This file contains the common defines of the application
   ******************************************************************************
   ** This notice applies to any and all portions of this file
   * that are not between comment pairs USER CODE BEGIN and
@@ -36,59 +35,69 @@
   *
   ******************************************************************************
   */
+/* Define to prevent recursive inclusion -------------------------------------*/
+#ifndef __SOC_INIT_H
+#define __SOC_INIT_H
+  /* Includes ------------------------------------------------------------------*/
+
 /* Includes ------------------------------------------------------------------*/
-#include "stm32l4xx_hal.h"
+/* USER CODE BEGIN Includes */
 
-extern void _Error_Handler(char *, int);
-/* USER CODE BEGIN 0 */
+/* USER CODE END Includes */
 
-/* USER CODE END 0 */
+/* Private define ------------------------------------------------------------*/
+
+#define B1_Pin GPIO_PIN_13
+#define B1_GPIO_Port GPIOC
+#define MCO_Pin GPIO_PIN_0
+#define MCO_GPIO_Port GPIOH
+#define USART_RX_Pin GPIO_PIN_3
+#define USART_RX_GPIO_Port GPIOA
+#define LD4_Pin GPIO_PIN_5
+#define LD4_GPIO_Port GPIOA
+#define SMPS_EN_Pin GPIO_PIN_12
+#define SMPS_EN_GPIO_Port GPIOB
+#define SMPS_V1_Pin GPIO_PIN_13
+#define SMPS_V1_GPIO_Port GPIOB
+#define SMPS_PG_Pin GPIO_PIN_14
+#define SMPS_PG_GPIO_Port GPIOB
+#define SPMS_SW_Pin GPIO_PIN_15
+#define SPMS_SW_GPIO_Port GPIOB
+#define TMS_Pin GPIO_PIN_13
+#define TMS_GPIO_Port GPIOA
+#define TCK_Pin GPIO_PIN_14
+#define TCK_GPIO_Port GPIOA
+#define SWO_Pin GPIO_PIN_3
+#define SWO_GPIO_Port GPIOB
+
+/* ########################## Assert Selection ############################## */
 /**
-  * Initializes the Global MSP.
+  * @brief Uncomment the line below to expanse the "assert_param" macro in the 
+  *        HAL drivers code
   */
-void HAL_MspInit(void)
-{
-  /* USER CODE BEGIN MspInit 0 */
+/* #define USE_FULL_ASSERT    1U */
 
-  /* USER CODE END MspInit 0 */
+/* USER CODE BEGIN Private defines */
 
-  __HAL_RCC_SYSCFG_CLK_ENABLE();
-  __HAL_RCC_PWR_CLK_ENABLE();
+/* USER CODE END Private defines */
 
-  HAL_NVIC_SetPriorityGrouping(NVIC_PRIORITYGROUP_4);
+#ifdef __cplusplus
+ extern "C" {
+#endif
+void _Error_Handler(char *, int);
 
-  /* System interrupt init*/
-  /* MemoryManagement_IRQn interrupt configuration */
-  HAL_NVIC_SetPriority(MemoryManagement_IRQn, 0, 0);
-  /* BusFault_IRQn interrupt configuration */
-  HAL_NVIC_SetPriority(BusFault_IRQn, 0, 0);
-  /* UsageFault_IRQn interrupt configuration */
-  HAL_NVIC_SetPriority(UsageFault_IRQn, 0, 0);
-  /* SVCall_IRQn interrupt configuration */
-  HAL_NVIC_SetPriority(SVCall_IRQn, 0, 0);
-  /* DebugMonitor_IRQn interrupt configuration */
-  HAL_NVIC_SetPriority(DebugMonitor_IRQn, 0, 0);
-  /* PendSV_IRQn interrupt configuration */
-  HAL_NVIC_SetPriority(PendSV_IRQn, 0, 0);
-  /* SysTick_IRQn interrupt configuration */
-  HAL_NVIC_SetPriority(SysTick_IRQn, 0, 0);
-
-  /* USER CODE BEGIN MspInit 1 */
-
-  /* USER CODE END MspInit 1 */
+#define Error_Handler() _Error_Handler(__FILE__, __LINE__)
+#ifdef __cplusplus
 }
-
-
-/* USER CODE BEGIN 1 */
-
-/* USER CODE END 1 */
+#endif
 
 /**
   * @}
-  */
+  */ 
 
 /**
   * @}
-  */
+*/ 
 
+#endif /* __SOC_INIT_H */
 /************************ (C) COPYRIGHT STMicroelectronics *****END OF FILE****/

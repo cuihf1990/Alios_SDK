@@ -31,7 +31,7 @@ static struct cli_st *cli = NULL;
 static int            cliexit = 0;
 char                  esc_tag[64] = {0};
 static uint8_t        esc_tag_len = 0;
-uart_dev_t     uart_0;
+extern uart_dev_t     uart_0;
 extern void hal_reboot(void);
 
 #ifdef CONFIG_AOS_CLI_BOARD
@@ -585,7 +585,7 @@ static void log_cmd(char *buf, int len, int argc, char **argv)
     }
     aos_cli_printf("set log level fail\r\n");
 }
-
+/*
 static uint8_t hex(char c)
 {
     if (c >= '0' && c <= '9')
@@ -604,7 +604,7 @@ static void hexstr2bin(const char *macstr, uint8_t *mac, int len)
         mac[i] = hex(macstr[2 * i]) << 4;
         mac[i] |= hex(macstr[2 * i + 1]);
     }
-}
+}*/
 
 static void mac_cmd(char *buf, int len, int argc, char **argv)
 {
