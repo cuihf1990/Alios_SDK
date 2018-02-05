@@ -13,7 +13,7 @@
 #include <sal_err.h>
 #include <sal.h>
 
-#include <hal/soc/atcmd.h>
+#include <hal/atcmd.h>
 #ifdef AOS_ATCMD
 #include <atparser.h>
 #endif
