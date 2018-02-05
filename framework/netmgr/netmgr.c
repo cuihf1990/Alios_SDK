@@ -559,6 +559,13 @@ bool netmgr_get_scan_cb_finished()
     return g_netmgr_cxt.wifi_scan_complete_cb_finished;
 }
 
+/* Returned IP[16] is in dot format, eg. 192.168.1.1. */
+void netmgr_wifi_get_ip(char ip[])
+{
+    if (!ip) {LOGE(TAG, "Invalid argument in %s", __func__);}
+    else format_ip(g_netmgr_cxt.ipv4_owned, ip);
+}
+
 #if !defined(CONFIG_YWSS) || defined(CSP_LINUXHOST)
 static int def_smart_config_start(void)
 {
