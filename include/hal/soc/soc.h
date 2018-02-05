@@ -20,6 +20,7 @@
 #include "wdg.h"
 #include "sd.h"
 #include "nand.h"
+#include "nor.h"
 
 #endif /* HAL_SOC_H */
 
