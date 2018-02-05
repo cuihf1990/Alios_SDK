@@ -976,7 +976,7 @@ class Terminal:
         self.log_display(time.time(), " 9.logdownload[ld]: download log file of device from server")
         self.log_display(time.time(), "           example: logdownload 0-2 5")
         self.log_display(time.time(), " 10.alias     [al]: alias names to client ids")
-        self.log_display(time.time(), "           example: alias 123456789012:Pi1@HZ")
+        self.log_display(time.time(), "           example: alias 1234567890123456:Pi1@HZ")
         self.log_display(time.time(), " 11.help          : print help infomation")
 
     def process_cmd(self, cmd):

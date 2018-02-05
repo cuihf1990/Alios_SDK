@@ -8,25 +8,28 @@ eml3047_stlink_serials = {
 def list_devices(os):
     return glob.glob('/dev/lora-*')
 
-def new_device(port):
-    if port not in eml3047_stlink_serials:
-        print('eml3047: unknow board {0}'.format(port))
+def exist(device):
+    return os.path.exists(device)
+
+def new_device(device):
+    if device not in eml3047_stlink_serials:
+        print('eml3047: unknow board {0}'.format(device))
         return None
     try:
-        ser = serial.Serial(port, 115200, timeout = 0.02)
-        subprocess.call(['st-flash', '--serial', eml3047_stlink_serials[port], 'reset'])
+        ser = serial.Serial(device, 115200, timeout = 0.02)
+        subprocess.call(['st-flash', '--serial', eml3047_stlink_serials[device], 'reset'])
     except:
         ser = None
-        print('eml3047: open {0} error'.format(port))
+        print('eml3047: open {0} error'.format(device))
     return ser
 
-def erase(port):
+def erase(device):
     retry = 3
     error = 'fail'
-    if port not in eml3407_stlink_serials:
+    if device not in eml3407_stlink_serials:
         return error
     while retry > 0:
-        script = ['st-flash', '--serial', eml3407_stlink_serials[port], 'erase']
+        script = ['st-flash', '--serial', eml3407_stlink_serials[device], 'erase']
         ret = subprocess.call(script)
         if ret == 0:
             error =  'success'
@@ -35,13 +38,13 @@ def erase(port):
         time.sleep(4)
     return error
 
-def program(port, address, file):
+def program(device, address, file):
     retry = 3
     error = 'fail'
-    if port not in eml3047_stlink_serials:
+    if device not in eml3047_stlink_serials:
         return error
     while retry > 0:
-        script = ['st-flash', '--serial', eml3047_stlink_serials[port]]
+        script = ['st-flash', '--serial', eml3047_stlink_serials[device]]
         script += ['write', file, address]
         ret = subprocess.call(script)
         if ret == 0:
@@ -51,13 +54,13 @@ def program(port, address, file):
         time.sleep(4)
     return error
 
-def control(port, operation):
+def control(device, operation):
     ret = 'fail'
-    if port not in eml3047_stlink_serials:
+    if device not in eml3047_stlink_serials:
         return ret
     try:
         if operation == 'reset':
-            subprocess.call(['st-flash', '--serial', eml3047_stlink_serials[port], 'reset'])
+            subprocess.call(['st-flash', '--serial', eml3047_stlink_serials[device], 'reset'])
             ret = 'success'
         elif operation == 'stop':
             ret = 'fail'

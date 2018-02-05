@@ -124,7 +124,7 @@ class Controller():
         self.netlog_print('{0} connected'.format(addr))
         conn.setblocking(False)
         self.selector.register(conn, selector.EVENT_READ, self.data_read)
-        self.connections[conn] = {'role':'none', 'inbuff':'', 'outbuff':Queue.Queue(256)}
+        self.connections[conn] = {'role':'none', 'addr': addr, 'inbuff':'', 'outbuff':Queue.Queue(256)}
         self.timeouts[conn] = time.time() + 0.2
 
     def data_write(self, sock):
@@ -148,7 +148,8 @@ class Controller():
             data = None
         role = self.connections[sock]['role']
         if not data:
-            self.netlog_print("{0} {1} disconnect".format(role, sock.getpeername()))
+            addr = self.connections[sock]['addr']
+            self.netlog_print("{0} {1} disconnect".format(role, addr))
             self.selector.unregister(sock, selector.EVENT_READ)
             self.selector.unregister(sock, selector.EVENT_WRITE)
             sock.close()
@@ -165,11 +166,15 @@ class Controller():
 
     def send_data(self, sock, content):
         if sock not in self.connections:
-            self.netlog_print("error: sending data to invalid connection {0}".format(sock.getpeername()))
+            try:
+                self.netlog_print("error: sending data to invalid connection {0}".format(sock.getpeername()))
+            except:
+                self.netlog_print("error: sending data to invalid connection {0}".format(repr(sock)))
             return False
         queue = self.connections[sock]['outbuff']
         if queue.full():
-            self.netlog_print("warning: output buffer for {0} full, discard packet".format(sock.getpeername()))
+            addr = self.connections[sock]['addr']
+            self.netlog_print("warning: output buffer for {0} full, discard packet".format(addr))
             return False
         queue.put_nowait(content)
         self.selector.register(sock, selector.EVENT_WRITE, self.data_write)
@@ -325,7 +330,7 @@ class Controller():
             if client_sock == None:
                 return
 
-            server_addr = sock.getpeername()[0]
+            server_addr = self.connections[sock]['addr'][0]
             server_port = self.connections[sock]['client_port']
             certificate = self.connections[sock]['certificate']
             content = 'success,{0},{1},{2},{3}'.format(server_addr, server_port, token, certificate)
@@ -357,7 +362,7 @@ class Controller():
                 self.send_data(terminal_sock, content)
                 return
 
-            server_addr = sock.getpeername()[0]
+            server_addr = self.connections[sock]['addr'][0]
             server_port = self.connections[sock]['terminal_port']
             certificate = self.connections[sock]['certificate']
             content = 'success,{0},{1},{2},{3}'.format(server_addr, server_port, token, certificate)
@@ -399,24 +404,30 @@ class Controller():
                 self.send_data(sock, content)
                 return
 
-            devices = []
+            devices = []; client_uuids = []; server_sock = None
             for device in self.devices:
                 if self.devices[device]['uuid'] != uuid:
                     continue
                 devices.append(device)
-            devices = '|'.join(devices)
-            if devices == '':
+                client_uuid = device[0:16]
+                if client_uuid in client_uuids:
+                    continue
+                client_uuids.append(client_uuid)
+                if server_sock != None:
+                    continue
+                server_sock = self.find_server_for_target(client_uuid, 'client')
+            self.netlog_print("{0} {1}".format(client_uuids, server_sock))
+            if devices == []:
                 content = pkt.construct(pkt.ACCESS_LOGIN, 'no allocated device')
                 self.send_data(sock, content)
                 return
-            client_uuid = devices.split(':')[0]
-            server_sock = self.find_server_for_target(client_uuid, 'client')
             if server_sock == None:
                 content = pkt.construct(pkt.ACCESS_LOGIN, 'allocated devices not connected')
                 self.send_data(sock, content)
                 return
 
             token = self.generate_random_hexstr(16)
+            devices = '|'.join(devices)
             content = '{0},{1},{2}'.format(uuid, token, devices)
             content = pkt.construct(pkt.ACCESS_ADD_TERMINAL, content)
             self.send_data(server_sock, content)
@@ -446,7 +457,8 @@ class Controller():
                 if now < self.timeouts[conn]:
                     continue
                 role = self.connections[conn]['role']
-                self.netlog_print("{0} {1} timeout, close connection".format(role, conn.getpeername()))
+                addr = self.connections[conn]['addr']
+                self.netlog_print("{0} {1} timeout, close connection".format(role, addr))
                 self.selector.unregister(conn, selector.EVENT_READ)
                 self.selector.unregister(conn, selector.EVENT_WRITE)
                 conn.close()
@@ -812,7 +824,7 @@ class Controller():
             if uuid != None and uuid != self.connections[conn]['uuid']:
                 continue
             server_uuid = self.connections[conn]['uuid']
-            server_port = conn.getpeername()[1]
+            server_port = self.connections[conn]['addr'][1]
             self.cmdlog_print("|" + tab*0 + '--' + '{0}-{1}:'.format(server_uuid, server_port))
             if 'clients' not in self.connections[conn]['status']:
                 continue
