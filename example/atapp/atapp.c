@@ -11,7 +11,7 @@
 #include <sys/time.h>
 #include <atparser.h>
 #include <netmgr.h>
-#include <hal/soc/atcmd.h>
+#include <hal/atcmd.h>
 #ifdef AOS_AT_ADAPTER
 #include <aos/network.h>
 #include <at_adapter.h>

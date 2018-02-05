@@ -200,7 +200,7 @@ int32_t hal_uart_recv(uart_dev_t *uart, void *data, uint32_t expect_size, uint32
 #include <fcntl.h>
 #include <string.h>
 #include <assert.h>
-#include <hal/soc/atcmd.h>
+#include <hal/atcmd.h>
 
 static int at_uart_fd = -1;
 

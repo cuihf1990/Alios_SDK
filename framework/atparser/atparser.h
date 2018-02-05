@@ -10,7 +10,7 @@
 #include <aos/aos.h>
 
 #ifdef AOS_ATCMD
-#include <hal/soc/atcmd.h>
+#include <hal/atcmd.h>
 #endif
 
 #ifndef bool

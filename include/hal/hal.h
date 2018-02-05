@@ -13,6 +13,7 @@
 #include <hal/sensor.h>
 #include <hal/trace.h>
 #include <hal/wifi.h>
+#include <hal/atcmd.h>
 
 #include <hal/soc/adc.h>
 #include <hal/soc/flash.h>
@@ -26,7 +27,6 @@
 #include <hal/soc/uart.h>
 #include <hal/soc/wdg.h>
 #include <hal/soc/sd.h>
-#include <hal/soc/atcmd.h>
 
 #endif /* HAL_HAL_H */
 
