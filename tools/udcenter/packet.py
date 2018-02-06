@@ -14,6 +14,9 @@ DEVICE_RESET       = 'DRST'
 DEVICE_START       = 'DSTR'
 DEVICE_STOP        = 'DSTP'
 DEVICE_ALLOC       = 'DALC'
+DEVICE_DEBUG_START = 'DDBI'
+DEVICE_DEBUG_DATA  = 'DDBD'
+DEVICE_DEBUG_STOP  = 'DDBE'
 LOG_SUB            = 'LGSB'
 LOG_UNSUB          = 'LGUS'
 STATUS_SUB         = 'STSB'
@@ -41,6 +44,8 @@ def is_valid_type(type):
         return True
     if type == DEVICE_STATUS:
         return True
+    if type == DEVICE_DEBUG_DATA:
+        return True
     if type == HEARTBEAT:
         return True
     if type == DEVICE_CMD:
@@ -58,6 +63,10 @@ def is_valid_type(type):
     if type == DEVICE_START:
         return True
     if type == DEVICE_STOP:
+        return True
+    if type == DEVICE_DEBUG_START:
+        return True
+    if type == DEVICE_DEBUG_STOP:
         return True
     #less frequently used commands
     if type == CLIENT_DEV:

@@ -2,7 +2,7 @@ import os, sys, time, serial, subprocess, traceback, glob
 import socket
 
 nucleo_stlink_serials = {}
-nucleo_gdb_sessions = {}
+nucleo_debug_sessions = {}
 
 def list_devices(host_os):
     return glob.glob('/dev/stm32*-*')
@@ -87,4 +87,36 @@ def control(device, operation):
     except:
         pass
     return ret
+
+def debug_start(device):
+    if device not in nucleo_stlink_serials:
+        return ['fail', None]
+    if device in nucleo_debug_sessions:
+        return ['busy', None]
+
+    used_ports = []
+    for device in nucleo_debug_sessions:
+        used_ports.append[nucleo_debug_sessions[device]['port']]
+    port = 3096 + ord(os.urandom(1)) * ord(os.urandom(1)) / 64
+    while port in used_ports:
+        port = 3096 + ord(os.urandom(1)) * ord(os.urandom(1)) / 64
+
+    p = subprocess.call('st-util -p {0} --serial {1}'.format(port, nucleo_stlink_serials[device]))
+    time.sleep(0.01)
+    sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+    try:
+        sock.connect(('localhost', port))
+    except:
+        p.kill()
+        return ['fail', None]
+    nucleo_debug_sessions[device] = {'process': p, 'port': port, 'socket': sock}
+    return ['success', sock]
+
+def debug_stop(device):
+    if device not in nucleo_debug_sessions:
+        return 'fail'
+    nucleo_debug_sessions[device]['process'].kill()
+    nucleo_debug_sessions[device]['socket'].close()
+    nucleo_debug_sessions.pop(device)
+    return 'success'
 
