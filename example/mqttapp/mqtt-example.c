@@ -14,7 +14,7 @@
 #include "aos/network.h"
 #include <netmgr.h>
 #include <aos/kernel.h>
-#include <k_err.h>
+//#include <k_err.h>
 //#include "aliot_platform.h"
 //#include "aliot_log.h"
 //#include "aliot_mqtt_client.h"
