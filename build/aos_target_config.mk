@@ -468,18 +468,34 @@ $(call WRITE_FILE_APPEND, $(CONFIG_PY_FILE) ,]$(COMMA))
 $(call WRITE_FILE_APPEND, $(CONFIG_PY_FILE) ,}$(COMMA))
 endef
 
-PROJ_GEN_DIR   := projects/auto_gen_projects/$(CLEANED_BUILD_STRING)
+PROJ_GEN_DIR   := projects/autogen/$(CLEANED_BUILD_STRING)
 
 ifeq ($(IDE),iar)
-$(MAKECMDGOALS): $(CONFIG_PY_FILE)
-$(CONFIG_PY_FILE): build/scripts/iar.py build/aos_target_config.mk $(CONFIG_FILE)
+PROJECT_GEN := $(PROJ_GEN_DIR)/iar_project/$(CLEANED_BUILD_STRING).ewd
+$(MAKECMDGOALS): $(PROJECT_GEN)
+$(PROJECT_GEN): build/scripts/iar.py build/aos_target_config.mk $(CONFIG_FILE)
 	$(QUIET)echo Making $(IDE) Project
 	$(QUIET)$(call WRITE_FILE_CREATE, $(CONFIG_PY_FILE) ,Projects = [)
 	$(QUIET)$(foreach comp,$(PROCESSED_COMPONENTS), $(call WRITE_COMPOENT_PY ))
 	$(QUIET)$(call WRITE_FILE_APPEND, $(CONFIG_PY_FILE) ,])
 	$(QUIET)$(call MKDIR, $(PROJ_GEN_DIR)/iar_project)
-	$(QUIET)cp -f  build/scripts/template.ewd $(PROJ_GEN_DIR)/iar_project/$(CLEANED_BUILD_STRING).ewd
+	$(QUIET)cp -f  build/scripts/template.ewd $(PROJECT_GEN)
 	python build/scripts/iar.py $(CLEANED_BUILD_STRING)
 	$(QUIET)echo ----------- iar project has generated in $(PROJ_GEN_DIR)/iar_project ----------- 
+endif
+
+ifeq ($(IDE),keil)
+PROJECT_GEN := $(PROJ_GEN_DIR)/keil_project/$(CLEANED_BUILD_STRING).uvoptx
+$(MAKECMDGOALS): $(PROJECT_GEN)
+$(PROJECT_GEN): build/scripts/keil.py build/aos_target_config.mk $(CONFIG_FILE)
+	$(QUIET)echo Making $(IDE) Project
+	$(QUIET)$(call WRITE_FILE_CREATE, $(CONFIG_PY_FILE) ,Projects = [)
+	$(warning 111 auto_component_SOURCES:  $(auto_component_SOURCES))
+	$(QUIET)$(foreach comp,$(PROCESSED_COMPONENTS), $(call WRITE_COMPOENT_PY ))
+	$(QUIET)$(call WRITE_FILE_APPEND, $(CONFIG_PY_FILE) ,])
+	$(QUIET)$(call MKDIR, $(PROJ_GEN_DIR)/keil_project)
+	$(QUIET)cp -f  build/scripts/template.uvoptx $(PROJECT_GEN)
+	python build/scripts/keil.py $(CLEANED_BUILD_STRING)
+	$(QUIET)echo ----------- keil project has generated in $(PROJ_GEN_DIR)/keil_project ----------- 
 endif
 

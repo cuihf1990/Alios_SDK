@@ -131,11 +131,11 @@ def IARProject(target, script):
 
 #argv[1]: buildstring, eg: nano@b_l475e
 buildstring = sys.argv[1]
-proj_output_dir = 'projects/auto_gen_projects/'+buildstring+'/iar_project'
+proj_output_dir = 'projects/autogen/'+buildstring+'/iar_project'
 #use in xml text
 aos_relative_path = '$PROJ_DIR$\\' + '../../../../'
 projectPath = proj_output_dir+'/'+buildstring+'.ewp'
-opt_dir = '$PROJ_DIR$\\libraries/'
+opt_dir = '$PROJ_DIR$\\opts/'
 
 print 'Making iar project '+buildstring
 IARProject(projectPath, Projects)
