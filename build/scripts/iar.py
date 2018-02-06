@@ -55,7 +55,7 @@ def IARAddGroup(parent, name, files, includes, project_path):
   
     for i in includes:
         stateTemp = SubElement(group_data_option3, 'state')
-        stateTemp.text = ('$PROJ_DIR$\\' + '../../../' + i).decode(fs_encoding)
+        stateTemp.text = (aos_relative_path + i).decode(fs_encoding)
     
     
     group_config_settings2 = SubElement(group_config, 'settings')
@@ -80,15 +80,13 @@ def IARAddGroup(parent, name, files, includes, project_path):
         if repeat_path.count(f):
             fnewName = f.replace('./','')
             fnewName = fnewName.replace('/','_')
-            fnewDir = 'out/'+buildstring+'/iar_project'
-            fnewPath = fnewDir+'/'+fnewName
+            fnewPath = proj_output_dir+'/'+fnewName
             #print 'copy', f, 'to', fnewPath
             shutil.copyfile(f,fnewPath)
             f = fnewPath
         file = SubElement(group, 'file')
         file_name = SubElement(file, 'name')
-        file_name.text = ('$PROJ_DIR$\\' + '../../../' + f).decode(fs_encoding)
-        
+        file_name.text = (aos_relative_path + f).decode(fs_encoding)
         
 def IARWorkspace(target):
     # make an workspace 
@@ -108,7 +106,7 @@ def IARProject(target, script):
     out = file(target, 'wb')
     
     existedFileNameString=[]
-    # find repeat source file
+    # copy repeat source file and replace old one
     for group in script:
         for filePath in group['src']:
             filename = os.path.splitext(basename(filePath))
@@ -116,7 +114,10 @@ def IARProject(target, script):
                 repeat_path.append(filePath)
             else:
                 existedFileNameString.append(filename)        
-    print 'repeat files:', repeat_path
+     
+    if len(repeat_path):
+        print 'repeat name files:', repeat_path
+        print 'will copy them to '+proj_output_dir+'/ !'
     
     # add group
     for group in script:
@@ -130,8 +131,11 @@ def IARProject(target, script):
 
 #argv[1]: buildstring, eg: nano@b_l475e
 buildstring = sys.argv[1]
-projectPath = 'out/'+buildstring+'/iar_project/'+buildstring+'.ewp'
-opt_dir = '$PROJ_DIR$\\../libraries/'
+proj_output_dir = 'projects/autogen/'+buildstring+'/iar_project'
+#use in xml text
+aos_relative_path = '$PROJ_DIR$\\' + '../../../../'
+projectPath = proj_output_dir+'/'+buildstring+'.ewp'
+opt_dir = '$PROJ_DIR$\\opts/'
 
 print 'Making iar project '+buildstring
 IARProject(projectPath, Projects)
