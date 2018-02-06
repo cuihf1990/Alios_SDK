@@ -694,7 +694,7 @@ static uint32_t current_factor = 0;
 
 i2c_dev_t bmg160_ctx = {
     .port = 1,
-    .config.address_width = 7,
+    .config.address_width = 8,
     .config.freq = 400000,
     .config.dev_addr = BMG160_I2C_ADDR1,
 };
@@ -896,9 +896,15 @@ static int drv_gyro_bosch_bmg160_close(void)
 static int drv_gyro_bosch_bmg160_read(void *buf, size_t len)
 {
     int ret = 0;
+    size_t size = 0;
     uint8_t reg[6];
-    gyro_data_t *gyro = buf;
+    gyro_data_t *gyro = (gyro_data_t *)buf;
     if(buf == NULL){
+        return -1;
+    }
+
+    size = sizeof(gyro_data_t);
+    if(len < size){
         return -1;
     }
 
@@ -923,8 +929,7 @@ static int drv_gyro_bosch_bmg160_read(void *buf, size_t len)
     }
 
     gyro->timestamp = aos_now_ms();
-    len = sizeof(gyro_data_t);
-    return 0;
+    return (int)size;
 }
 
 static int drv_gyro_bosch_bmg160_ioctl(int cmd, unsigned long arg)

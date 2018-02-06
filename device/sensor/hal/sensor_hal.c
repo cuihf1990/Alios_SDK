@@ -238,12 +238,12 @@ static ssize_t sensor_read(file_t *f, void *buf, size_t len)
     }
     
     ret = g_sensor_obj[index]->read(buf, len);
-    if(ret != 0){
+    if(ret < 0){
         goto error;
     }
     
     LOG("%s %s successfully\n", SENSOR_STR, __func__);
-    return len;
+    return ret;
     
 error:
     return -1;

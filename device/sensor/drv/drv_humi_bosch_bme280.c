@@ -181,7 +181,7 @@ static bme280_config_t g_bme280_config;
 
 i2c_dev_t bme280_ctx = {
     .port = 1,
-    .config.address_width = 7,
+    .config.address_width = 8,
     .config.freq = 400000,
     .config.dev_addr = BME280_I2C_ADDR,
 };
@@ -633,6 +633,7 @@ static int drv_humi_bosch_bme280_close(void)
 static int drv_humi_bosch_bme280_read(void *buf, size_t len)
 {
     int ret = 0;
+    size_t size = 0;
     uint8_t data[BME280_TEMP_DATA_LEN] = {0};
     uint32_t data_lsb;
     uint32_t data_msb;
@@ -641,8 +642,9 @@ static int drv_humi_bosch_bme280_read(void *buf, size_t len)
     if(buf == NULL){
         return -1;
     }
-
-    if(len < sizeof(humidity_data_t)){
+    
+    size = sizeof(humidity_data_t);
+    if(len < size){
         return -1;
     }
 
@@ -657,8 +659,7 @@ static int drv_humi_bosch_bme280_read(void *buf, size_t len)
     }
     
     pdata->timestamp = aos_now_ms();
- 
-    return 0;
+    return (int)size;
 }
 
 static int drv_humi_bosch_bme280_ioctl(int cmd, unsigned long arg)
