@@ -314,6 +314,14 @@ int sensor_init(void){
     drv_baro_bosch_bmp280_init();
 #endif /* AOS_SENSOR_BARO_BOSCH_BMP280 */
 
+#ifdef AOS_SENSOR_ACC_ST_LSM6DSL
+    drv_acc_st_lsm6dsl_init();
+#endif /* AOS_SENSOR_ACC_ST_LSM6DSL */
+
+#ifdef AOS_SENSOR_GYRO_ST_LSM6DSL
+    drv_gyro_st_lsm6dsl_init();
+#endif /* AOS_SENSOR_GYRO_ST_LSM6DSL */
+
     ret = sensor_hal_register();
     if(ret != 0){
         return -1;
