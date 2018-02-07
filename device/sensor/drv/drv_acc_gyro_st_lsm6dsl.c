@@ -21,7 +21,6 @@
 #define LSM6DSL_I2C_ADDR_TRANS(n)           ((n)<<1)  
 #define LSM6DSL_I2C_ADDR                    LSM6DSL_I2C_ADDR_TRANS(LSM6DSL_I2C_ADDR1)
 
-
 #define LSM6DSL_ACC_GYRO_FUNC_CFG_ACCESS    0x01
 #define LSM6DSL_ACC_GYRO_SENSOR_SYNC_TIME   0x04
 #define LSM6DSL_ACC_GYRO_SENSOR_RES_RATIO   0x05
@@ -176,36 +175,18 @@
 #define LSM6DSL_GYRO_RANGE_MSK              (0X0C)
 #define LSM6DSL_GYRO_RANGE_POS              (2)
 
-
-
-#define LSM6DSL_GYRO_SENSITIVITY_245DPS            (875)
-#define LSM6DSL_GYRO_SENSITIVITY_500DPS            (1750)
-#define LSM6DSL_GYRO_SENSITIVITY_1000DPS           (3500)
-#define LSM6DSL_GYRO_SENSITIVITY_2000DPS           (7000)
-
+#define LSM6DSL_GYRO_SENSITIVITY_245DPS     (875)
+#define LSM6DSL_GYRO_SENSITIVITY_500DPS     (1750)
+#define LSM6DSL_GYRO_SENSITIVITY_1000DPS    (3500)
+#define LSM6DSL_GYRO_SENSITIVITY_2000DPS    (7000)
 
 #define LSM6DSL_SHIFT_EIGHT_BITS            (8)
 #define LSM6DSL_16_BIT_SHIFT                (0xFF)
 #define LSM6DSL_ACC_MUL                     (1000)
 #define LSM6DSL_GYRO_MUL                    (100)
 
-
 #define LSM6DSL_ACC_DEFAULT_ODR_100HZ       (100)
-#define LSM6DSL_GYRO_DEFAULT_ODR_100HZ       (100)
-
-static int32_t lsm6dsl_acc_factor[ACC_RANGE_MAX] = { LSM6DSL_ACC_SENSITIVITY_2G, LSM6DSL_ACC_SENSITIVITY_4G, 
-                                         LSM6DSL_ACC_SENSITIVITY_8G, LSM6DSL_ACC_SENSITIVITY_16G };
-
-static int32_t cur_acc_factor = 0;
-
-
-static int32_t lsm6dsl_gyro_factor[GYRO_RANGE_MAX] = {0, LSM6DSL_GYRO_SENSITIVITY_245DPS, LSM6DSL_GYRO_SENSITIVITY_500DPS, 
-                                         LSM6DSL_GYRO_SENSITIVITY_1000DPS, LSM6DSL_GYRO_SENSITIVITY_2000DPS };
-
-static int32_t cur_gyro_factor = 0;
-
-
-
+#define LSM6DSL_GYRO_DEFAULT_ODR_100HZ      (100)
 
 #define LSM6DSL_GET_BITSLICE(regvar, bitname)\
 ((regvar & bitname##_MSK) >> bitname##_POS)
@@ -213,6 +194,13 @@ static int32_t cur_gyro_factor = 0;
 #define LSM6DSL_SET_BITSLICE(regvar, bitname, val)\
 ((regvar & ~bitname##_MSK) | ((val<<bitname##_POS)&bitname##_MSK))
 
+static int32_t lsm6dsl_acc_factor[ACC_RANGE_MAX] = { LSM6DSL_ACC_SENSITIVITY_2G, LSM6DSL_ACC_SENSITIVITY_4G, 
+                                     LSM6DSL_ACC_SENSITIVITY_8G, LSM6DSL_ACC_SENSITIVITY_16G };
+static int32_t lsm6dsl_gyro_factor[GYRO_RANGE_MAX] = {0, LSM6DSL_GYRO_SENSITIVITY_245DPS, LSM6DSL_GYRO_SENSITIVITY_500DPS, 
+                                     LSM6DSL_GYRO_SENSITIVITY_1000DPS, LSM6DSL_GYRO_SENSITIVITY_2000DPS };
+static int32_t cur_acc_factor = 0;
+static int32_t cur_gyro_factor = 0;
+static int32_t g_lsm6dslflag = 0;
 
 i2c_dev_t lsm6dsl_ctx = {
     .port = 1,
@@ -220,7 +208,6 @@ i2c_dev_t lsm6dsl_ctx = {
     .config.freq = 400000,
     .config.dev_addr = LSM6DSL_I2C_ADDR,
 };
-#define dot_st  printf("%s line %d\n",__func__,__LINE__);
 
 static int drv_acc_gyro_st_lsm6dsl_soft_reset(i2c_dev_t* drv)
 {
@@ -245,25 +232,20 @@ static int drv_acc_gyro_st_lsm6dsl_validate_id(i2c_dev_t* drv, uint8_t id_value)
 {
     uint8_t value = 0x00;
     int ret = 0;
-    dot_st;
 
     if(drv == NULL){
         return -1;
     }
-    
-    dot_st;
-    ret = sensor_i2c_read(drv, LSM6DSL_ACC_GYRO_WHO_AM_I_REG, &value, I2C_DATA_LEN, I2C_OP_RETRIES);
+
     ret = sensor_i2c_read(drv, LSM6DSL_ACC_GYRO_WHO_AM_I_REG, &value, I2C_DATA_LEN, I2C_OP_RETRIES);
     if(unlikely(ret)){
         return ret;
     }
     
-    dot_st;
     if (id_value != value){
         return -1;
     }
     
-    dot_st;
     return 0;
 }
 
@@ -271,7 +253,6 @@ static int drv_acc_st_lsm6dsl_set_power_mode(i2c_dev_t* drv, dev_power_mode_e mo
 {
     uint8_t value,value1 = 0x00;
     int ret = 0;
-    uint8_t buf[4];
     
     ret = sensor_i2c_read(drv, LSM6DSL_ACC_GYRO_CTRL1_XL, &value, I2C_DATA_LEN, I2C_OP_RETRIES);
     if(unlikely(ret)){
@@ -390,13 +371,11 @@ static int drv_acc_st_lsm6dsl_set_range(i2c_dev_t* drv, uint32_t range)
     }
     
     value  = LSM6DSL_SET_BITSLICE(value,LSM6DSL_ACC_RANGE,tmp);
-    /* Write the range register 0x0F*/
     ret = sensor_i2c_write(drv, LSM6DSL_ACC_GYRO_CTRL1_XL, &value, I2C_DATA_LEN, I2C_OP_RETRIES);
     if(unlikely(ret)){
         return ret;
     }
 
-    
     if((range >= ACC_RANGE_2G)&&(range <= ACC_RANGE_16G)){
         cur_acc_factor = lsm6dsl_acc_factor[range];
     }
@@ -414,76 +393,21 @@ static int drv_acc_st_lsm6dsl_open(void)
 {
     int ret = 0;
     
-    dot_st;
-#if 1
     ret  = drv_acc_st_lsm6dsl_set_power_mode(&lsm6dsl_ctx, DEV_POWER_ON);
     if(unlikely(ret)){
         return -1;
     }
-    dot_st;
 
     ret = drv_acc_st_lsm6dsl_set_range(&lsm6dsl_ctx, ACC_RANGE_8G);
     if(unlikely(ret)){
         return -1;
     }
-    dot_st;
 
     ret = drv_acc_st_lsm6dsl_set_odr(&lsm6dsl_ctx, LSM6DSL_ACC_DEFAULT_ODR_100HZ);
     if(unlikely(ret)){
         return -1;
     }
-    dot_st;
-    uint8_t value = 0;
-    ret = sensor_i2c_read(&lsm6dsl_ctx, LSM6DSL_ACC_GYRO_CTRL3_C, &value, I2C_DATA_LEN, I2C_OP_RETRIES);
-    if(unlikely(ret)){
-        return ret;
-    }
-
-    value = 0x00;
-    ret = sensor_i2c_write(&lsm6dsl_ctx, LSM6DSL_ACC_GYRO_CTRL3_C, &value, I2C_DATA_LEN, I2C_OP_RETRIES);
-    if(unlikely(ret)){
-        return ret;
-    }
-    value = 0;
-
-    ret = sensor_i2c_read(&lsm6dsl_ctx, LSM6DSL_ACC_GYRO_CTRL3_C, &value, I2C_DATA_LEN, I2C_OP_RETRIES);
-    if(unlikely(ret)){
-        return ret;
-    }
-
-    printf("LSM6DSL_ACC_GYRO_CTRL3_C = 0x%x\n",value);
-
-    ret = sensor_i2c_read(&lsm6dsl_ctx, LSM6DSL_ACC_GYRO_CTRL1_XL, &value, I2C_DATA_LEN, I2C_OP_RETRIES);
-    if(unlikely(ret)){
-        return ret;
-    }
-
-    printf("LSM6DSL_ACC_GYRO_CTRL1_XL = 0x%x\n",value);
-    ret = sensor_i2c_read(&lsm6dsl_ctx, LSM6DSL_ACC_GYRO_CTRL6_C, &value, I2C_DATA_LEN, I2C_OP_RETRIES);
-    if(unlikely(ret)){
-        return ret;
-    }
-
-    printf("LSM6DSL_ACC_GYRO_CTRL6_C = 0x%x\n",value);
-
-    value = 0x80;
-    ret = sensor_i2c_write(&lsm6dsl_ctx, LSM6DSL_ACC_GYRO_CTRL4_C, &value, I2C_DATA_LEN, I2C_OP_RETRIES);
-    if(unlikely(ret)){
-        return ret;
-    }
-
-    ret = sensor_i2c_read(&lsm6dsl_ctx, LSM6DSL_ACC_GYRO_CTRL4_C, &value, I2C_DATA_LEN, I2C_OP_RETRIES);
-    if(unlikely(ret)){
-        return ret;
-    }
-
-    printf("LSM6DSL_ACC_GYRO_CTRL4_C = 0x%x\n",value);
-
-
-    
-#endif
-
-    
+     
     return 0;
 
 }
@@ -522,30 +446,17 @@ static int drv_acc_st_lsm6dsl_read(void *buf, size_t len)
     if(unlikely(ret)){
         return ret;
     }
-    
-    accel->data[DATA_AXIS_X] = (int16_t)((((int16_t)((int8_t)reg[1]))<< LSM6DSL_SHIFT_EIGHT_BITS)|(reg[0] &LSM6DSL_16_BIT_SHIFT));
-
-    accel->data[DATA_AXIS_Y] = (int16_t)((((int16_t)((int8_t)reg[3]))<< LSM6DSL_SHIFT_EIGHT_BITS)|(reg[2] &LSM6DSL_16_BIT_SHIFT));
-
-    accel->data[DATA_AXIS_Z] = (int16_t)((((int16_t)((int8_t)reg[5]))<< LSM6DSL_SHIFT_EIGHT_BITS)|(reg[4]&LSM6DSL_16_BIT_SHIFT));
-
-    
-    printf("a accel->data %d %d %d \n",accel->data[DATA_AXIS_X],accel->data[DATA_AXIS_Y],accel->data[DATA_AXIS_Z]);
-    
-
+    accel->data[DATA_AXIS_X] = (int16_t)((((int16_t)((int8_t)reg[1]))<< LSM6DSL_SHIFT_EIGHT_BITS)|(reg[0]));
+    accel->data[DATA_AXIS_Y] = (int16_t)((((int16_t)((int8_t)reg[3]))<< LSM6DSL_SHIFT_EIGHT_BITS)|(reg[2]));
+    accel->data[DATA_AXIS_Z] = (int16_t)((((int16_t)((int8_t)reg[5]))<< LSM6DSL_SHIFT_EIGHT_BITS)|(reg[4]));
 
     if(cur_acc_factor != 0){
         accel->data[DATA_AXIS_X] = (accel->data[DATA_AXIS_X] * cur_acc_factor)/LSM6DSL_ACC_MUL;
         accel->data[DATA_AXIS_Y] = (accel->data[DATA_AXIS_Y] * cur_acc_factor)/LSM6DSL_ACC_MUL;
         accel->data[DATA_AXIS_Z] = (accel->data[DATA_AXIS_Z] * cur_acc_factor)/LSM6DSL_ACC_MUL;
 
-        printf("accel->data %d %d %d \n",accel->data[DATA_AXIS_X],accel->data[DATA_AXIS_Y],accel->data[DATA_AXIS_Z]);
     }
     accel->timestamp = aos_now_ms();
-
-    
-
-    printf("drv_acc_st_lsm6dsl_read success\n");
 
     return (int)size;
 }
@@ -604,47 +515,32 @@ int drv_acc_st_lsm6dsl_init(void){
     sensor.ioctl      = drv_acc_st_lsm6dsl_ioctl;
     sensor.irq_handle = drv_acc_st_lsm6dsl_irq_handle;
     sensor.bus = &lsm6dsl_ctx;
-    dot_st;
 
     ret = sensor_create_obj(&sensor);
     if(unlikely(ret)){
         return -1;
     }
-    dot_st;
     ret = drv_acc_gyro_st_lsm6dsl_validate_id(&lsm6dsl_ctx, LSM6DSL_CHIP_ID_VALUE);
     if(unlikely(ret)){
         return -1;
     }
-    dot_st;
-    ret = drv_acc_gyro_st_lsm6dsl_soft_reset(&lsm6dsl_ctx);
-    if(unlikely(ret)){
-        return -1;
+
+    if(0 == g_lsm6dslflag)
+    {
+        ret = drv_acc_gyro_st_lsm6dsl_soft_reset(&lsm6dsl_ctx);
+        if(unlikely(ret)){
+            return -1;
+        }
+        ret = drv_acc_st_lsm6dsl_set_power_mode(&lsm6dsl_ctx, DEV_POWER_OFF);
+        if(unlikely(ret)){
+            return -1;
+        }
+        g_lsm6dslflag = 1;
     }
-    dot_st;
-    ret = drv_acc_st_lsm6dsl_set_power_mode(&lsm6dsl_ctx, DEV_POWER_OFF);
-    if(unlikely(ret)){
-        return -1;
+    else
+    {
+        LOG("%s %s acc do not need reset\n", SENSOR_STR, __func__);
     }
-    dot_st;
-    /* update the phy sensor info to sensor hal */
-
-    uint8_t value = 0;
-
-    ret = sensor_i2c_read(&lsm6dsl_ctx, LSM6DSL_ACC_GYRO_CTRL3_C, &value, I2C_DATA_LEN, I2C_OP_RETRIES);
-    if(unlikely(ret)){
-        return ret;
-    }
-
-    printf("LSM6DSL_ACC_GYRO_CTRL3_C 0 = 0x%x\n",value);
-
-    ret = sensor_i2c_read(&lsm6dsl_ctx, LSM6DSL_ACC_GYRO_CTRL1_XL, &value, I2C_DATA_LEN, I2C_OP_RETRIES);
-    if(unlikely(ret)){
-        return ret;
-    }
-
-    
-    printf("LSM6DSL_ACC_GYRO_CTRL1_XL 0 = 0x%x\n",value);
-
     
     LOG("%s %s successfully \n", SENSOR_STR, __func__);
     return 0;
@@ -652,12 +548,10 @@ int drv_acc_st_lsm6dsl_init(void){
 
 
 #if 1
-
 static int drv_gyro_st_lsm6dsl_set_power_mode(i2c_dev_t* drv, dev_power_mode_e mode)
 {
     uint8_t value,value1 = 0x00;
     int ret = 0;
-    uint8_t buf[4];
     
     ret = sensor_i2c_read(drv, LSM6DSL_ACC_GYRO_CTRL2_G, &value, I2C_DATA_LEN, I2C_OP_RETRIES);
     if(unlikely(ret)){
@@ -774,12 +668,10 @@ static int drv_gyro_st_lsm6dsl_set_range(i2c_dev_t* drv, uint32_t range)
     }
     
     value  = LSM6DSL_SET_BITSLICE(value,LSM6DSL_GYRO_RANGE,tmp);
-    /* Write the range register 0x0F*/
     ret = sensor_i2c_write(drv, LSM6DSL_ACC_GYRO_CTRL2_G, &value, I2C_DATA_LEN, I2C_OP_RETRIES);
     if(unlikely(ret)){
         return ret;
     }
-
     
     if((range >= GYRO_RANGE_250DPS)&&(range <= GYRO_RANGE_2000DPS)){
         cur_gyro_factor = lsm6dsl_gyro_factor[range];
@@ -811,7 +703,6 @@ static int drv_gyro_st_lsm6dsl_open(void)
     if(unlikely(ret)){
         return -1;
     }
-
     
     return 0;
 
@@ -851,15 +742,11 @@ static int drv_gyro_st_lsm6dsl_read(void *buf, size_t len)
     if(unlikely(ret)){
         return ret;
     }
-    
-    gyro->data[DATA_AXIS_X] = (int16_t)((((int32_t)((int8_t)reg[1]))<< LSM6DSL_SHIFT_EIGHT_BITS)|(reg[0] &LSM6DSL_16_BIT_SHIFT));
-
-    gyro->data[DATA_AXIS_Y] = (int16_t)((((int32_t)((int8_t)reg[3]))<< LSM6DSL_SHIFT_EIGHT_BITS)|(reg[2] &LSM6DSL_16_BIT_SHIFT));
-
-    gyro->data[DATA_AXIS_Z] = (int16_t)((((int32_t)((int8_t)reg[5]))<< LSM6DSL_SHIFT_EIGHT_BITS)|(reg[4]&LSM6DSL_16_BIT_SHIFT));
+    gyro->data[DATA_AXIS_X] = (int16_t)((((int32_t)((int8_t)reg[1]))<< LSM6DSL_SHIFT_EIGHT_BITS)|(reg[0]));
+    gyro->data[DATA_AXIS_Y] = (int16_t)((((int32_t)((int8_t)reg[3]))<< LSM6DSL_SHIFT_EIGHT_BITS)|(reg[2]));
+    gyro->data[DATA_AXIS_Z] = (int16_t)((((int32_t)((int8_t)reg[5]))<< LSM6DSL_SHIFT_EIGHT_BITS)|(reg[4]));
 
     if(cur_gyro_factor != 0){
-        // the unit of acc is mg, 1000 mg = 1 g.
         gyro->data[DATA_AXIS_X] = (gyro->data[DATA_AXIS_X] * cur_gyro_factor)/LSM6DSL_GYRO_MUL;
         gyro->data[DATA_AXIS_Y] = (gyro->data[DATA_AXIS_Y] * cur_gyro_factor)/LSM6DSL_GYRO_MUL;
         gyro->data[DATA_AXIS_Z] = (gyro->data[DATA_AXIS_Z] * cur_gyro_factor)/LSM6DSL_GYRO_MUL;
@@ -933,14 +820,20 @@ int drv_gyro_st_lsm6dsl_init(void){
         return -1;
     }
 
-    ret = drv_acc_gyro_st_lsm6dsl_soft_reset(&lsm6dsl_ctx);
-    if(unlikely(ret)){
-        return -1;
-    }
+    if(0 == g_lsm6dslflag){
+        ret = drv_acc_gyro_st_lsm6dsl_soft_reset(&lsm6dsl_ctx);
+        if(unlikely(ret)){
+            return -1;
+        }
 
-    ret = drv_gyro_st_lsm6dsl_set_power_mode(&lsm6dsl_ctx, DEV_POWER_OFF);
-    if(unlikely(ret)){
-        return -1;
+        ret = drv_gyro_st_lsm6dsl_set_power_mode(&lsm6dsl_ctx, DEV_POWER_OFF);
+        if(unlikely(ret)){
+            return -1;
+        }
+        g_lsm6dslflag = 1;
+    }
+    else{
+        LOG("%s %s gyro do not need reset\n", SENSOR_STR, __func__);
     }
 
     /* update the phy sensor info to sensor hal */
