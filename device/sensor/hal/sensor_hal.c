@@ -322,6 +322,9 @@ int sensor_init(void){
     drv_gyro_st_lsm6dsl_init();
 #endif /* AOS_SENSOR_GYRO_ST_LSM6DSL */
 
+#ifdef AOS_SENSOR_BARO_ST_LPS22HB
+    drv_baro_st_lps22hb_init();
+#endif /* AOS_SENSOR_BARO_ST_LPS22HB */
     ret = sensor_hal_register();
     if(ret != 0){
         return -1;
