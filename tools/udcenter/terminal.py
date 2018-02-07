@@ -1,7 +1,9 @@
 #!/usr/bin/python
 
-import os, sys, time, curses, socket, ssl, random, re
-import subprocess, thread, threading, json, traceback, Queue
+import os, sys, time, re, random, json, Queue
+import curses, socket, ssl, select
+import subprocess, thread, threading
+import traceback
 from operator import itemgetter
 import packet as pkt
 
@@ -33,6 +35,8 @@ class Terminal:
         self.cmd_excute_return = ''
         self.cmd_excute_event = threading.Event()
         self.output_queue = Queue.Queue(256)
+        self.debug_socks = {}
+        self.debug_queue = Queue.Queue(256)
         self.log_content = []
         self.log_curr_line = -1
         self.log_subscribed = []
@@ -510,6 +514,33 @@ class Terminal:
                             log =  str(index) + log
                             self.log_display(logtime, log)
                         continue
+                    if type == pkt.DEVICE_DEBUG_DATA:
+                        dev = value.split(':')[0]
+                        if dev not in list(self.device_list):
+                            continue
+                        data = value[len(dev)+1:]
+                        if dev not in self.debug_socks:
+                            continue
+                        try:
+                            self.debug_socks[dev].sendall(data)
+                        except:
+                            index = self.get_index_by_devstr(dev)
+                            self.log_display(time.time(), 'forwording debug data for {0} failed'.format(index))
+                    if type in [pkt.DEVICE_DEBUG_START, pkt.DEVICE_DEBUG_REINIT, pkt.DEVICE_DEBUG_STOP]:
+                        #self.log_display(time.time(), '{0}'.format([type, value]))
+                        try:
+                            [dev, result] = value.split(':')
+                        except:
+                            self.log_display(time.time(), "error: wrong data {0} {1}".format(type,value))
+                            continue
+                        if dev not in list(self.device_list):
+                            continue
+                        message = [type, dev, result]
+                        if self.debug_queue.full() == True:
+                            self.log_display(time.time(), 'local debug deamon busy, discard packet {0}'.format([type, value]))
+                            continue
+                        self.debug_queue.put(message)
+                        continue
                     if type == pkt.CMD_DONE:
                         self.cmd_excute_return = value
                         self.cmd_excute_state = 'done'
@@ -563,6 +594,113 @@ class Terminal:
                 break
         self.keep_running = False;
 
+    def debug_interaction(self):
+        debug_sessions = {}
+        while self.keep_running:
+            if debug_sessions == {} or self.debug_queue.empty() == False:
+                [type, device, result] = self.debug_queue.get()
+                index = self.get_index_by_devstr(device)
+                if type == pkt.DEVICE_DEBUG_START:
+                    if result != 'success':
+                        self.log_display(time.time(), 'error: start debug device {0} failed, ret={1}'.format(index, result))
+                        self.cmd_excute_return = result
+                        self.cmd_excute_state = 'error'
+                        self.cmd_excute_event.set()
+                        continue
+
+                    if device in debug_sessions:
+                        self.cmd_excute_return = port
+                        self.cmd_excute_state = 'done'
+                        self.cmd_excute_event.set()
+                        port = debug_sessions[device]['port']
+                        self.log_display(time.time(), 'start debugging {0} succeed, serve at port {1}'.format(index, port))
+                        continue
+                    used_ports = []
+                    for device in debug_sessions:
+                        used_ports.append(debug_sessions[device]['port'])
+                    port = 4120 + ord(os.urandom(1)) * ord(os.urandom(1)) / 64
+                    while port in used_ports:
+                        port = 4120 + ord(os.urandom(1)) * ord(os.urandom(1)) / 64
+                    sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+                    sock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+                    sock.setblocking(False)
+                    try:
+                        sock.bind(('localhost', port))
+                    except:
+                        self.log_display(time.time(), 'start debugging {0} failed, listen at port {1} failed'.format(index, port))
+                        self.cmd_excute_return = 'fail'
+                        self.cmd_excute_state = 'error'
+                        self.cmd_excute_event.set()
+                        continue
+                    sock.listen(1)
+                    debug_sessions[device] = {'port': port, 'listen_sock': sock}
+                    self.log_display(time.time(), 'start debugging {0} succeed, serve at port {1}'.format(index, port))
+                    self.cmd_excute_return = port
+                    self.cmd_excute_state = 'done'
+                    self.cmd_excute_event.set()
+                elif type == pkt.DEVICE_DEBUG_REINIT:
+                    if result == 'success':
+                        continue
+                    self.log_display(time.time(), 'error: restart debugging device {0} failed, ret={1}, closing debug session'.format(index, result))
+                    if device not in debug_sessions:
+                        continue
+                    if 'serve_sock' in debug_sessions[device]:
+                        self.debug_socks.pop(device)
+                        debug_sessions[device]['serve_sock'].close()
+                    debug_sessions[device]['listen_sock'].close()
+                    debug_sessions.pop(device)
+                elif type == pkt.DEVICE_DEBUG_STOP:
+                    self.cmd_excute_return = result
+                    if result == 'success':
+                        self.cmd_excute_state = 'done'
+                    else:
+                        self.cmd_excute_state = 'error'
+                    self.cmd_excute_event.set()
+
+                    if device not in debug_sessions:
+                        continue
+                    self.log_display(time.time(), "stop debugging {0}: {1}".format(index, result))
+                    if 'serve_sock' in debug_sessions[device]:
+                        debug_sessions[device]['serve_sock'].close()
+                    debug_sessions[device]['listen_sock'].close()
+                    debug_sessions.pop(device)
+                else:
+                    self.log_display(time.time(), "error: wrong debug msg type '{0}'".format(type))
+                continue
+
+            select_list = {}
+            for device in debug_sessions:
+                if 'serve_sock' in debug_sessions[device]:
+                    sock = debug_sessions[device]['serve_sock']
+                    operation = 'recv'
+                else:
+                    sock = debug_sessions[device]['listen_sock']
+                    operation = 'accept'
+                select_list[sock] = [operation, device]
+
+            r, w, e = select.select(list(select_list), [], [], 0.02)
+            for sock in r:
+                [operation, device] = select_list[sock]
+                if operation == 'accept':
+                    conn, addr = sock.accept()
+                    conn.setblocking(0)
+                    debug_sessions[device]['serve_sock'] = conn
+                    self.debug_socks[device] = conn
+                else:
+                    try:
+                        data = sock.recv(MAX_MSG_LENGTH)
+                    except:
+                        data = None
+                    if not data:
+                        debug_sessions[device].pop('serve_sock')
+                        self.debug_socks.pop(device)
+                        sock.close()
+                        #self.log_display(time.time(), 'debug client disconnected')
+                        self.send_packet(pkt.DEVICE_DEBUG_REINIT, device)
+                        continue
+                    content = device + ':' + data
+                    self.send_packet(pkt.DEVICE_DEBUG_DATA, content)
+
     def parse_device_index(self, index_str):
         max = len(self.device_list) - 1
         if '-' in index_str:
@@ -586,7 +724,7 @@ class Terminal:
                 return range(start, end - 1, -1)
         else:
             if index_str.isdigit() == False:
-                return
+                return []
             try:
                 index = int(index_str)
             except:
@@ -936,9 +1074,51 @@ class Terminal:
         self.cmdrun_status_display(status_str)
         return (len(failed) == 0)
 
+    def run_debug(self, args, uselast = False):
+        if len(args) < 2 or args[0] not in ['start', 'stop']:
+            self.cmdrun_status_display("Usage error, usage: debug start/stop device1 [device2 .. deviceN] ")
+            return False
+        operation = args[0]
+        devs = args[1:]
+        indexes = []; devices = {}
+        for dev in devs:
+            indexes += self.parse_device_index(dev)
+        if indexes == []:
+            self.cmdrun_status_display('invalid device index {0}'.format(' '.join(devs)))
+            return False
+        indexes = list(set(indexes))
+        for index in indexes:
+            devices[self.get_devstr_by_index(index)] = index
+
+        if operation == 'start':
+            type = pkt.DEVICE_DEBUG_START
+        else:
+            type = pkt.DEVICE_DEBUG_STOP
+
+        succeed = []; failed = []
+        for device in list(devices):
+            if device not in self.device_list:
+                continue
+            self.send_packet(type, device)
+            self.wait_cmd_excute_done(2)
+            if self.cmd_excute_state == "done":
+                succeed.append(devices[device])
+            else:
+                failed.append(devices[device])
+        status_str = ''
+        if succeed != []:
+            status_str += "succeed: {0}".format(succeed)
+        if failed != []:
+            if status_str != '':
+                status_str += ', '
+            status_str += "failed: {0}".format(failed)
+        self.cmdrun_status_display(status_str)
+        return (len(failed) == 0)
+
     def client_alias(self, args):
         if len(args) < 1:
             self.cmdrun_status_display("Usage error, usage: alias id0:name0 [id1:name1 ... idN:nameN]")
+            return False
 
         for arg in args:
             alias = arg.split(':')
@@ -971,13 +1151,16 @@ class Terminal:
         self.log_display(time.time(), "                    runcmd 0-10 umesh status")
         self.log_display(time.time(), " 7.^              : run command at latest (runcmd) remote device")
         self.log_display(time.time(), "           example: ^ping fc:00:00:10:11:22:33:44")
-        self.log_display(time.time(), " 8.log        [lg]: turn on/off log display for devices, eg.: log on 1")
+        self.log_display(time.time(), " 8.debug      [db]: start/stop debugging remote device")
+        self.log_display(time.time(), "           example: debug start 0")
+        self.log_display(time.time(), "                    debug stop 1")
+        self.log_display(time.time(), " 9.log        [lg]: turn on/off log display for devices, eg.: log on 1")
         self.log_display(time.time(), "           example: log on 1 2 5-8; log off 2-5 7")
-        self.log_display(time.time(), " 9.logdownload[ld]: download log file of device from server")
+        self.log_display(time.time(), " 10.logdownload[ld]: download log file of device from server")
         self.log_display(time.time(), "           example: logdownload 0-2 5")
-        self.log_display(time.time(), " 10.alias     [al]: alias names to client ids")
+        self.log_display(time.time(), " 11.alias     [al]: alias names to client ids")
         self.log_display(time.time(), "           example: alias 1234567890123456:Pi1@HZ")
-        self.log_display(time.time(), " 11.help          : print help infomation")
+        self.log_display(time.time(), " 12.help          : print help infomation")
 
     def process_cmd(self, cmd):
         if self.connected == False:
@@ -1001,6 +1184,8 @@ class Terminal:
             self.log_download(args)
         elif cmd == "runcmd" or cmd == "rc":
             self.run_command(args, uselast=False)
+        elif cmd == "debug" or cmd == "db":
+            self.run_debug(args)
         elif cmd[0] == '^':
             self.run_command([cmd[1:]] + args, uselast=True)
         elif cmd == "alias" or cmd == 'al':
@@ -1115,6 +1300,7 @@ class Terminal:
         self.controller_port = controller_port
         thread.start_new_thread(self.packet_send_thread, ())
         thread.start_new_thread(self.server_interaction, ())
+        thread.start_new_thread(self.debug_interaction, ())
         while self.keep_running:
             try:
                 self.user_interaction()

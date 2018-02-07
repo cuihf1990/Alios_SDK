@@ -6,7 +6,7 @@ import packet as pkt
 MAX_MSG_LENGTH = 65536
 ENCRYPT = True
 DEBUG = True
-EN_STATUS_POLL = True
+EN_STATUS_POLL = False
 LOCALLOG = False
 
 def signal_handler(sig, frame):
@@ -80,37 +80,137 @@ class Client:
             print "error: ouput buffer full, drop packet [{0] {1}]".format(type, content)
         return False
 
-    def debug_data_poll_thread(self):
-        debug_session = {}
+    def debug_daemon_thread(self):
+        debug_sessions = {}
         while self.keep_running:
             if debug_sessions == {} or self.debug_queue.empty() == False:
-                [type, sock, term, device] = self.debug_queue.get()
-                if type == pkt.DEVICE_DEBUG_START:
-                    debug_sessions[sock] = [term, device]
-                    content = term + ',' + 'success'
+                [type, term, device] = self.debug_queue.get()
+                if device not in self.devices:
+                    content = term + ',' + device + ':' + 'nonexist'
                     self.send_packet(type, content)
-                    sock.setblocking(0)
+                    continue
+                interface = self.devices[device]['interface']
+                if type == pkt.DEVICE_DEBUG_START:
+                    if 'debug_socket' in self.devices[device]: #session exist
+                        sock = self.devices[device]['debug_socket']
+                        if debug_sessions[sock]['term'] != term:
+                            content = term + ',' + device + ':' + 'busy'
+                            self.send_packet(type, content)
+                            continue
+                        interface.debug_stop(device) #stop current session
+                        debug_sessions.pop(sock)
+                        sock.close()
+
+                    if hasattr(interface, 'debug_start') == False or hasattr(interface, 'debug_stop') == False:
+                        content = term + ',' + device + ':' + 'debug unsupported'
+                        self.send_packet(type, content)
+                        continue
+
+                    used_ports = []
+                    for session in debug_sessions:
+                        used_ports.append(debug_sessions[session]['port'])
+                    port = 3096 + ord(os.urandom(1)) * ord(os.urandom(1)) / 64
+                    while port in used_ports:
+                        port = 3096 + ord(os.urandom(1)) * ord(os.urandom(1)) / 64
+
+                    result = interface.debug_start(device, port)
+                    if result != 'success':
+                        print "start st-util for {0} at port {1} failed, ret={2}".format(device, port, result)
+                        content = term + ',' + device + ':' + result
+                        self.send_packet(type, content)
+                        continue
+
+                    sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+                    try:
+                        sock.connect(('127.0.0.1', port))
+                        sock.setblocking(0)
+                    except:
+                        sock = None
+                    if sock:
+                        debug_sessions[sock] = {'term': term, 'device': device, 'port': port}
+                        self.devices[device]['debug_socket'] = sock
+                        content = term + ',' + device + ':' + 'success'
+                        print 'start debugging device {0} at port {1} succeed'.format(device, port)
+                    else:
+                        if DEBUG: traceback.print_exc()
+                        interface.debug_stop(device)
+                        content = term + ',' + device + ':' + 'fail'
+                        print 'start debugging device {0} failed'.format(device)
+                    self.send_packet(type, content)
+                    continue
+                elif type in [pkt.DEVICE_DEBUG_REINIT, pkt.DEVICE_DEBUG_STOP]:
+                    operations = {pkt.DEVICE_DEBUG_REINIT: 'reinit', pkt.DEVICE_DEBUG_STOP: 'stop'}
+                    sock = None
+                    for session in debug_sessions:
+                        if debug_sessions[session]['term'] != term:
+                            continue
+                        if debug_sessions[session]['device'] != device:
+                            continue
+                        sock = session
+                        break
+                    if sock == None:
+                        print 'error: try to {0} a nonexisting debug session'.format(operations[type])
+                        content = term + ',' + device + ':' + 'session nonexist'
+                        self.send_packet(type, content)
+                        continue
+
+                    port = debug_sessions[sock]['port']
+                    interface.debug_stop(device)
+                    sock.close()
+                    self.devices[device].pop('debug_socket')
+                    debug_sessions.pop(sock)
+                    if type == pkt.DEVICE_DEBUG_STOP:
+                        content = term + ',' + device + ':' + 'success'
+                        self.send_packet(type, content)
+                        print 'stop debugging {0} succeed'.format(device)
+                    elif type == pkt.DEVICE_DEBUG_REINIT:
+                        result = interface.debug_start(device, port)
+                        if result != 'success':
+                            content = term + ',' + device + ':' + 'fail'
+                            self.send_packet(type, content)
+                            continue
+                        sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+                        try:
+                            sock.connect(('127.0.0.1', port))
+                            sock.setblocking(0)
+                        except:
+                            if DEBUG: traceback.print_exc()
+                            sock = None
+                        if sock:
+                            debug_sessions[sock] = {'term': term, 'device': device, 'port': port}
+                            self.devices[device]['debug_socket'] = sock
+                            content = term + ',' + device + ':' + 'success'
+                            self.send_packet(type, content)
+                            print 'restart debugging {0} succeed'.format(device)
+                        else:
+                            interface.debug_stop(device)
+                            self.devices[device].pop('debug_socket')
+                            content = term + ',' + device + ':' + 'fail'
+                            self.send_packet(type, content)
+                            print 'restart debugging {0} failed, debug session closed'.format(device)
+                    continue
                 else:
                     print "error: wrong command type '{0}'".format(type)
                 continue
 
-            r, w, e = select.select(list(self.debug_sessions), [], [], 0.02)
+            r, w, e = select.select(list(debug_sessions), [], [], 0.02)
             for sock in r:
-                [term, device] = debug_sessions[sock]
+                term = debug_sessions[sock]['term']
+                device = debug_sessions[sock]['device']
                 try:
-                    data = sock.read(MAX_MSG_LENGTH)
+                    data = sock.recv(MAX_MSG_LENGTH)
                 except:
                     data = None
                 if not data:
                     print 'debug session for {0}:{1} closed'.format(term, device)
                     interface = self.devices[device]['interface']
                     interface.debug_stop(device)
-                    self.debug_sessions.pop(sock)
-                    self.devices[device].pop('debug')
-                    content = ','.join([term, device, 'session closed'])
+                    debug_sessions.pop(sock)
+                    self.devices[device].pop('debug_socket')
+                    content = term + ',' + device + ':' + 'session closed'
                     self.send_packet(pkt.DEVICE_DEBUG_STOP, content)
                     continue
-                content = ','.join([term, device, data])
+                content = term + ',' + device + ':' + data
                 self.send_packet(pkt.DEVICE_DEBUG_DATA, content)
 
     def send_device_list(self):
@@ -214,13 +314,8 @@ class Client:
                         self.device_run_cmd(device, cmd, term)
                         if re.search('umesh extnetid [0-9A-Fa-f]{12}', cmd) != None:
                             queue_safeput(pcmd_queue, ['umesh extnetid', 1, 0.2])
-                    elif type in [pkt.DEVICE_DEBUG_START, pkt.DEVICE_DEBUG_DATA, pkt.DEVICE_DEBUG_STOP]:
-                        cmd = None
-                        if type == DEVICE_DEBUG_DATA:
-                            cmd = args[2]
-                        self.device_debug(device, type, cmd, term)
                     else:
-                        print "error: unknown operation tyep {0}".format(repr(type))
+                        print "error: unknown operation type {0}".format(repr(type))
                     args = None
                     time.sleep(0.05)
                     continue
@@ -590,69 +685,6 @@ class Client:
         content = term + ',' + result
         self.send_packet(pkt.DEVICE_CMD, content)
 
-    def device_debug(self, device, type, cmd, term):
-        if device not in self.devices:
-            print "error: debug at nonexist device {0}".format(device)
-            content = term + ',' + 'device nonexist'
-            self.send_packet(type, content)
-            return
-
-        interface = self.devices[device]['interface']
-        if type == pkt.DEVICE_DEBUG_START:
-            if 'debug' in self.devices[device]: #session exist
-                if self.devices[device]['debug']['term'] != term:
-                    content = ','.join([term, devie, 'busy'])
-                    self.send_packet(type, content)
-                    return
-                interface.debug_stop(device) #stop current session
-
-            if hasattr(interface, 'debug_start') == False or hasattr(interface, 'debug_stop') == False:
-                content = ','.join([term, devie, 'debug unsupported'])
-                self.send_packet(type, content)
-                return
-
-            [result, sock] = interface.debug_start(device)
-            if result != 'success':
-                content = ','.join([term, devie, result])
-                self.send_packet(type, content)
-                return
-
-            debug_session_cmd = [type, sock, term, device]
-            try:
-                self.debug_queue.put(debug_session_cmd)
-                self.devices[device]['debug'] = {'socket':sock, 'term': term}
-            except:
-                print "error: start new debug session failed, debug_queue full"
-                interface.debug_stop(device)
-                content = ','.join([term, devie, 'fail'])
-                self.send_packet(type, content)
-                return
-        elif type == pkt.DEVICE_DEBUG_DATA:
-            if 'debug' not in self.devices[device] or self.devices[device]['debug']['term'] != term:
-                content = ','.join([term, device, 'session nonexist'])
-                self.send_packet(pkt.DEVICE_DEBUG_STOP, content)
-                return
-            try:
-                self.devices[device]['debug']['socket'].send(cmd)
-                print "run debug command '{0}' at {1} succeed".format(cmd, device)
-            except:
-                if DEBUG: traceback.print_exc()
-                print "run debug command '{0}' at {1} failed".format(cmd, device)
-        elif type == pkt.DEVICE_DEBUG_STOP:
-            if 'debug' not in self.devices[device] or self.devices[device]['debug']['term'] != term:
-                content = ','.join([term, device, 'session nonexist'])
-                self.send_packet(type, content)
-                return
-
-            result = interface.debug_stop(device)
-            self.devices[device].pop('debug')
-            content = ','.join([term, devie, result])
-            self.send_packet(type, content)
-        else:
-            result = 'unknown debug command'
-            content = term + ',' + result
-            self.send_packet(pkt.DEVICE_CMD, content)
-
     def login_and_get_server(self, controller_ip, controller_port):
         sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         if ENCRYPT:
@@ -754,7 +786,7 @@ class Client:
         self.load_interfaces()
 
         thread.start_new_thread(self.packet_send_thread, ())
-        thread.start_new_thread(self.debug_data_poll_thread, ())
+        thread.start_new_thread(self.debug_daemon_thread, ())
         thread.start_new_thread(self.device_monitor, ())
 
         file_received = {}
@@ -903,9 +935,8 @@ class Client:
                             print 'program {0} to {1} @ {2} failed, device nonexist'.format(filename, device, address)
                         content = term + ',' + result
                         self.send_packet(type, content)
-                    elif type in [pkt.DEVICE_RESET, pkt.DEVICE_START, pkt.DEVICE_STOP, pkt.DEVICE_DEBUG_START, pkt.DEVICE_DEBUG_STOP]:
-                        operations = {pkt.DEVICE_RESET:'reset', pkt.DEVICE_START:'start', pkt.DEVICE_STOP:'stop', \
-                                      pkt.DEVICE_DEBUG_START:'start debug', pkt.DEVICE_STOP:'stop debug'}
+                    elif type in [pkt.DEVICE_RESET, pkt.DEVICE_START, pkt.DEVICE_STOP]:
+                        operations = {pkt.DEVICE_RESET:'reset', pkt.DEVICE_START:'start', pkt.DEVICE_STOP:'stop'}
                         try:
                             [term, device] = value.split(',')
                         except:
@@ -923,8 +954,24 @@ class Client:
                             print operations[type], device, 'failed, device nonexist'
                         content = term + ',' + result
                         self.send_packet(type, content)
-                    elif type in [pkt.DEVICE_CMD, pkt.DEVICE_DEBUG_DATA]:
-                        operations = {pkt.DEVICE_DEBUG_DATA:'run command', pkt.DEVICE_DEBUG_DATA:'run debug command'}
+                    elif type in [pkt.DEVICE_DEBUG_START, pkt.DEVICE_DEBUG_REINIT, pkt.DEVICE_DEBUG_STOP]:
+                        operations = {
+                            pkt.DEVICE_DEBUG_START:'start debuging',
+                            pkt.DEVICE_DEBUG_START:'reinit debuging',
+                            pkt.DEVICE_STOP:'stop debugging'}
+                        try:
+                            [term, device] = value.split(',')
+                        except:
+                            print "argument error: {0} {1}".format(type, value)
+                            continue
+                        debug_cmd = [type, term, device]
+                        try:
+                            self.debug_queue.put_nowait(debug_cmd)
+                        except:
+                            print "error: {0} debug session failed, debug_queue full".format(operations[type])
+                            content = term + ',' + device + ':' + 'daemon busy'
+                            self.send_packet(type, content)
+                    elif type == pkt.DEVICE_CMD:
                         term_dev = value.split(':')[0]
                         term_dev_len = len(term_dev) + 1
                         try:
@@ -932,7 +979,7 @@ class Client:
                         except:
                             print "argument error: {0} {1}".format(type, value)
                             continue
-                        cmd = value[arglen:]
+                        cmd = value[term_dev_len:]
                         if type == pkt.DEVICE_CMD:
                             cmd = cmd.replace('|', ' ')
                         if device in self.devices and self.devices[device]['valid'] == True:
@@ -941,12 +988,32 @@ class Client:
                                 continue
                             else:
                                 result = 'busy'
-                                print operations[type], "'{0}' at {1} failed, device busy".format(cmd, device)
+                                print "run command '{0}' at {1} failed, device busy".format(cmd, device)
                         else:
                             result = 'nonexist'
-                            print operations[type], "'{0}' at {1} failed, device nonexist".format(cmd, device)
+                            print "run command '{0}' at {1} failed, device nonexist".format(cmd, device)
                         content = term + ',' + result
                         self.send_packet(type, content)
+                    elif type == pkt.DEVICE_DEBUG_DATA:
+                        term_dev = value.split(':')[0]
+                        term_dev_len = len(term_dev) + 1
+                        try:
+                            [term, device] = term_dev.split(',')
+                        except:
+                            print "argument error: {0} {1}".format(type, value)
+                            continue
+
+                        data = value[term_dev_len:]
+                        if device not in self.devices or 'debug_socket' not in self.devices[device]:
+                            content = term + ',' + device + ':' + 'session nonexist'
+                            self.send_packet(pkt.DEVICE_DEBUG_STOP, content)
+                            return
+
+                        try:
+                            self.devices[device]['debug_socket'].send(data)
+                        except:
+                            if DEBUG: traceback.print_exc()
+                            print "forward debug data to {1} failed".format(device)
                     elif type == pkt.CLIENT_LOGIN:
                         if value == 'request':
                             print 'server request login'

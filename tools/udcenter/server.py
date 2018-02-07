@@ -232,12 +232,11 @@ class Server:
                         if self.terminals[uuid]['valid'] == False:
                             continue
                         self.send_packet(self.terminals[uuid]['socket'], type, log)
-                    elif type in [pkt.DEVICE_DEBUG_START, pkt.DEVICE_DEBUG_DATA, pkt.DEVICE_DEBUG_STOP]:
-                        #print value
+                    elif type in [pkt.DEVICE_DEBUG_DATA, pkt.DEVICE_DEBUG_START, pkt.DEVICE_DEBUG_REINIT, pkt.DEVICE_DEBUG_STOP]:
                         uuid = value.split(',')[0]
                         if uuid not in self.terminals or self.terminals[uuid]['valid'] == False:
                             continue
-                        value = client[uuid] + value[len(uuid):]
+                        value = client['uuid'] + value[len(uuid):]
                         self.send_packet(self.terminals[uuid]['socket'], type, value)
                     elif type == pkt.DEVICE_ERASE or type == pkt.DEVICE_PROGRAM or \
                          type == pkt.DEVICE_START or type == pkt.DEVICE_STOP or \
@@ -389,11 +388,12 @@ class Server:
                         client = self.clients[uuid]
                         content = terminal['uuid'] + value[len(dev_str):]
                         self.send_packet(client['socket'], type, content)
-                    elif type == pkt.DEVICE_ERASE or type == pkt.DEVICE_PROGRAM or \
+                    elif type == pkt.DEVICE_DEBUG_DATA or \
+                         type == pkt.DEVICE_ERASE or type == pkt.DEVICE_PROGRAM or \
                          type == pkt.DEVICE_START or type == pkt.DEVICE_STOP or \
-                         type == pkt.DEVICE_RESET or type == pkt.DEVICE_CMD or
+                         type == pkt.DEVICE_RESET or type == pkt.DEVICE_CMD or \
                          type == pkt.DEVICE_DEBUG_START or type == pkt.DEVICE_DEBUG_STOP or \
-                         type == pkt.DEVICE_DEBUG_DATA:
+                         type == pkt.DEVICE_DEBUG_REINIT:
                         dev_str_split = value.split(':')[0].split(',')[0:2]
                         if len(dev_str_split) != 2:
                             self.send_packet(conn, pkt.CMD_ERROR,'argerror')

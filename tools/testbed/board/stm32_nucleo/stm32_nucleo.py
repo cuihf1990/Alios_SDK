@@ -1,5 +1,4 @@
-import os, sys, time, serial, subprocess, traceback, glob
-import socket
+import os, sys, time, serial, subprocess, shlex, traceback, glob
 
 nucleo_stlink_serials = {}
 nucleo_debug_sessions = {}
@@ -88,35 +87,35 @@ def control(device, operation):
         pass
     return ret
 
-def debug_start(device):
+def debug_start(device, port):
     if device not in nucleo_stlink_serials:
-        return ['fail', None]
+        return 'nonexist'
     if device in nucleo_debug_sessions:
-        return ['busy', None]
+        return 'busy'
 
-    used_ports = []
     for device in nucleo_debug_sessions:
-        used_ports.append[nucleo_debug_sessions[device]['port']]
-    port = 3096 + ord(os.urandom(1)) * ord(os.urandom(1)) / 64
-    while port in used_ports:
-        port = 3096 + ord(os.urandom(1)) * ord(os.urandom(1)) / 64
-
-    p = subprocess.call('st-util -p {0} --serial {1}'.format(port, nucleo_stlink_serials[device]))
-    time.sleep(0.01)
-    sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        if nucleo_debug_sessions[device]['port'] == port:
+            return 'port_in_use'
+    logfile = 'client/{0}-debuglog.txt'.format(device.split('/')[-1])
     try:
-        sock.connect(('localhost', port))
+        flog = open(logfile, 'a+')
     except:
-        p.kill()
-        return ['fail', None]
-    nucleo_debug_sessions[device] = {'process': p, 'port': port, 'socket': sock}
-    return ['success', sock]
+        traceback.print_exc()
+        return 'open_log_fail'
+    command = 'st-util -m --serial {0} -p {1}'.format(nucleo_stlink_serials[device], port)
+    command = shlex.split(command)
+    p = subprocess.Popen(command, stdout=flog, stderr=flog)
+    time.sleep(0.2)
+    if p.poll() != None:
+        return 'fail'
+    nucleo_debug_sessions[device] = {'process': p, 'port': port, 'flog':flog }
+    return 'success'
 
 def debug_stop(device):
     if device not in nucleo_debug_sessions:
         return 'fail'
     nucleo_debug_sessions[device]['process'].kill()
-    nucleo_debug_sessions[device]['socket'].close()
+    nucleo_debug_sessions[device]['flog'].close()
     nucleo_debug_sessions.pop(device)
     return 'success'
 
