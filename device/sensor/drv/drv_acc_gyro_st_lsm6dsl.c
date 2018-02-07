@@ -547,7 +547,6 @@ int drv_acc_st_lsm6dsl_init(void){
 }
 
 
-#if 1
 static int drv_gyro_st_lsm6dsl_set_power_mode(i2c_dev_t* drv, dev_power_mode_e mode)
 {
     uint8_t value,value1 = 0x00;
@@ -842,7 +841,6 @@ int drv_gyro_st_lsm6dsl_init(void){
 }
 
 
-#endif
 
 
 

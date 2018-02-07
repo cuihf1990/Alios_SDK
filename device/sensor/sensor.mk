@@ -8,7 +8,8 @@ $(NAME)_SOURCES += \
         drv/drv_humi_bosch_bme280.c \
         drv/drv_acc_bosch_bma253.c \
         drv/drv_baro_bosch_bmp280.c \
-        drv/drv_acc_gyro_st_lsm6dsl.c
+        drv/drv_acc_gyro_st_lsm6dsl.c\
+        drv/drv_baro_st_lps22hb.c
 
 $(NAME)_CFLAGS      += -Wall -Werror
 

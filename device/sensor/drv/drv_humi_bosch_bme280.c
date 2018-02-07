@@ -271,7 +271,7 @@ static int drv_humi_bosch_bme280_soft_reset(i2c_dev_t* drv)
     return 0;
 }
 
-static int drv_humi_bosch_bme280_validate_id(i2c_dev_t* drv,  uint8_t id_addr, uint8_t id_value)
+static int drv_humi_bosch_bme280_validate_id(i2c_dev_t* drv, uint8_t id_value)
 {
     uint8_t value = 0x00;
     int ret = 0;
@@ -280,7 +280,7 @@ static int drv_humi_bosch_bme280_validate_id(i2c_dev_t* drv,  uint8_t id_addr, u
         return -1;
     }
     
-    ret = sensor_i2c_read(drv, id_addr, &value, I2C_DATA_LEN, I2C_OP_RETRIES);
+    ret = sensor_i2c_read(drv, BME280_CHIP_ID_ADDR, &value, I2C_DATA_LEN, I2C_OP_RETRIES);
     if(unlikely(ret)){
         return ret;
     }
@@ -716,7 +716,7 @@ int drv_humi_bosch_bme280_init(void){
         return -1;
     }
 
-    ret = drv_humi_bosch_bme280_validate_id(&bme280_ctx, BME280_CHIP_ID_ADDR, BME280_CHIP_ID);
+    ret = drv_humi_bosch_bme280_validate_id(&bme280_ctx, BME280_CHIP_ID);
     if(unlikely(ret)){
         return -1;
     }
