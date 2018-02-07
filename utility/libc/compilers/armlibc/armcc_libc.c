@@ -117,4 +117,10 @@ int listen(int sock, int backlog)
 
 }
 
+//referred from timing.o
+unsigned int alarm(unsigned int seconds)
+{
+	return 0;
+}
+
 #endif
