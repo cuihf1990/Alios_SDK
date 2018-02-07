@@ -3,6 +3,7 @@
 #include "hal/soc/soc.h"
 #include "c_types.h"
 #include "spi_flash.h"
+#include "k_api.h"
 
 #define ROUND_DOWN(a,b) (((a) / (b)) * (b))
 #define FLASH_ALIGN_MASK ~(sizeof(uint32_t) - 1)
@@ -26,6 +27,8 @@ int32_t hal_flash_write(hal_partition_t pno, uint32_t* poff, const void* buf ,ui
     uint8_t *buffer = NULL;
     hal_logic_partition_t *partition_info;
 
+    CPSR_ALLOC();
+
     partition_info = hal_flash_get_info( pno );
     start_addr = partition_info->partition_start_addr + *poff;
 
@@ -38,10 +41,15 @@ int32_t hal_flash_write(hal_partition_t pno, uint32_t* poff, const void* buf ,ui
             return -1;
         memset(buffer, 0xff, len);
         memcpy(buffer + left_off, buf, buf_size);
+        RHINO_CRITICAL_ENTER();
         ret = spi_flash_write(start_addr - left_off, (uint32_t *)buffer, len);
+        RHINO_CRITICAL_EXIT();
         aos_free(buffer);
-    } else
+    } else {
+        RHINO_CRITICAL_ENTER();
         ret = spi_flash_write(start_addr, (uint32_t *)buf, len);
+        RHINO_CRITICAL_EXIT();
+    }
 
     *poff += buf_size;
     return ret;
@@ -86,6 +94,8 @@ int32_t hal_flash_erase(hal_partition_t pno, uint32_t off_set,
     int32_t ret = 0;
     hal_logic_partition_t *partition_info;
 
+    CPSR_ALLOC();
+
     partition_info = hal_flash_get_info( pno );
     if(size + off_set > partition_info->partition_length)
         return -1;
@@ -94,7 +104,9 @@ int32_t hal_flash_erase(hal_partition_t pno, uint32_t off_set,
     end_addr = ROUND_DOWN((partition_info->partition_start_addr + off_set + size - 1), SPI_FLASH_SEC_SIZE);
 
     for (addr = start_addr; addr <= end_addr; addr += SPI_FLASH_SEC_SIZE) {
+        RHINO_CRITICAL_ENTER();
         ret = spi_flash_erase_sector(addr/SPI_FLASH_SEC_SIZE);
+        RHINO_CRITICAL_EXIT();
         if (ret != 0)
             return ret;
     }
