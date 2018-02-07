@@ -173,17 +173,9 @@ static void notify_error2(ali_transport_t * p_transport, uint32_t src, uint32_t 
     p_transport->event_handler(p_transport->p_evt_context, &evt);
 }
 
-
-static void sd_ecb_block_encrypt(ecb_hal_data_t *ecb_ctx)
-{
-    /* <TODO> */
-}
-
-
 /**@brief Encryption. */
 static void encrypt (ali_transport_t * p_transport, uint8_t * data, uint16_t len)
 {
-#if 0 // <TODO>
     uint16_t bytes_encrypted = 0;
     uint16_t bytes_to_pad, l_len;
 
@@ -198,14 +190,12 @@ static void encrypt (ali_transport_t * p_transport, uint8_t * data, uint16_t len
         }
 
         /* ECB engine. */
-        memcpy(p_transport->tx.ecb_context.cleartext, data + bytes_encrypted, AES_BLK_SIZE);
-        (void) sd_ecb_block_encrypt(&p_transport->tx.ecb_context);
-        memcpy(data + bytes_encrypted, p_transport->tx.ecb_context.ciphertext, AES_BLK_SIZE);
+        memcpy(p_transport->tx.ecb_context.data + bytes_encrypted, data + bytes_encrypted, AES_BLK_SIZE);
+        AES_Encrypt(p_transport->tx.ecb_context.data + bytes_encrypted, p_transport->tx.ecb_context.key);
+        memcpy(data + bytes_encrypted, p_transport->tx.ecb_context.data + bytes_encrypted, AES_BLK_SIZE);
         bytes_encrypted += l_len;
     }
-#endif
 }
-
 
 /**@brief Decryption. */
 static void decrypt (ali_transport_t * p_transport, uint8_t * data, uint16_t len)
@@ -386,8 +376,7 @@ ret_code_t ali_transport_init(ali_transport_t * p_transport, ali_transport_init_
     /* Initialize ECB context. */
     if (p_transport->p_key != NULL)
     {
-        printf("p_transport->p_key not NULL, need to handle!\r\n");
-        //memcpy(p_transport->tx.ecb_context.key, p_transport->p_key, AES_BLK_SIZE);
+        memcpy(p_transport->tx.ecb_context.key, p_transport->p_key, AES_BLK_SIZE);
     }
 
     /* Initialize Tx and Rx timeout timers. */
@@ -701,8 +690,7 @@ uint32_t ali_transport_set_key(ali_transport_t * p_transport, uint8_t * p_key)
 
     /* Copy key, which will take effect when encoding the next fragment. */
     p_transport->p_key = p_key;
-    printf("FIXME: %s %d\r\n", __FILE__, __LINE__);
-    //memcpy(p_transport->tx.ecb_context.key, p_transport->p_key, AES_BLK_SIZE);
+    memcpy(p_transport->tx.ecb_context.key, p_transport->p_key, AES_BLK_SIZE);
     return NRF_SUCCESS;
 }
 

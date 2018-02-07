@@ -68,20 +68,6 @@ extern "C" {
 #define ALI_PROTOCOL_ID             0x03        /**< Protocol ID (see spec. v1.0.4 ch. 2.2). */
 //#define ALI_PROTOCOL_ID             0x04        /**< Protocol ID (see spec. v1.0.4 ch. 2.2). */
 
-#if 0
-#if defined (NRF51)
-    #define ALI_BLUETOOTH_VER       0x00        /**< Bluetooth version 4.0 (see spec. v1.0.4 ch. 2.2). */
-    #define ALI_MAX_SUPPORTED_MTU   23          /**< Maximum supported MTU. */
-    #define ALI_CONTEXT_SIZE        394         /**< Context size required, in number of 4-byte words. */
-#elif defined (NRF52) || defined(CONFIG_ESP32_WITH_BLE)
-    #define ALI_BLUETOOTH_VER       0x01        /**< Bluetooth version 4.2 (see spec. v1.0.4 ch. 2.2). */
-    #define ALI_MAX_SUPPORTED_MTU   247         /**< Maximum supported MTU. */
-    #define ALI_CONTEXT_SIZE        450         /**< Context size required, in number of 4-byte words. */
-#else
-    #error No valid target set for ALI_CONTEXT_SIZE.
-#endif
-#endif
-
 /**
  * @brief Types of commands for control interface.
  */

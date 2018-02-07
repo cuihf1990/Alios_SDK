@@ -330,7 +330,7 @@ static struct bt_gatt_attr ais_attrs[] = {
     BT_GATT_CHARACTERISTIC2(BT_UUID_AIS_WC, BT_GATT_CHRC_READ | \
                             BT_GATT_CHRC_WRITE, HDLC_AIS_WC),
     BT_GATT_DESCRIPTOR2(BT_UUID_AIS_WC, BT_GATT_PERM_READ | \
-                        BT_GATT_PERM_WRITE | BT_GATT_PERM_WRITE_AUTHEN, \
+                        BT_GATT_PERM_WRITE, \
                         read_ais_wc, write_ais_wc, NULL, HDLC_AIS_WC_VALUE),
 
     /* IC */
@@ -542,10 +542,10 @@ static void indicate_cb(struct bt_conn *conn, const struct bt_gatt_attr *attr,
     /* <TODO> */
 }
 
+struct bt_gatt_indicate_params ind_params;
 uint32_t ble_ais_send_indication(ble_ais_t * p_ais, uint8_t * p_data, uint16_t length)
 {
     int err;
-    struct bt_gatt_indicate_params ind_params;
 
     VERIFY_PARAM_NOT_NULL(p_ais);
 
