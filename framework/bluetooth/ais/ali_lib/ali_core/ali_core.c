@@ -115,9 +115,14 @@ static bool is_valid_command(uint8_t cmd)
     return false;
 }
 
+#define notify_error(p_ali, src, err_code) \
+    do {\
+        printf("We are in %s %d\r\n", __func__, __LINE__);\
+        notify_error2(p_ali, src, err_code);\
+    } while (0)
 
 /**@brief Notify error to higher layer. */
-static void notify_error (ali_t * p_ali, uint32_t src, uint32_t err_code)
+static void notify_error2(ali_t * p_ali, uint32_t src, uint32_t err_code)
 {
     ali_event_t evt;
 
@@ -328,6 +333,8 @@ static void transport_event_handler (ali_t * p_ali, ali_transport_event_t * p_ev
 {
     bool send_err = false;
     uint32_t err_code;
+
+    LOGD(MOD, "In %s, event type is %d", __func__, p_event->type);
 
     switch (p_event->type)
     {

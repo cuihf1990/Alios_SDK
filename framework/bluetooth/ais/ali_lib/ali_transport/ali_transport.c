@@ -155,8 +155,14 @@ static void on_rx_timeout(void *arg1, void *arg2)
     on_rx_timeout_helper(p_transport);
 }
 
+#define notify_error(p_transport, src, err_code) \
+    do {\
+        printf("We are in %s %d\r\n", __FILE__, __LINE__);\
+        notify_error2(p_transport, src, err_code);\
+    } while (0)
+
 /**@brief Report error. */
-static void notify_error(ali_transport_t * p_transport, uint32_t src, uint32_t err_code)
+static void notify_error2(ali_transport_t * p_transport, uint32_t src, uint32_t err_code)
 {
     ali_transport_event_t evt;
 
@@ -280,6 +286,8 @@ static ret_code_t try_send (ali_transport_t * p_transport)
 
     bytes_left = tx_bytes_left(p_transport);
 
+    LOGD(MOD, "%s %d total %d bytes for sending.", __FILE__, __LINE__, bytes_left);
+
     if (p_transport->tx.encrypted != 0)
     {
         pkt_payload_len &= ~(AES_BLK_SIZE - 1);
@@ -292,14 +300,18 @@ static ret_code_t try_send (ali_transport_t * p_transport)
         VERIFY_SUCCESS(ret);
 
         pkt_len = len + p_transport->tx.zeroes_padded + HEADER_SIZE;
+        p_transport->tx.pkt_req++;
+        p_transport->tx.frame_seq++;
+        p_transport->tx.bytes_sent += len;
         ret = p_transport->tx.active_func(p_transport->tx.p_context,
                                           p_transport->tx.buff,
                                           pkt_len);
         if (ret == NRF_SUCCESS)
         {
-            p_transport->tx.pkt_req++;
-            p_transport->tx.frame_seq++;
-            p_transport->tx.bytes_sent += len;
+            LOGD(MOD, "file %s line %d send %d bytes successfully.", __FILE__, __LINE__, len);
+            //p_transport->tx.pkt_req++;
+            //p_transport->tx.frame_seq++;
+            //p_transport->tx.bytes_sent += len;
             bytes_left = tx_bytes_left(p_transport);
         }
 #if 0 // Below cases not handled, <TODO>
@@ -316,9 +328,13 @@ static ret_code_t try_send (ali_transport_t * p_transport)
 #endif
         else
         {
+            LOGD(MOD, "%s %d send failed.", __FILE__, __LINE__);
             VERIFY_SUCCESS(ret);
+            return NRF_ERROR_TRANSPORT_TX_FAILURE;
         }
     } while (bytes_left > 0) ;  // send until there are still bytes
+
+    LOGD(MOD, "%s %d %d bytes left for sending.", __FILE__, __LINE__, bytes_left);
 
     /* Start Tx timeout timer */
     if ((bytes_left != 0) && (p_transport->timeout != 0))
@@ -327,7 +343,7 @@ static ret_code_t try_send (ali_transport_t * p_transport)
         VERIFY_SUCCESS(ret);
     }
 
-    LOGD(MOD, "try_send entry.");
+    LOGD(MOD, "try_send exit.");
 
     return ret;
 }
@@ -617,19 +633,27 @@ void ali_transport_on_tx_complete(ali_transport_t * p_transport, uint16_t pkt_se
     /* Check parameters. */
     VERIFY_PARAM_NOT_NULL_VOID(p_transport);
 
+    LOGD(MOD, "%s entry.", __func__);
+    LOGD(MOD, "pkt_sent: %d", pkt_sent);
+
     p_transport->tx.pkt_cfm += pkt_sent;
+    LOGD(MOD, "p_transport->tx.pkt_cfm updated: %d", p_transport->tx.pkt_cfm);
+
+    p_transport->tx.bytes_sent += pkt_sent;
 
     /* Check whether there are still data to be sent. */
-    bytes_left = tx_bytes_left(p_transport);
+    LOGD(MOD, "bytes_left: %d", bytes_left);
     if (bytes_left != 0)
     {
+        LOGD(MOD, "bytes_left %d, please continue to sending.", bytes_left);
         /* try sending until no tx packet or any other error. */
-        err_code = try_send (p_transport);
-        VERIFY_SUCCESS_VOID(err_code);
+        //err_code = try_send (p_transport);
+        //VERIFY_SUCCESS_VOID(err_code);
     }
     else if (p_transport->tx.pkt_req == p_transport->tx.pkt_cfm
              && p_transport->tx.pkt_req != 0)
     {
+        LOGD(MOD, "All bytes sent, let's notify higher level.");
         /* send event to higher layer. */
         evt.type                 = ALI_TRANSPORT_EVT_TX_DONE;
         evt.data.rxtx.p_data     = p_transport->tx.data;
@@ -644,9 +668,12 @@ void ali_transport_on_tx_complete(ali_transport_t * p_transport, uint16_t pkt_se
     }
     else if (p_transport->tx.pkt_req < p_transport->tx.pkt_cfm)
     {
+        LOGD(MOD, "Something goes to wrong, let's reset tx.");
         reset_tx (p_transport);
         notify_error(p_transport, ALI_ERROR_SRC_TRANSPORT_PKT_CFM_SENT, NRF_ERROR_INTERNAL);
     }
+
+    LOGD(MOD, "%s exit.", __func__);
 }
 
 

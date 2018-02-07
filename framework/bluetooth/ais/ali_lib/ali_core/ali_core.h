@@ -66,6 +66,7 @@ extern "C" {
 
 #define ALI_COMPANY_ID              0x01A8      /**< Bluetooth company ID of Alibaba (see spec. v1.0.4 ch. 2.2). */
 #define ALI_PROTOCOL_ID             0x03        /**< Protocol ID (see spec. v1.0.4 ch. 2.2). */
+//#define ALI_PROTOCOL_ID             0x04        /**< Protocol ID (see spec. v1.0.4 ch. 2.2). */
 
 #if 0
 #if defined (NRF51)

@@ -301,15 +301,21 @@ static u8_t att_handle_rsp(struct bt_att *att, void *pdu, u16_t len, u8_t err)
 {
 	bt_att_func_t func;
 
-	BT_DBG("err %u len %u: %s", err, len, bt_hex(pdu, len));
+        BT_DBG("In %s %d", __func__, __LINE__);
 
+	BT_DBG("err %u len %u: %s", err, len, bt_hex(pdu, len));
+        
 	/* Cancel timeout if ongoing */
 	k_delayed_work_cancel(&att->timeout_work);
+
+        BT_DBG("In %s %d", __func__, __LINE__);
 
 	if (!att->req) {
 		BT_WARN("No pending ATT request");
 		goto process;
 	}
+
+        BT_DBG("In %s %d", __func__, __LINE__);
 
 	/* Release original buffer */
 	if (att->req->buf) {
@@ -317,22 +323,32 @@ static u8_t att_handle_rsp(struct bt_att *att, void *pdu, u16_t len, u8_t err)
 		att->req->buf = NULL;
 	}
 
+        BT_DBG("In %s %d", __func__, __LINE__);
+
 	/* Reset func so it can be reused by the callback */
 	func = att->req->func;
 	att->req->func = NULL;
 
+        BT_DBG("In %s %d", __func__, __LINE__);
+
 	func(att->chan.chan.conn, err, pdu, len, att->req);
+
+        BT_DBG("In %s %d", __func__, __LINE__);
 
 	/* Don't destroy if callback had reused the request */
 	if (!att->req->func) {
 		att_req_destroy(att->req);
 	}
 
+        BT_DBG("In %s %d", __func__, __LINE__);
+
 	att->req = NULL;
 
 process:
 	/* Process pending requests */
 	att_process(att);
+
+        BT_DBG("In %s %d", __func__, __LINE__);
 
 	return 0;
 }
