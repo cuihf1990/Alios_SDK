@@ -471,7 +471,7 @@ endef
 PROJ_GEN_DIR   := projects/autogen/$(CLEANED_BUILD_STRING)
 
 ifeq ($(IDE),iar)
-PROJECT_GEN := $(PROJ_GEN_DIR)/iar_project/$(CLEANED_BUILD_STRING).ewd
+PROJECT_GEN := $(PROJ_GEN_DIR)/iar_project/$(CLEANED_BUILD_STRING).ewp
 $(MAKECMDGOALS): $(PROJECT_GEN)
 $(PROJECT_GEN): build/scripts/iar.py build/aos_target_config.mk $(CONFIG_FILE)
 	$(QUIET)echo Making $(IDE) Project
@@ -485,12 +485,11 @@ $(PROJECT_GEN): build/scripts/iar.py build/aos_target_config.mk $(CONFIG_FILE)
 endif
 
 ifeq ($(IDE),keil)
-PROJECT_GEN := $(PROJ_GEN_DIR)/keil_project/$(CLEANED_BUILD_STRING).uvoptx
+PROJECT_GEN := $(PROJ_GEN_DIR)/keil_project/$(CLEANED_BUILD_STRING).uvprojx
 $(MAKECMDGOALS): $(PROJECT_GEN)
 $(PROJECT_GEN): build/scripts/keil.py build/aos_target_config.mk $(CONFIG_FILE)
 	$(QUIET)echo Making $(IDE) Project
 	$(QUIET)$(call WRITE_FILE_CREATE, $(CONFIG_PY_FILE) ,Projects = [)
-	$(warning 111 auto_component_SOURCES:  $(auto_component_SOURCES))
 	$(QUIET)$(foreach comp,$(PROCESSED_COMPONENTS), $(call WRITE_COMPOENT_PY ))
 	$(QUIET)$(call WRITE_FILE_APPEND, $(CONFIG_PY_FILE) ,])
 	$(QUIET)$(call MKDIR, $(PROJ_GEN_DIR)/keil_project)

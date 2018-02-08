@@ -428,7 +428,7 @@ static void ip4_sockaddr_to_ipstr_port(const struct sockaddr *name, char *ip)
     ip_u.ip_u32 = (uint32_t)(saddr->sin_addr.s_addr);
     snprintf(ip, SAL_SOCKET_IP4_ADDR_LEN, "%d.%d.%d.%d",
              ip_u.ip_u8[0], ip_u.ip_u8[1], ip_u.ip_u8[2], ip_u.ip_u8[3]);
-    ip[SAL_SOCKET_IP4_ADDR_LEN] = '\0';
+    ip[SAL_SOCKET_IP4_ADDR_LEN-1] = '\0';
 
     SAL_DEBUG("Socket address coverted to %s\n", ip);
 }
@@ -1814,6 +1814,7 @@ int sal_connect(int s, const struct sockaddr *name, socklen_t namelen)
     }
 
     sockaddr_to_ipaddr_port(name, &remote_addr, &remote_port);
+	LOGD(SAL_TAG, "remote_port -- : %d", remote_port)
     ip4_sockaddr_to_ipstr_port(name, (char *)ip_str);
     LOCK_SAL_CORE;
     err = salnetconn_connect(sock->conn, ip_str, remote_port);
