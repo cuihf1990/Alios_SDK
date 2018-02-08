@@ -105,16 +105,18 @@ void bzero()
 //referred from ssl_cli.o
 time_t time(time_t *t)
 {
+	return 0;
 }
 
 //referred from aos_network.o
 int accept(int sock, long *addr, long *addrlen)
 {
+	return 0;
 }
 
 int listen(int sock, int backlog)
 {
-
+	return 0;
 }
 
 #endif
