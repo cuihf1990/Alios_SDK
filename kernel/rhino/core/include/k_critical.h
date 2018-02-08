@@ -71,7 +71,7 @@ typedef struct {
 
 #define krhino_spin_lock_init(lock)          do {                                       \
                                                  kspinlock_t *s = (kspinlock_t*)(lock); \
-                                                 s->cnt   = 0u;                         \
+                                                 s->cnt         = 0u;                   \
                                              } while(0)
 #endif
 
