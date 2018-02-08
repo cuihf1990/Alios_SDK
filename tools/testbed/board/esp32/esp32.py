@@ -55,8 +55,6 @@ def program(device, address, file):
         script += [str(baudrate)]
         script += ['--before']
         script += ['default_reset']
-        script += ['--after']
-        script += ['hard_reset']
         script += ['write_flash']
         script += ['-z']
         script += ['--flash_mode']
@@ -73,6 +71,7 @@ def program(device, address, file):
             break
         retry -= 1
         baudrate = baudrate / 2
+    control(device, 'reset')
     return error
 
 def control(device, operation):
