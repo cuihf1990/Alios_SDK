@@ -1,21 +1,24 @@
 import os, sys, time, serial, subprocess, traceback, glob
 
-def list_devices(os):
+def list_devices(host_os):
     return glob.glob('/dev/espif-*')
 
-def new_device(port):
+def exist(device):
+    return os.path.exists(device)
+
+def new_device(device):
     try:
-        ser = serial.Serial(port, 115200, timeout = 0.02)
+        ser = serial.Serial(device, 115200, timeout = 0.02)
         ser.setRTS(True)
         ser.setDTR(False)
         time.sleep(0.1)
         ser.setDTR(True)
     except:
         ser = None
-        print 'esp32: open {0} error'.format(port)
+        print 'esp32: open {0} error'.format(device)
     return ser
 
-def erase(port):
+def erase(device):
     retry = 3
     baudrate = 230400
     error = 'fail'
@@ -25,7 +28,7 @@ def erase(port):
         script += ['--chip']
         script += ['esp32']
         script += ['--port']
-        script += [port]
+        script += [device]
         script += ['--baud']
         script += [str(baudrate)]
         script += ['erase_flash']
@@ -37,7 +40,7 @@ def erase(port):
         baudrate = baudrate / 2
     return error
 
-def program(port, address, file):
+def program(device, address, file):
     retry = 3
     baudrate = 230400
     error = 'fail'
@@ -47,7 +50,7 @@ def program(port, address, file):
         script += ['--chip']
         script += ['esp32']
         script += ['--port']
-        script += [port]
+        script += [device]
         script += ['--baud']
         script += [str(baudrate)]
         script += ['--before']
@@ -72,12 +75,12 @@ def program(port, address, file):
         baudrate = baudrate / 2
     return error
 
-def control(port, operation):
+def control(device, operation):
     try:
-        ser = serial.Serial(port, 115200)
+        ser = serial.Serial(device, 115200)
     except:
         traceback.print_exc()
-        print 'esp32 control error: unable to open {0}'.format(port)
+        print 'esp32 control error: unable to open {0}'.format(device)
         return 'fail'
     ret = 'fail'
     try:
