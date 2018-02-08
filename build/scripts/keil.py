@@ -98,7 +98,7 @@ def MDK5Project(target, script):
     template_tree = etree.parse('build/scripts/template.uvprojx')
     MDKProject(template_tree, target, script)
     opt_file = target.replace('.uvprojx', '.uvoptx')
-    opt_tree = etree.parse(opt_file)
+    opt_tree = etree.parse('build/scripts/template.uvoptx')
     TargetName = opt_tree.find('Target/TargetName')
     TargetName.text = buildstring
     out = file(opt_file, 'wb')
