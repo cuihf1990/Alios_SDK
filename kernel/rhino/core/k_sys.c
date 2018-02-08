@@ -23,8 +23,6 @@ kstat_t krhino_init(void)
 {
     g_sys_stat = RHINO_STOPPED;
 
-    krhino_spin_init(&g_sys_lock);
-
 #if (RHINO_CONFIG_USER_HOOK > 0)
     krhino_init_hook();
 #endif
@@ -218,8 +216,6 @@ size_t krhino_global_space_get(void)
 #if (RHINO_CONFIG_SYSTEM_STATS > 0)
     mem += sizeof(g_kobj_list);
 #endif
-
-    mem += sizeof(g_sys_lock);
 
     return mem;
 }
