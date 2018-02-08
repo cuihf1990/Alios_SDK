@@ -75,7 +75,10 @@ class Server:
             return
         devices = []
         for device in self.terminals[uuid]['devices']:
-            [cuuid, port] = device.split(':')
+            try:
+                [cuuid, port] = device.split(':')
+            except:
+                continue
             if cuuid in self.clients and port in self.clients[cuuid]['devices'] and \
                     self.clients[cuuid]['devices'][port]['valid'] == True:
                 devices.append(cuuid + ',' + port + '|' + str(self.clients[cuuid]['devices'][port]['using']))
