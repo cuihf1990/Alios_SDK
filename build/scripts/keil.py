@@ -52,6 +52,11 @@ def MDKAddGroup(parent, name, files, project_path):
 
     return group
 
+def ModifyProjString( projString ):
+    if 'stm32l433' in buildstring:
+        projString = projString.replace('STM32L475VGTx','STM32L433RCTx')
+    return  projString   
+    
 def MDKProject(tree, target, script):
     project_path = os.path.dirname(os.path.abspath(target))
 
@@ -91,7 +96,8 @@ def MDKProject(tree, target, script):
     # set <OutputName>B-L475E-IOT01</OutputName> 
     
     xml_indent(root)
-    out.write(etree.tostring(root, encoding='utf-8'))
+    projString = ModifyProjString( etree.tostring(root, encoding='utf-8') )
+    out.write(projString)
     out.close()
 
 def MDK5Project(target, script):
@@ -102,7 +108,8 @@ def MDK5Project(target, script):
     TargetName = opt_tree.find('Target/TargetName')
     TargetName.text = buildstring
     out = file(opt_file, 'wb')
-    out.write(etree.tostring(opt_tree.getroot(), encoding='utf-8'))
+    projString = ModifyProjString( etree.tostring(opt_tree.getroot(), encoding='utf-8') )
+    out.write(projString)
     out.close()
 
 '''
