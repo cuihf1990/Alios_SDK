@@ -24,8 +24,8 @@ GLOBAL_INCLUDES += \
                    Drivers/BSP/Components/lsm6dsl \
                    Drivers/BSP/Components/vl53l0x \
                    Drivers/CMSIS/Include \
-                   Drivers/CMSIS/Device/ST/STM32L4xx/Include \
-                   src/STM32L433RC-Nucleo/helloworld
+                   Drivers/CMSIS/Device/ST/STM32L4xx\Include \
+                   src/STM32L433RC-Nucleo/runapp
                    
 $(NAME)_SOURCES := Drivers/STM32L4xx_HAL_Driver/Src/stm32l4xx_hal.c  \
                    Drivers/STM32L4xx_HAL_Driver/Src/stm32l4xx_hal_flash.c  \
@@ -67,11 +67,11 @@ $(NAME)_SOURCES += src/STM32L433RC-Nucleo/startup_stm32l433xx.s
 endif
      
 ifeq ($(HOST_MCU_NAME), STM32L433RC-Nucleo)
-$(NAME)_SOURCES += src/STM32L433RC-Nucleo/helloworld/soc_init.c \
-                   src/STM32L433RC-Nucleo/helloworld/stm32l4xx_hal_msp.c \
-                   src/STM32L433RC-Nucleo/helloworld/stm32l4xx_it.c \
-                   src/STM32L433RC-Nucleo/helloworld/system_stm32l4xx.c \
-                   src/STM32L433RC-Nucleo/helloworld/aos.c  \
+$(NAME)_SOURCES += src/STM32L433RC-Nucleo/runapp/soc_init.c \
+                   src/STM32L433RC-Nucleo/runapp/stm32l4xx_hal_msp.c \
+                   src/STM32L433RC-Nucleo/runapp/stm32l4xx_it.c \
+                   src/STM32L433RC-Nucleo/runapp/system_stm32l4xx.c \
+                   src/STM32L433RC-Nucleo/runapp/aos.c  \
                    src/STM32L433RC-Nucleo/hal/hal_uart_stm32l4.c \
                    src/STM32L433RC-Nucleo/hal/hw.c
 endif
@@ -121,15 +121,15 @@ GLOBAL_LDFLAGS += -mcpu=cortex-m4  \
 endif
 
 ifeq ($(COMPILER),armcc)
-GLOBAL_LDFLAGS += -L --scatter=platform/mcu/stm32l475/B-L475E-IOT01.sct
+GLOBAL_LDFLAGS += -L --scatter=platform/mcu/stm32l4xx/src/STM32L433RC-Nucleo/STM32L433.sct
 else ifeq ($(COMPILER),iar)
-GLOBAL_LDFLAGS += --config platform/mcu/stm32l475/STM32L475.icf
+GLOBAL_LDFLAGS += --config platform/mcu/stm32l4xx/src/STM32L433RC-Nucleo/STM32L433.icf
 else
-GLOBAL_LDFLAGS += -T platform/mcu/stm32l475/STM32L475VGTx_FLASH.ld
+GLOBAL_LDFLAGS += -T platform/mcu/stm32l4xx/src/STM32L433RC-Nucleo/STM32L433.ld
 endif
 
 
 ifeq ($(COMPILER),armcc)
 $(NAME)_LINK_FILES := src/STM32L433RC-Nucleo/startup_stm32l433xx_keil.o
-$(NAME)_LINK_FILES += src/STM32L433RC-Nucleo/helloworld/stm32l4xx_it.o
+$(NAME)_LINK_FILES += src/STM32L433RC-Nucleo/runapp/stm32l4xx_it.o
 endif

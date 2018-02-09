@@ -10,6 +10,10 @@
 #include "soc_init.h"
 #define AOS_START_STACK 4096
 
+static ktask_t demo_task_obj;
+cpu_stack_t demo_task_buf[AOS_START_STACK];
+
+
 #define WIFI_PRODUCT_INFO_SIZE                      ES_WIFI_MAX_SSID_NAME_SIZE
 
 ktask_t *g_aos_init;
@@ -48,7 +52,10 @@ static void sys_init(void)
 static void sys_start(void)
 {
     aos_init();
-    krhino_task_dyn_create(&g_aos_init, "aos-init", 0, AOS_DEFAULT_APP_PRI, 0, AOS_START_STACK, (task_entry_t)sys_init, 1);
+    //krhino_task_dyn_create(&g_aos_init, "aos-init", 0, AOS_DEFAULT_APP_PRI, 0, AOS_START_STACK, (task_entry_t)sys_init, 1);
+    krhino_task_create(&demo_task_obj, "aos-init", 0,AOS_DEFAULT_APP_PRI, 
+        50, demo_task_buf, AOS_START_STACK, (task_entry_t)sys_init, 1);
+    
     aos_start();
 }
 
