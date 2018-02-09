@@ -1,7 +1,7 @@
 import os, sys, time, serial, subprocess, traceback, glob
 
 def list_devices(host_os):
-    return glob.glob('/dev/mxchip-*')
+    return glob.glob('/dev/mk3060-*')
 
 def exist(device):
     return os.path.exists(device)

@@ -341,7 +341,6 @@ class Server:
                     if type == pkt.TYPE_NONE:
                         break
 
-                    self.conn_timeout[conn]['timeout'] = time.time() + 30
                     if terminal == None:
                         if type != pkt.TERMINAL_LOGIN:
                             self.send_packet(conn, pkt.CLIENT_LOGIN, 'request')

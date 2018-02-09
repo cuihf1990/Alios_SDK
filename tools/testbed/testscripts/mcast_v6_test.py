@@ -6,10 +6,10 @@ ap_ssid = 'aos_test_01'
 ap_pass = 'Alios@Embedded'
 
 devices = {}
-devices['A'] = 'mxchip-DN02QRIQ'
-devices['B'] = 'mxchip-DN02QRIU'
-devices['C'] = 'mxchip-DN02QRIX'
-devices['D'] = 'mxchip-DN02QRJ3'
+devices['A'] = 'mk3060-DN02QRIQ'
+devices['B'] = 'mk3060-DN02QRIU'
+devices['C'] = 'mk3060-DN02QRIX'
+devices['D'] = 'mk3060-DN02QRJ3'
 
 device_list = list(devices)
 device_list.sort()

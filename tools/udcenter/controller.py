@@ -55,7 +55,7 @@ class Controller():
         self.selector = None
         self.user_cmd = ''
         self.cur_pos = 0
-        self.models = {'mk3060':'mxchip-', 'esp32':'espif-'}
+        self.models = {'mk3060':'mk3060-', 'esp32':'esp32-'}
         self.serve_funcs = {'none':    self.login_process, 'client':  self.client_process,
                             'server':  self.server_process, 'terminal':self.terminal_process}
         self.keyfile = 'controller_key.pem'
