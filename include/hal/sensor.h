@@ -9,9 +9,6 @@
 
 #include <stdint.h>
 #include <hal/base.h>
-#include <vfs_conf.h>
-#include <vfs_err.h>
-#include <vfs_register.h>
 #include "hal/soc/soc.h"
 #include "hal/soc/gpio.h"
 #include "hal/soc/i2c.h"
