@@ -52,16 +52,9 @@ static void sys_start(void)
     aos_start();
 }
 
-#if defined (__CC_ARM) || defined(__ICCARM__) /* Keil / armcc */
 int main(void)
 {
     sys_start();
     return 0;
 }
-#else
-void entry_main(void)
-{
-    sys_start();
-}
-#endif
 
