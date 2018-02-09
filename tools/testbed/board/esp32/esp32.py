@@ -1,7 +1,7 @@
 import os, sys, time, serial, subprocess, traceback, glob
 
 def list_devices(host_os):
-    return glob.glob('/dev/espif-*')
+    return glob.glob('/dev/esp32-*')
 
 def exist(device):
     return os.path.exists(device)

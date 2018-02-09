@@ -25,14 +25,15 @@ class Server:
         self.allocated = {'lock':threading.Lock(), 'devices':[], 'timeout':0}
         self.special_purpose_set = {'mk3060-alink':[], 'esp32-alink':[]}
         #mk3060
-        self.special_purpose_set['mk3060-alink'] += ['DN02QRKQ', 'DN02RDVL', 'DN02RDVT', 'DN02RDVV']
-        self.special_purpose_set['mk3060-alink'] += ['DN02X2ZO', 'DN02X2ZS', 'DN02X2ZX', 'DN02X2ZZ']
-        self.special_purpose_set['mk3060-alink'] += ['DN02X303', 'DN02X304', 'DN02X30B', 'DN02X30H']
+        self.special_purpose_set['mk3060-alink'] += ['mk3060-DN02QRKQ', 'mk3060-DN02RDVL', 'mk3060-DN02RDVT']
+        self.special_purpose_set['mk3060-alink'] += ['mk3060-DN02RDVV', 'mk3060-DN02X2ZO', 'mk3060-DN02X2ZS']
+        self.special_purpose_set['mk3060-alink'] += ['mk3060-DN02X2ZX', 'mk3060-DN02X2ZZ', 'mk3060-DN02X303']
+        self.special_purpose_set['mk3060-alink'] += ['mk3060-DN02X304', 'mk3060-DN02X30B', 'mk3060-DN02X30H']
         self.special_purpose_set['mk3060-mesh'] = self.special_purpose_set['mk3060-alink']
         #esp32
-        self.special_purpose_set['esp32-alink'] += ['espif-3.1.1', 'espif-3.1.2', 'espif-3.1.3', 'espif-3.1.4']
-        self.special_purpose_set['esp32-alink'] += ['espif-3.2.1', 'espif-3.2.2', 'espif-3.2.3', 'espif-3.2.4']
-        self.special_purpose_set['esp32-alink'] += ['espif-3.3.1', 'espif-3.3.2', 'espif-3.3.3', 'espif-3.3.4']
+        self.special_purpose_set['esp32-alink'] += ['esp32-3.1.1', 'esp32-3.1.2', 'esp32-3.1.3', 'esp32-3.1.4']
+        self.special_purpose_set['esp32-alink'] += ['esp32-3.2.1', 'esp32-3.2.2', 'esp32-3.2.3', 'esp32-3.2.4']
+        self.special_purpose_set['esp32-alink'] += ['esp32-3.3.1', 'esp32-3.3.2', 'esp32-3.3.3', 'esp32-3.3.4']
         self.special_purpose_set['esp32-mesh'] = self.special_purpose_set['esp32-alink']
 
     def construct_dev_list(self):
