@@ -33,9 +33,7 @@
 ENTRY(Reset_Handler)
 
 /* Highest address of the user mode stack */
-_estack  = 0x20018000;          /* end of RAM */
-_estack2_start = 0x10000000;    /* end of RAM2 */
-_estack2       = 0x10008000;    /* end of RAM2 */
+_estack  = 0x20010000;          /* end of RAM */
 /* Generate a link error if heap and stack don't fit into RAM */
 _Min_Heap_Size = 0x7000;      /* required amount of heap  */
 _Min_Stack_Size = 0x2000; /* required amount of stack */
@@ -43,9 +41,8 @@ _Min_Stack_Size = 0x2000; /* required amount of stack */
 /* Specify the memory areas */
 MEMORY
 {
-RAM (xrw)      : ORIGIN = 0x20000000, LENGTH = 96K
-RAM2 (xrw)      : ORIGIN = 0x10000000, LENGTH = 32K
-FLASH (rx)      : ORIGIN = 0x8000000, LENGTH = 400K		/* Use only the first bank */
+RAM (xrw)      : ORIGIN = 0x20000000, LENGTH = 64K
+FLASH (rx)      : ORIGIN = 0x8000000, LENGTH = 256K		/* Use only the first bank */
 FLASH_UC (r)	: ORIGIN = 0x08064000, LENGTH = 9K		/* Fixed-location area */
 }
 
@@ -185,8 +182,6 @@ SECTIONS
 
     PROVIDE(heap_end      = _stack_unused);
     PROVIDE(heap_len      = heap_end -  heap_start);
-    PROVIDE(heap2_start   = _estack2_start);
-    PROVIDE(heap2_len     = _estack2 - heap2_start);
     .ARM.attributes 0 : { *(.ARM.attributes) }
 }
 

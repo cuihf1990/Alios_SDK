@@ -11,8 +11,6 @@
 #include "stm32l4xx_hal.h"
 #include "hal_uart_stm32l4.h"
 
-uart_dev_t   uart_0;
-
 /* Init and deInit function for uart1 */
 static int32_t uart1_init(uart_dev_t *uart);
 static int32_t uart1_DeInit(void);

@@ -24,8 +24,9 @@ GLOBAL_INCLUDES += \
                    Drivers/BSP/Components/lsm6dsl \
                    Drivers/BSP/Components/vl53l0x \
                    Drivers/CMSIS/Include \
-                   Drivers/CMSIS/Device/ST/STM32L4xx\Include \
-                   src/STM32L433RC-Nucleo/runapp
+                   Drivers/CMSIS/Device/ST/STM32L4xx/Include \
+                   src/STM32L433RC-Nucleo/runapp \
+                   src/STM32L433RC-Nucleo
                    
 $(NAME)_SOURCES := Drivers/STM32L4xx_HAL_Driver/Src/stm32l4xx_hal.c  \
                    Drivers/STM32L4xx_HAL_Driver/Src/stm32l4xx_hal_flash.c  \
