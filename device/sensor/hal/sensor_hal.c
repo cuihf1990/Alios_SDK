@@ -7,6 +7,11 @@
 #include <string.h>
 #include <aos/aos.h>
 #include <hal/base.h>
+
+#include <vfs_conf.h>
+#include <vfs_err.h>
+#include <vfs_register.h>
+
 #include "common.h"
 #include "hal/sensor.h"
 
