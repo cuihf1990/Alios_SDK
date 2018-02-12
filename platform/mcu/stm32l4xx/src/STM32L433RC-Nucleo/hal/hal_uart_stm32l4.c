@@ -69,9 +69,8 @@ int32_t hal_uart_init(uart_dev_t *uart)
 
 
 int32_t hal_uart_send(uart_dev_t *uart, const void *data, uint32_t size, uint32_t timeout)
-{ 
-	HAL_UART_Transmit(&huart2, data, 1,30000);
-    return 0;
+{ 	
+    return HAL_UART_Transmit(&huart2, data, 1,30000);
 }
 
 int32_t hal_uart_recv(uart_dev_t *uart, void *data, uint32_t expect_size,

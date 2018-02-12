@@ -133,4 +133,5 @@ endif
 ifeq ($(COMPILER),armcc)
 $(NAME)_LINK_FILES := src/STM32L433RC-Nucleo/startup_stm32l433xx_keil.o
 $(NAME)_LINK_FILES += src/STM32L433RC-Nucleo/runapp/stm32l4xx_it.o
+$(NAME)_LINK_FILES += src/STM32L433RC-Nucleo/runapp/stm32l4xx_hal_msp.o
 endif
