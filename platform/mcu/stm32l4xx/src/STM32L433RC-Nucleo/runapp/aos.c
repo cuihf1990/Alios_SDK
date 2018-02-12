@@ -38,23 +38,10 @@ extern void hw_start_hal(void);
 #include "board.h"
 uart_dev_t   uart_0;
 
-static int default_UART_Init()
-{
-    uart_0.port                = PORT_UART1;
-    uart_0.config.baud_rate    = STDIO_UART_BUADRATE;
-    uart_0.config.data_width   = DATA_WIDTH_8BIT;
-    uart_0.config.parity       = NO_PARITY;
-    uart_0.config.stop_bits    = STOP_BITS_1;
-    uart_0.config.flow_control = FLOW_CONTROL_DISABLED;
-
-    return hal_uart_init(&uart_0);
-}
-
 static void sys_init(void)
 {
 
     stm32_soc_init();
-    default_UART_Init();
 
 #ifdef BOOTLOADER
     main();
