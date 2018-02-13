@@ -15,38 +15,18 @@
 #include <stddef.h>
 #include <stdint.h>
 #include <string.h>
+
 #include <k_config.h>
 #include <k_default_config.h>
 #include <k_types.h>
 #include <k_err.h>
-#include <k_critical.h>
 #include <k_sys.h>
-#include <k_bitmap.h>
 #include <k_list.h>
-#include <k_obj.h>
-#include <k_sched.h>
-#include <k_task.h>
 #include <k_ringbuf.h>
+#include <k_obj.h>
 #include <k_queue.h>
-#include <k_buf_queue.h>
-#include <k_sem.h>
-#include <k_task_sem.h>
-#include <k_mutex.h>
-#include <k_timer.h>
-#include <k_time.h>
-#include <k_event.h>
 #include <k_stats.h>
-#include <k_mm_debug.h>
-#include <k_mm_blk.h>
-#include <k_mm_region.h>
-#include <k_mm.h>
-#include <k_workqueue.h>
-#include <k_internal.h>
-#include <k_trace.h>
-#include <k_soc.h>
-#include <k_hook.h>
-#include <port.h>
-#include <k_endian.h>
+#include <k_time.h>
 
 #if defined(__cplusplus)
 extern "C"
@@ -54,8 +34,8 @@ extern "C"
 #endif
 
 typedef kqueue_t _queue_t;
-typedef ksem_t  _sem_t;
-typedef ktask_t _task_t;
+typedef aos_sem_t  _sem_t;
+typedef aos_task_t _task_t;
 typedef cpu_stack_t _stack_element_t;
 
 #define _K_SEM_INITIALIZER(obj, initial_count, count_limit)  { }
@@ -329,7 +309,7 @@ unsigned int k_sem_count_get(struct k_sem *sem);
 
 typedef void (*k_timer_handler_t)(void *timer, void *args);
 typedef struct k_timer {
-    ktimer_t timer;
+    aos_timer_t timer;
     k_timer_handler_t handler;
     void *args;
     uint32_t timeout;
@@ -385,11 +365,11 @@ void k_timer_stop(k_timer_t *timer);
 int64_t k_uptime_get();
 inline u32_t k_uptime_get_32(void)
 {
-    return (u32_t)krhino_sys_time_get();
+    return (u32_t)aos_now_ms();
 }
 
 struct k_thread {
-    _task_t *task;
+    _task_t task;
 };
 
 typedef _stack_element_t k_thread_stack_t;

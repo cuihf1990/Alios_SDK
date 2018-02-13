@@ -23,10 +23,6 @@ $(NAME)_SOURCES := core/atomic_c.c \
                    core/poll.c \
                    host/uuid.c \
                    host/hci_core.c \
-                   core/tinycrypt/source/utils.c \
-                   core/tinycrypt/source/sha256.c \
-                   core/tinycrypt/source/hmac.c \
-                   core/tinycrypt/source/hmac_prng.c \
                    host/conn.c \
                    host/l2cap.c \
                    host/att.c \
@@ -35,13 +31,18 @@ $(NAME)_SOURCES := core/atomic_c.c \
                    host/smp.c \
                    host/keys.c \
                    host/sdp.c \
-                   core/tinycrypt/source/cmac_mode.c \
-                   core/tinycrypt/source/aes_encrypt.c \
                    core/rpa.c \
-                   core/work.c \
-                   port/rhino_port.c
+                   core/work.c
+
+$(NAME)_SOURCES += port/aos_port.c
 
 $(NAME)_SOURCES += host/hci_ecc.c \
+                   core/tinycrypt/source/utils.c \
+                   core/tinycrypt/source/sha256.c \
+                   core/tinycrypt/source/hmac.c \
+                   core/tinycrypt/source/hmac_prng.c \
+                   core/tinycrypt/source/cmac_mode.c \
+                   core/tinycrypt/source/aes_encrypt.c \
                    core/tinycrypt/source/ecc.c \
                    core/tinycrypt/source/ecc_dh.c
 

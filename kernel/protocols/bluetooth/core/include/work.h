@@ -7,11 +7,6 @@
 #include "atomic.h"
 #include "zephyr.h"
 
-#if defined(__cplusplus)
-extern "C"
-{
-#endif
-
 struct k_work_q {
     struct k_fifo fifo;
 };
@@ -52,9 +47,4 @@ int k_delayed_work_submit(struct k_delayed_work *work, uint32_t delay);
 int k_delayed_work_cancel(struct k_delayed_work *work);
 s32_t k_delayed_work_remaining_get(struct k_delayed_work *work);
 
-#ifdef __cplusplus
-}
-#endif
-
 #endif /* WORK_H */
-
