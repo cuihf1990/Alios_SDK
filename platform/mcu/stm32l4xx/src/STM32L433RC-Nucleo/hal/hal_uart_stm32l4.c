@@ -87,7 +87,7 @@ int32_t hal_uart_recv(uart_dev_t *uart, void *data, uint32_t expect_size,
 
     for (i = 0; i < expect_size; i++)
     {
-        ret = HAL_UART_Receive_IT_Buf_Queue_1byte((UART_HandleTypeDef *)uart->priv, &pdata[i]); 
+        ret = HAL_UART_Receive_IT_Buf_Queue_1byte(&huart2, &pdata[i]); 
         if (ret == 0) {
             rx_count++;
         } else {
@@ -95,7 +95,8 @@ int32_t hal_uart_recv(uart_dev_t *uart, void *data, uint32_t expect_size,
         }
     }
 
-    *recv_size = rx_count;
+    if (recv_size)
+        *recv_size = rx_count;
 
     if(rx_count != 0)
     {
