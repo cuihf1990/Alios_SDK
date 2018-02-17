@@ -436,7 +436,9 @@ int32_t hal_uart_recv(uart_dev_t *uart, void *data, uint32_t expect_size, uint32
         }
     }
 
-    *recv_size = rx_count;
+    if (NULL != recv_size){
+        *recv_size = rx_count;
+    }
 
     if(rx_count != 0)
     {
