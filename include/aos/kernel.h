@@ -228,15 +228,6 @@ int aos_sem_is_valid(aos_sem_t *sem);
 void aos_sem_signal_all(aos_sem_t *sem);
 
 /**
- * Get semaphore count.
- *
- * @param[in]  sem  semaphore object, it contains kernel obj pointer which aos_sem_new alloced.
- *
- * @return  semaphore valid.
- */
-int aos_sem_count_get(aos_sem_t *sem);
-
-/**
  * This function will create an event with an initialization flag set.
  * This function should not be called from interrupt context.
  *
