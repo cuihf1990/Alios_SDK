@@ -237,7 +237,6 @@ int bt_hci_cmd_send(u16_t opcode, struct net_buf *buf)
 
 	net_buf_put(&bt_dev.cmd_tx_queue, buf);
         k_sem_give(&g_poll_sem);
-
 	return 0;
 }
 

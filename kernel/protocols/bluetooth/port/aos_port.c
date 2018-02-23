@@ -2,7 +2,6 @@
  * Copyright (C) 2015-2017 Alibaba Group Holding Limited
  */
 
-#include <stdint.h>
 #include <zephyr.h>
 #include <misc/util.h>
 #include <misc/dlist.h>
@@ -17,7 +16,7 @@
 #include <string.h>
 #include "atomic.h"
 
-#include <k_config.h>
+#ifdef VCALL_RHINO
 #include <k_default_config.h>
 #include <k_types.h>
 #include <k_err.h>
@@ -25,188 +24,90 @@
 #include <k_list.h>
 #include <k_ringbuf.h>
 #include <k_obj.h>
+#include <k_sem.h>
 #include <k_queue.h>
+#include <k_buf_queue.h>
 #include <k_stats.h>
 #include <k_time.h>
 #include <k_task.h>
 #include <port.h>
-
-extern kstat_t krhino_queue_dyn_create(kqueue_t **queue, const name_t *name, size_t msg_num);
-
-void k_lifo_init(struct k_lifo *lifo)
-{
-    kstat_t ret;
-    const char *name = "ble_lifo";
-    size_t msg_num = 20;
-
-    if (NULL == lifo) {
-        BT_ERR("lifo is NULL");
-        return;
-    }
-
-    ret = krhino_queue_dyn_create(&lifo->_queue, name, msg_num);
-    if (RHINO_SUCCESS != ret) {
-        BT_ERR("lifo %s %p creat fail,%d\n",name, lifo, ret);
-    }
-
-    sys_dlist_init(&lifo->poll_events);
-
-#if LIFO_DEBUG
-    lifo->total_count = msg_num;
-    lifo->count = 0;
 #endif
+
+void k_queue_init(struct k_queue *queue)
+{
+    void *msg_start;
+    int size = 20;
+    int stat;
+
+    msg_start = (void*)aos_malloc(size * sizeof(void *));
+    assert(msg_start);
+
+    queue->_queue = (aos_queue_t *)aos_malloc(sizeof(aos_queue_t));
+    assert(queue->_queue);
+
+    stat = aos_queue_new(queue->_queue, msg_start, size * sizeof(void *), sizeof(void *));
+    assert(stat == 0);
+
+    sys_dlist_init(&queue->poll_events);
 }
 
-void k_lifo_put(struct k_lifo *lifo, void *data)
+void k_queue_cancel_wait(struct k_queue *queue)
 {
-    kstat_t ret;
-
-    if (NULL == lifo) {
-        BT_ERR("lifo is NULL");
-        return;
-    }
-
-    ret = krhino_queue_back_send(lifo->_queue, data);
-
-    if (RHINO_SUCCESS != ret) {
-#if LIFO_DEBUG
-        BT_ERR("send msg to lifo %p count %d,total_count %d,fail,%d",
-                lifo, lifo->count, lifo->total_count, ret);
-#else
-        BT_ERR("send msg to lifo %p fail,%d",lifo, ret);
-#endif
-        return;
-    }
-#if LIFO_DEBUG
-    lifo->count++;
-#endif
 }
 
-void *k_lifo_get(struct k_lifo *lifo, tick_t timeout)
+void k_queue_insert(struct k_queue *queue, void *prev, void *data)
 {
-    void *msg;
-    tick_t t;
-
-    if (NULL == lifo) {
-        BT_ERR("lifo is NULL");
-        return NULL;
-    }
-
-    if (timeout == K_FOREVER) {
-        t = RHINO_WAIT_FOREVER;
-    } else if (timeout == K_NO_WAIT) {
-        t = RHINO_NO_WAIT;
-    } else {
-        t = krhino_ms_to_ticks(timeout);
-    }
-
-    krhino_queue_recv(lifo->_queue, t, &msg);
-
-#if LIFO_DEBUG
-    if (msg)
-    {
-        lifo->count--;
-    }
-#endif
-    return msg;
+    aos_queue_send(queue->_queue, &data, sizeof(void *));
 }
 
-void k_fifo_init(struct k_fifo *fifo)
+void k_queue_append(struct k_queue *queue, void *data)
 {
-    kstat_t ret;
-    const char *name = "ble_fifo";
-    size_t msg_len = 20;
-
-    if (NULL == fifo) {
-        BT_ERR("fifo is NULL");
-        return;
-    }
-    ret = krhino_queue_dyn_create(&fifo->_queue, name, msg_len);
-
-    if (ret) {
-        BT_ERR("fifo %s %p creat fail,%d\n", name, fifo, ret);
-        return;
-    }
-
-    sys_dlist_init(&fifo->poll_events);
-
-#if FIFO_DEBUG
-    fifo->total_count = msg_len;
-    fifo->count = 0;
-#endif
+    k_queue_insert(queue, NULL, data);
 }
 
-void *k_fifo_get(struct k_fifo *fifo, tick_t timeout)
+void k_queue_prepend(struct k_queue *queue, void *data)
 {
-    void *msg = NULL;
-    tick_t t;
-
-    if (NULL == fifo) {
-        BT_ERR("fifo is NULL");
-        return NULL;
-    }
-
-    if (timeout == K_FOREVER) {
-        t = RHINO_WAIT_FOREVER;
-    } else if (timeout == K_NO_WAIT) {
-        t = RHINO_NO_WAIT;
-    } else {
-        t =  krhino_ms_to_ticks(timeout);
-    }
-
-    krhino_queue_recv(fifo->_queue, t, &msg);
-
-#if FIFO_DEBUG
-    if (msg)
-    {
-        fifo->count--;
-    }
-#endif
-    return msg;
+    k_queue_insert(queue, NULL, data);
 }
 
-void k_fifo_put(struct k_fifo *fifo, void *msg)
-{
-    kstat_t ret;
-
-    if (NULL == fifo) {
-        BT_ERR("fifo is NULL");
-        return;
-    }
-
-    ret = krhino_queue_back_send(fifo->_queue, msg);
-
-    if (RHINO_SUCCESS != ret) {
-#if FIFO_DEBUG
-        BT_ERR("send msg to fifo %p count %d,total_count %d,fail,%d",
-                        fifo, fifo->count, fifo->total_count, ret);
-#else
-        BT_ERR("send msg to fifo %p fail,%d", fifo, ret);
-#endif
-        return;
-    }
-#if FIFO_DEBUG
-    fifo->count++;
-#endif
-}
-
-void k_fifo_put_list(struct k_fifo *fifo, void *head, void *tail)
+void k_queue_append_list(struct k_queue *queue, void *head, void *tail)
 {
     struct net_buf *buf_tail = (struct net_buf *)head;
 
     for (buf_tail = (struct net_buf *)head; buf_tail; buf_tail = buf_tail->frags) {
-        k_fifo_put(fifo, buf_tail);
+        k_queue_append(queue, buf_tail);
     }
 }
 
-void k_fifo_cancel_wait(struct k_fifo *fifo)
+void *k_queue_get(struct k_queue *queue, s32_t timeout)
 {
+    void *msg = NULL;
+    unsigned int t = timeout;
+    unsigned int len;
 
+    if (timeout == K_FOREVER) {
+        t = AOS_WAIT_FOREVER;
+    } else if (timeout == K_NO_WAIT) {
+        t = AOS_NO_WAIT;
+    }
+
+    aos_queue_recv(queue->_queue, t, &msg, &len);
+    return msg;
+}
+
+int k_queue_is_empty(struct k_queue *queue)
+{
+#ifdef VCALL_RHINO
+    kbuf_queue_t *k_queue = queue->_queue->hdl;
+
+    return k_queue->cur_num? 0: 1;
+#endif
+    return 0;
 }
 
 int k_sem_init(struct k_sem *sem, unsigned int initial_count, unsigned int limit)
 {
-    kstat_t ret;
+    int ret;
 
     if (NULL == sem) {
         BT_ERR("sem is NULL\n");
@@ -254,7 +155,14 @@ int k_sem_delete(struct k_sem *sem)
 
 unsigned int k_sem_count_get(struct k_sem *sem)
 {
-    return aos_sem_count_get(&sem->sem);
+#ifdef VCALL_RHINO
+    sem_count_t count;
+    ksem_t *k_sem = (ksem_t *)&(sem->sem.hdl);
+
+    krhino_sem_count_get(k_sem, &count);
+    return (int)count;
+#endif
+    return 0;
 }
 
 int64_t k_uptime_get()
@@ -280,7 +188,7 @@ int k_thread_create(struct k_thread *new_thread, k_thread_stack_t *stack,
 
 int k_yield(void)
 {
-    return krhino_task_yield();
+    return 0;
 }
 
 unsigned int irq_lock(void)
@@ -308,7 +216,7 @@ void k_timer_init(k_timer_t *timer, k_timer_handler_t handle, void *args)
     BT_DBG("timer %p,handle %p,args %p", timer, handle, args);
     timer->handler = handle;
     timer->args = args;
-    aos_timer_new(&timer->timer, timer->handler, args, 1000, 0);
+    aos_timer_new_ext(&timer->timer, timer->handler, args, 1000, 0, 0);
 }
 
 void k_timer_start(k_timer_t *timer, uint32_t timeout)

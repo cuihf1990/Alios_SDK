@@ -346,24 +346,6 @@ void aos_sem_signal_all(aos_sem_t *sem)
     krhino_sem_give_all(sem->hdl);
 }
 
-int aos_sem_count_get(aos_sem_t *sem)
-{
-    sem_count_t count;
-    ksem_t *k_sem;
-
-    if (sem == NULL) {
-        return 0;
-    }
-
-    k_sem = sem->hdl;
-
-    if (k_sem == NULL) {
-        return 0;
-    }
-
-    krhino_sem_count_get(k_sem, &count);
-    return (int)count;
-}
 #endif
 
 #if (RHINO_CONFIG_EVENT_FLAG > 0)
