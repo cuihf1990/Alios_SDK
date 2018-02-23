@@ -28,6 +28,8 @@
 #include <k_queue.h>
 #include <k_stats.h>
 #include <k_time.h>
+#include <k_task.h>
+#include <port.h>
 
 extern kstat_t krhino_queue_dyn_create(kqueue_t **queue, const name_t *name, size_t msg_num);
 
@@ -278,17 +280,21 @@ int k_thread_create(struct k_thread *new_thread, k_thread_stack_t *stack,
 
 int k_yield(void)
 {
-    return aos_task_yield();
+    return krhino_task_yield();
 }
 
 unsigned int irq_lock(void)
 {
-    return (unsigned int)aos_irq_lock();
+    CPSR_ALLOC();
+    RHINO_CPU_INTRPT_DISABLE();
+    return cpsr;
 }
 
 void irq_unlock(unsigned int key)
 {
-    aos_irq_unlock(key);
+    CPSR_ALLOC();
+    cpsr = key;
+    RHINO_CPU_INTRPT_ENABLE();
 }
 
 void _SysFatalErrorHandler(unsigned int reason,

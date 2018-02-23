@@ -74,14 +74,6 @@ void aos_task_exit(int code)
 AOS_EXPORT(void, aos_task_exit, int);
 #endif
 
-int aos_task_yield(void)
-{
-    int ret;
-
-    ret = krhino_task_yield();
-    ERRNO_MAPPING(ret);
-}
-
 const char *aos_task_name(void)
 {
     return krhino_cur_task_get()->task_name;
@@ -958,33 +950,6 @@ void aos_msleep(int ms)
     krhino_task_sleep(MS2TICK(ms));
 }
 AOS_EXPORT(void, aos_msleep, int);
-
-#ifdef CSP_LINUXHOST
-sigset_t g_cpsr;
-#endif
-
-unsigned int aos_irq_lock(void)
-{
-    CPSR_ALLOC();
-    RHINO_CPU_INTRPT_DISABLE();
-#ifndef CSP_LINUXHOST
-    return cpsr;
-#else
-    g_cpsr = cpsr;
-    return 0;
-#endif
-}
-
-void aos_irq_unlock(unsigned int key)
-{
-    CPSR_ALLOC();
-#ifndef CSP_LINUXHOST
-    cpsr = key;
-#else
-    cpsr = g_cpsr;
-#endif
-    RHINO_CPU_INTRPT_ENABLE();
-}
 
 void aos_init(void)
 {

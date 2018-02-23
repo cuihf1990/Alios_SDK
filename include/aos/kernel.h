@@ -90,13 +90,6 @@ int aos_task_new_ext(aos_task_t *task, const char *name, void (*fn)(void *), voi
 void aos_task_exit(int code);
 
 /**
- * Yield current task
- *
- * &return 0: success.
- */
-int aos_task_yield(void);
-
-/**
  * Get task name.
  *
  * @return  the name of the task
@@ -242,20 +235,6 @@ void aos_sem_signal_all(aos_sem_t *sem);
  * @return  semaphore valid.
  */
 int aos_sem_count_get(aos_sem_t *sem);
-
-/**
- * Disable interrupt
- *
- * @return interrupt key value.
- */
-unsigned int aos_irq_lock(void);
-
-/**
- * Restore interrupt
- *
- * @param[in]  key  interrupt key value.
- */
-void aos_irq_unlock(unsigned int key);
 
 /**
  * This function will create an event with an initialization flag set.
