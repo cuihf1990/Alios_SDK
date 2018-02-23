@@ -407,7 +407,8 @@ static int sal_wifi_send(int fd,
                          uint8_t *data,
                          uint32_t len,
                          char remote_ip[16],
-                         int32_t remote_port)
+                         int32_t remote_port,
+                         int32_t timeout)
 {
     int link_id;
     char cmd[SEND_CMD_LEN] = {0}, out[128] = {0};
