@@ -137,23 +137,23 @@ const char *aos_cli_get_tag(void);
 
 #define cmd_printf(...) do {} while(0)
 
-static inline int aos_cli_register_command(const struct cli_command *command)
+RHINO_INLINE int aos_cli_register_command(const struct cli_command *command)
 {
     return 0;
 }
 
-static inline int aos_cli_unregister_command(const struct cli_command *command)
+RHINO_INLINE int aos_cli_unregister_command(const struct cli_command *command)
 {
     return 0;
 }
 
-static inline int aos_cli_register_commands(const struct cli_command *commands,
+RHINO_INLINE int aos_cli_register_commands(const struct cli_command *commands,
                                             int num_commands)
 {
     return 0;
 }
 
-static inline int aos_cli_unregister_commands(const struct cli_command *commands,
+RHINO_INLINE int aos_cli_unregister_commands(const struct cli_command *commands,
                                               int num_commands)
 {
     return 0;
@@ -161,12 +161,12 @@ static inline int aos_cli_unregister_commands(const struct cli_command *commands
 
 #define aos_cli_printf csp_printf
 
-static inline int aos_cli_init(void)
+RHINO_INLINE int aos_cli_init(void)
 {
     return 0;
 }
 
-static inline int aos_cli_stop(void)
+RHINO_INLINE int aos_cli_stop(void)
 {
     return 0;
 }
