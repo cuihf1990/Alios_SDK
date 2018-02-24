@@ -427,7 +427,7 @@ static void douglas_asr_recode_test()
 
         if (result) {
             log_debug("~~~~~ttsurl=%s",result->tts);
-           // xPlayerPlay(result->tts);
+            xPlayerPlay(result->tts);
             pal_rec_result_destroy(result);
         }
 
