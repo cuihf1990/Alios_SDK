@@ -333,9 +333,14 @@ kstat_t krhino_sem_count_set(ksem_t *sem, sem_count_t sem_count)
 
 kstat_t krhino_sem_count_get(ksem_t *sem, sem_count_t *count)
 {
+    CPSR_ALLOC();
+
     NULL_PARA_CHK(sem);
     NULL_PARA_CHK(count);
-    *count = sem->count;
+
+    RHINO_CRITICAL_ENTER();
+   *count = sem->count;
+    RHINO_CRITICAL_EXIT();
 
     return RHINO_SUCCESS;
 }
