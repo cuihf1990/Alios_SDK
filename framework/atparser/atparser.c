@@ -504,8 +504,8 @@ static int at_send_data_2stage(const char *fst, const char *data,
     }
     LOGD(MODULE_NAME, "Sending delimiter %s", at._send_delimiter);
 
-    aos_msleep(20);
-
+    aos_msleep(200);
+    
     if ((ret = hal_uart_send(&at._uart, (void *)data, 
           len, at._timeout)) != 0) {
         LOGE(MODULE_NAME, "uart send 2stage data failed");
@@ -667,8 +667,8 @@ static void at_worker(void *arg)
                 }else{
                     if (oob->reallen == 0){
                         memset(oob->oobinputdata, 0, oob->maxlen);
-                        memcpy(oob->oobinputdata, oob->prefix, strlen(oob->prefix));
-                        oob->reallen += strlen(oob->prefix);
+                        memcpy(oob->oobinputdata, oob->prefix, strlen(oob->prefix) - 1);
+                        oob->reallen += strlen(oob->prefix) - 1;
                     }
 
                     if (oob->reallen < oob->maxlen){

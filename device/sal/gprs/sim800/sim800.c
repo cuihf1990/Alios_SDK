@@ -208,7 +208,7 @@ static void sim800_gprs_module_socket_data_handle(void *arg, char *rspinfo, int 
         remoteport = remoteport * 10 + port[j] - '0';
     }
 
-    printf("link %d get data from %s %s ,len %s \r\n", linkid, ipaddr, port, datalen);
+    //printf("link %d get data from %s %s ,len %s \r\n", linkid, ipaddr, port, datalen);
     /* Prepare socket data */
     recvdata = (char *)aos_malloc(len + 1);
     if (!recvdata) {
