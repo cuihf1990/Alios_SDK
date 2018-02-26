@@ -35,7 +35,7 @@ static int at_init_uart()
     if (hal_uart_init(&at_uart) != 0){
         return -1;
     } 
-    at._uart = at_uart;
+    at._pstuart = &at_uart;
     return 0;
 }
 
@@ -112,10 +112,10 @@ static void at_worker_uart_send_mutex_uinit()
     }
 }
 
-static int at_init(uart_dev_t *u, const char *recv_prefix, const char *recv_success_postfix,
+static int at_init(const char *recv_prefix, const char *recv_success_postfix,
                     const char *recv_fail_postfix, const char *send_delimiter, int timeout)
 {
-    if (!u || !recv_prefix || !recv_success_postfix || !recv_fail_postfix
+    if (!recv_prefix || !recv_success_postfix || !recv_fail_postfix
         || !send_delimiter || (timeout < 0)) {
         LOGE(MODULE_NAME, "%s: invalid argument", __func__);
         return -1;
@@ -126,7 +126,7 @@ static int at_init(uart_dev_t *u, const char *recv_prefix, const char *recv_succ
         inited = 0;
     }
     
-    if (at_init_uart(u) != 0) {
+    if (at_init_uart() != 0) {
         LOGE(MODULE_NAME, "at uart init fail \r\n");
         return -1;
     }
@@ -137,12 +137,11 @@ static int at_init(uart_dev_t *u, const char *recv_prefix, const char *recv_succ
     at_set_recv_delimiter(recv_prefix, recv_success_postfix, recv_fail_postfix);
     at_set_send_delimiter(send_delimiter);
     
-    printf("at worker rcv prefix is %s success postfix is %s fail postfix is %s \r\n", recv_prefix, recv_success_postfix, recv_fail_postfix);
+    LOGD(MODULE_NAME, "at worker rcv prefix is %s success postfix is %s fail postfix is %s \r\n", recv_prefix, recv_success_postfix, recv_fail_postfix);
     if (at_init_at_mutex() != 0){
         LOGE(MODULE_NAME, "at uart mutex init fail \r\n");
         return -1;
     }
-    
     
     if (at_init_task_mutex() != 0){
         at_uinit_at_mutex();
@@ -197,7 +196,7 @@ static int at_putc(char c)
     
     LOGD(MODULE_NAME, "uart sending %c(0x%02x)\r\n", c, c);
     aos_mutex_lock(&at.at_uart_send_mutex, AOS_WAIT_FOREVER);
-    ret = hal_uart_send(&at._uart, (void *)&c, 1, at._timeout);
+    ret = hal_uart_send(at._pstuart, (void *)&c, 1, at._timeout);
     aos_mutex_unlock(&at.at_uart_send_mutex);
 
     return ret;
@@ -218,12 +217,11 @@ static int at_getc(char *c)
     }
 #if 1
     if (at._mode != ASYN){
-        //LOGE(MODULE_NAME, "AT mode is normal, can no use at_getc \r\n");
         return -1;
     }
 #endif
     aos_mutex_lock(&at.at_mutex, AOS_WAIT_FOREVER);
-    if (hal_uart_recv_II(&at._uart, (void *)&data, 1, 
+    if (hal_uart_recv_II(at._pstuart, (void *)&data, 1, 
       &recv_size, at._timeout) != 0) {
         return -1;
     }
@@ -250,7 +248,7 @@ static int at_write(const char *data, int size)
     }
     
     aos_mutex_lock(&at.at_uart_send_mutex, AOS_WAIT_FOREVER);
-    if (hal_uart_send(&at._uart, (void *)data, size, AOS_WAIT_FOREVER) != 0){
+    if (hal_uart_send(at._pstuart, (void *)data, size, AOS_WAIT_FOREVER) != 0){
         return -1;
     }
     aos_mutex_unlock(&at.at_uart_send_mutex);
@@ -266,15 +264,17 @@ static int at_read(char *data, int size)
         LOGE(MODULE_NAME, "at have not init yet\r\n");
         return -1;
     }
+
 #if 0
     if (at._mode != NORMAL){
         LOGE(MODULE_NAME, "AT mode is aysn, can no use at_read \r\n");
         return -1;
     }
-#endif    
+#endif
+
     aos_mutex_lock(&at.at_mutex, AOS_WAIT_FOREVER);
     while (total_read < size) {
-        if (hal_uart_recv_II(&at._uart, (void *)(data + total_read), size - total_read,
+        if (hal_uart_recv_II(at._pstuart, (void *)(data + total_read), size - total_read,
           &recv_size, at._timeout) != 0) {
             LOGE(MODULE_NAME, "at_read failed on uart_recv.");
             return -1;
@@ -379,14 +379,14 @@ static int at_send_raw_self_define_respone_formate_internal(const char *command,
     at_worker_task_add(tsk);
 
     // uart operation should be inside mutex lock
-    if ((ret = hal_uart_send(&at._uart, (void *)command,
+    if ((ret = hal_uart_send(at._pstuart, (void *)command,
                              cmdlen, at._timeout)) != 0) {
         LOGE(MODULE_NAME, "uart send command failed");
         goto end;
     }
     LOGD(MODULE_NAME, "Sending command %s", command);
 
-    if ((ret = hal_uart_send(&at._uart, (void *)at._send_delimiter,
+    if ((ret = hal_uart_send(at._pstuart, (void *)at._send_delimiter,
                              strlen(at._send_delimiter), at._timeout)) != 0) {
         LOGE(MODULE_NAME, "uart send delimiter failed");
         goto end;
@@ -394,7 +394,7 @@ static int at_send_raw_self_define_respone_formate_internal(const char *command,
     LOGD(MODULE_NAME, "Sending delimiter %s", at._send_delimiter);
 
     if ((ret = aos_sem_wait(&tsk->smpr, AOS_WAIT_FOREVER)) != 0) {
-        LOGE(MODULE_NAME, "sem_wait failed");
+        LOGD(MODULE_NAME, "sem_wait failed");
         goto end;
     }
     
@@ -441,7 +441,7 @@ static int at_send_raw(const char *command, char *rsp, uint32_t rsplen)
  * Send data in 2 stages. These 2 stages must be finished inside 
  * one mutex lock.
  *   1. Send 'fst' string (first stage);
- *   2. Receving prompt, usually "<" character;
+ *   2. Receving prompt, usually ">" character;
  *   3. Send data (second stage) in 'len' length.
  */
 static int at_send_data_2stage(const char *fst, const char *data, 
@@ -490,14 +490,14 @@ static int at_send_data_2stage(const char *fst, const char *data,
     at_worker_task_add(tsk);
 
     // uart operation should be inside mutex lock
-    if ((ret = hal_uart_send(&at._uart, (void *)fst,
+    if ((ret = hal_uart_send(at._pstuart, (void *)fst,
                              strlen(fst), at._timeout)) != 0) {
         LOGE(MODULE_NAME, "uart send command failed");
         goto end;
     }
     LOGD(MODULE_NAME, "Sending command %s", fst);
 
-    if ((ret = hal_uart_send(&at._uart, (void *)at._send_delimiter,
+    if ((ret = hal_uart_send(at._pstuart, (void *)at._send_delimiter,
                              strlen(at._send_delimiter), at._timeout)) != 0) {
         LOGE(MODULE_NAME, "uart send delimiter failed");
         goto end;
@@ -506,20 +506,13 @@ static int at_send_data_2stage(const char *fst, const char *data,
 
     aos_msleep(200);
     
-    if ((ret = hal_uart_send(&at._uart, (void *)data, 
+    if ((ret = hal_uart_send(at._pstuart, (void *)data, 
           len, at._timeout)) != 0) {
         LOGE(MODULE_NAME, "uart send 2stage data failed");
         goto end;
     }
     LOGD(MODULE_NAME, "Sending 2stage data %s", data);
-#if 0
-    if ((ret = hal_uart_send(&at._uart, (void *)at._send_delimiter,
-                             strlen(at._send_delimiter), at._timeout)) != 0) {
-        LOGE(MODULE_NAME, "uart send delimiter failed");
-        goto end;
-    }
-    LOGD(MODULE_NAME, "Sending delimiter %s", at._send_delimiter);
-#endif
+
     if ((ret = aos_sem_wait(&tsk->smpr, AOS_WAIT_FOREVER)) != 0) {
         LOGE(MODULE_NAME, "sem_wait failed");
         goto end;
@@ -590,21 +583,6 @@ static int at_oob(const char *prefix, const char *postfix, int maxlen,
     return 0;
 }
 
-static void dumpbufinfo(char *buf, int length)
-{
-    int printlen = length;
-    int i = 0;
-    
-    if (printlen >= 32)
-        printlen = 32;
-    for (i = 0; i < printlen; i++){
-        printf("0x%02x ", buf[i]);
-        if ((i + 1) % 16 == 0)
-            printf("\r\n");
-    }
-    printf("\r\n");
-}
-
 #define RECV_BUFFER_SIZE 512
 static void at_worker(void *arg)
 {
@@ -652,8 +630,6 @@ static void at_worker(void *arg)
         }
         buf[offset++] = c;
         buf[offset] = 0;
-        
-        //dumpbufinfo(buf, offset);
         
         for (int k = 0; k < at._oobs_num; k++) {
             oob = &(at._oobs[k]);
@@ -737,35 +713,28 @@ static void at_worker(void *arg)
             rsp_fail_postfix_len = at._recv_fail_postfix_len;
         }
 
-        /*如果没有收到过task响应 前缀，则开始判断下是否收到响应*/
         if (offset >= rsp_prefix_len && at_task_reponse_begin == 0 &&
             (strncmp(buf + offset - rsp_prefix_len , rsp_prefix , rsp_prefix_len) == 0)){
-            //printf("command %s get response begin \r\n", tsk->command);
             at_task_reponse_begin = 1;
         }
         
-        /*如果收到了reponse起始符*/
         if (at_task_reponse_begin == 1){
-            /*把每一个收到的字符都放到task reponse中*/
             if (tsk->rsp_offset < tsk->rsp_len){
                 tsk->rsp[tsk->rsp_offset] = c;
                 tsk->rsp_offset++;
-                /* 收到了结束符，则唤醒task开始解析下一个任务*/
+
                 if ((tsk->rsp_offset >= rsp_success_postfix_len && 
                     strncmp(tsk->rsp + tsk->rsp_offset - rsp_success_postfix_len, rsp_success_postfix, rsp_success_postfix_len) == 0)
                     || (tsk->rsp_offset >= rsp_fail_postfix_len && 
                     strncmp(tsk->rsp + tsk->rsp_offset - rsp_fail_postfix_len, rsp_fail_postfix, rsp_fail_postfix_len) == 0)){
-                    //printf("command %s get response result %s \r\n", tsk->command, tsk->rsp);
                     aos_sem_signal(&tsk->smpr);
                     at_task_reponse_begin = 0;
-                    //printf("%s ", buf);
                     memset(buf, 0, offset);
                     offset = 0;
                 }
             }else{
                 memset(tsk->rsp, 0, tsk->rsp_len);
                 strcpy(tsk->rsp, rsp_fail_postfix);
-                //printf("%s ", buf);
                 aos_sem_signal(&tsk->smpr);
                 at_task_reponse_begin = 0;
                 memset(buf, 0, offset);
@@ -776,7 +745,6 @@ check_buffer:
         // in case buffer is full
         if (offset > (RECV_BUFFER_SIZE - 2) ) {
             printf("buffer full \r\n");
-            /*防止某一个起始符和结束符被截断*/
             memcpy_size = rsp_prefix_len > rsp_success_postfix_len ? rsp_prefix_len : rsp_success_postfix_len;
             memcpy_size = memcpy_size > rsp_fail_postfix_len ? memcpy_size : rsp_fail_postfix_len;
             memcpy(buf, buf + offset - memcpy_size, memcpy_size);

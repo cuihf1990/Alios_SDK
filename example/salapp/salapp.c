@@ -303,7 +303,7 @@ int application_start(int argc, char *argv[])
     uart_1.config.stop_bits    = AT_UART_STOP_BITS;
     uart_1.config.flow_control = AT_UART_FLOW_CONTROL;
 
-    if (at.init(&at_uart, AT_RECV_PREFIX, AT_RECV_SUCCESS_POSTFIX, 
+    if (at.init(AT_RECV_PREFIX, AT_RECV_SUCCESS_POSTFIX, 
             AT_RECV_FAIL_POSTFIX, AT_SEND_DELIMITER, 1000) != 0)
         return -1;
 

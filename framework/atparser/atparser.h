@@ -76,7 +76,7 @@ typedef enum {
 */
 typedef struct {
     /// used only internally
-    uart_dev_t _uart;
+    uart_dev_t *_pstuart;
     int _timeout;
     char *_default_recv_prefix;
     char *_default_recv_success_postfix;
@@ -105,7 +105,7 @@ typedef struct {
     * @param recv_delimiter string of characters to use as line delimiters for receiving
     * @param timeout timeout of the connection
     */
-    int (*init)(uart_dev_t *u, const char *recv_prefix, const char *recv_success_postfix,
+    int (*init)(const char *recv_prefix, const char *recv_success_postfix,
                     const char *recv_fail_postfix, const char *send_delimiter, int timeout);
 
     void (*set_mode)(at_mode_t m);
