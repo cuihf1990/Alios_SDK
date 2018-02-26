@@ -5,7 +5,7 @@
 #ifndef _ATCMD_CONFIG_MODULE
 #define _ATCMD_CONFIG_MODULE
 
-#include <hal/soc/soc.h>
+#include <hal/soc/uart.h>
 
 /**
  * AT related platform-dependent things are here, including:
@@ -38,6 +38,5 @@
 #define AT_UART_PARITY NO_PARITY
 #define AT_UART_STOP_BITS STOP_BITS_1
 #define AT_UART_FLOW_CONTROL FLOW_CONTROL_DISABLED
-#define AT_UART_MODE MODE_TX_RX
 
 #endif

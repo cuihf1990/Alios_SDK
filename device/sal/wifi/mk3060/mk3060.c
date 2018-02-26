@@ -16,6 +16,7 @@
 #define CMD_SUCCESS_RSP "OK"
 #define CMD_FAIL_RSP "ERROR"
 
+#define MAX_DATA_LEN   4096
 #define MAX_DOMAIN_LEN 256
 #define DATA_LEN_MAX 10
 #define LINK_ID_MAX 5
@@ -120,10 +121,14 @@ static void handle_socket_data()
         len = len * 10 + reader[j] - '0';
     }
 
+    if (len > MAX_DATA_LEN){
+        LOGE(TAG, "invalid input socket data len %d \r\n", len);
+        return;
+    }
     /* Prepare socket data */
     recvdata = (char *)aos_malloc(len + 1);
     if (!recvdata) {
-        LOGE(TAG, "Error: %s %d out of memory.", __func__, __LINE__);
+        LOGE(TAG, "Error: %s %d out of memory, len is %d. \r\n", __func__, __LINE__, len);
         return;
     }
 
@@ -156,7 +161,7 @@ static void handle_socket_data()
  *   6. +CIPEVENT:id,UDP,CLOSED
  *   7. +CIPEVENT:SOCKET,id,len,data
  */
-static void net_event_handler(void *arg)
+static void net_event_handler(void *arg, char *buf, int buflen)
 {
     char c;
     char s[32] = {0}; 
@@ -270,7 +275,7 @@ static int sal_wifi_init(void)
         memset(cmd, 0, sizeof(cmd));
     }
     
-    at.oob(NET_OOB_PREFIX, net_event_handler, NULL);
+    at.oob(NET_OOB_PREFIX, NULL, 0, net_event_handler, NULL);
     inited = 1;
     
     return 0;
@@ -473,7 +478,7 @@ static int sal_wifi_domain_to_ip(char *domain,
 
     at.send_raw(cmd, out, sizeof(out));
     LOGD(TAG, "The AT response is: %s", out);
-    if (strstr(out, CMD_FAIL_RSP) != NULL) {
+    if (strstr(out, at._default_recv_success_postfix) == NULL) {
         LOGE(TAG, "%s %d failed", __func__, __LINE__);
         return -1;
     }
@@ -491,18 +496,23 @@ static int sal_wifi_domain_to_ip(char *domain,
 
     /* Check the format */
     head += strlen(DOMAIN_RSP);
-    if (head[0] < '0' && head[0] >= ('0' + LINK_ID_MAX))
+    if (head[0] < '0' && head[0] >= ('0' + LINK_ID_MAX)){
+        LOGE(TAG, "%s %d failed", __func__, __LINE__);
         goto err;
+    }
+        
 
     head++;
-    if (memcmp(head, at._recv_delimiter, strlen(at._recv_delimiter)) != 0)
+    if (memcmp(head, at._default_recv_prefix, at._recv_prefix_len) != 0){
+        LOGE(TAG, "%s %d failed", __func__, __LINE__);
         goto err;
+    }
 
    /* We find the IP head */
-   head += strlen(at._recv_delimiter);
+   head += at._recv_prefix_len;
 
    end = head;
-   while (((end - head) < 15) && (*end != at._recv_delimiter[0])) end++;
+   while (((end - head) < 15) && (*end != at._default_recv_prefix[0])) end++;
    if (((end - head) < 6) || ((end -head) > 15)) goto err;
 
    /* We find a good IP, save it. */
