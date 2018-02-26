@@ -422,10 +422,12 @@ static void douglas_asr_recode_test()
         aos_msleep(2*1000);
         start=1;
         pal_pcm_recode_with_cb(get_recode_stream);
+
         struct pal_rec_result *result = pal_asr_stop();
+
         if (result) {
             log_debug("~~~~~ttsurl=%s",result->tts);
-           // xPlayerPlay(result->tts);
+            xPlayerPlay(result->tts);
             pal_rec_result_destroy(result);
         }
 
@@ -633,7 +635,7 @@ void pal_sample(void *p) {
     aos_msleep(1000);
     #ifdef  MCU_XR871
     //krhino_task_dyn_create(&g_player, "xplayer_init", 0, 10, 0, 768, xplayer_run, 1);
-    aos_task_new("xplayer_init", xplayer_run, NULL,1536);
+    aos_task_new("xplayer_init", xplayer_run, NULL,2048);
     douglas_asr_recode_test(); 
     //send_opus();
     #else

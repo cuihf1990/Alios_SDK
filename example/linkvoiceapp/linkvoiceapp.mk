@@ -23,7 +23,7 @@ endif
 
 
 
-$(NAME)_COMPONENTS := opus yloop cli linkvoice_src framework.common  netmgr cjson connectivity/websockets
+$(NAME)_COMPONENTS := opus yloop cli linkvoice framework.common  netmgr cjson connectivity/websockets
 
 LWIP:=0
 ifeq ($(LWIP),1)
@@ -33,5 +33,5 @@ endif
 
 sds:=1
 ifeq ($(sds),1)
-GLOBAL_DEFINES += CONFIG_SDS MBEDTLS_SSL_MAX_CONTENT_LEN=6144
+GLOBAL_DEFINES += CONFIG_SDS MBEDTLS_SSL_MAX_CONTENT_LEN=6144 ALINK_PRODUCT_ATALK
 endif
