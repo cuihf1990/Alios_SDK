@@ -134,6 +134,7 @@ int aos_cli_stop(void);
 const char *aos_cli_get_tag(void);
 
 #else /* CONFIG_AOS_CLI */
+#include "k_types.h"
 
 #define cmd_printf(...) do {} while(0)
 
