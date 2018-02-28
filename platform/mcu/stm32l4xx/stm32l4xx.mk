@@ -74,7 +74,9 @@ $(NAME)_SOURCES += src/STM32L433RC-Nucleo/runapp/soc_init.c \
                    src/STM32L433RC-Nucleo/runapp/system_stm32l4xx.c \
                    src/STM32L433RC-Nucleo/runapp/aos.c  \
                    src/STM32L433RC-Nucleo/hal/hal_uart_stm32l4.c \
-                   src/STM32L433RC-Nucleo/hal/hw.c
+                   src/STM32L433RC-Nucleo/hal/hw.c \
+                   src/STM32L433RC-Nucleo/hal/flash_l4.c \
+                   src/STM32L433RC-Nucleo/hal/flash_port.c
 endif
 
 ifeq ($(COMPILER),armcc)
