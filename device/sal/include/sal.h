@@ -11,7 +11,7 @@
 extern "C" {
 #endif
 
-#define SAL_PACKET_SEND_MODE_ASYNC   1
+#define SAL_PACKET_SEND_MODE_ASYNC   0
 
 typedef enum {
     /* WiFi */

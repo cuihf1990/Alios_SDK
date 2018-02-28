@@ -215,7 +215,7 @@ struct hostent *sal_gethostbyname(const char *name);
 
 int sal_close(int s);
 
-int sal_init();
+int sal_init(void);
 
 int sal_sendto(int s, const void *data, size_t size, int flags, const struct sockaddr *to, socklen_t tolen);
 
