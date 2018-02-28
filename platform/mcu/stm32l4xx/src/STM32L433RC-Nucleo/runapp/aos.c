@@ -47,7 +47,7 @@ static void sys_init(void)
     main();
 #else
     hw_start_hal();
-    //board_init();
+    board_init();
     var_init();
     aos_kernel_init(&kinit);
 #endif
