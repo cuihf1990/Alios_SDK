@@ -1,6 +1,7 @@
 import os, sys, time, platform, json, traceback, random, re, glob, uuid
 import socket, ssl, thread, threading, subprocess, signal, Queue, importlib
 import select
+from os import path
 import packet as pkt
 
 MAX_MSG_LENGTH = 65536
@@ -475,7 +476,7 @@ class Client:
         log_time = time.time()
         log = ''
         if LOCALLOG:
-            logfile= 'client/' + device.split('/')[-1] + '.log'
+            logfile= path.join(path.expanduser('~'), '.udclient', path.basename(device) + '.log')
             flog = open(logfile, 'a+')
         interface = self.devices[device]['interface']
         while interface.exist(device) and exit_condition.is_set() == False:
@@ -589,31 +590,23 @@ class Client:
         print 'device monitor thread exited'
         self.keep_running = False
 
-    def get_interface_by_model(self, model):
-        if model not in self.model_interface:
-            if os.path.exists('board/'+model) == False or \
-               os.path.exists('board/{0}/{0}.py'.format(model)) == False:
-                return None
-            if 'board/'+model not in sys.path:
-                sys.path.append('board/'+model)
+    def load_interfaces(self):
+        board_dir = path.join(path.dirname(path.abspath(__file__)), 'board')
+        candidates = os.listdir(board_dir)
+        for d in candidates:
+            if path.isdir(path.join(board_dir, d)) == False:
+                continue
+            model = path.basename(d)
+            interface_file = path.join(board_dir, d, model+'.py')
+            if path.isfile(interface_file) == False:
+                continue
+            sys.path.append(path.join(board_dir, d))
             try:
                 self.model_interface[model] =  importlib.import_module(model)
             except:
                 if DEBUG: traceback.print_exc()
-                return None
-        return self.model_interface[model]
-
-    def load_interfaces(self):
-        candidates = glob.glob("board/*/*.py")
-        for d in candidates:
-            r = re.search("board/(.*)/(.*)\.py", d)
-            if r == None:
                 continue
-            model = r.groups()[0]
-            if model != r.groups()[1]:
-                continue
-            self.get_interface_by_model(model)
-            print 'model loaded - ',model
+            print 'model loaded - {0}'.format(model)
 
     def device_erase(self, device, term):
         interface = self.devices[device]['interface']
@@ -688,7 +681,8 @@ class Client:
     def login_and_get_server(self, controller_ip, controller_port):
         sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         if ENCRYPT:
-            sock = ssl.wrap_socket(sock, cert_reqs=ssl.CERT_REQUIRED, ca_certs='controller_certificate.pem')
+            cert_file = path.join(path.dirname(path.abspath(__file__)), 'controller_certificate.pem')
+            sock = ssl.wrap_socket(sock, cert_reqs=ssl.CERT_REQUIRED, ca_certs = cert_file)
         try:
             sock.connect((controller_ip, controller_port))
             sock.settimeout(3)
@@ -722,8 +716,9 @@ class Client:
         #print 'controller', type, value
         rets = value.split(',')
         if type != pkt.ACCESS_LOGIN or rets[0] != 'success':
-            if rets[0] == 'invalid access key' and os.path.exists('client/.accesskey'):
-                os.remove('client/.accesskey')
+            accesskey_file = path.join(path.expanduser('~'), '.udclient', '.accesskey')
+            if rets[0] == 'invalid access key' and path.exists(accesskey_file):
+                os.remove(accesskey_file)
             print "login failed, ret={0}".format(value)
             sock.close()
             return None
@@ -735,7 +730,7 @@ class Client:
         sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         if certificate != 'None':
             try:
-                certfile = 'client/certificate.pem'
+                certfile = path.join(path.expanduser('~'), '.udclient', 'certificate.pem')
                 f = open(certfile, 'wt')
                 f.write(certificate)
                 f.close()
@@ -755,13 +750,15 @@ class Client:
             return "fail"
 
     def client_func(self, contoller_ip, controller_port):
-        if os.path.exists('client') == False:
-            os.mkdir('client')
+        work_dir = path.join(path.expanduser('~'), '.udclient')
+        if path.exists(work_dir) == False:
+            os.mkdir(work_dir)
         signal.signal(signal.SIGINT, signal_handler)
 
-        if os.path.exists('client/.accesskey') == True:
+        accesskey_file = path.join(path.expanduser('~'), '.udclient', '.accesskey')
+        if path.exists(accesskey_file) == True:
             try:
-                file = open('client/.accesskey','rb')
+                file = open(accesskey_file, 'rb')
                 self.uuid = json.load(file)
                 file.close()
             except:
@@ -777,7 +774,7 @@ class Client:
                 continue
             self.uuid = uuid
             try:
-                file = open('client/.accesskey','wb')
+                file = open(accesskey_file, 'wb')
                 json.dump(self.uuid, file)
                 file.close()
             except:
@@ -826,7 +823,7 @@ class Client:
                             print "argument error: {0} {1}".format(type, value)
                             continue
                         if hash in file_received:
-                            if os.path.exists(file_received[hash]) == True:
+                            if path.exists(file_received[hash]) == True:
                                 content = term + ',' + 'exist'
                                 self.send_packet(type, content)
                                 continue
@@ -838,7 +835,7 @@ class Client:
                             self.send_packet(type, content)
                             continue
 
-                        filename = 'client/' + fname.split('/')[-1]
+                        filename = path.join(path.expanduser('~'), '.udclient', path.basename(fname))
                         filename += '-' + term + '@' + time.strftime('%Y%m%d-%H%M%S')
                         filehandle = open(filename, 'wb')
                         timeout = time.time() + 5
