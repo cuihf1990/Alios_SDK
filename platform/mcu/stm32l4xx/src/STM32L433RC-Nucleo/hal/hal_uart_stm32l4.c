@@ -11,7 +11,6 @@
 #include "stm32l4xx_hal.h"
 #include "hal_uart_stm32l4.h"
 
-extern UART_HandleTypeDef huart2;
 
 /* Init and deInit function for uart1 */
 static int32_t uart1_init(uart_dev_t *uart);
@@ -70,7 +69,10 @@ int32_t hal_uart_init(uart_dev_t *uart)
 
 int32_t hal_uart_send(uart_dev_t *uart, const void *data, uint32_t size, uint32_t timeout)
 { 	
-    return HAL_UART_Transmit(&huart2, data, 1,30000);
+	  if ((uart == NULL) || (data == NULL)) {
+        return -1;
+    }
+    return HAL_UART_Transmit((UART_HandleTypeDef *)uart->priv, (uint8_t *)data, 1,30000);
 }
 
 int32_t hal_uart_recv(uart_dev_t *uart, void *data, uint32_t expect_size,
@@ -87,7 +89,7 @@ int32_t hal_uart_recv(uart_dev_t *uart, void *data, uint32_t expect_size,
 
     for (i = 0; i < expect_size; i++)
     {
-        ret = HAL_UART_Receive_IT_Buf_Queue_1byte(&huart2, &pdata[i]); 
+        ret = HAL_UART_Receive_IT_Buf_Queue_1byte((UART_HandleTypeDef *)uart->priv, &pdata[i]); 
         if (ret == 0) {
             rx_count++;
         } else {

@@ -583,7 +583,7 @@ static void at_worker(void *arg)
             }
         }
         
-        aos_mutex_lock(&at._mutex, AOS_WAIT_FOREVER);
+        
         at_task_empty = slist_empty(&at.task_l);
         // if no task, continue recv
         if (at_task_empty) {
@@ -592,8 +592,9 @@ static void at_worker(void *arg)
         }
 
         // otherwise, get the first task in list
+        aos_mutex_lock(&at._mutex, AOS_WAIT_FOREVER);
         tsk = slist_first_entry(&at.task_l, at_task_t, next);
-
+        aos_mutex_unlock(&at._mutex);
         // check if a rsp end matched
         if (strcmp(buf + offset - strlen(RECV_STATUS_OK), RECV_STATUS_OK) == 0 ||
             strcmp(buf + offset - strlen(RECV_STATUS_ERROR), RECV_STATUS_ERROR) == 0) {
@@ -638,7 +639,6 @@ static void at_worker(void *arg)
                  offset, tsk->rsp_offset, tsk->rsp_len);
         }
 check_buffer:
-        aos_mutex_unlock(&at._mutex);
         // in case buffer is full
         if ((offset > (RECV_BUFFER_SIZE - 2)) ||
             (strcmp(&buf[offset - at._recv_delim_size], at._recv_delimiter) == 0)) {

@@ -1377,7 +1377,7 @@ int sal_sendto(int s, const void *data, size_t size, int flags,
     }
     sal_deal_event(s, NETCONN_EVT_SENDPLUS);
 #else
-    if (sal_module_send(s, data, size, NULL, -1, pstsalsock->conn->send_timeout)){
+    if (sal_module_send(s, (uint8_t *)data, size, NULL, -1, pstsalsock->conn->send_timeout)){
         SAL_ERROR("socket %d fail to send packet, do nothing for now \r\n", s);
         return -1;
     }
@@ -1704,7 +1704,7 @@ static void sal_packet_output(void *arg)
 }
 
 /* Call this during the init process. */
-int sal_init()
+int sal_init(void)
 {
     static bool sal_init_done = 0;
     aos_task_t  task;
