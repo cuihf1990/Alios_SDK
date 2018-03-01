@@ -3,7 +3,7 @@
 
 #include <k_api.h>
 
-#include <hal/soc/uart.h>
+#include <hal/soc/soc.h>
 #include <aos/aos.h>
 
 #include "c_types.h"

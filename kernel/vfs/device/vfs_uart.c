@@ -3,7 +3,7 @@
  */
 
 #include "device/vfs_uart.h"
-#include "hal/soc/uart.h"
+#include "hal/soc/soc.h"
 #include "vfs_err.h"
 
 /* uart driver struct */
