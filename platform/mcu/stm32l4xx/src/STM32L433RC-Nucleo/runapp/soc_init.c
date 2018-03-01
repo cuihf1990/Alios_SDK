@@ -37,10 +37,12 @@
   */
 
 /* Includes ------------------------------------------------------------------*/
+#include <stdint.h>
 #include "soc_init.h"
+#include "hal/soc/uart.h"
 #include "k_config.h"
 #include "stm32l4xx_hal.h"
-
+#include "hal_uart_stm32l4.h"
 #if defined (__CC_ARM) && defined(__MICROLIB)
 #define PUTCHAR_PROTOTYPE int fputc(int ch, FILE *f)
 #define GETCHAR_PROTOTYPE int fgetc(FILE *f)
@@ -53,14 +55,14 @@
 #define PUTCHAR_PROTOTYPE int __io_putchar(int ch)
 #define GETCHAR_PROTOTYPE int __io_getchar(void)
 #endif /* defined (__CC_ARM) && defined(__MICROLIB) */
-
-
 /* USER CODE BEGIN Includes */
 
 /* USER CODE END Includes */
 
 /* Private variables ---------------------------------------------------------*/
-UART_HandleTypeDef huart2;
+/*UART_HandleTypeDef huart2;*/
+uart_dev_t uart_0;
+
 
 /* USER CODE BEGIN PV */
 /* Private variables ---------------------------------------------------------*/
@@ -70,7 +72,9 @@ UART_HandleTypeDef huart2;
 /* Private function prototypes -----------------------------------------------*/
 void SystemClock_Config(void);
 static void MX_GPIO_Init(void);
-static void MX_USART2_UART_Init(void);
+/*static void MX_USART2_UART_Init(void);*/
+static void uart2_init(void);
+
 
 /* USER CODE BEGIN PFP */
 /* Private function prototypes -----------------------------------------------*/
@@ -106,7 +110,8 @@ void stm32_soc_init(void)
 
   /* Initialize all configured peripherals */
   MX_GPIO_Init();
-  MX_USART2_UART_Init();
+  /*MX_USART2_UART_Init();*/
+  uart2_init();
 }
 
 /** System Clock Configuration
@@ -176,6 +181,7 @@ void SystemClock_Config(void)
 }
 
 /* USART2 init function */
+/*
 static void MX_USART2_UART_Init(void)
 {
 
@@ -194,6 +200,20 @@ static void MX_USART2_UART_Init(void)
     _Error_Handler(__FILE__, __LINE__);
   }
 
+}*/
+
+
+static void uart2_init(void)
+{
+    uart_0.port = PORT_UART2;
+    uart_0.config.baud_rate = 115200;
+    uart_0.config.data_width = DATA_WIDTH_8BIT;
+    uart_0.config.flow_control = FLOW_CONTROL_DISABLED;
+    uart_0.config.mode = MODE_TX_RX;
+    uart_0.config.parity = NO_PARITY;
+    uart_0.config.stop_bits = STOP_BITS_1;
+	
+    hal_uart_init(&uart_0);
 }
 
 /** Configure pins as 
@@ -299,6 +319,7 @@ HAL_StatusTypeDef HAL_InitTick(uint32_t TickPriority)
   return HAL_OK;
 }
 
+
 /**
   * @brief  Retargets the C library printf function to the USART.
   * @param  None
@@ -308,9 +329,9 @@ PUTCHAR_PROTOTYPE
 {
   if (ch == '\n') {
     //hal_uart_send(&console_uart, (void *)"\r", 1, 30000);
-    HAL_UART_Transmit(&huart2, (void *)"\r", 1,30000);
+    hal_uart_send(&uart_0, (void *)"\r", 1, 30000);
   }
-  HAL_UART_Transmit(&huart2, (uint8_t *)&ch, 1, 0xFFFF);
+  hal_uart_send(&uart_0, &ch, 1, 30000);
   return ch;
 }
 
@@ -323,11 +344,20 @@ GETCHAR_PROTOTYPE
 {
   /* Place your implementation of fgetc here */
   /* e.g. readwrite a character to the USART2 and Loop until the end of transmission */
-  uint8_t ch = 0;
-  //uint32_t recv_size;
-  HAL_UART_Receive(&huart2, &ch, 1,30000);
+  uint8_t ch = EOF;
+  int32_t ret = -1;
+  
+  uint32_t recv_size;
+  ret = hal_uart_recv(&uart_0, &ch, 1, &recv_size, 0xFFFFFFFF);
+  if(ret)
+  {
+  	return ret;
+  }
+
   return ch;
 }
+
+
 
 /**
   * @}

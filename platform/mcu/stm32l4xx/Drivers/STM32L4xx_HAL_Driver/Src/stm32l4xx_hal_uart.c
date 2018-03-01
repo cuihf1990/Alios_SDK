@@ -989,8 +989,8 @@ HAL_StatusTypeDef HAL_UART_Receive_IT_Buf_Queue_1byte(UART_HandleTypeDef *huart,
 
   if (huart->buffer_queue != NULL)
   {
-	  ret = krhino_buf_queue_recv(huart->buffer_queue, RHINO_WAIT_FOREVER, pData, &rev_size);
-	  if((ret == 0) && (rev_size == 1))
+    ret = krhino_buf_queue_recv(huart->buffer_queue, RHINO_WAIT_FOREVER, pData, &rev_size);
+    if((ret == 0) && (rev_size == 1))
     {
       ret = HAL_OK;
     }
@@ -3365,7 +3365,7 @@ static void UART_RxISR_8BIT_Buf_Queue(UART_HandleTypeDef *huart)
 {
   uint16_t uhMask = huart->Mask;
   uint16_t  uhdata;
-	uint8_t data;
+  uint8_t data;
 
   /* Check that a Rx process is ongoing */
   if(huart->RxState == HAL_UART_STATE_BUSY_RX)
