@@ -1,5 +1,5 @@
 #include "gd32f4xx.h"
-#include "hal/soc/uart.h"
+#include "hal/soc/soc.h"
 #include "ringbuf.h"
 #include <aos/aos.h>
 #include <k_api.h>
@@ -72,10 +72,15 @@ GETCHAR_PROTOTYPE
     /* e.g. readwrite a character to the USART2 and Loop until the end of transmission */
     uint8_t ch = 0;
     uint32_t recved_size;
+    int32_t ret = 0;
     
-    hal_uart_recv(&uart_0, &ch, 1, &recved_size, 500);
+    ret = hal_uart_recv(&uart_0, &ch, 1, &recved_size, 500);
 
-    return ch;
+    if (ret == 0) {
+        return ch;
+    } else {
+        return ret;
+    }
 }
 
 int32_t hal_uart_init(uart_dev_t *uart)

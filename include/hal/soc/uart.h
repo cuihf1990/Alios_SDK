@@ -98,7 +98,8 @@ int32_t hal_uart_send(uart_dev_t *uart, const void *data, uint32_t size, uint32_
  * @param[out]  data         pointer to the buffer which will store incoming data
  * @param[in]   expect_size  number of bytes to receive
  * @param[out]  recv_size    number of bytes received
- * @param[in]   timeout      timeout in milisecond
+ * @param[in]   timeout      timeout in milisecond, set this value to HAL_WAIT_FOREVER
+ *                           if you want to wait forever
  *
  * @return  0 : on success, EIO : if an error occurred with any step
  */

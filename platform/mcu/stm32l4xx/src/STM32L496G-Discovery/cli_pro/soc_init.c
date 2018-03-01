@@ -40,7 +40,7 @@
 #include <stdint.h>
 
 #include "soc_init.h"
-#include "hal/soc/uart.h"
+#include "hal/soc/soc.h"
 #include "k_config.h"
 
 #include "stm32l4xx_hal.h"
@@ -792,7 +792,7 @@ GETCHAR_PROTOTYPE
   int32_t ret = -1;
   
   uint32_t recv_size;
-  ret = hal_uart_recv(&uart_0, &ch, 1, &recv_size, 0xFFFFFFFF);
+  ret = hal_uart_recv(&uart_0, &ch, 1, &recv_size, HAL_WAIT_FOREVER);
   if(ret)
   {
   	return ret;

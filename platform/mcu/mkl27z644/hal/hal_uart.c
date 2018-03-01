@@ -65,7 +65,7 @@
 #include <errno.h>
 #include <aos/aos.h>
 #include <k_api.h>
-#include "hal/soc/uart.h"
+#include "hal/soc/soc.h"
 #include "fsl_clock.h"
 #include "fsl_lpuart.h"
 
