@@ -133,11 +133,11 @@ void SerialUpload(hal_partition_t partition, char * fileName)
 {
   uint8_t status = 0;
   uint8_t key;
+  int32_t ret = 0;
   
   printf("Select Receive File\n\r");
-  hal_uart_recv( STDIO_UART, &key, 1, NULL, AOS_WAIT_FOREVER );
-  
-  if (key == CRC16)
+  ret = hal_uart_recv( STDIO_UART, &key, 1, NULL, HAL_WAIT_FOREVER );
+  if ((ret == 0) && (key == CRC16))
   {
     /* Transmit the flash image through ymodem protocol */
     status = Ymodem_Transmit(partition, (uint8_t *)fileName);

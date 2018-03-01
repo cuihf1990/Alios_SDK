@@ -381,8 +381,15 @@ GETCHAR_PROTOTYPE
   /* e.g. readwrite a character to the USART2 and Loop until the end of transmission */
   uint8_t ch = 0;
   uint32_t recv_size;
-  hal_uart_recv(&console_uart, &ch, 1, &recv_size, 30000);
-  return ch;
+  int32_t ret = 0;
+
+  ret = hal_uart_recv(&console_uart, &ch, 1, &recv_size, 30000);
+
+  if (ret == 0) {
+      return ch;
+  } else {
+      return ret;
+  }
 }
 
 int32_t hal_uart_send(uart_dev_t *uart, const void *data, uint32_t size, uint32_t timeout) {
