@@ -388,7 +388,7 @@ GETCHAR_PROTOTYPE
   if (ret == 0) {
       return ch;
   } else {
-      return ret;
+      return -1;
   }
 }
 

@@ -312,12 +312,12 @@ GETCHAR_PROTOTYPE
   
   uint32_t recv_size;
   ret = hal_uart_recv(&uart_0, &ch, 1, &recv_size, HAL_WAIT_FOREVER);
-  if(ret)
-  {
-  	return ret;
-  }
 
-  return ch;
+  if (ret == 0) {
+      return ch;
+  } else {
+      return -1;
+  }
 }
 
 
