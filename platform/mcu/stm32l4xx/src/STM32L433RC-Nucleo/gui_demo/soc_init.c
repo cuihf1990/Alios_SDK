@@ -329,7 +329,7 @@ GETCHAR_PROTOTYPE
     uint8_t ch = 0;
     int32_t ret = 0;
     
-    ret = HAL_UART_Receive(&huart2, &ch, 1, HAL_WAIT_FOREVER);
+    ret = HAL_UART_Receive(&huart2, &ch, 1, HAL_MAX_DELAY);
 
     if (ret == 0) {
         return ch;

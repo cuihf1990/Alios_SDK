@@ -383,7 +383,7 @@ GETCHAR_PROTOTYPE
   uint32_t recv_size;
   int32_t ret = 0;
 
-  ret = hal_uart_recv(&console_uart, &ch, 1, &recv_size, 30000);
+  ret = hal_uart_recv(&console_uart, &ch, 1, &recv_size, HAL_WAIT_FOREVER);
 
   if (ret == 0) {
       return ch;
