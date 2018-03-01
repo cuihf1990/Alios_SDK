@@ -30,8 +30,8 @@ def try_install_curses():
     print 'installing dependent package: curses ...'
     import subprocess, urllib
     try:
-        curses_32bit_url = 'https://code.aliyun.com/vivid8710/aos-esptool/raw/master/curses-2.2-cp27-none-win32.whl'
-        curses_64bit_url = 'https://code.aliyun.com/vivid8710/aos-esptool/raw/master/curses-2.2-cp27-none-win_amd64.whl'
+        curses_32bit_url = 'http://alios-things-public.oss-cn-hangzhou.aliyuncs.com/curses-2.2-cp27-none-win32.whl'
+        curses_64bit_url = 'http://alios-things-public.oss-cn-hangzhou.aliyuncs.com/curses-2.2-cp27-none-win_amd64.whl'
         urllib.urlretrieve(curses_32bit_url, 'curses-2.2-cp27-none-win32.whl')
         urllib.urlretrieve(curses_64bit_url, 'curses-2.2-cp27-none-win_amd64.whl')
         subprocess.call(['pip', 'install', 'wheel'])

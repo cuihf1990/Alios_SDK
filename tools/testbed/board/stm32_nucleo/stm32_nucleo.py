@@ -42,9 +42,11 @@ def new_device(device):
 
 def erase(device):
     retry = 3
-    error = 'fail'
     if device not in nucleo_stlink_serials:
-        return error
+        return 'fail'
+    if device in nucleo_debug_sessions:
+        return 'busy'
+    error = 'fail'
     while retry > 0:
         script = ['st-flash', '--serial', nucleo_stlink_serials[device], 'erase']
         ret = subprocess.call(script)
@@ -57,9 +59,11 @@ def erase(device):
 
 def program(device, address, file):
     retry = 3
-    error = 'fail'
     if device not in nucleo_stlink_serials:
-        return error
+        return 'fail'
+    if device in nucleo_debug_sessions:
+        return 'busy'
+    error = 'fail'
     while retry > 0:
         script = ['st-flash', '--serial', nucleo_stlink_serials[device]]
         script += ['write', file, address]

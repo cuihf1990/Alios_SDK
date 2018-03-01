@@ -7,7 +7,7 @@ import packet as pkt
 MAX_MSG_LENGTH = 65536
 ENCRYPT = True
 DEBUG = True
-EN_STATUS_POLL = False
+EN_STATUS_POLL = True
 LOCALLOG = False
 
 def signal_handler(sig, frame):
