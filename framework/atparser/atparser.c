@@ -131,7 +131,7 @@ static int at_getc(char *c)
         return -1;
     }
     
-    if (hal_uart_recv(&at._uart, (void *)&data, 1, 
+    if (hal_uart_recv_II(&at._uart, (void *)&data, 1, 
       &recv_size, at._timeout) != 0) {
         return -1;
     }
@@ -171,7 +171,7 @@ static int at_read(char *data, int size)
     }
     
     while (total_read < size) {
-        if (hal_uart_recv(&at._uart, (void *)(data + total_read), size - total_read,
+        if (hal_uart_recv_II(&at._uart, (void *)(data + total_read), size - total_read,
           &recv_size, at._timeout) != 0) {
             LOGE(MODULE_NAME, "at_read failed on uart_recv.");
             return -1;

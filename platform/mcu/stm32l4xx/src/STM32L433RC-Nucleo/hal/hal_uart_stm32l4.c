@@ -75,7 +75,7 @@ int32_t hal_uart_send(uart_dev_t *uart, const void *data, uint32_t size, uint32_
     return HAL_UART_Transmit((UART_HandleTypeDef *)uart->priv, (uint8_t *)data, 1,30000);
 }
 
-int32_t hal_uart_recv(uart_dev_t *uart, void *data, uint32_t expect_size,
+int32_t hal_uart_recv_II(uart_dev_t *uart, void *data, uint32_t expect_size,
                       uint32_t *recv_size, uint32_t timeout)
 {
     uint8_t *pdata = (uint8_t *)data;

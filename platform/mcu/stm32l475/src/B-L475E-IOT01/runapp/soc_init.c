@@ -383,7 +383,7 @@ GETCHAR_PROTOTYPE
   uint32_t recv_size;
   int32_t ret = 0;
 
-  ret = hal_uart_recv(&console_uart, &ch, 1, &recv_size, HAL_WAIT_FOREVER);
+  ret = hal_uart_recv_II(&console_uart, &ch, 1, &recv_size, HAL_WAIT_FOREVER);
 
   if (ret == 0) {
       return ch;
@@ -420,7 +420,7 @@ int32_t hal_uart_send(uart_dev_t *uart, const void *data, uint32_t size, uint32_
     return 0;
 }
 
-int32_t hal_uart_recv(uart_dev_t *uart, void *data, uint32_t expect_size, uint32_t *recv_size, uint32_t timeout) 
+int32_t hal_uart_recv_II(uart_dev_t *uart, void *data, uint32_t expect_size, uint32_t *recv_size, uint32_t timeout) 
 {
     uint8_t *pdata = (uint8_t *)data;
     int i = 0;
