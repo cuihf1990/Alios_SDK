@@ -1,7 +1,6 @@
 #include "hal/soc/soc.h"
 #include "stm32l4xx.h"
 #include "stm32l4xx_hal_flash.h"
-#include "flash.h"
 
 #define ROUND_DOWN(a,b) (((a) / (b)) * (b))
 
