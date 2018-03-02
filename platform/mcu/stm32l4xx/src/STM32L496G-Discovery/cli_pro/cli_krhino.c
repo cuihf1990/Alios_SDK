@@ -937,7 +937,10 @@ int cli_putstr(char *msg)
 
 int cli_getchar(char *inbuf)
 {
-    if (hal_uart_recv(&uart_0, inbuf, 1, NULL, HAL_WAIT_FOREVER) == 0) {
+    int ret = 0;
+
+    ret = hal_uart_recv_II(&uart_0, inbuf, 1, NULL, HAL_WAIT_FOREVER);
+    if (ret == 0) {
         return 1;
     } else {
         return 0;

@@ -67,7 +67,7 @@ static inline void h4_get_type(void)
 
     /* Get packet type */
     while (1) {
-        ret = hal_uart_recv(&h4_dev, &rx.type, 1, &recv_siz, -1);
+        ret = hal_uart_recv_II(&h4_dev, &rx.type, 1, &recv_siz, -1);
         if (ret != 0) continue;
         else break;
     }
@@ -96,7 +96,7 @@ static inline void get_acl_hdr(void)
     int to_read = sizeof(*hdr) - rx.remaining;
     uint32_t recv_siz = 0;
 
-    hal_uart_recv(&h4_dev, (uint8_t *)hdr + to_read, rx.remaining, &recv_siz, -1);
+    hal_uart_recv_II(&h4_dev, (uint8_t *)hdr + to_read, rx.remaining, &recv_siz, -1);
     rx.remaining -= recv_siz;
 
     if (!rx.remaining) {
@@ -112,7 +112,7 @@ static inline void get_evt_hdr(void)
     int to_read = rx.hdr_len - rx.remaining;
     uint32_t recv_siz = 0;
 
-    hal_uart_recv(&h4_dev, (uint8_t *)hdr + to_read, rx.remaining, &recv_siz, -1);
+    hal_uart_recv_II(&h4_dev, (uint8_t *)hdr + to_read, rx.remaining, &recv_siz, -1);
     rx.remaining -= recv_siz;
 
     if (rx.hdr_len == sizeof(*hdr) && rx.remaining < sizeof(*hdr)) {
@@ -176,7 +176,7 @@ static size_t h4_discard(uart_dev_t *uart, size_t len)
     uint8_t buf[33];
     uint32_t recv_siz;
 
-    return hal_uart_recv(uart, buf, min(len, sizeof(buf)), &recv_siz, 0);
+    return hal_uart_recv_II(uart, buf, min(len, sizeof(buf)), &recv_siz, 0);
 }
 
 static inline void read_payload(void)
@@ -212,7 +212,7 @@ static inline void read_payload(void)
         copy_hdr(rx.buf);
     }
 
-    hal_uart_recv(&h4_dev, net_buf_tail(rx.buf), rx.remaining, (uint32_t *)&read, -1);
+    hal_uart_recv_II(&h4_dev, net_buf_tail(rx.buf), rx.remaining, (uint32_t *)&read, -1);
     net_buf_add(rx.buf, read);
     rx.remaining -= read;
 

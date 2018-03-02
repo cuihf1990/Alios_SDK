@@ -31,7 +31,7 @@ extern uint8_t FileName[];
   */
 static int32_t Receive_Byte (uint8_t *c, uint32_t timeout)
 {
-  if (hal_uart_recv( STDIO_UART, c, 1, NULL, timeout )!=0)
+  if (hal_uart_recv_II( STDIO_UART, c, 1, NULL, timeout )!=0)
     return -1;
   else
     return 0;

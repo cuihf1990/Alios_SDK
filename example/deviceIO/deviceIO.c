@@ -54,7 +54,7 @@ void hal_uart_test(void)
     int ret = -1;
 
     /* receive a message and sent out through the uart */
-    ret = hal_uart_recv(&uart_dev_com1, readbuf, UART_DATA_BYTES, &recBytes, 10);
+    ret = hal_uart_recv_II(&uart_dev_com1, readbuf, UART_DATA_BYTES, &recBytes, 10);
 
     if((ret == 0) && (recBytes > 0))
     {

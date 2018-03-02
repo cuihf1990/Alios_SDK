@@ -28,7 +28,7 @@ void getline (char *line, int n)  {
   char c;
 
   do  {
-    hal_uart_recv( STDIO_UART, &c, 1, NULL, AOS_WAIT_FOREVER);
+    hal_uart_recv_II( STDIO_UART, &c, 1, NULL, AOS_WAIT_FOREVER);
     if (c == CR)  c = LF;     /* read character                 */
     if (c == BACKSPACE  ||  c == DEL)  {    /* process backspace              */
       if (cnt != 0)  {
@@ -56,7 +56,7 @@ int stdio_break_in(void)
     
     for(i=0, j=0; i<5; i++)
     {
-      if (0 != hal_uart_recv( STDIO_UART, &c, 1, NULL, 100)) 
+      if (0 != hal_uart_recv_II( STDIO_UART, &c, 1, NULL, 100)) 
         continue;
 
       if (c == SPACE) 
