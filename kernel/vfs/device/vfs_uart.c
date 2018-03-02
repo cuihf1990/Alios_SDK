@@ -125,7 +125,7 @@ ssize_t vfs_uart_write(file_t *fp, const void *buf, size_t nbytes)
         if (ret == 0) {
 
             /* send data from uart. */ 
-            ret = hal_uart_send(uart_dev, buf, nbytes, AOS_WAIT_FOREVER);
+            ret = hal_uart_send(uart_dev, buf, nbytes, HAL_WAIT_FOREVER);
 
             /* If the data is sent successfully, set the return 
             value to nbytes. */
