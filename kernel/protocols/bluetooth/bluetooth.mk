@@ -30,7 +30,6 @@ $(NAME)_SOURCES := core/atomic_c.c \
                    host/crypto.c \
                    host/smp.c \
                    host/keys.c \
-                   host/sdp.c \
                    core/rpa.c \
                    core/work.c
 
