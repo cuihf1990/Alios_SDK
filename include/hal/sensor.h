@@ -250,12 +250,10 @@ typedef struct _sensor_obj_t {
     char*                    path;
     sensor_tag_e             tag;
     dev_io_port_e            io_port;
-  //uint8_t                  i2c_addr;
     work_mode_e              mode;
     dev_power_mode_e         power;
     gpio_dev_t               gpio;
     dev_sensor_full_info_t   info;
-    i2c_dev_t*               bus;
     uint8_t                  ref;
     int (*open)(void);
     int (*close)(void);

@@ -709,7 +709,6 @@ int drv_humi_bosch_bme280_init(void){
     sensor.write      = NULL;
     sensor.ioctl      = drv_humi_bosch_bme280_ioctl;
     sensor.irq_handle = drv_humi_bosch_bme280_irq_handle;
-    sensor.bus = &bme280_ctx;
 
     ret = sensor_create_obj(&sensor);
     if(unlikely(ret)){
