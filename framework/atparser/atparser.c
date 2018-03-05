@@ -25,6 +25,7 @@ static void at_uart_configure(uart_dev_t *u)
     u->config.parity       = AT_UART_PARITY;
     u->config.stop_bits    = AT_UART_STOP_BITS;
     u->config.flow_control = AT_UART_FLOW_CONTROL;
+    u->config.mode         = AT_UART_MODE;
 }
 
 static int at_init_uart()

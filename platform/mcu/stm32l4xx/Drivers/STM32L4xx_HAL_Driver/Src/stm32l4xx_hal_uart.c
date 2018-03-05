@@ -3373,10 +3373,10 @@ static void UART_RxISR_8BIT_Buf_Queue(UART_HandleTypeDef *huart)
     uhdata = (uint16_t) READ_REG(huart->Instance->RDR);
     data = (uint8_t)(uhdata & (uint8_t)uhMask);
 
-		if (huart->buffer_queue != NULL)
-		{
+    if (huart->buffer_queue != NULL)
+    {
         krhino_buf_queue_send(huart->buffer_queue, &data, 1);
-		}
+    }
 
     if(--huart->RxXferCount == 0)
     {
