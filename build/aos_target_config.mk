@@ -479,7 +479,7 @@ $(PROJECT_GEN): build/scripts/iar.py build/aos_target_config.mk $(CONFIG_FILE)
 	$(QUIET)$(foreach comp,$(PROCESSED_COMPONENTS), $(call WRITE_COMPOENT_PY ))
 	$(QUIET)$(call WRITE_FILE_APPEND, $(CONFIG_PY_FILE) ,])
 	$(QUIET)$(call MKDIR, $(PROJ_GEN_DIR)/iar_project)
-	$(QUIET)cp -f  build/scripts/template.ewd $(PROJECT_GEN)
+	$(QUIET)cp -f  build/scripts/template.ewd $(PROJ_GEN_DIR)/iar_project/$(CLEANED_BUILD_STRING).ewd
 	python build/scripts/iar.py $(CLEANED_BUILD_STRING)
 	$(QUIET)echo ----------- iar project has generated in $(PROJ_GEN_DIR)/iar_project ----------- 
 endif
@@ -493,7 +493,6 @@ $(PROJECT_GEN): build/scripts/keil.py build/aos_target_config.mk $(CONFIG_FILE)
 	$(QUIET)$(foreach comp,$(PROCESSED_COMPONENTS), $(call WRITE_COMPOENT_PY ))
 	$(QUIET)$(call WRITE_FILE_APPEND, $(CONFIG_PY_FILE) ,])
 	$(QUIET)$(call MKDIR, $(PROJ_GEN_DIR)/keil_project)
-	$(QUIET)cp -f  build/scripts/template.uvoptx $(PROJECT_GEN)
 	python build/scripts/keil.py $(CLEANED_BUILD_STRING)
 	$(QUIET)echo ----------- keil project has generated in $(PROJ_GEN_DIR)/keil_project ----------- 
 endif
