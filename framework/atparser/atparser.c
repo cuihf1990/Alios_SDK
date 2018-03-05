@@ -103,7 +103,7 @@ static int at_init(const char *recv_delimiter, const char *send_delimiter, int t
             return -1;
         }
         slist_init(&at.task_l);
-        if (aos_task_new("at_worker", at_worker, NULL, 4096)){
+        if (aos_task_new("at_worker", at_worker, NULL, 2048)){
             at_uinit_mutex();
             LOGE(MODULE_NAME, "fail to creat at task\r\n");
             return -1;

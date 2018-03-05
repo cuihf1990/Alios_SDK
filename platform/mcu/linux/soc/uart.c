@@ -370,7 +370,7 @@ int32_t hal_uart_recv(uart_dev_t *uart, void *data, uint32_t expect_size,
     else fd = 1;
 
     if ((n = read(fd, data, expect_size)) == -1) {
-        printf("read failed\r\n");
+        //printf("read failed\r\n");
         return -1;
     }
 
