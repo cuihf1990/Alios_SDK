@@ -403,7 +403,6 @@ static void asign_ais_handles(ble_ais_t * p_ais)
 
 static void ble_event_handler(input_event_t *event, void *priv_data)
 {
-
     LOG("%s", __func__);
 
     if (event->type != EV_BLE) {
@@ -411,8 +410,7 @@ static void ble_event_handler(input_event_t *event, void *priv_data)
     }
 
     switch (event->code) {
-        case CODE_BLE_NOTIFY_COMPLETED:
-        case CODE_BLE_INDICATE_COMPLETED:
+        case CODE_BLE_TX_COMPLETED:
             notify_pkt_sent(g_ais, event->value);
             break;
         default:
@@ -529,8 +527,6 @@ uint32_t ble_ais_send_notification(ble_ais_t * p_ais, uint8_t * p_data, uint16_t
     if (err) {
         return NRF_ERROR_GATT_NOTIFY;
     } else {
-        //aos_post_event(EV_BLE, CODE_BLE_NOTIFY_COMPLETED, (unsigned long)length);
-        notify_pkt_sent(g_ais, 1);
         return NRF_SUCCESS;
     }
 }
@@ -571,8 +567,6 @@ uint32_t ble_ais_send_indication(ble_ais_t * p_ais, uint8_t * p_data, uint16_t l
     if (err) {
         return NRF_ERROR_GATT_INDICATE;
     } else {
-        //aos_post_event(EV_BLE, CODE_BLE_INDICATE_COMPLETED, (unsigned long)length);
-        notify_pkt_sent(g_ais, 1);
         return NRF_SUCCESS;
     }
 }
