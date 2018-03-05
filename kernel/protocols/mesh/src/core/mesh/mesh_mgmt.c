@@ -648,6 +648,7 @@ static ur_error_t send_attach_request(void)
     message_t *message = NULL;
     message_info_t *info;
     const mac_address_t *mac;
+    uint32_t timestamp;
 
     if (g_mm_state.attach_context.attach_candidate == NULL) {
         return UR_ERROR_FAIL;
@@ -661,7 +662,8 @@ static ur_error_t send_attach_request(void)
     data_orig = data;
     data += sizeof(mm_header_t);
     data += set_mm_uuid_tv(data, TYPE_SRC_UUID, g_mm_state.device.uuid);
-    data += set_mm_timestamp_tv(data, umesh_get_timestamp());
+    timestamp = umesh_get_timestamp();
+    data += set_mm_timestamp_tv(data, timestamp);
     message = mf_build_message(MESH_FRAME_TYPE_CMD, COMMAND_ATTACH_REQUEST,
                                data_orig, length, MESH_MGMT_2);
     if (message == NULL) {
@@ -671,7 +673,7 @@ static ur_error_t send_attach_request(void)
 
     info = message->info;
     mac = umesh_mm_get_mac_address();
-    calculate_one_time_key(NULL, umesh_get_timestamp(), mac->addr);
+    calculate_one_time_key(NULL, timestamp, mac->addr);
     set_mesh_short_addr(&info->dest, g_mm_state.attach_context.attach_candidate->netid,
                         g_mm_state.attach_context.attach_candidate->sid);
     error = mf_send_message(message);
