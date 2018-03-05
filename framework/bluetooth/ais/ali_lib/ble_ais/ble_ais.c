@@ -74,6 +74,8 @@ static void notify_pkt_sent (ble_ais_t * p_ais, uint8_t pkt_sent)
 {
     ble_ais_event_t evt;
 
+    LOGD(MOD, "In %s, %d packets sent.", __func__, pkt_sent);
+
     evt.type                  = BLE_AIS_EVT_TX_DONE;
     evt.data.tx_done.pkt_sent = pkt_sent;
     p_ais->event_handler(p_ais->p_context, &evt);
@@ -328,7 +330,7 @@ static struct bt_gatt_attr ais_attrs[] = {
     BT_GATT_CHARACTERISTIC2(BT_UUID_AIS_WC, BT_GATT_CHRC_READ | \
                             BT_GATT_CHRC_WRITE, HDLC_AIS_WC),
     BT_GATT_DESCRIPTOR2(BT_UUID_AIS_WC, BT_GATT_PERM_READ | \
-                        BT_GATT_PERM_WRITE | BT_GATT_PERM_WRITE_AUTHEN, \
+                        BT_GATT_PERM_WRITE, \
                         read_ais_wc, write_ais_wc, NULL, HDLC_AIS_WC_VALUE),
 
     /* IC */
@@ -527,7 +529,8 @@ uint32_t ble_ais_send_notification(ble_ais_t * p_ais, uint8_t * p_data, uint16_t
     if (err) {
         return NRF_ERROR_GATT_NOTIFY;
     } else {
-        aos_post_event(EV_BLE, CODE_BLE_NOTIFY_COMPLETED, (unsigned long)length);
+        //aos_post_event(EV_BLE, CODE_BLE_NOTIFY_COMPLETED, (unsigned long)length);
+        notify_pkt_sent(g_ais, 1);
         return NRF_SUCCESS;
     }
 }
@@ -539,10 +542,10 @@ static void indicate_cb(struct bt_conn *conn, const struct bt_gatt_attr *attr,
     /* <TODO> */
 }
 
+struct bt_gatt_indicate_params ind_params;
 uint32_t ble_ais_send_indication(ble_ais_t * p_ais, uint8_t * p_data, uint16_t length)
 {
     int err;
-    struct bt_gatt_indicate_params ind_params;
 
     VERIFY_PARAM_NOT_NULL(p_ais);
 
@@ -568,7 +571,8 @@ uint32_t ble_ais_send_indication(ble_ais_t * p_ais, uint8_t * p_data, uint16_t l
     if (err) {
         return NRF_ERROR_GATT_INDICATE;
     } else {
-        aos_post_event(EV_BLE, CODE_BLE_INDICATE_COMPLETED, (unsigned long)length);
+        //aos_post_event(EV_BLE, CODE_BLE_INDICATE_COMPLETED, (unsigned long)length);
+        notify_pkt_sent(g_ais, 1);
         return NRF_SUCCESS;
     }
 }
