@@ -3,7 +3,7 @@
  */
 
 
-#include "mem.h"
+#include "cplus_mem.h"
 #include <k_api.h>
 
 void *operator new[](size_t size)
