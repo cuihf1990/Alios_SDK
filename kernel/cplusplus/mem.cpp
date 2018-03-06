@@ -16,9 +16,9 @@ void *operator new(size_t size)
     return krhino_mm_alloc(size);
 }
 
-void operator delete[] (void *ptr)
+void operator delete[](void *ptr)
 {
-	krhino_mm_free(ptr);
+    krhino_mm_free(ptr);
 }
 
 void operator delete(void *ptr)
