@@ -16,9 +16,9 @@ GLOBAL_INCLUDES += \
                    Drivers/STM32L4xx_HAL_Driver/Inc/Legacy \
                    Drivers/CMSIS/Include \
                    Drivers/CMSIS/Device/ST/STM32L4xx/Include \
-                   src/STM32L433RC-Nucleo/runapp \
-                   src/STM32L433RC-Nucleo/hal \
-		   src/STM32L433RC-Nucleo
+                   src/$(HOST_MCU_NAME)/runapp \
+                   src/$(HOST_MCU_NAME)/hal \
+                   src/$(HOST_MCU_NAME)
                    
 $(NAME)_SOURCES := Drivers/STM32L4xx_HAL_Driver/Src/stm32l4xx_hal.c  \
                    Drivers/STM32L4xx_HAL_Driver/Src/stm32l4xx_hal_flash.c  \
@@ -59,17 +59,15 @@ $(NAME)_SOURCES += src/STM32L433RC-Nucleo/startup_stm32l433xx.s
 
 endif
      
-ifeq ($(HOST_MCU_NAME),STM32L433RC-Nucleo)
-$(NAME)_SOURCES += src/STM32L433RC-Nucleo/runapp/soc_init.c \
-                   src/STM32L433RC-Nucleo/runapp/stm32l4xx_hal_msp.c \
-                   src/STM32L433RC-Nucleo/runapp/stm32l4xx_it.c \
-                   src/STM32L433RC-Nucleo/runapp/system_stm32l4xx.c \
-                   src/STM32L433RC-Nucleo/runapp/aos.c  \
-                   src/STM32L433RC-Nucleo/hal/hal_uart_stm32l4.c \
-                   src/STM32L433RC-Nucleo/hal/hw.c \
-                   src/STM32L433RC-Nucleo/hal/flash_l4.c \
-                   src/STM32L433RC-Nucleo/hal/flash_port.c
-endif
+$(NAME)_SOURCES += src/$(HOST_MCU_NAME)/runapp/soc_init.c \
+                   src/$(HOST_MCU_NAME)/runapp/stm32l4xx_hal_msp.c \
+                   src/$(HOST_MCU_NAME)/runapp/stm32l4xx_it.c \
+                   src/$(HOST_MCU_NAME)/runapp/system_stm32l4xx.c \
+                   src/$(HOST_MCU_NAME)/runapp/aos.c  \
+                   src/$(HOST_MCU_NAME)/hal/hal_uart_stm32l4.c \
+                   src/$(HOST_MCU_NAME)/hal/hw.c \
+                   src/$(HOST_MCU_NAME)/hal/flash_l4.c \
+                   src/$(HOST_MCU_NAME)/hal/flash_port.c
 
 ifeq ($(COMPILER),armcc)
 GLOBAL_CFLAGS   += --c99 --cpu=7E-M -D__MICROLIB -g --apcs=interwork --split_sections
