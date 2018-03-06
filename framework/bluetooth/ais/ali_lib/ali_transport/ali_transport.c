@@ -290,41 +290,34 @@ static ret_code_t try_send (ali_transport_t * p_transport)
         VERIFY_SUCCESS(ret);
 
         pkt_len = len + p_transport->tx.zeroes_padded + HEADER_SIZE;
-        p_transport->tx.pkt_req++;
-        p_transport->tx.frame_seq++;
-        p_transport->tx.bytes_sent += len;
         ret = p_transport->tx.active_func(p_transport->tx.p_context,
                                           p_transport->tx.buff,
                                           pkt_len);
         if (ret == NRF_SUCCESS)
         {
-            LOGD(MOD, "file %s line %d send %d bytes successfully.", __FILE__, __LINE__, len);
-            //p_transport->tx.pkt_req++;
-            //p_transport->tx.frame_seq++;
-            //p_transport->tx.bytes_sent += len;
+            p_transport->tx.pkt_req++;
+            p_transport->tx.frame_seq++;
+            p_transport->tx.bytes_sent += len;
             bytes_left = tx_bytes_left(p_transport);
+            aos_post_event(EV_BLE, CODE_BLE_TX_COMPLETED, 1);
         }
-#if 0 // Below cases not handled, <TODO>
+#if 0
         else if (ret == BLE_ERROR_NO_TX_PACKETS)
         {
             ret = NRF_SUCCESS;
             break;              // wait until timeout or tx-done
         }
+#endif
         else if (ret == NRF_ERROR_BUSY && p_transport->tx.active_func == p_transport->tx.indicate_func)
         {
             ret = NRF_SUCCESS;
             break;              // wait until timeout or tx-done
         }
-#endif
         else
         {
-            LOGD(MOD, "%s %d send failed.", __FILE__, __LINE__);
             VERIFY_SUCCESS(ret);
-            return NRF_ERROR_TRANSPORT_TX_FAILURE;
         }
     } while (bytes_left > 0) ;  // send until there are still bytes
-
-    LOGD(MOD, "%s %d %d bytes left for sending.", __FILE__, __LINE__, bytes_left);
 
     /* Start Tx timeout timer */
     if ((bytes_left != 0) && (p_transport->timeout != 0))
