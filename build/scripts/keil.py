@@ -55,6 +55,8 @@ def MDKAddGroup(parent, name, files, project_path):
 def ModifyProjString( projString ):
     if 'stm32l433' in buildstring:
         projString = projString.replace('STM32L475VGTx','STM32L433RCTx')
+    if 'stm32l432' in buildstring:
+        projString = projString.replace('STM32L475VGTx','STM32L432KCTx')
     return  projString   
     
 def MDKProject(tree, target, script):
