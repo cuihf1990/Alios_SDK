@@ -47,6 +47,10 @@ $(NAME)_SOURCES  += hal/pwm.c
 $(NAME)_SOURCES  += bsp/tcpip_adapter_lwip.c bsp/wlanif.c bsp/ethernetif.c
 $(NAME)_CFLAGS   := -std=gnu99
 
+ifeq ($(bt_mesh), 1)
+$(NAME)_SOURCES  += hal/mesh_bt_hal.c
+endif
+
 ifneq ($(wifi),0)
 $(NAME)_CFLAGS   += -DENABLE_WIFI
 endif
@@ -106,7 +110,10 @@ ble ?= 0
 ifneq ($(ble),0)
 $(NAME)_COMPONENTS += protocols.bluetooth
 GLOBAL_INCLUDES += $(ESP_INC_PATH)/bt/include
+$(NAME)_INCLUDES += ../../../kernel/protocols/bluetooth/port
+$(NAME)_INCLUDES += ../../../kernel/protocols/bluetooth/host/bt_mesh
 $(NAME)_INCLUDES += ../../../kernel/protocols/bluetooth/core/include
+$(NAME)_INCLUDES += ../../../kernel/protocols/bluetooth/include/bluetooth
 ifneq ($(hci_h4),1)
 $(NAME)_SOURCES += ble_hci_driver/hci_driver.c
 else

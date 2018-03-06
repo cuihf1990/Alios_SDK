@@ -81,7 +81,7 @@ ur_error_t frags_reassemble(message_t *p, message_t **reass_p)
                 del_reass(lrh);
             }
         }
-        message_set_payload_offset(p, - 4); /* hide FRAG_1 header */
+        message_set_payload_offset(p, -4); /* hide FRAG_1 header */
 
         MESH_LOG_DEBUG("frags: received new FRAG_1 from %04hx, tag=%u tot_len=%u len=%u offset=0",
                        info->src.addr.short_addr, datagram_tag, datagram_size, message_get_msglen(p));
