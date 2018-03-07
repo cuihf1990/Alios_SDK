@@ -42,17 +42,17 @@
 #define UART1_RX_GPIO_CLK_ENABLE()     __HAL_RCC_GPIOB_CLK_ENABLE()
 #define UART1_RX_GPIO_CLK_DISABLE()    __HAL_RCC_GPIOB_CLK_DISABLE()
 
-#define UART1_TX_PIN                   GPIO_PIN_6
+#define UART1_TX_PIN                   GPIO_PIN_9
 #define UART1_TX_MODE                  GPIO_MODE_AF_PP
 #define UART1_TX_SPEED                 GPIO_SPEED_FREQ_VERY_HIGH
 #define UART1_TX_PULL                  GPIO_PULLUP
 #define UART1_TX_ALTERNATE             GPIO_AF7_USART1
-#define UART1_TX_GPIO_PORT             GPIOB
+#define UART1_TX_GPIO_PORT             GPIOA
 
-#define UART1_RX_PIN                   GPIO_PIN_7
+#define UART1_RX_PIN                   GPIO_PIN_10
 #define UART1_RX_MODE                  GPIO_MODE_AF_PP
 #define UART1_RX_ALTERNATE             GPIO_AF7_USART1
-#define UART1_RX_GPIO_PORT             GPIOB
+#define UART1_RX_GPIO_PORT             GPIOA
 
 #define UART1_IRQn                     USART1_IRQn
 
