@@ -75,14 +75,14 @@ int32_t hal_spi_recv(spi_dev_t *spi, uint8_t *data, uint16_t size, uint32_t time
     return ret;
 }
 
-int32_t hal_spi_send_recv(spi_dev_t *spi, uint8_t *tx_data, uint16_t tx_size,
-                          uint8_t *rx_data, uint16_t rx_size, uint32_t timeout)
+int32_t hal_spi_send_recv(spi_dev_t *spi, uint8_t *tx_data, uint8_t *rx_data,
+                          uint16_t size, uint32_t timeout)
 {
     int32_t ret = -1;
 
-    if((spi != NULL) && (tx_data != NULL) && (rx_data != NULL) && (rx_size == tx_size)) {
+    if((spi != NULL) && (tx_data != NULL) && (rx_data != NULL)) {
           ret = HAL_SPI_TransmitReceive((SPI_HandleTypeDef *)spi->priv,
-                (uint8_t *)tx_data, (uint8_t *)rx_data, rx_size, timeout);
+                (uint8_t *)tx_data, (uint8_t *)rx_data, size, timeout);
     }
 
     return ret;
