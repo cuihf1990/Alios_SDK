@@ -13,6 +13,10 @@
 #define BUFFER_MAX_SIZE  1512
 #define TCP_DEMO_TARGET_TCP_PORT 443
 
+#ifndef IPADDR_NONE
+#define IPADDR_NONE ((uint32_t)0xffffffffUL)
+#endif
+
 static int networktestcmd_tcp_client(int argc, char **argv)
 {
     int  ret = 0;
