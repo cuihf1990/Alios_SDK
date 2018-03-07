@@ -100,7 +100,7 @@ static int networktestcmd_tcp_client(int argc, char **argv)
             goto err;
         }
         
-        memset(pbuf, BUFFER_MAX_SIZE, 0);
+        memset(pbuf, 0, BUFFER_MAX_SIZE);
         
         readlen = read(fd, pbuf, BUFFER_MAX_SIZE - 1);
         if (readlen < 0){
