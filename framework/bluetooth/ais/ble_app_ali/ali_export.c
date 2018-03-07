@@ -40,15 +40,8 @@
 #include <string.h>                 /* String function definitions */
 #include <stdbool.h>
 #include "ali_common.h"
-//#include "nordic_common.h"
-//#include "ble_srv_common.h"
-//#include "ble_hci.h"
-//#include "nrf_nvic.h"
-//#include "nrf_soc.h"
-//#include "app_scheduler.h"
 
 #define NRF_LOG_MODULE_NAME "ALI"
-//#include "nrf_log.h"
 
 #ifndef NRF_LOG_DEBUG
 #define NRF_LOG_DEBUG printf

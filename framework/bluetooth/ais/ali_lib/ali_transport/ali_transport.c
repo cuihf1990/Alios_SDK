@@ -40,8 +40,6 @@
 #include <stdio.h>                  /* Standard input/output definitions */
 #include <string.h>                 /* String function definitions */
 #include <stdbool.h>
-//#include "nordic_common.h"
-//#include "sdk_macros.h"
 #include "ble_gatt.h"
 #include <aos/aos.h>
 
@@ -378,10 +376,10 @@ ret_code_t ali_transport_init(ali_transport_t * p_transport, ali_transport_init_
         aos_timer_t *tx_timer = &p_transport->tx.timer;
         aos_timer_t *rx_timer = &p_transport->rx.timer;
 
-        ret = aos_timer_new(tx_timer, on_tx_timeout, p_transport, p_transport->timeout, 0);
+        ret = aos_timer_new_ext(tx_timer, on_tx_timeout, p_transport, p_transport->timeout, 0, 0);
         VERIFY_SUCCESS(ret);
 
-        ret = aos_timer_new(rx_timer, on_rx_timeout, p_transport, p_transport->timeout, 0);
+        ret = aos_timer_new_ext(rx_timer, on_rx_timeout, p_transport, p_transport->timeout, 0, 0);
         VERIFY_SUCCESS(ret);
     }
 
