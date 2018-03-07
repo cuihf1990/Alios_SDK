@@ -1,16 +1,16 @@
 #!/usr/bin/env bash
 
 workdir=autobuild
-linux_posix_targets="alinkapp meshapp"
-linux_targets="alinkapp helloworld linuxapp meshapp tls yts"
+linux_posix_targets="alinkapp meshapp networkapp"
+linux_targets="alinkapp networkapp helloworld linuxapp meshapp tls yts"
 linux_platforms="linuxhost linuxhost@debug linuxhost@release"
-mk3060_targets="alinkapp helloworld linuxapp meshapp tls uDataapp"
+mk3060_targets="alinkapp helloworld linuxapp meshapp tls uDataapp networkapp"
 mk3060_platforms="mk3060 mk3060@release"
-b_l475e_targets="mqttapp helloworld tls uDataapp"
+b_l475e_targets="mqttapp helloworld tls uDataapp networkapp"
 b_l475e_platforms="b_l475e"
-lpcxpresso54102_targets="helloworld alinkapp mqttapp tls"
+lpcxpresso54102_targets="helloworld alinkapp mqttapp tls networkapp"
 lpcxpresso54102_platforms="lpcxpresso54102"
-esp32_targets="alinkapp helloworld bluetooth.bleadv bluetooth.bleperipheral"
+esp32_targets="alinkapp helloworld bluetooth.bleadv bluetooth.bleperipheral networkapp"
 esp32_platforms="esp32devkitc"
 esp8266_targets="helloworld"
 esp8266_platforms="esp8266"
