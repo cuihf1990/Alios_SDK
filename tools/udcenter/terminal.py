@@ -5,6 +5,7 @@ import curses, socket, ssl, select
 import subprocess, thread, threading
 import traceback
 from operator import itemgetter
+from os import path
 import packet as pkt
 
 MAX_MSG_LENGTH = 65536
@@ -49,28 +50,32 @@ class Terminal:
         self.uuid = None
 
     def init(self):
-        if os.path.exists('terminal') == False:
-            subprocess.call(['mkdir','terminal'])
+        work_dir = path.join(path.expanduser('~'), '.udterminal')
+        if path.exists(work_dir) == False:
+            os.mkdir(work_dir)
 
-        if os.path.exists('terminal/.alias') == True:
+        alias_file = path.join(path.expanduser('~'), '.udterminal', '.alias')
+        if path.exists(alias_file) == True:
             try:
-                file = open('terminal/.alias','rb')
+                file = open(alias_file, 'rb')
                 self.alias_tuples = json.load(file)
                 file.close()
             except:
                 print "read alias record failed"
 
-        if os.path.exists('terminal/.cmd_history') == True:
+        cmd_history_file = path.join(path.expanduser('~'), '.udterminal', '.cmd_history')
+        if path.exists(cmd_history_file) == True:
             try:
-                file = open('terminal/.cmd_history','rb')
+                file = open(cmd_history_file, 'rb')
                 self.cmd_history = json.load(file)
                 file.close()
             except:
                 print "read command history failed"
 
-        if os.path.exists('terminal/.accesskey') == True:
+        accesskey_file = path.join(path.expanduser('~'), '.udterminal', '.accesskey')
+        if path.exists(accesskey_file) == True:
             try:
-                file = open('terminal/.accesskey','rb')
+                file = open(accesskey_file, 'rb')
                 self.uuid = json.load(file)
                 file.close()
             except:
@@ -86,7 +91,8 @@ class Terminal:
                 continue
             self.uuid = uuid
             try:
-                file = open('terminal/.accesskey','wb')
+                accesskey_file = path.join(path.expanduser('~'), '.udterminal', '.accesskey')
+                file = open(accesskey_file, 'wb')
                 json.dump(self.uuid, file)
                 file.close()
             except:
@@ -101,7 +107,6 @@ class Terminal:
             curses.mouseinterval(0)
             curses.start_color()
             curses.use_default_colors()
-            curses.init_pair(0, curses.COLOR_BLACK, -1)
             curses.init_pair(1, curses.COLOR_RED, -1)
             curses.init_pair(2, curses.COLOR_GREEN, -1)
             curses.init_pair(3, curses.COLOR_YELLOW, -1)
@@ -113,6 +118,7 @@ class Terminal:
             self.window_redraw()
             return "success"
         except:
+            if DEBUG: traceback.print_exc()
             return "UI failed"
 
     def window_redraw(self):
@@ -374,7 +380,8 @@ class Terminal:
     def login_and_get_server(self, controller_ip, controller_port):
         sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         if ENCRYPT:
-            sock = ssl.wrap_socket(sock, cert_reqs=ssl.CERT_REQUIRED, ca_certs='controller_certificate.pem')
+            cert_file = path.join(path.dirname(path.abspath(__file__)), 'controller_certificate.pem')
+            sock = ssl.wrap_socket(sock, cert_reqs=ssl.CERT_REQUIRED, ca_certs = cert_file)
         try:
             sock.connect((controller_ip, controller_port))
             sock.settimeout(3)
@@ -410,8 +417,9 @@ class Terminal:
         if type != pkt.ACCESS_LOGIN or rets[0] != 'success':
             if rets[0] == 'invalid access key':
                 self.log_display(time.time(), "login to controller failed, invalid access key")
-                if os.path.exists('terminal/.accesskey'):
-                    os.remove('terminal/.accesskey')
+                accesskey_file = path.join(path.expanduser('~'), '.udterminal', '.accesskey')
+                if path.exists(accesskey_file):
+                    os.remove(accesskey_file)
             else:
                 self.log_display(time.time(), "login to controller failed, ret={0}".format(value))
             sock.close()
@@ -424,7 +432,7 @@ class Terminal:
         sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         if certificate != 'None':
             try:
-                certfile = 'terminal/certificate.pem'
+                certfile = path.join(path.expanduser('~'), '.udterminal', 'certificate.pem')
                 f = open(certfile, 'wt')
                 f.write(certificate)
                 f.close()
@@ -465,7 +473,7 @@ class Terminal:
                     if type == pkt.FILE_BEGIN:
                         if 'file' in locals() and file.closed == False:
                             file.close()
-                        filename = 'terminal/' + value
+                        filename = path.join(path.expanduser('~'), '.udterminal', value)
                         file = open(filename, 'w')
                         continue
                     if type == pkt.FILE_DATA:
@@ -475,6 +483,7 @@ class Terminal:
                     if type == pkt.FILE_END:
                         if 'file' in locals():
                             file.close()
+                            self.log_display(time.time(), 'log file downloaded to {0}'.format(file.name))
                         continue
                     if type == pkt.ALL_DEV:
                         new_list = {}
@@ -874,11 +883,11 @@ class Terminal:
         address  = args[0]
         filename = args[1]
         try:
-            expandname = os.path.expanduser(filename)
+            expandname = path.expanduser(filename)
         except:
             self.cmdrun_status_display("{0} does not exist".format(filename))
             return False
-        if os.path.exists(expandname) == False:
+        if path.exists(expandname) == False:
             self.cmdrun_status_display("{0} does not exist".format(filename))
             return False
         filehash = pkt.hash_of_file(expandname)
@@ -1127,7 +1136,8 @@ class Terminal:
                 continue
             self.alias_tuples[alias[0]] = alias[1]
         try:
-            file = open("terminal/.alias",'wb')
+            alias_file = path.join(path.expanduser('~'), '.udterminal', '.alias')
+            file = open(alias_file, 'wb')
             json.dump(self.alias_tuples, file)
             file.close()
         except:
@@ -1218,7 +1228,7 @@ class Terminal:
                 history_index = -1
                 p = 0
                 self.cmdrun_command_display(cmd, 0)
-            elif c == curses.KEY_BACKSPACE or c == 127: #DELETE
+            elif c == curses.KEY_BACKSPACE or c == 127 or c == 8: #DELETE
                 if cmd[0:p] == "":
                     continue
                 newcmd = cmd[0:p-1] + cmd[p:]
@@ -1320,7 +1330,8 @@ class Terminal:
             self.service_socket.close()
         try:
             if len(self.cmd_history) > 0:
-                file = open("terminal/.cmd_history",'wb')
+                cmd_history_file = path.join(path.expanduser('~'), '.udterminal', '.cmd_history')
+                file = open(cmd_history_file, 'wb')
                 json.dump(self.cmd_history, file)
                 file.close()
         except:

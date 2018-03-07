@@ -1041,14 +1041,3 @@ class Controller():
         thread.start_new_thread(self.sock_interact_thread, (self.port,))
         thread.start_new_thread(self.house_keeping_thread, ())
         self.user_interaction()
-
-if __name__ == '__main__':
-    host = ''
-    port = '34567'
-    if len(sys.argv) > 1:
-        host = sys.argv[1]
-    if len(sys.argv) > 2:
-        port = sys.argv[2]
-    cntr = Controller(host, 34567)
-    cntr.run()
-    sys.exit(0)

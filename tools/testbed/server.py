@@ -23,18 +23,21 @@ class Server:
         self.keep_running = True
         self.log_preserve_period = (7 * 24 * 3600) * 3 #save log for 3 weeks
         self.allocated = {'lock':threading.Lock(), 'devices':[], 'timeout':0}
-        self.special_purpose_set = {'mk3060-alink':[], 'esp32-alink':[]}
+        self.special_purpose_set = {'mk3060-alink':[], 'esp32-alink':[], 'stm32-alink':[]}
         #mk3060
         self.special_purpose_set['mk3060-alink'] += ['mk3060-DN02QRKQ', 'mk3060-DN02RDVL', 'mk3060-DN02RDVT']
         self.special_purpose_set['mk3060-alink'] += ['mk3060-DN02RDVV', 'mk3060-DN02X2ZO', 'mk3060-DN02X2ZS']
         self.special_purpose_set['mk3060-alink'] += ['mk3060-DN02X2ZX', 'mk3060-DN02X2ZZ', 'mk3060-DN02X303']
         self.special_purpose_set['mk3060-alink'] += ['mk3060-DN02X304', 'mk3060-DN02X30B', 'mk3060-DN02X30H']
-        self.special_purpose_set['mk3060-mesh'] = self.special_purpose_set['mk3060-alink']
         #esp32
         self.special_purpose_set['esp32-alink'] += ['esp32-3.1.1', 'esp32-3.1.2', 'esp32-3.1.3', 'esp32-3.1.4']
         self.special_purpose_set['esp32-alink'] += ['esp32-3.2.1', 'esp32-3.2.2', 'esp32-3.2.3', 'esp32-3.2.4']
         self.special_purpose_set['esp32-alink'] += ['esp32-3.3.1', 'esp32-3.3.2', 'esp32-3.3.3', 'esp32-3.3.4']
-        self.special_purpose_set['esp32-mesh'] = self.special_purpose_set['esp32-alink']
+        #esp32
+        self.special_purpose_set['stm32-alink'] += ['stm32l432-0670FF504955857567182119']
+        self.special_purpose_set['stm32-alink'] += ['stm32l432-0672FF494851877267084108']
+        self.special_purpose_set['stm32-alink'] += ['stm32l432-0672FF504955857567113026']
+        self.special_purpose_set['stm32-alink'] += ['stm32l432-0672FF535750877267212458']
 
     def construct_dev_list(self):
         l = []
@@ -339,7 +342,7 @@ class Server:
                     if 'model' not in status or model != status['model'].lower():
                         continue
                 else:
-                    paths = {'mk3060':'mxchip', 'esp32':'espif'}
+                    paths = {'mk3060':'mk3060-', 'esp32':'esp32-', 'stm32':'stm32l43'}
                     if model not in paths:
                         continue
                     pathstr = paths[model]
