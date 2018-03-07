@@ -47,7 +47,7 @@ $(NAME)_SOURCES += aos/soc_impl.c \
                    
 ifeq ($(HOST_MCU_NAME), STM32L433RC-Nucleo)
 GLOBAL_CFLAGS += -DSTM32L433xx
-else ifeq($(HOST_MCU_NAME), STM32L432KC-Nucleo)
+else ifeq ($(HOST_MCU_NAME), STM32L432KC-Nucleo)
 GLOBAL_CFLAGS += -DSTM32L432xx 
 endif
               
