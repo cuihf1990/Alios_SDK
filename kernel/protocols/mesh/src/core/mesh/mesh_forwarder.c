@@ -1031,7 +1031,7 @@ static void handle_received_frame(void *context, frame_t *frame,
     received_frame_t *rx_frame = NULL;
     hal_context_t *hal = (hal_context_t *)context;
     message_info_t info;
-    ur_error_t uerror = UR_ERROR_NONE;
+    ur_error_t umesh_error = UR_ERROR_NONE;
     const uint8_t *key;
 
     hal->link_stats.in_frames++;
@@ -1065,17 +1065,17 @@ static void handle_received_frame(void *context, frame_t *frame,
     rx_frame->hal = hal;
     memcpy(&rx_frame->frame_info, frame_info, sizeof(rx_frame->frame_info));
     bzero(&info, sizeof(info));
-    uerror = resolve_message_info(rx_frame, &info, frame->data);
-    if (uerror == UR_ERROR_NONE && (info.flags & ENCRYPT_ENABLE_FLAG)) {
+    umesh_error = resolve_message_info(rx_frame, &info, frame->data);
+    if (umesh_error == UR_ERROR_NONE && (info.flags & ENCRYPT_ENABLE_FLAG)) {
         info.key_index =
           (umesh_mm_get_attach_state() == ATTACH_REQUEST? ONE_TIME_KEY_INDEX: GROUP_KEY1_INDEX);
         key = get_key(info.key_index);
-        uerror = umesh_aes_decrypt(key, KEY_SIZE, frame->data + info.header_ies_offset,
+        umesh_error = umesh_aes_decrypt(key, KEY_SIZE, frame->data + info.header_ies_offset,
                                    frame->len - info.header_ies_offset,
                                    frame->data + info.header_ies_offset);
     }
 
-    if (uerror != UR_ERROR_NONE) {
+    if (umesh_error != UR_ERROR_NONE) {
         ur_mem_free(rx_frame, sizeof(received_frame_t));
         hal->link_stats.in_drops++;
         return;
