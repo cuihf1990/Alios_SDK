@@ -134,6 +134,9 @@ def main(firmware='~/lb-all.bin', model='mk3060', duration = 12 * 3600, withalin
         return [1, 'failed. duration={0:0.3f} hours'.format(duration/3600) ]
 
 if __name__ == '__main__':
+    #flush to output immediately
+    sys.stdout = os.fdopen(sys.stdout.fileno(), 'w', 0)
+    sys.stderr = os.fdopen(sys.stderr.fileno(), 'w', 0)
     [code, msg] = main()
     sys.exit(code)
 

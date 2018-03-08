@@ -127,6 +127,9 @@ def main(firmware='lb-mk3060.bin', model='mk3060'):
     return [0, 'succeed. ping: pass-{0} fail-{1}, udp: pass-{2} fail-{3}'.format(ping_pass_num, ping_fail_num, udp_pass_num, udp_fail_num)]
 
 if __name__ == '__main__':
+    #flush to output immediately
+    sys.stdout = os.fdopen(sys.stdout.fileno(), 'w', 0)
+    sys.stderr = os.fdopen(sys.stderr.fileno(), 'w', 0)
     [code, msg] = main()
     sys.exit(code)
 

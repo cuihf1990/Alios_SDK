@@ -7,6 +7,7 @@ CONFIG_TIMEOUT = 30
 CONFIG_MAXMSG_LENTH = 8192
 ENCRYPT = True
 DEBUG = True
+EMERGENCY_DEBUG = True
 
 def signal_handler(sig, frame):
     print "received SIGINT"
@@ -37,7 +38,7 @@ class selector():
 
     def select(self):
         ret = []
-        r, w, e = select.select(list(self.read_map), list(self.write_map), list(self.error_map))
+        r, w, e = select.select(list(self.read_map), list(self.write_map), list(self.error_map), 5)
         for fd in r:
             ret.append([fd, self.read_map[fd]])
         for fd in w:
@@ -55,7 +56,6 @@ class Controller():
         self.selector = None
         self.user_cmd = ''
         self.cur_pos = 0
-        self.models = {'mk3060':'mk3060-', 'esp32':'esp32-'}
         self.serve_funcs = {'none':    self.login_process, 'client':  self.client_process,
                             'server':  self.server_process, 'terminal':self.terminal_process}
         self.keyfile = 'controller_key.pem'
@@ -120,6 +120,7 @@ class Controller():
         try:
             conn, addr = sock.accept()
         except:
+            if EMERGENCY_DEBUG: traceback.print_exc()
             return
         self.netlog_print('{0} connected'.format(addr))
         conn.setblocking(False)
@@ -162,7 +163,9 @@ class Controller():
             type, length, value, msg = pkt.parse(msg)
             if type == pkt.TYPE_NONE:
                 break
+            if EMERGENCY_DEBUG: self.netlog_print("{0}: enter {1} function".format(time.time(), self.serve_funcs[role].__name__))
             self.serve_funcs[role](sock, type, value)
+            if EMERGENCY_DEBUG: self.netlog_print("{0}: exit {1} function".format(time.time(), self.serve_funcs[role].__name__))
 
     def send_data(self, sock, content):
         if sock not in self.connections:
@@ -259,7 +262,7 @@ class Controller():
         self.timeouts[sock] = time.time() + CONFIG_TIMEOUT
         if type in [pkt.HEARTBEAT, pkt.ACCESS_UPDATE_TERMINAL, pkt.ACCESS_DEL_TERMINAL, pkt.ACCESS_DEL_CLIENT]:
             return
-        self.netlog_print('server {0} {1}'.format(type, value))
+        #self.netlog_print('server {0} {1}'.format(type, value))
         if type == pkt.ACCESS_LOGIN:
             if value.startswith('server,'):
                 value = value[len('server,'):]
@@ -437,10 +440,10 @@ class Controller():
     def sock_interact_thread(self, port):
         sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         sock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
-        sock.setblocking(False)
         sock.bind((self.host, port))
         if ENCRYPT:
             sock = ssl.wrap_socket(sock, self.keyfile, self.certfile, True)
+        sock.setblocking(False)
         sock.listen(100)
         self.selector = selector()
         self.connections = {}
@@ -449,10 +452,13 @@ class Controller():
         while self.keep_running:
             events = self.selector.select()
             for [sock, callback] in events:
+                if EMERGENCY_DEBUG: self.netlog_print("{0}: enter {1} function".format(time.time(), callback.__name__))
                 callback(sock)
+                if EMERGENCY_DEBUG: self.netlog_print("{0}: exit {1} function".format(time.time(), callback.__name__))
 
             #close timeout connections
             now = time.time()
+            if EMERGENCY_DEBUG: self.netlog_print("{0}: start proccessing timeout".format(time.time()))
             for conn in list(self.timeouts):
                 if now < self.timeouts[conn]:
                     continue
@@ -464,6 +470,8 @@ class Controller():
                 conn.close()
                 self.timeouts.pop(conn)
                 self.connections.pop(conn)
+            if EMERGENCY_DEBUG: self.netlog_print("{0}: end proccessing timeout".format(time.time()))
+            os.system('touch controller_running')
 
     def house_keeping_thread(self):
         while self.keep_running:
@@ -694,11 +702,6 @@ class Controller():
             self.cmdlog_print('error: invalid input {0}, input a positive integer'.format(args[1]))
             return
 
-        if model not in self.models:
-            self.cmdlog_print('error: unsupported model {0}'.format(model))
-            return
-        model_path_str = self.models[model]
-
         ext_server = None
         ext_devices = []
         for device in self.devices:
@@ -724,7 +727,7 @@ class Controller():
                     continue
                 allocated = []
                 for dev in self.connections[conn]['status']['devices']:
-                    if model_path_str not in dev:
+                    if model not in dev:
                         continue
                     if dev in self.devices:
                         continue
@@ -736,7 +739,7 @@ class Controller():
         else:
             allocated = []
             for dev in self.connections[ext_server]['status']['devices']:
-                if model_path_str not in dev:
+                if model not in dev:
                     continue
                 if dev in self.devices:
                     continue
@@ -1020,7 +1023,7 @@ class Controller():
                 self.cur_pos += 1
                 self.cmd_print()
             except:
-                traceback.print_exc()
+                if DEBUG: traceback.print_exc()
                 sys.stdout.write("\rError: unsupported unicode character {0}\n".format(c))
                 self.cmd_print()
                 continue

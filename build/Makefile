@@ -125,7 +125,7 @@ export COMPONENT_DEPENDENCY
 
 .PHONY: $(BUILD_STRING) main_app bootloader clean Help download total run download_bootloader .gdbinit .gdbinit$(BINSTYPE_LOWER)
 
-Help: 
+Help:
 	$(TOOLCHAIN_HOOK_TARGETS)
 	$(error $(USAGE_TEXT))
 
@@ -134,7 +134,7 @@ clean:
 	$(QUIET)$(CLEAN_COMMAND)
 	$(QUIET)$(RM) -rf .gdbinit .gdbinitkernel .gdbinitframework .gdbinitapp
 	$(QUIET)rm -rf build/scripts/config_mk.py
-ifneq (,$(wildcard buid/scripts/*.pyc))
+ifneq (,$(wildcard build/scripts/*.pyc))
 	$(QUIET)rm -rf build/scripts/*.pyc
 endif
 	$(QUIET)$(ECHO) Done

@@ -59,9 +59,16 @@ def alink_test(conn, operation, testid, auid):
     if url == '':
         return {}
 
-    try:
-        conn.request('GET', url, '', headers)
-    except:
+    succeed = False; retry = 3
+    while retry > 0:
+        try:
+            conn.request('GET', url, '', headers)
+            succeed = True
+            break
+        except:
+            time.sleep(2)
+            retry -= 1
+    if succeed == False:
         print 'error: connecting server to request service failed'
         return {}
     response = conn.getresponse()
@@ -386,5 +393,8 @@ def main(firmware='~/lb-all.bin', model='mk3060', testname='5pps'):
 
 
 if __name__ == '__main__':
+    #flush to output immediately
+    sys.stdout = os.fdopen(sys.stdout.fileno(), 'w', 0)
+    sys.stderr = os.fdopen(sys.stderr.fileno(), 'w', 0)
     [code, msg] = main()
     sys.exit(code)
