@@ -358,21 +358,6 @@ static struct bt_gatt_attr ais_attrs[] = {
 
 static struct bt_gatt_service ais_svc = BT_GATT_SERVICE(ais_attrs);
 
-#if 0 // Move the adv logic to app later <TODO>
-static uint8_t ali_data[] = {0xA8, 0x01, 0x04, 0x0C, 0x7B, 0x9C, 0x00, \
-                             0x00, 0xB0, 0xB4, 0x48, 0xD0, 0x78, 0x82};
-static const struct bt_data ad[3] = {
-    BT_DATA_BYTES(BT_DATA_FLAGS, (BT_LE_AD_GENERAL | BT_LE_AD_NO_BREDR)),
-    BT_DATA_BYTES(BT_DATA_UUID16_ALL, 0x0a, 0x18),
-    //BT_DATA(0xFF, ali_data, sizeof(ali_data)),
-};
-
-static const struct bt_data sd[] = {
-    BT_DATA(BT_DATA_NAME_COMPLETE, CONFIG_BT_DEVICE_NAME, \
-            sizeof(CONFIG_BT_DEVICE_NAME) - 1),
-};
-#endif
-
 static void asign_ais_handles(ble_ais_t * p_ais)
 {
     /* AIS Service. */

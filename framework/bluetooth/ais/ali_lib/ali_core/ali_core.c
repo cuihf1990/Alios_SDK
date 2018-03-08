@@ -484,7 +484,7 @@ static uint32_t transport_init (ali_t * p_ali, ali_init_t const * p_init)
     init_transport.tx_buffer_len     = TX_BUFF_LEN;
     init_transport.rx_buffer         = (uint8_t *)p_ali->rx_buff;
     init_transport.rx_buffer_len     = RX_BUFF_LEN;
-    init_transport.timeout           = 0;//p_init->transport_timeout;
+    init_transport.timeout           = p_init->transport_timeout;
     init_transport.event_handler     = (ali_transport_event_handler_t)transport_event_handler;
     init_transport.p_evt_context     = p_ali;
     init_transport.tx_func_notify    = (ali_transport_tx_func_t)ble_ais_send_notification;

@@ -27,12 +27,9 @@ static uint8_t m_addr[BD_ADDR_LEN] = {0x01, 0x02, 0x03, 0x04, 0x05, 0x06};
 #define DEVICE_MODEL_NUM "AIS"
 static uint8_t sys_id[] = {0x12, 0x34};
 
-//static uint8_t ali_data[] = {0xA8, 0x01, 0x04, 0x0C, 0x7B, 0x9C, 0x00, \
-//                             0x00, 0xB0, 0xB4, 0x48, 0xD0, 0x78, 0x82};
 static struct bt_data ad[3] = {
     BT_DATA_BYTES(BT_DATA_FLAGS, (BT_LE_AD_GENERAL | BT_LE_AD_NO_BREDR)),
     BT_DATA_BYTES(BT_DATA_UUID16_ALL, 0x0a, 0x18),
-    //BT_DATA(0xFF, ali_data, sizeof(ali_data)),
 };
 
 static const struct bt_data sd[] = {

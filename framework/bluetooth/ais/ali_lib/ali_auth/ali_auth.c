@@ -39,9 +39,6 @@
 #include <stdio.h>                  /* Standard input/output definitions */
 #include <string.h>                 /* String function definitions */
 #include <stdbool.h>
-//#include "nordic_common.h"
-//#include "sdk_macros.h"
-//#include "nrf_soc.h"
 #include "sha256.h"
 #include "ali_common.h"
 #include <aos/aos.h>
@@ -52,9 +49,6 @@
 static uint8_t const m_tv_rand[ALI_AUTH_PRS_LEN]    /**< Injected test vector: fixed random number. */
     = "\x28\x1f\x2e\x4e\xef\xbd\x12\xd3\xb9\xf7\xee\x5a\x17\x40\xcc\x2b";
 #endif
-
-static uint8_t const m_fixed_rand[ALI_AUTH_PRS_LEN]    /**< Injected test vector: fixed random number. */
-    = "\x28\x1f\x2e\x4e\xef\xbd\x12\xd3\xb9\xf7\xee\x5a\x17\x40\xcc\x2b";
 
 static uint8_t const m_auth_req[9] = "Hi,Server";   /**< Authentication request from central. */
 static uint8_t const m_auth_rsp[9] = "Hi,Client";   /**< Authentication response from peripheral. */
@@ -127,25 +121,26 @@ static void notify_key(ali_auth_t * p_auth)
 /**@brief Generate random number using SD calls. */
 static void sd_rand (ali_auth_t * p_auth)
 {
-#if 0
 #ifndef TEST_VECTORS
-    uint8_t bytes_available;
+    uint8_t bytes_available = 0;
+    uint32_t seed = aos_now_ms();
+    uint8_t byte[4 + 1];
+    uint32_t result = result;
+    uint16_t bytes_copy;
 
-    do
-    {
-        // wait for SD to acquire enough RNs
-        (void)sd_rand_application_bytes_available_get(&bytes_available);
-    } while (bytes_available < ALI_AUTH_PRS_LEN);
-
-    (void)sd_rand_application_vector_get(p_auth->ikm + p_auth->ikm_len, ALI_AUTH_PRS_LEN);
+    while (bytes_available < ALI_AUTH_PRS_LEN) {
+        seed += result;
+        seed = seed % 9999;
+        snprintf((char *)byte, sizeof(byte), "%04d", seed);
+        bytes_copy = ALI_AUTH_PRS_LEN - bytes_available;
+        bytes_copy = (bytes_copy > 4)? 4: bytes_copy;
+        memcpy(p_auth->ikm + p_auth->ikm_len + bytes_available, byte, bytes_copy);
+        bytes_available += bytes_copy;
+    }
 #else
     memcpy(p_auth->ikm + p_auth->ikm_len, m_tv_rand, ALI_AUTH_PRS_LEN);
 #endif
-#endif
-
-    memcpy(p_auth->ikm + p_auth->ikm_len, m_fixed_rand, ALI_AUTH_PRS_LEN);
 }
-
 
 /**@brief Key derivation function. */
 static void kdf (ali_auth_t * p_auth)
@@ -185,7 +180,7 @@ ret_code_t ali_auth_init(ali_auth_t * p_auth, ali_auth_init_t const * p_init)
     memset(p_auth, 0, sizeof(ali_auth_t));
     p_auth->feature_enable    = p_init->feature_enable;
     p_auth->state             = ALI_AUTH_STATE_IDLE;
-    p_auth->timeout           = 0;//p_init->timeout;
+    p_auth->timeout           = p_init->timeout;
     p_auth->event_handler     = p_init->event_handler;
     p_auth->p_evt_context     = p_init->p_evt_context;
     p_auth->tx_func           = p_init->tx_func;
@@ -206,8 +201,8 @@ ret_code_t ali_auth_init(ali_auth_t * p_auth, ali_auth_init_t const * p_init)
     if (p_auth->timeout != 0)
     {
         int err;
-        err = aos_timer_new(&p_auth->timer, on_timeout,
-                  p_auth, p_auth->timeout, 0);
+        err = aos_timer_new_ext(&p_auth->timer, on_timeout, p_auth, p_auth->timeout, 0, 0);
+        VERIFY_SUCCESS(ret);
     }
 
     LOGD(MOD, "ali_auth_init exit.");
