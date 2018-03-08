@@ -58,6 +58,10 @@ void app_main(void)
     extern void nrf51822_h4_set_uart_config();
     nrf51822_h4_set_uart_config();
 #endif
+#if defined(CONFIG_AOS_MESH) && defined(CONFIG_BT_MESH)
+    extern void esp_bt_mesh_register(void);
+    esp_bt_mesh_register();
+#endif
     hal_ota_register_module(&esp32_yos_ota_module);
     aos_task_new("main", app_entry, 0, 8192);
 }

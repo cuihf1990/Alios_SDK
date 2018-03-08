@@ -521,7 +521,7 @@ static ur_error_t send_fragment(network_context_t *network, message_t *message)
         }
     } else {
         frag_header.dispatch = FRAG_N_DISPATCH;
-        frag_header.size     = msg_length;
+        frag_header.size = msg_length;
         *((uint16_t *)&frag_header) = htons(*((uint16_t *)&frag_header));
         frag_header.offset = (uint8_t)(message->frag_offset >> 3);
         frag_header.tag = htons(hal->frag_info.tag);

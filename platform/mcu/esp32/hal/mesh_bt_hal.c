@@ -169,11 +169,11 @@ static void esp_bt_mesh_scan_cb(const bt_addr_le_t *addr, signed char rssi,
                 break;
 #if defined(CONFIG_BT_MESH_PB_ADV)
             case BT_DATA_MESH_PROV:
-                //bt_mesh_pb_adv_recv(buf);
+                bt_mesh_pb_adv_recv(buf);
                 break;
 #endif
             case BT_DATA_MESH_BEACON:
-                //bt_mesh_beacon_recv(buf);
+                bt_mesh_beacon_recv(buf);
                 break;
             default:
                 break;
