@@ -13,14 +13,30 @@
 #define TASK_DEFAULT_WAIT_TIME 1000
 
 static uint8_t inited = 0;
+static uart_dev_t at_uart;
 
 static void at_worker(void *arg);
 
-static int at_init_uart(uart_dev_t *u)
+static void at_uart_configure(uart_dev_t *u)
 {
-    at._uart = *u;
-    if (hal_uart_init(u) != 0) return -1;
-    else return 0;
+    u->port                = AT_UART_PORT;
+    u->config.baud_rate    = AT_UART_BAUDRATE;
+    u->config.data_width   = AT_UART_DATA_WIDTH;
+    u->config.parity       = AT_UART_PARITY;
+    u->config.stop_bits    = AT_UART_STOP_BITS;
+    u->config.flow_control = AT_UART_FLOW_CONTROL;
+    u->config.mode         = AT_UART_MODE;
+}
+
+static int at_init_uart()
+{
+    at_uart_configure(&at_uart);
+    
+    if (hal_uart_init(&at_uart) != 0){
+        return -1;
+    } 
+    at._uart = at_uart;
+    return 0;
 }
 
 static void at_set_timeout(int timeout)
@@ -66,10 +82,9 @@ static void at_uinit_mutex()
     return;
 }
 
-static int at_init(uart_dev_t *u, const char *recv_delimiter,
-                    const char *send_delimiter, int timeout)
+static int at_init(const char *recv_delimiter, const char *send_delimiter, int timeout)
 {
-    if (!u || !recv_delimiter || !send_delimiter || (timeout < 0)) {
+    if (!recv_delimiter || !send_delimiter || (timeout < 0)) {
         LOGE(MODULE_NAME, "%s: invalid argument", __func__);
         return -1;
     }
@@ -79,7 +94,7 @@ static int at_init(uart_dev_t *u, const char *recv_delimiter,
         inited = 0;
     }
     
-    if (at_init_uart(u) != 0) return -1;
+    if (at_init_uart() != 0) return -1;
     at_set_timeout(timeout);
     at_set_recv_delimiter(recv_delimiter);
     at_set_send_delimiter(send_delimiter);
@@ -89,7 +104,7 @@ static int at_init(uart_dev_t *u, const char *recv_delimiter,
             return -1;
         }
         slist_init(&at.task_l);
-        if (aos_task_new("at_worker", at_worker, NULL, 4096)){
+        if (aos_task_new("at_worker", at_worker, NULL, 2048)){
             at_uinit_mutex();
             LOGE(MODULE_NAME, "fail to creat at task\r\n");
             return -1;

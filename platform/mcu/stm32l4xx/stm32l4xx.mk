@@ -12,21 +12,13 @@ GLOBAL_DEFINES += CONFIG_AOS_KV_PTN_SIZE=4096
 GLOBAL_DEFINES += CONFIG_AOS_KV_BUFFER_SIZE=8192
 
 GLOBAL_INCLUDES += \
-                   src/common/csp/lwip/include \
-                   src/common/csp/wifi/inc     \
-                   src/include   \
                    Drivers/STM32L4xx_HAL_Driver/Inc \
                    Drivers/STM32L4xx_HAL_Driver/Inc/Legacy \
-                   Drivers/BSP/Components/es_wifi \
-                   Drivers/BSP/Components/hts221 \
-                   Drivers/BSP/Components/lis3mdl \
-                   Drivers/BSP/Components/lps22hb \
-                   Drivers/BSP/Components/lsm6dsl \
-                   Drivers/BSP/Components/vl53l0x \
                    Drivers/CMSIS/Include \
                    Drivers/CMSIS/Device/ST/STM32L4xx/Include \
-                   src/STM32L433RC-Nucleo/runapp \
-                   src/STM32L433RC-Nucleo
+                   src/$(HOST_MCU_NAME)/runapp \
+                   src/$(HOST_MCU_NAME)/hal \
+                   src/$(HOST_MCU_NAME)
                    
 $(NAME)_SOURCES := Drivers/STM32L4xx_HAL_Driver/Src/stm32l4xx_hal.c  \
                    Drivers/STM32L4xx_HAL_Driver/Src/stm32l4xx_hal_flash.c  \
@@ -53,9 +45,12 @@ $(NAME)_SOURCES := Drivers/STM32L4xx_HAL_Driver/Src/stm32l4xx_hal.c  \
 $(NAME)_SOURCES += aos/soc_impl.c \
                    aos/trace_impl.c
                    
-
+ifeq ($(HOST_MCU_NAME), STM32L433RC-Nucleo)
 GLOBAL_CFLAGS += -DSTM32L433xx
-                   
+else ifeq ($(HOST_MCU_NAME), STM32L432KC-Nucleo)
+GLOBAL_CFLAGS += -DSTM32L432xx 
+endif
+              
 ifeq ($(COMPILER), armcc)
 $(NAME)_SOURCES += src/STM32L433RC-Nucleo/startup_stm32l433xx_keil.s
      
@@ -67,15 +62,15 @@ $(NAME)_SOURCES += src/STM32L433RC-Nucleo/startup_stm32l433xx.s
 
 endif
      
-ifeq ($(HOST_MCU_NAME), STM32L433RC-Nucleo)
-$(NAME)_SOURCES += src/STM32L433RC-Nucleo/runapp/soc_init.c \
-                   src/STM32L433RC-Nucleo/runapp/stm32l4xx_hal_msp.c \
-                   src/STM32L433RC-Nucleo/runapp/stm32l4xx_it.c \
-                   src/STM32L433RC-Nucleo/runapp/system_stm32l4xx.c \
-                   src/STM32L433RC-Nucleo/runapp/aos.c  \
-                   src/STM32L433RC-Nucleo/hal/hal_uart_stm32l4.c \
-                   src/STM32L433RC-Nucleo/hal/hw.c
-endif
+$(NAME)_SOURCES += src/$(HOST_MCU_NAME)/runapp/soc_init.c \
+                   src/$(HOST_MCU_NAME)/runapp/stm32l4xx_hal_msp.c \
+                   src/$(HOST_MCU_NAME)/runapp/stm32l4xx_it.c \
+                   src/$(HOST_MCU_NAME)/runapp/system_stm32l4xx.c \
+                   src/$(HOST_MCU_NAME)/runapp/aos.c  \
+                   src/$(HOST_MCU_NAME)/hal/hal_uart_stm32l4.c \
+                   src/$(HOST_MCU_NAME)/hal/hw.c \
+                   src/$(HOST_MCU_NAME)/hal/flash_l4.c \
+                   src/$(HOST_MCU_NAME)/hal/flash_port.c
 
 ifeq ($(COMPILER),armcc)
 GLOBAL_CFLAGS   += --c99 --cpu=7E-M -D__MICROLIB -g --apcs=interwork --split_sections
@@ -132,6 +127,6 @@ endif
 
 ifeq ($(COMPILER),armcc)
 $(NAME)_LINK_FILES := src/STM32L433RC-Nucleo/startup_stm32l433xx_keil.o
-$(NAME)_LINK_FILES += src/STM32L433RC-Nucleo/runapp/stm32l4xx_it.o
-$(NAME)_LINK_FILES += src/STM32L433RC-Nucleo/runapp/stm32l4xx_hal_msp.o
+$(NAME)_LINK_FILES += src/$(HOST_MCU_NAME)/runapp/stm32l4xx_it.o
+$(NAME)_LINK_FILES += src/$(HOST_MCU_NAME)/runapp/stm32l4xx_hal_msp.o
 endif

@@ -470,7 +470,7 @@ static int sal_wifi_domain_to_ip(char *domain,
      * OK\r\n
      */
     if ((head = strstr(out, DOMAIN_RSP)) == NULL) {
-        LOGE(TAG, "No IP info found in result string.");
+        LOGE(TAG, "No IP info found in result string %s \r\n.", out);
         return -1;
     }
 
@@ -497,7 +497,7 @@ static int sal_wifi_domain_to_ip(char *domain,
    return 0;
 
 err:
-    LOGD(TAG, "Failed to get IP due to unexpected result string.");
+    LOGE(TAG, "Failed to get IP due to unexpected result string %s \r\n.", out);
     return -1;
 }
 

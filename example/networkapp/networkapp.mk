@@ -2,8 +2,6 @@ NAME := networkapp
 
 $(NAME)_SOURCES := networkapp.c
 
-GLOBAL_DEFINES += AOS_NO_WIFI
-
 $(NAME)_COMPONENTS := yloop cli netmgr
 
 ifeq ($(BENCHMARKS),1)
