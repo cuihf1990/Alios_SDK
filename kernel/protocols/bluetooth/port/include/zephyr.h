@@ -11,9 +11,7 @@
 #include <misc/slist.h>
 #include <misc/dlist.h>
 #include "kport.h"
-#include "mbox.h"
 #include "work.h"
-#include "timer.h"
 
 #if defined(__cplusplus)
 extern "C"
