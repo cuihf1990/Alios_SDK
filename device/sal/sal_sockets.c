@@ -722,6 +722,7 @@ static err_t salnetconn_connect(sal_netconn_t *conn, int8_t *addr, u16_t port)
 {
     sal_conn_t statconn = {0};
     ip_addr_t remoteipaddr;
+    struct sal_sock *sock;
     char *ipv4anyadrr = "0.0.0.0";
     err_t err = ERR_OK;
 
@@ -781,6 +782,14 @@ static err_t salnetconn_connect(sal_netconn_t *conn, int8_t *addr, u16_t port)
             SAL_ERROR("Unsupported sal connection type.\n");
             return ERR_ARG;
     }
+
+    sock = get_socket(conn->socket);
+/*init socket send event*/
+#if SAL_PACKET_SEND_MODE_ASYNC
+    sock->sendevent = SAL_DEFAULT_OUTPUTMBOX_SIZE;
+#else
+    sal_deal_event(conn->socket, NETCONN_EVT_SENDPLUS);
+#endif
 
     /* Update sal conn state here */
     conn->state = NETCONN_CONNECT;
@@ -1375,12 +1384,14 @@ int sal_sendto(int s, const void *data, size_t size, int flags,
         SAL_ERROR("%s try post output packet fail \n", __FUNCTION__);
         return -1;
     }
-    sal_deal_event(s, NETCONN_EVT_SENDPLUS);
+    sal_deal_event(s, NETCONN_EVT_SENDMINUS);
 #else
+    sal_deal_event(s, NETCONN_EVT_SENDMINUS);
     if (sal_module_send(s, (uint8_t *)data, size, NULL, -1, pstsalsock->conn->send_timeout)){
         SAL_ERROR("socket %d fail to send packet, do nothing for now \r\n", s);
         return -1;
     }
+    sal_deal_event(s, NETCONN_EVT_SENDPLUS);
 #endif
 
     return size;
@@ -1687,7 +1698,7 @@ static void sal_packet_output(void *arg)
                     continue;
                 }
                 
-                sal_deal_event(fd, NETCONN_EVT_SENDMINUS);
+                sal_deal_event(fd, NETCONN_EVT_SENDPLUS);
                 /* sal module send need timeout to support send timeout */
                 if (sal_module_send(fd, outputmem->payload, outputmem->len, NULL, -1, 0)){
                     SAL_ERROR("socket %d fail to send packet, do nothing for now \r\n", fd);
