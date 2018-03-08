@@ -125,7 +125,7 @@ static void ali_lib_init(void)
     init_alink.status_changed_cb = dev_status_changed_handler;
     init_alink.set_cb            = set_dev_status_handler;
     init_alink.get_cb            = get_dev_status_handler;
-    init_alink.enable_ota        = false;
+    init_alink.enable_ota        = true;
     init_alink.enable_auth       = true;
     memcpy(init_alink.bd_addr, bd_addr, BD_ADDR_LEN);
     memcpy(init_alink.secret, m_secret, sizeof(m_secret));
