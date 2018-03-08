@@ -64,6 +64,9 @@ typedef uint16_t ret_code_t;
 #define NRF_ERROR_NULL                       (17)
 #define NRF_ERROR_INVALID_LENGTH             (18)
 #define NRF_ERROR_TRANSPORT_TX_FAILURE       (19)
+#define NRF_ERROR_FLASH_STORE_FAIL           (20)
+#define NRF_ERROR_FLASH_ERASE_FAIL           (21)
+#define NRF_ERROR_SETTINGS_FAIL              (22)
 
 #define BLE_CONN_HANDLE_INVALID 0xffff
 #define BLE_CONN_HANDLE_MAGIC 0x1234
