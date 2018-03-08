@@ -4,8 +4,8 @@
 
 **  File        : LinkerScript.ld
 **
-**  Abstract    : Linker script for STM32L475VGTx Device with
-**                1024KByte FLASH, 96KByte RAM
+**  Abstract    : Linker script for STM32L433RCTxP Device with
+**                256KByte FLASH, 64KByte RAM
 **
 **                Set heap size, stack size and stack location according
 **                to application requirements.
@@ -33,34 +33,21 @@
 ENTRY(Reset_Handler)
 
 /* Highest address of the user mode stack */
-_estack  = 0x20010000;          /* end of RAM */
+_estack = 0x20010000;    /* end of RAM */
 /* Generate a link error if heap and stack don't fit into RAM */
-_Min_Heap_Size = 0x7000;      /* required amount of heap  */
-_Min_Stack_Size = 0x2000; /* required amount of stack */
+_Min_Heap_Size = 0x1000;      /* required amount of heap  */
+_Min_Stack_Size = 0x400; /* required amount of stack */
 
 /* Specify the memory areas */
 MEMORY
 {
 RAM (xrw)      : ORIGIN = 0x20000000, LENGTH = 64K
-FLASH (rx)      : ORIGIN = 0x8000000, LENGTH = 256K		/* Use only the first bank */
-FLASH_UC (r)	: ORIGIN = 0x08064000, LENGTH = 9K		/* Fixed-location area */
+FLASH (rx)      : ORIGIN = 0x8000000, LENGTH = 256K
 }
 
 /* Define output sections */
 SECTIONS
 {
-
-  INITED_FIXED_LOC : ALIGN(0x800)
-  {
-    *(INITED_FIXED_LOC)
-  } >FLASH_UC
-  
-  /* uninit region must be last or else it is erased */
-  UNINIT_FIXED_LOC (NOLOAD) : ALIGN(0x800)
-  {
-    *(UNINIT_FIXED_LOC)
-  } >FLASH_UC
-
   /* The startup code goes first into FLASH */
   .isr_vector :
   {
@@ -127,7 +114,6 @@ SECTIONS
     PROVIDE_HIDDEN (__init_array_end = .);
 	. = ALIGN(8);
   } >FLASH
- 
   .fini_array :
   {
 	. = ALIGN(8);
@@ -137,7 +123,6 @@ SECTIONS
     PROVIDE_HIDDEN (__fini_array_end = .);
 	. = ALIGN(8);
   } >FLASH
-  
 
   /* used by the startup to initialize data */
   _sidata = LOADADDR(.data);
@@ -172,17 +157,18 @@ SECTIONS
   } >RAM
 
   /* User_heap_stack section, used to check that there is enough RAM left */
-    . = ALIGN(8);
-    PROVIDE ( end = . );
-    PROVIDE ( _end = . );
-    PROVIDE (heap_start = . );
-    PROVIDE(_stack_unused      = _estack - _Min_Stack_Size); /* 0x10*/
+  . = ALIGN(8);
+  PROVIDE ( end = . );
+  PROVIDE ( _end = . );
+  PROVIDE ( _stack_base = _estack - _Min_Stack_Size); /* 0x10*/
+  ASSERT ((_stack_base > end), "Error: No room left for the stack")
 
-    ASSERT ((_stack_unused > end), "Error: No room left for the stack")
+  PROVIDE ( heap_start  = _end );
+  PROVIDE ( heap_end    = _stack_base);
+  PROVIDE ( heap_len    = heap_end - heap_start);
+  ASSERT ((heap_len > _Min_Heap_Size), "Error: No room left for the heap")
 
-    PROVIDE(heap_end      = _stack_unused);
-    PROVIDE(heap_len      = heap_end -  heap_start);
-    .ARM.attributes 0 : { *(.ARM.attributes) }
+  .ARM.attributes 0 : { *(.ARM.attributes) }
 }
 
  GROUP(
