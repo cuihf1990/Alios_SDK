@@ -203,7 +203,7 @@ static int networktestcmd_domain(int argc, char **argv)
 {
     char *pcdomain = NULL;
     char *pcdestport = NULL;
-    int port = TCP_DEMO_TARGET_TCP_PORT;
+    int port = 0;
     int fd = 0;
     struct hostent *host = NULL;
     struct sockaddr_in server_addr;
@@ -231,25 +231,27 @@ static int networktestcmd_domain(int argc, char **argv)
                                         (unsigned char)((*(unsigned long *)(host->h_addr) & 0x0000ff00) >> 8),
                                         (unsigned char)((*(unsigned long *)(host->h_addr) & 0x00ff0000) >> 16),
                                         (unsigned char)((*(unsigned long *)(host->h_addr) & 0xff000000) >> 24));
-    if ((fd = socket(AF_INET, SOCK_STREAM, 0)) == -1) {
-        printf("Socket failed, errno: %d \r\n", errno);
-        return -1;
-    }
+    if (port){
+        if ((fd = socket(AF_INET, SOCK_STREAM, 0)) == -1) {
+            printf("Socket failed, errno: %d \r\n", errno);
+            return -1;
+        }
 
-    memset(&server_addr, 0, sizeof(server_addr));
-    server_addr.sin_family = AF_INET;
-    server_addr.sin_port = htons(port);
-    server_addr.sin_addr = *((struct in_addr *)host->h_addr);
-    printf("connect to ip 0x%x port 0x%x \r\n", server_addr.sin_addr.s_addr, server_addr.sin_port);
-    
-    if (connect(fd, (struct sockaddr *) (&server_addr),
-        sizeof(struct sockaddr)) == -1) {
-        printf("Connect failed, errno: %d\r\n", errno);
+        memset(&server_addr, 0, sizeof(server_addr));
+        server_addr.sin_family = AF_INET;
+        server_addr.sin_port = htons(port);
+        server_addr.sin_addr = *((struct in_addr *)host->h_addr);
+        printf("connect to ip 0x%x port 0x%x \r\n", server_addr.sin_addr.s_addr, server_addr.sin_port);
+        
+        if (connect(fd, (struct sockaddr *) (&server_addr),
+            sizeof(struct sockaddr)) == -1) {
+            printf("Connect failed, errno: %d\r\n", errno);
+            close(fd);
+            return -1;
+        }
+        
         close(fd);
-        return -1;
     }
-    
-    close(fd);
     return 0;
 }
 
@@ -294,7 +296,7 @@ static void handle_networktestcmd(char *pwbuf, int blen, int argc, char **argv)
 static struct cli_command networktestcmds[] = {
     {
         .name = "network",
-        .help = "netowork { tcp_c|udp_c remote_ip remote_port data [times] } | { domain domain_info remote_port}",
+        .help = "netowork { tcp_c|udp_c remote_ip remote_port data [times] } | { domain domain_info [ remote_port ]}",
         .function = handle_networktestcmd
     }
 };
