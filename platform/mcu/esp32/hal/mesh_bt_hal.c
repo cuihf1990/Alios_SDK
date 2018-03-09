@@ -10,7 +10,7 @@
 #include "hci.h"
 #include "adv.h"
 #include "bluetooth.h"
-#include "esp_err.h"
+#include "hci_core.h"
 #include "umesh_hal.h"
 #include "net/buf.h"
 #include "mesh/access.h"
@@ -49,7 +49,7 @@ static send_cxt_t g_send_bcast_cxt;
 
 static mesh_hal_priv_t *g_hal_priv;
 static umesh_hal_module_t esp_bt_mesh_module;
-static const uint8_t g_ble_channels[] = {0, 12, 39};// advertising channels
+static const uint8_t g_ble_channels[] = {0, 12, 39}; //advertising channels
 static mesh_hal_priv_t g_ble_priv = {
     .mtu = BLE_DEFAULT_MTU_SIZE,
     .channel = 0,
@@ -209,9 +209,11 @@ static void bt_ready(int err)
 }
 
 extern int hci_driver_init(void);
-extern esp_err_t esp_efuse_mac_get_default(uint8_t *mac);
 static int esp_bt_mesh_init(umesh_hal_module_t *module, void *config)
 {
+    int error;
+    struct net_buf *rsp;
+    struct bt_hci_rp_read_bd_addr *rp;
     mesh_hal_priv_t *priv = module->base.priv_dev;
     g_hal_priv = priv;
 
@@ -224,7 +226,15 @@ static int esp_bt_mesh_init(umesh_hal_module_t *module, void *config)
     // init adv context
     bt_mesh_adv_init();
 
-    esp_efuse_mac_get_default(priv->macaddr);
+    // read public device address from controller
+    error = bt_hci_cmd_send_sync(BT_HCI_OP_READ_BD_ADDR, NULL, &rsp);
+    if (error) {
+        return error;
+    }
+    
+    rp = (void *)rsp->data;
+    memcpy(priv->macaddr, &rp->bdaddr, BLE_MAC_ADDR_SIZE);
+    net_buf_unref(rsp);
     return 0;
 }
 
