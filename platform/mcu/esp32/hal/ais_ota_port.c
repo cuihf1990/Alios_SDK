@@ -16,16 +16,18 @@ void ais_ota_set_setting_fw_offset(uint32_t offset)
 
 uint32_t ais_ota_get_page_size()
 {
-    return 0;
+    return 4096;
 }
 
 ali_ota_flash_err_t ais_ota_flash_erase(uint32_t const *addr, uint32_t num_pages, flash_event_handler_t cb)
 {
+    cb(ALI_OTA_FLASH_ERASE_OK);
     return ALI_OTA_FLASH_CODE_SUCCESS;
 }
 
 ali_ota_flash_err_t ais_ota_flash_store(uint32_t const *addr, uint32_t const *p_data, uint16_t len, flash_event_handler_t cb)
 {
+    cb(ALI_OTA_FLASH_STORE_OK);
     return ALI_OTA_FLASH_CODE_SUCCESS;
 }
 
@@ -46,6 +48,7 @@ uint32_t ais_ota_get_dst_addr()
 
 ali_ota_settings_err_t ais_ota_settings_write(settings_event_handler_t cb)
 {
+    cb(ALI_OTA_FLASH_STORE_OK);
     return ALI_OTA_SETTINGS_CODE_SUCCESS;
 }
 
