@@ -52,6 +52,15 @@ def MDKAddGroup(parent, name, files, project_path):
 
     return group
 
+# automation to do
+def changeItemForMcu( tree ):
+    ScatterFile = tree.find('Targets/Target/TargetOption/TargetArmAds/LDads/ScatterFile')
+    if 'stm32l433' in buildstring:
+        ScatterFile.text = '..\..\..\..\platform\mcu\stm32l4xx\src\STM32L433RC-Nucleo\STM32L433.sct'
+    if 'stm32l432' in buildstring:
+        ScatterFile.text = '..\..\..\..\platform\mcu\stm32l4xx\src\STM32L432KC-Nucleo\STM32L432.sct'
+    
+# change key word in project file. automation to do
 def ModifyProjString( projString ):
     if 'stm32l433' in buildstring:
         projString = projString.replace('STM32L475VGTx','STM32L433RCTx')
@@ -98,13 +107,18 @@ def MDKProject(tree, target, script):
     # set <OutputName>B-L475E-IOT01</OutputName> 
     
     xml_indent(root)
+    
+    changeItemForMcu(tree)
     projString = ModifyProjString( etree.tostring(root, encoding='utf-8') )
     out.write(projString)
     out.close()
 
 def MDK5Project(target, script):
     template_tree = etree.parse('build/scripts/template.uvprojx')
+    # create uvprojx file
     MDKProject(template_tree, target, script)
+    
+    # create uvoptx file
     opt_file = target.replace('.uvprojx', '.uvoptx')
     opt_tree = etree.parse('build/scripts/template.uvoptx')
     TargetName = opt_tree.find('Target/TargetName')
