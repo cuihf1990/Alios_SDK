@@ -48,6 +48,7 @@
 //#include "nrf_dfu_flash.h"
 //#include "nrf_dfu_settings.h"
 #include <hal/ais_ota.h>
+#include <crc.h>
 
 #define EXTRACT_U16(d)  (*((uint8_t *)(d)) | (*((uint8_t *)(d) + 1) << 8))
 #define EXTRACT_U32(d)  (*((uint8_t *)(d)) | (*((uint8_t *)(d) + 1) << 8) | (*((uint8_t *)(d) + 2) << 16) | (*((uint8_t *)(d) + 3) << 24))
@@ -526,12 +527,12 @@ static void on_fw_data (ali_ota_t * p_ota, uint8_t * p_data, uint16_t length, ui
 
 static uint16_t crc16_compute(uint8_t const *add, uint32_t size, void *p)
 {
-
+    return utils_crc16((uint8_t *)add, size);
 }
 
 static uint32_t crc32_compute(uint8_t const *add, uint32_t size, void *p)
 {
-
+    return utils_crc32((uint8_t *)add, size);
 }
 
 /**@brief Function for handling command @ref ALI_CMD_FW_XFER_FINISH in state

@@ -18,8 +18,6 @@
 uint32_t      m_ali_context[ALI_CONTEXT_SIZE];
 uint8_t const m_secret[40] = "sFqTYrjneyyEUlhbZpdOwsDPmShLwMNH8ZHdqLWL";
 static uint8_t m_addr[BD_ADDR_LEN] = {0x01, 0x02, 0x03, 0x04, 0x05, 0x06};
-#define SOFTWARE_VERSION                 "0.1.0"                                     /**< Version number defined by user. Must be in format "%d.%d.%d". */
-#define SOFTWARE_VERSION_LEN             5                                           /**< Length of the version number defined by user. */ 
 
 #define MOD "aisapp"
 
