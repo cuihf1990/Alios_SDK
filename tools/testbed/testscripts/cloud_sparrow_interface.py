@@ -138,6 +138,10 @@ def unzip_file(zipfilename, unziptodir):
     zfobj.extractall(unziptodir)
 
 if __name__ == '__main__':
+    #flush to output immediately
+    sys.stdout = os.fdopen(sys.stdout.fileno(), 'w', 0)
+    sys.stderr = os.fdopen(sys.stderr.fileno(), 'w', 0)
+
     isLocalFile = False
     userImageUrl = None
     imageUrl = None

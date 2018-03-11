@@ -21,12 +21,14 @@ caseids['536C0EB02B06B21AB6F54333ED18415F'] = 33759 #mk3060-DN02X304
 caseids['3BD14E6396E3074B61CB83F9257A4F01'] = 33839 #mk3060-DN02X30B
 caseids['47112F8E0A5CDFBE05B570F4C7306801'] = 33807 #mk3060-DN02X30H
 #esp32
-caseids['7D917B0B8CF687EC496B3B7788CE6186'] = 34111 #esp32-1.1
+caseids['F30F0804BC3752D2E6F43EF35DBE8E29'] = 34159 #esp32-3.1.1
+caseids['7D917B0B8CF687EC496B3B7788CE6186'] = 34111 #esp32-3.1.2
+caseids['5ED76F329769F485FC59B94CC4D1A3F8'] = 34271 #esp32-1.4
+caseids['938F2BFC13AE8F6C4098289BB2D02B93'] = 41263 #esp32-9.2.3
 caseids['0CD754231D66D79A38CBD8416F37A4E8'] = 34127 #esp32-1.2.1
 caseids['785A61C6F5656AD16D57A919F0CEDFB4'] = 34207 #esp32-1.2.2
 caseids['1A2D6B99CF19A1DE70E197798F2D68FE'] = 34223 #esp32-1.2.3
 caseids['2363A965CE3C548993F485EF5883F6CA'] = 34031 #esp32-1.3
-caseids['5ED76F329769F485FC59B94CC4D1A3F8'] = 34271 #esp32-1.4
 caseids['A2A268CC74FEB91744C68E652AE89266'] = 34175 #esp32-2.1
 caseids['9EA130B3F97FEDD4A40B58E223B0EA23'] = 33983 #esp32-2.2.1
 caseids['A007D2D3AE28C4B501A7D57D93B253B4'] = 34063 #esp32-2.2.2
@@ -34,13 +36,12 @@ caseids['FD1FC11D9B9F6511FBD6E86168822072'] = 33903 #esp32-2.2.3
 caseids['33688B9B824E66254D109CDAC1C66CF4'] = 33887 #esp32-2.3
 caseids['59ED5E3E36FF2BDCB81B0FBCE9E997BF'] = 33999 #esp32-2.4
 caseids['794736BDFF2E591F6BFEC2FE3EE383E6'] = 33935 #esp32-9.1
-caseids['F30F0804BC3752D2E6F43EF35DBE8E29'] = 34159 #esp32-9.2.1
 caseids['41DB75B637872CFEB194C79476568F59'] = 34143 #esp32-9.2.2
-caseids['938F2BFC13AE8F6C4098289BB2D02B93'] = 41263 #esp32-9.2.3
 caseids['F731214AA77B4134FD988BC89E7B7B00'] = 33919 #esp32-9.3
 caseids['D5D8715DA640D401D3836A3C854C4021'] = 34191 #esp32-9.4
 caseids['A4FFC78630480DB8768D04091B282D54'] = 33967 #esp32-x
 caseids['E55F17709F0A11180D36AE83720EC22B'] = 34079 #esp32-x
+caseids['734BC5C5A01E48E549A42D7C72B3BD14'] = 34079 #esp32-3.3.3
 #stm32
 caseids['7D917B0B8CF687EC496B3B7788CE6186'] = 34111 #stm32l432-0670FF504955857567182119
 caseids['0CD754231D66D79A38CBD8416F37A4E8'] = 34127 #stm32l432-0672FF494851877267084108
@@ -72,9 +73,16 @@ def alink_test(conn, operation, testid, auid):
     if url == '':
         return {}
 
-    try:
-        conn.request('GET', url, '', headers)
-    except:
+    succeed = False; retry = 3
+    while retry > 0:
+        try:
+            conn.request('GET', url, '', headers)
+            succeed = True
+            break
+        except:
+            time.sleep(2)
+            retry -= 1
+    if succeed == False:
         print 'error: connecting server to request service failed'
         return {}
     response = conn.getresponse()
@@ -348,5 +356,8 @@ def main(firmware='~/lb-all.bin', model='mk3060', testname='5pps'):
 
 
 if __name__ == '__main__':
+    #flush to output immediately
+    sys.stdout = os.fdopen(sys.stdout.fileno(), 'w', 0)
+    sys.stderr = os.fdopen(sys.stderr.fileno(), 'w', 0)
     [code, msg] = main()
     sys.exit(code)

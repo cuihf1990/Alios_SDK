@@ -19,8 +19,8 @@ def new_device(device):
     return ser
 
 def erase(device):
-    retry = 3
-    baudrate = 230400
+    retry = 8
+    baudrate = 912600
     error = 'fail'
     flash_tool_path = os.path.dirname(os.path.realpath(__file__)) + '/esptool.py'
     while retry > 0:
@@ -37,12 +37,12 @@ def erase(device):
             error = 'success'
             break
         retry -= 1
-        baudrate = baudrate / 2
+        time.sleep(3)
     return error
 
 def program(device, address, file):
-    retry = 3
-    baudrate = 230400
+    retry = 8
+    baudrate = 921600
     error = 'fail'
     flash_tool_path = os.path.dirname(os.path.realpath(__file__)) + '/esptool.py'
     while retry > 0:
@@ -70,7 +70,7 @@ def program(device, address, file):
             error =  'success'
             break
         retry -= 1
-        baudrate = baudrate / 2
+        time.sleep(3)
     control(device, 'reset')
     return error
 

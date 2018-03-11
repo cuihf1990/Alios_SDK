@@ -226,7 +226,7 @@ class Autotest:
         retry = 4
         while retry > 0:
             self.send_data(data)
-            self.wait_cmd_excute_done(0.2)
+            self.wait_cmd_excute_done(0.3)
             if self.cmd_excute_state == 'timeout':
                 retry -= 1;
                 continue
@@ -255,7 +255,7 @@ class Autotest:
             retry = 4
             while retry > 0:
                 self.send_data(data)
-                self.wait_cmd_excute_done(0.2)
+                self.wait_cmd_excute_done(0.3)
                 if self.cmd_excute_return == None:
                     retry -= 1;
                     continue
@@ -279,7 +279,7 @@ class Autotest:
         retry = 4
         while retry > 0:
             self.send_data(data)
-            self.wait_cmd_excute_done(0.2)
+            self.wait_cmd_excute_done(0.3)
             if self.cmd_excute_return == None:
                 retry -= 1;
                 continue

@@ -23,7 +23,7 @@ class Server:
         self.keep_running = True
         self.log_preserve_period = (7 * 24 * 3600) * 3 #save log for 3 weeks
         self.allocated = {'lock':threading.Lock(), 'devices':[], 'timeout':0}
-        self.special_purpose_set = {'mk3060-alink':[], 'esp32-alink':[], 'stm32-alink':[]}
+        self.special_purpose_set = {'mk3060-alink':[], 'esp32-alink':[], 'stm32-sal':[]}
         #mk3060
         self.special_purpose_set['mk3060-alink'] += ['mk3060-DN02QRKQ', 'mk3060-DN02RDVL', 'mk3060-DN02RDVT']
         self.special_purpose_set['mk3060-alink'] += ['mk3060-DN02RDVV', 'mk3060-DN02X2ZO', 'mk3060-DN02X2ZS']
@@ -34,10 +34,15 @@ class Server:
         self.special_purpose_set['esp32-alink'] += ['esp32-3.2.1', 'esp32-3.2.2', 'esp32-3.2.3', 'esp32-3.2.4']
         self.special_purpose_set['esp32-alink'] += ['esp32-3.3.1', 'esp32-3.3.2', 'esp32-3.3.3', 'esp32-3.3.4']
         #esp32
-        self.special_purpose_set['stm32-alink'] += ['stm32l432-0670FF504955857567182119']
-        self.special_purpose_set['stm32-alink'] += ['stm32l432-0672FF494851877267084108']
-        self.special_purpose_set['stm32-alink'] += ['stm32l432-0672FF504955857567113026']
-        self.special_purpose_set['stm32-alink'] += ['stm32l432-0672FF535750877267212458']
+        self.special_purpose_set['stm32-sal'] += ['stm32l432-0670FF504955857567182119']
+        self.special_purpose_set['stm32-sal'] += ['stm32l432-0672FF494851877267084108']
+        self.special_purpose_set['stm32-sal'] += ['stm32l432-0672FF504955857567113026']
+        self.special_purpose_set['stm32-sal'] += ['stm32l432-0672FF535750877267212458']
+
+        #devices never allocate to do autotest
+        self.alloc_exclude_set = []
+        #self.alloc_exclude_set += ['/dev/mk3060-DN02RDVV']
+        #self.alloc_exclude_set += ['/dev/esp32-3.x.x']
 
     def construct_dev_list(self):
         l = []
@@ -330,6 +335,9 @@ class Server:
                 if client['devices'][port]['using'] != 0: #busy
                     continue
 
+                if port in self.alloc_exclude_set: # in alloc_exclude_set
+                    continue
+
                 if port in self.allocated['devices']: #in allocated buffer
                     continue
 
@@ -338,8 +346,8 @@ class Server:
                 except:
                     print 'parse {0} status failed'.format(port)
                     status = None
-                if status:
-                    if 'model' not in status or model != status['model'].lower():
+                if status and 'model' in status:
+                    if model != status['model'].lower():
                         continue
                 else:
                     paths = {'mk3060':'mk3060-', 'esp32':'esp32-', 'stm32':'stm32l43'}
@@ -371,7 +379,23 @@ class Server:
             if DEBUG: print "allocated", allocated
             return ['success', '|'.join(allocated)]
         else:
-            if DEBUG: print "allocate failed, purpose={0} allocated={1}".format(purpose, self.allocated)
+            if DEBUG:
+                print "allocate failed, infomation:"
+                print "    model    : {0}".format(model)
+                print "    number   : {0}".format(number)
+                print "    purpose  : {0}".format(purpose)
+                print "    allocated: {0}".format(self.allocated)
+                print "    func_set : {0}".format(repr(func_set))
+                print "    devices:"
+                for client in self.client_list:
+                    ports = list(client['devices'])
+                    ports.sort()
+                    for port in ports:
+                        if client['devices'][port]['valid'] == False: #no exist
+                            continue
+                        if model not in port:
+                            continue
+                        print "        {0} {1}".format(port, client['devices'][port])
             return ['fail', 'busy']
 
     def increase_device_refer(self, client, port, using_list):

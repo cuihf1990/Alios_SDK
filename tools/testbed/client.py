@@ -5,7 +5,7 @@ import TBframe
 MAX_MSG_LENTH = 8192
 ENCRYPT = False
 DEBUG = True
-EN_STATUS_POLL = True
+EN_STATUS_POLL = False
 LOCALLOG = False
 
 try:
@@ -276,8 +276,12 @@ class Client:
                 if exit_condition.is_set() == True:
                     break
                 if DEBUG: traceback.print_exc()
-                self.devices[port]['serial'].close()
-                self.devices[port]['serial'].open()
+                try:
+                    self.devices[port]['serial'].close()
+                    self.devices[port]['serial'].open()
+                except:
+                    exit_condition.set()
+                    break
         print 'devie command process thread for {0} exited'.format(port)
 
     def device_log_filter(self, port, log):
@@ -359,7 +363,10 @@ class Client:
         print 'device {0} removed'.format(port)
         self.devices[port]['valid'] = False
         exit_condition.set()
-        self.devices[port]['serial'].close()
+        try:
+            self.devices[port]['serial'].close()
+        except:
+            pass
         self.send_device_list()
         print 'device log poll thread for {0} exited'.format(port)
 
@@ -465,15 +472,11 @@ class Client:
 
         self.devices[port]['slock'].acquire()
         try:
-            self.devices[port]['serial'].close()
             ret = interface.erase(port)
         except:
             if DEBUG: traceback.print_exc()
             ret = 'fail'
         finally:
-            if os.path.exists(port) and \
-               self.devices[port]['serial'].isOpen() == False:
-                self.devices[port]['serial'].open()
             self.devices[port]['slock'].release()
         print 'erasing', port, '...', ret
         content = ','.join(term) + ',' + ret
@@ -495,15 +498,11 @@ class Client:
 
         self.devices[port]['slock'].acquire()
         try:
-            self.devices[port]['serial'].close()
             ret = interface.program(port, address, file)
         except:
             if DEBUG: traceback.print_exc()
             ret = 'fail'
         finally:
-            if os.path.exists(port) and \
-               self.devices[port]['serial'].isOpen() == False:
-                self.devices[port]['serial'].open()
             self.devices[port]['slock'].release()
         print 'programming', file, 'to', port, '@', address, '...', ret
         content = ','.join(term) + ',' + ret
@@ -644,6 +643,7 @@ class Client:
                         if hash in file_receiving:
                             content = terminal + ',' + 'busy'
                             self.send_packet(type, content)
+                            print "busy: refused to recive {0}:{1}".format(filename, hash)
                             continue
 
                         filename = 'client/' + filename
@@ -666,10 +666,12 @@ class Client:
                         if hash not in file_receiving:
                             content = terminal + ',' + 'noexist'
                             self.send_packet(type, content)
+                            print "error: drop data fragment {0}:{1}, hash not in receiving file".format(hash, seq)
                             continue
                         if file_receiving[hash]['seq'] != seq and file_receiving[hash]['seq'] != seq + 1:
                             content = terminal + ',' + 'seqerror'
                             self.send_packet(type, content)
+                            print "error: drop data fragment {0}:{1}, sequence error".format(hash, seq)
                             continue
                         if file_receiving[hash]['seq'] == seq:
                             file_receiving[hash]['handle'].write(data)
