@@ -87,7 +87,23 @@ def IARAddGroup(parent, name, files, includes, project_path):
         file = SubElement(group, 'file')
         file_name = SubElement(file, 'name')
         file_name.text = (aos_relative_path + f).decode(fs_encoding)
-        
+
+# automation to do
+def changeItemForMcu( tree ):
+    for config in tree.findall('configuration'):
+        for settings in config.findall('settings'):
+            if settings.find('name').text == 'ILINK':
+                data = settings.find('data')
+                for option in data.findall('option'):
+                    if option.find('name').text == 'IlinkOutputFile':
+                        option.find('state').text = buildstring + '.out'
+                    if option.find('name').text == 'IlinkIcfFile': 
+                        if 'stm32l433' in buildstring:
+                            option.find('state').text = '$PROJ_DIR$\../../../../'+'platform/mcu/stm32l4xx/src/STM32L433RC-Nucleo/STM32L433.icf'
+                        if 'stm32l432' in buildstring:
+                            option.find('state').text = '$PROJ_DIR$\../../../../'+'platform/mcu/stm32l4xx/src/STM32L432KC-Nucleo/STM32L432.icf'
+
+                    
 def IARWorkspace(target):
     # make an workspace 
     workspace = target.replace('.ewp', '.eww')
@@ -122,9 +138,15 @@ def IARProject(target, script):
     # add group
     for group in script:
         IARAddGroup(root, group['name'], group['src'], group['include'], project_path)       
-
+    
+    changeItemForMcu(tree)
     xml_indent(root)
-    out.write(etree.tostring(root, encoding='utf-8'))
+    projString = etree.tostring(root, encoding='utf-8')
+    if 'stm32l433' in buildstring:
+        projString = projString.replace('STM32L475VG','STM32L433RC')
+    if 'stm32l432' in buildstring:
+        projString = projString.replace('STM32L475VG','STM32L432KC')
+    out.write(projString)
     out.close()
 
     IARWorkspace(target)
