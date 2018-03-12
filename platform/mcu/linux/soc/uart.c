@@ -327,9 +327,6 @@ int32_t hal_uart_init(uart_dev_t *uart)
 
     printf("open at uart succeed\r\n");
 
-    // turn off AT echo
-    write(fd, AT_CMD_EHCO_OFF, strlen(AT_CMD_EHCO_OFF));
-    write(fd, AT_SEND_DELIMITER, strlen(AT_SEND_DELIMITER));
     // clear uart buffer
     read_and_discard_all_data(fd);
 
