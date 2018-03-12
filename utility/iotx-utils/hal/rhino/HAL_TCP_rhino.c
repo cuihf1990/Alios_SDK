@@ -9,6 +9,8 @@
 #include <aos/network.h>
 #include <aos/errno.h>
 #include <stdlib.h>
+#include "iot_import.h"
+
 //#include "aliot_platform_network.h"
 
 #define PLATFORM_RHINOSOCK_LOG(format, ...) \
