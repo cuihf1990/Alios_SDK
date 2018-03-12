@@ -207,7 +207,20 @@ static void net_event_handler(void *arg)
 
     LOGD(TAG, "%s exit.", __func__);
 }
+// turn off AT echo
 
+static void mk3060_uart_echo_off()
+{
+    char out[64] = {0};
+    
+    at.send_raw(AT_CMD_EHCO_OFF, out, sizeof(out));
+    LOGD(TAG, "The AT response is: %s", out);
+    if (strstr(out, CMD_FAIL_RSP) != NULL) {
+        LOGE(TAG, "%s %d failed", __func__, __LINE__);
+    }
+    
+    return;
+}
 static uint8_t inited = 0;
 
 #define NET_OOB_PREFIX "+CIPEVENT:"
@@ -226,6 +239,8 @@ static int sal_wifi_init(void)
         LOGE(TAG, "Creating link mutex failed (%s %d).", __func__, __LINE__);
         return -1;
     }
+
+    mk3060_uart_echo_off();
 
     memset(g_link, 0, sizeof(g_link));
     for (link = 0; link < LINK_ID_MAX; link++) {

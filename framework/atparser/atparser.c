@@ -470,6 +470,8 @@ static int at_send_data_2stage(const char *fst, const char *data,
     }
     LOGD(MODULE_NAME, "Sending delimiter %s", at._send_delimiter);
 
+    aos_msleep(20);
+
     if ((ret = hal_uart_send(&at._uart, (void *)data, 
       len, at._timeout)) != 0) {
         aos_mutex_unlock(&at._mutex);
