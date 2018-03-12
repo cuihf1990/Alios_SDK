@@ -458,7 +458,12 @@ static ur_error_t send_fragment(network_context_t *network, message_t *message)
     int16_t hdr_ies_limit;
 
     hal = network->hal;
-    info = message->info;
+    info = ur_mem_alloc(sizeof(message_info_t));
+    if (info == NULL) {
+        return UR_ERROR_MEM;
+    }
+    memcpy(info, message->info, sizeof(message_info_t));
+
     if (info->dest.addr.short_addr == BCAST_SID) {
         mtu = hal_umesh_get_bcast_mtu(network->hal->module);
     } else {
@@ -471,7 +476,8 @@ static ur_error_t send_fragment(network_context_t *network, message_t *message)
         next_node = get_next_node(info);
         if (next_node == NULL) {
             send_address_unreachable(&info->src, &info->dest);
-            return UR_ERROR_DROP;
+            umesh_error = UR_ERROR_DROP;
+            goto exit;
         }
     }
     if (info->dest.addr.len == EXT_ADDR_SIZE) {
@@ -480,18 +486,21 @@ static ur_error_t send_fragment(network_context_t *network, message_t *message)
 #ifdef CONFIG_AOS_MESH_LOWPOWER
     if (next_node && (next_node->mode & MODE_RX_ON) == 0 && (next_node->flags & NBR_WAKEUP) == 0) {
         if (message->frag_offset) {
-            return UR_ERROR_DROP;
+            umesh_error = UR_ERROR_DROP;
+            goto exit;
         }
         message_queue_dequeue(message);
         message_queue_enqueue(&next_node->buffer_queue, message);
-        return UR_ERROR_BUFFER;
+        umesh_error = UR_ERROR_BUFFER;
+        goto exit;
     }
 #endif
 
     if (info->flags & INSERT_MESH_HEADER) {
         header_length = insert_mesh_header(network, info);
         if (header_length == 0) {
-            return UR_ERROR_DROP;
+            umesh_error = UR_ERROR_DROP;
+            goto exit;
         }
     } else {
         header_length = info->header_ies_offset;
@@ -541,7 +550,8 @@ static ur_error_t send_fragment(network_context_t *network, message_t *message)
 
     if (info->key_index == ONE_TIME_KEY_INDEX) {
         if (next_node == NULL) {
-            return UR_ERROR_DROP;
+            umesh_error = UR_ERROR_DROP;
+            goto exit;
         }
         key = next_node->one_time_key;
     } else if (info->key_index != INVALID_KEY_INDEX) {
@@ -553,7 +563,8 @@ static ur_error_t send_fragment(network_context_t *network, message_t *message)
                           hal->frame.data + info->header_ies_offset,
                           header_ies_length + append_length + frag_length,
                           hal->frame.data + info->header_ies_offset) != UR_ERROR_NONE) {
-        return UR_ERROR_DROP;
+        umesh_error = UR_ERROR_DROP;
+        goto exit;
     }
 
     hal->frame.len = header_length + append_length + frag_length;
@@ -575,7 +586,11 @@ static ur_error_t send_fragment(network_context_t *network, message_t *message)
         error = hal_umesh_send_bcast_request(network->hal->module, &hal->frame,
                                              handle_sent, hal);
     }
+
     umesh_error = mapping_error(error);
+ 
+exit:
+    ur_mem_free(info, sizeof(message_info_t));
     return umesh_error;
 }
 
@@ -1141,9 +1156,9 @@ static void send_datagram(void *args)
         message = message_queue_get_head(&hal->send_queue[CMD_QUEUE]);
         if (message == NULL) {
             message = message_queue_get_head(&hal->send_queue[DATA_QUEUE]);
-        }
-        if (message == NULL) {
-            return;
+            if (message == NULL) {
+                return;
+            }
         }
         hal->send_message = message;
     }
