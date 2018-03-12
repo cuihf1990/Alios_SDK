@@ -34,9 +34,7 @@
  * TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF
  * THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-//#include "sdk_common.h"
 #include "ble_ais.h"
-//#include "ble_srv_common.h"
 #include "ali_common.h"
 #include "ble_gatt.h"
 #include "ali_core.h"
@@ -47,6 +45,7 @@
 #include <bluetooth/uuid.h>
 #include <bluetooth/gatt.h>
 #include <aos/aos.h>
+#include <aos/list.h>
 
 #define MOD "ble_ais"
 
@@ -433,27 +432,9 @@ uint32_t ble_ais_init(ble_ais_t * p_ais, const ble_ais_init_t * p_ais_init)
 
     asign_ais_handles(p_ais);
 
-/*
-    hci_driver_init();
-    err = bt_enable(NULL);
-    if (err) {
-        printf("Bluetooth init failed (err %d)\n", err);
-        return NRF_ERROR_BT_ENABLE;
-    }
-*/
-
     bt_conn_cb_register(&conn_callbacks);
 
     bt_gatt_service_register(&ais_svc);
-
-/* Start adv at later stage
-    err = bt_le_adv_start(BT_LE_ADV_CONN, ad, ARRAY_SIZE(ad),
-                          sd, ARRAY_SIZE(sd));
-    if (err) {
-        printf("Advertising failed to start (err %d)\n", err);
-        return NRF_ERROR_BT_ADV;
-    }
-*/
 
     LOGD(MOD, "ble_ais_init exit.");
 
@@ -516,17 +497,31 @@ uint32_t ble_ais_send_notification(ble_ais_t * p_ais, uint8_t * p_data, uint16_t
     }
 }
 
+slist_t params_list;
+
+typedef struct bt_gatt_indicate_param_s {
+    slist_t next;
+    struct bt_gatt_indicate_params *ind_params;
+} bt_gatt_indicate_param_t;
+
 static void indicate_cb(struct bt_conn *conn, const struct bt_gatt_attr *attr,
                         uint8_t err)
 {
-    printf("Indication %s\n", err != 0 ? "fail" : "success");
-    /* <TODO> */
+    bt_gatt_indicate_param_t *param;
+
+    param = slist_first_entry(&params_list, bt_gatt_indicate_param_t, next);
+    if (param) {
+        aos_free(param->ind_params);
+        slist_del(&param->next, &params_list);
+        aos_free(param);
+    }
 }
 
-struct bt_gatt_indicate_params ind_params;
 uint32_t ble_ais_send_indication(ble_ais_t * p_ais, uint8_t * p_data, uint16_t length)
 {
     int err;
+    struct bt_gatt_indicate_params *ind_params;
+    bt_gatt_indicate_param_t *param;
 
     VERIFY_PARAM_NOT_NULL(p_ais);
 
@@ -540,14 +535,24 @@ uint32_t ble_ais_send_indication(ble_ais_t * p_ais, uint8_t * p_data, uint16_t l
         return NRF_ERROR_DATA_SIZE;
     }
 
-    memset(&ind_params, 0, sizeof(ind_params));
+    param = aos_malloc(sizeof(bt_gatt_indicate_param_t));
+    if (param == NULL) {
+        return NRF_ERROR_NULL;
+    }
+    ind_params = aos_malloc(sizeof(struct bt_gatt_indicate_params));
+    if (ind_params == NULL) {
+        aos_free(param);
+        return NRF_ERROR_NULL;
+    }
+    param->ind_params = ind_params;
+    slist_add_tail(&param->next, &params_list);
 
-    ind_params.attr = &ais_attrs[6];
-    ind_params.func = indicate_cb;
-    ind_params.data = p_data;
-    ind_params.len = length;
+    ind_params->attr = &ais_attrs[6];
+    ind_params->func = indicate_cb;
+    ind_params->data = p_data;
+    ind_params->len = length;
 
-    err = bt_gatt_indicate(NULL, &ind_params);
+    err = bt_gatt_indicate(NULL, ind_params);
 
     if (err) {
         return NRF_ERROR_GATT_INDICATE;

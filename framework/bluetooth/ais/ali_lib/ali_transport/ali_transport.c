@@ -269,6 +269,7 @@ static ret_code_t try_send (ali_transport_t * p_transport)
     ret_code_t ret = NRF_SUCCESS;
     uint16_t len, pkt_len, bytes_left;
     uint16_t pkt_payload_len = p_transport->max_pkt_size - HEADER_SIZE;
+    uint16_t pkt_sent;
 
     LOGD(MOD, "try_send entry.");
 
@@ -297,7 +298,6 @@ static ret_code_t try_send (ali_transport_t * p_transport)
             p_transport->tx.frame_seq++;
             p_transport->tx.bytes_sent += len;
             bytes_left = tx_bytes_left(p_transport);
-            aos_post_event(EV_BLE, CODE_BLE_TX_COMPLETED, 1);
         }
 #if 0
         else if (ret == BLE_ERROR_NO_TX_PACKETS)
@@ -323,6 +323,12 @@ static ret_code_t try_send (ali_transport_t * p_transport)
         ret = aos_timer_start(&p_transport->tx.timer);
         VERIFY_SUCCESS(ret);
     }
+    pkt_sent = p_transport->tx.len / pkt_payload_len;
+    if (pkt_sent * pkt_payload_len < p_transport->tx.len &&
+        p_transport->tx.len != 0) {
+        pkt_sent++;
+    }
+    aos_post_event(EV_BLE, CODE_BLE_TX_COMPLETED, pkt_sent);
 
     LOGD(MOD, "try_send exit.");
 
@@ -613,22 +619,16 @@ void ali_transport_on_tx_complete(ali_transport_t * p_transport, uint16_t pkt_se
     /* Check parameters. */
     VERIFY_PARAM_NOT_NULL_VOID(p_transport);
 
-    LOGD(MOD, "%s entry.", __func__);
-    LOGD(MOD, "pkt_sent: %d", pkt_sent);
-
     p_transport->tx.pkt_cfm += pkt_sent;
-    LOGD(MOD, "p_transport->tx.pkt_cfm updated: %d", p_transport->tx.pkt_cfm);
-
-    p_transport->tx.bytes_sent += pkt_sent;
 
     /* Check whether there are still data to be sent. */
-    LOGD(MOD, "bytes_left: %d", bytes_left);
+    bytes_left = tx_bytes_left(p_transport);
     if (bytes_left != 0)
     {
         LOGD(MOD, "bytes_left %d, please continue to sending.", bytes_left);
         /* try sending until no tx packet or any other error. */
-        //err_code = try_send (p_transport);
-        //VERIFY_SUCCESS_VOID(err_code);
+        err_code = try_send (p_transport);
+        VERIFY_SUCCESS_VOID(err_code);
     }
     else if (p_transport->tx.pkt_req == p_transport->tx.pkt_cfm
              && p_transport->tx.pkt_req != 0)
