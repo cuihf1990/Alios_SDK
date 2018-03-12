@@ -348,7 +348,16 @@ static int set_random_address(const bt_addr_t *addr)
 		return -ENOBUFS;
 	}
 
+#ifdef CONFIG_AOS_MESH
+        // WORKAROUND: replace the resolvable private address with 
+        // public device address (will not change along each message
+        // transmission). The purpose is that to calcaulte the same
+        // one time key (input param: timestamp and mac address), which
+        // is used for uMesh attach response message encrypt/decrypt.
+        net_buf_add_mem(buf, &bt_dev.id_addr.a, sizeof(*addr));
+#else
 	net_buf_add_mem(buf, addr, sizeof(*addr));
+#endif
 
 	err = bt_hci_cmd_send_sync(BT_HCI_OP_LE_SET_RANDOM_ADDRESS, buf, NULL);
 	if (err) {

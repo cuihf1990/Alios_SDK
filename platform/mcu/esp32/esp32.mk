@@ -112,6 +112,7 @@ ifneq ($(ble),0)
 $(NAME)_COMPONENTS += protocols.bluetooth
 GLOBAL_INCLUDES += $(ESP_INC_PATH)/bt/include
 $(NAME)_INCLUDES += ../../../kernel/protocols/bluetooth/port
+$(NAME)_INCLUDES += ../../../kernel/protocols/bluetooth/host
 $(NAME)_INCLUDES += ../../../kernel/protocols/bluetooth/host/bt_mesh
 $(NAME)_INCLUDES += ../../../kernel/protocols/bluetooth/core/include
 $(NAME)_INCLUDES += ../../../kernel/protocols/bluetooth/include/bluetooth
