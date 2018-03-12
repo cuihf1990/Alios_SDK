@@ -248,7 +248,6 @@ static ssize_t read_ais_rc(struct bt_conn *conn,
                            const struct bt_gatt_attr *attr, void *buf,
                            uint16_t len, uint16_t offset)
 {
-    printf("FIXME: %s %d not implemeted yet!\r\n", __func__, __LINE__);
     printf("Length to read: %d, offset: %d\r\n", len, offset);
     if (len < FIXME_STR_SIZ) return 0;
     memcpy(buf, FIXME_STR, FIXME_STR_SIZ);
@@ -259,7 +258,6 @@ static ssize_t read_ais_wc(struct bt_conn *conn,
                            const struct bt_gatt_attr *attr, void *buf,
                            uint16_t len, uint16_t offset)
 {
-    printf("FIXME: %s %d not implemeted yet!\r\n", __func__, __LINE__);
     printf("Length to read: %d, offset: %d\r\n", len, offset);
     if (len < FIXME_STR_SIZ) return 0;
     memcpy(buf, FIXME_STR, FIXME_STR_SIZ);
@@ -278,7 +276,6 @@ static ssize_t read_ais_ic(struct bt_conn *conn,
                            const struct bt_gatt_attr *attr, void *buf,
                            uint16_t len, uint16_t offset)
 {
-    printf("FIXME: %s %d not implemeted yet!\r\n", __func__, __LINE__);
     printf("Length to read: %d, offset: %d\r\n", len, offset);
     if (len < FIXME_STR_SIZ) return 0;
     memcpy(buf, FIXME_STR, FIXME_STR_SIZ);
@@ -289,7 +286,6 @@ static ssize_t read_ais_wwnrc(struct bt_conn *conn,
                               const struct bt_gatt_attr *attr, void *buf,
                               uint16_t len, uint16_t offset)
 {
-    printf("FIXME: %s %d not implemeted yet!\r\n", __func__, __LINE__);
     printf("Length to read: %d, offset: %d\r\n", len, offset);
     if (len < FIXME_STR_SIZ) return 0;
     memcpy(buf, FIXME_STR, FIXME_STR_SIZ);
@@ -308,7 +304,6 @@ static ssize_t read_ais_nc(struct bt_conn *conn,
                            const struct bt_gatt_attr *attr, void *buf,
                            uint16_t len, uint16_t offset)
 {
-    printf("FIXME: %s %d not implemeted yet!\r\n", __func__, __LINE__);
     printf("Length to read: %d, offset: %d\r\n", len, offset);
     if (len < FIXME_STR_SIZ) return 0;
     memcpy(buf, FIXME_STR, FIXME_STR_SIZ);

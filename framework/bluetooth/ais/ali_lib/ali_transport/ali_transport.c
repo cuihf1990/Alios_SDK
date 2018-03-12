@@ -324,8 +324,8 @@ static ret_code_t try_send (ali_transport_t * p_transport)
         VERIFY_SUCCESS(ret);
     }
     pkt_sent = p_transport->tx.len / pkt_payload_len;
-    if (pkt_sent * pkt_payload_len < p_transport->tx.len &&
-        p_transport->tx.len != 0) {
+    if ((pkt_sent * pkt_payload_len < p_transport->tx.len &&
+        p_transport->tx.len != 0) || p_transport->tx.cmd == ALI_CMD_ERROR) {
         pkt_sent++;
     }
     aos_post_event(EV_BLE, CODE_BLE_TX_COMPLETED, pkt_sent);
