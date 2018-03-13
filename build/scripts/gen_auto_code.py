@@ -56,20 +56,20 @@ def process_component_test(source_directory):
     source_codes += "\nvoid add_test(void) {\n\n"
 
     # temporary work around for the process sequence of mesh & netmgr testcase
-    uradar_test_code = ""
+    mesh_test_code = ""
     netmgr_test_code = ""
 
     for code in code_list:
-        if code.find("uradar") == -1 and code.find("netmgr") == -1 :
+        if code.find("mesh") == -1 and code.find("netmgr") == -1 :
             source_codes += "    %s();\n\n"%(code)
         else:
-            if code.find("uradar") == -1:
+            if code.find("mesh") == -1:
                 netmgr_test_code = code
             else:
-                uradar_test_code = code
+                mesh_test_code = code
 
-    if uradar_test_code:
-        source_codes += "    %s();\n\n"%(uradar_test_code)
+    if mesh_test_code:
+        source_codes += "    %s();\n\n"%(mesh_test_code)
 
     if netmgr_test_code:
         source_codes += "    %s();\n\n"%(netmgr_test_code)
