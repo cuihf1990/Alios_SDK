@@ -1,7 +1,7 @@
 #!/bin/bash
 
 performance_tests="alink_5pps mesh_5pps stability_noalink"
-mesh_tests="line_topology_v4_test.py tree_topology_v4_test.py mcast_v4_test.py"
+mesh_tests="line_topology_v4_test.py tree_topology_v4_test.py multicast_v4_test.py"
 recipients="apsaras73@list.alibaba-inc.com"
 meshrecipients="xiaoma.mx@alibaba-inc.com gubiao.dc@alibaba-inc.com yuanlu.gl@alibaba-inc.com wanglu.luwang@alibaba-inc.com wenjunchen.cwj@alibaba-inc.com simen.cjj@alibaba-inc.com lc122798@alibaba-inc.com"
 #recipients="lc122798@alibaba-inc.com"

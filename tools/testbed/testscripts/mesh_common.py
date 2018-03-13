@@ -32,6 +32,7 @@ def subscribe_and_reboot_devices(at, devices):
 
 #program devices
 def program_devices(at, devices, model, firmware):
+    print 'program devices ...',
     models = {'mk3060':'0x13200', 'esp32':'0x10000'}
     if model not in models:
         print "error: unsupported device model {0}".format(repr(model))
@@ -50,7 +51,7 @@ def program_devices(at, devices, model, firmware):
             print 'error: program device {0}:{1} failed'.format(device, devices[device])
             return False
     time.sleep(5)
-    print 'program devices succeed\n'
+    print 'succeed\n'
     return True
 
 #reboot and get device mac address
@@ -87,7 +88,16 @@ def set_random_extnetid(at, device_list):
 
 #start devices
 def start_devices(at, device_list, device_attr, ap_ssid, ap_pass):
-    filter = ['disabled', 'detached', 'attached', 'leaf', 'router', 'super_router', 'leader', 'unknown']
+    filter = [
+        'state\tdisabled',
+        'state\tdetached',
+        'state\tattached',
+        'state\tleaf',
+        'state\trouter',
+        'state\tsuper_router',
+        'state\tleader',
+        'state\tunknown'
+        ]
     for device in device_list:
         at.device_run_cmd(device, ['umesh', 'stop'])
     for device in device_list:
@@ -104,16 +114,15 @@ def start_devices(at, device_list, device_attr, ap_ssid, ap_pass):
                 at.device_run_cmd(device, ['netmgr', 'connect', ap_ssid, ap_pass])
                 time.sleep(30)
                 uuid = at.device_run_cmd(device, ['uuid'], 1, 1.5, ['uuid:', 'not connected'])
-
-                state = at.device_run_cmd(device, ['umesh', 'state'], 1, 1, filter)
-                if uuid and 'uuid:' in uuid[0] and state == [role]:
+                state = at.device_run_cmd(device, ['umesh', 'status'], 1, 1, filter)
+                if uuid and 'uuid:' in uuid[0] and state == ['state\t' + role]:
                     succeed = True
                     break
             else:
                 at.device_run_cmd(device, ['umesh', 'start'])
                 time.sleep(30)
-                state = at.device_run_cmd(device, ['umesh', 'state'], 1, 1, filter)
-                if state == [role]:
+                state = at.device_run_cmd(device, ['umesh', 'status'], 1, 1, filter)
+                if state == ['state\t' + role]:
                     succeed = True
                     break
             at.device_run_cmd(device, ['netmgr', 'clear'])
@@ -152,7 +161,11 @@ def print_device_attrs(device_attr):
     device_list = list(device_attr)
     device_list.sort()
     for device in device_list:
-        print "{0}:{1}".format(device, device_attr[device])
+        attr_str  = "{0}: ".format(device)
+        attr_str += "mac-{0} ".format(device_attr[device]['mac'])
+        attr_str += "ip-{0} ".format(device_attr[device]['ipaddr'][0])
+        attr_str += "role-{0} ".format(device_attr[device]['role'])
+        print attr_str
     print ''
 
 #ping test
@@ -210,6 +223,11 @@ def ping_ext_test(at, device_list, dst_ip):
 
 #udp test
 def udp_test(at, device_list, device_attr):
+    for device in device_list:
+        ret = at.device_run_cmd(device, ['umesh', 'help'], 1, 1, ['autotest'])
+        if ret != ['autotest']:
+            print "udp test aborted: do not support 'umesh autotest' operationr"
+            return [0, 0]
     retry = 5
     print 'test connectivity with udp:'
     pass_num = 0; fail_num = 0
@@ -236,7 +254,12 @@ def udp_test(at, device_list, device_attr):
     print 'udp: pass-{0}, fail-{1}\n'.format(pass_num, fail_num)
     return [pass_num, fail_num]
 
-def mcast_test(at, device_list, device_attr):
+def multicast_test(at, device_list, device_attr):
+    for device in device_list:
+        ret = at.device_run_cmd(device, ['umesh', 'help'], 1, 1, ['autotest'])
+        if ret != ['autotest']:
+            print 'multicast test aborted: "umesh autotest" operation not supported'.format(device_list[device])
+            return [0, 0]
     retry = 20
     print 'test multicast connectivity:'
     pass_num = 0; fail_num = 0

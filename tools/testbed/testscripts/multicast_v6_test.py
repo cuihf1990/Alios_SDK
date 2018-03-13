@@ -16,7 +16,7 @@ device_list.sort()
 device_attr={}
 at=Autotest()
 logname=time.strftime('%Y-%m-%d@%H-%M')
-logname = 'mcast-' + logname +'.log'
+logname = 'multicast-' + logname +'.log'
 if at.start('10.125.52.132', 34568, logname) == False:
     print 'error: start failed'
     exit(1)
