@@ -131,7 +131,6 @@ kstat_t krhino_intrpt_enter(void)
 
     RHINO_CPU_INTRPT_DISABLE();
 
-    /* RHINO_CONFIG_CPU_PWR_MGMT */
 #if (RHINO_CONFIG_CPU_PWR_MGMT > 0)
     cpu_pwr_up();
 #endif
