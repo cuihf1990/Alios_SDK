@@ -49,6 +49,7 @@
 //#include "nrf_dfu_settings.h"
 #include <hal/ais_ota.h>
 #include <crc.h>
+#include <aos/aos.h>
 
 #define EXTRACT_U16(d)  (*((uint8_t *)(d)) | (*((uint8_t *)(d) + 1) << 8))
 #define EXTRACT_U32(d)  (*((uint8_t *)(d)) | (*((uint8_t *)(d) + 1) << 8) | (*((uint8_t *)(d) + 2) << 16) | (*((uint8_t *)(d) + 3) << 24))
@@ -172,6 +173,9 @@ static uint32_t check_upgrade_fw_version (ali_ota_t * p_ota, uint8_t * p_data, u
     {
         return NRF_ERROR_INVALID_DATA;
     }
+
+    printf("Old fw ver: %d.%d.%d, new ver: %d.%d.%d\r\n",
+           v_old[0], v_old[1], v_old[2], v_new[0], v_new[1], v_new[2]);
 
     // Check digits in software version
     if (v_new[0] > v_old[0])        // x
@@ -687,7 +691,11 @@ void ali_ota_on_command(ali_ota_t * p_ota, uint8_t cmd, uint8_t * p_data, uint16
         case ALI_OTA_STATE_FW_CHECK:
             if (cmd == ALI_CMD_FW_XFER_FINISH)              // cmd=0x28
             {
+                char flag[5] = "Yes";
+                int len = sizeof(flag);
                 on_xfer_finished(p_ota, p_data, length);
+                printf("Firmware download completed, let's set the flag.\r\n");
+                aos_kv_set("fwup_ongoing", flag, len, 1);
             }
             else
             {

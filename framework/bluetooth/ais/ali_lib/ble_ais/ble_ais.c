@@ -97,6 +97,8 @@ static void notify_svc_enabled (ble_ais_t * p_ais)
     }
 }
 
+struct bt_conn *g_conn = NULL;
+
 static void connected(struct bt_conn *conn, uint8_t err)
 {
     if (err) {
@@ -109,6 +111,7 @@ static void connected(struct bt_conn *conn, uint8_t err)
         g_ais->is_authenticated = false;
         g_ais->is_indication_enabled   = false;
         g_ais->is_notification_enabled = false;
+        g_conn = conn;
 
         ali_auth_on_connected(&g_ali->auth);
         ble_ais_set_auth(g_ais, true);
