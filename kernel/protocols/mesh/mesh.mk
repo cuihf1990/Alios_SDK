@@ -30,6 +30,7 @@ $(NAME)_SOURCES := src/core/umesh.c \
                    src/utilities/memory.c \
                    src/utilities/configs.c \
                    src/utilities/maths.c \
+                   src/utilities/mac_whitelist.c \
                    src/tools/cli.c
 
 ifneq ($(SDK), 1)
@@ -41,7 +42,6 @@ endif
 MESHDEBUG ?= 1
 ifeq ($(MESHDEBUG), 1)
 $(NAME)_SOURCES += src/tools/diags.c
-$(NAME)_SOURCES += src/utilities/mac_whitelist.c
 $(NAME)_SOURCES += src/utilities/logging.c
 GLOBAL_DEFINES += CONFIG_AOS_MESH_DEBUG
 endif

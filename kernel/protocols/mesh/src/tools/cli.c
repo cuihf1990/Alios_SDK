@@ -35,7 +35,6 @@ static void process_networks(int argc, char *argv[]);
 static void process_router(int argc, char *argv[]);
 static void process_state(int argc, char *argv[]);
 static void process_sids(int argc, char *argv[]);
-static void process_whitelist(int argc, char *argv[]);
 #endif
 
 static void process_extnetid(int argc, char *argv[]);
@@ -54,6 +53,7 @@ extern void process_traceroute(int argc, char *argv[]);
 extern void process_ipaddr(int argc, char *argv[]);
 extern void process_ping(int argc, char *argv[]);
 #endif
+static void process_whitelist(int argc, char *argv[]);
 
 void response_append(const char *format, ...);
 const char *routerid2str(uint8_t id);
@@ -72,7 +72,6 @@ const cli_command_t g_commands[] = {
     { "router", &process_router },
     { "state", &process_state },
     { "sids", &process_sids },
-    { "whitelist", &process_whitelist },
 #endif
     { "extnetid", &process_extnetid },
     { "nbrs", &process_nbrs },
@@ -90,6 +89,7 @@ const cli_command_t g_commands[] = {
     { "ipaddr", &process_ipaddr },
     { "ping", &process_ping },
 #endif
+    { "whitelist", &process_whitelist },
 };
 
 enum {
@@ -413,67 +413,6 @@ void process_sids(int argc, char *argv[])
         }
     }
 }
-
-void process_whitelist(int argc, char *argv[])
-{
-    uint8_t arg_index = 0;
-    int length;
-    mac_address_t addr;
-    int8_t rssi;
-    whitelist_entry_t *entry;
-
-    if (arg_index >= argc) {
-        int i = 0;
-        bool enabled = is_whitelist_enabled();
-        const whitelist_entry_t *whitelist = whitelist_get_entries();
-        response_append("whitelist is %s, entries:\r\n", enabled ? "enabled" : "disabled");
-        for (i = 0; i < WHITELIST_ENTRY_NUM; i++) {
-            if (whitelist[i].valid == false) {
-                continue;
-            }
-            response_append("%02x:%02x:%02x:%02x:%02x:%02x:%02x:%02x\r\n",
-                            whitelist[i].address.addr[0], whitelist[i].address.addr[1],
-                            whitelist[i].address.addr[2], whitelist[i].address.addr[3],
-                            whitelist[i].address.addr[4], whitelist[i].address.addr[5],
-                            whitelist[i].address.addr[6], whitelist[i].address.addr[7]);
-        }
-        return;
-    }
-
-    if (strcmp(argv[arg_index], "add") == 0) {
-        if (++arg_index >= argc) {
-            return;
-        }
-        addr.len = 8;
-        length = hex2bin(argv[arg_index], addr.addr, sizeof(addr.addr));
-        if (length != sizeof(addr.addr)) {
-            return;
-        }
-        entry = whitelist_add(&addr);
-        if (++arg_index < argc && entry) {
-            rssi = (int8_t)strtol(argv[arg_index], NULL, 0);
-            whitelist_set_constant_rssi(entry, rssi);
-        }
-    } else if (strcmp(argv[arg_index], "clear") == 0) {
-        whitelist_clear();
-    } else if (strcmp(argv[arg_index], "disable") == 0) {
-        whitelist_disable();
-    } else if (strcmp(argv[arg_index], "enable") == 0) {
-        whitelist_enable();
-    } else if (strcmp(argv[arg_index], "remove") == 0) {
-        if (++arg_index >= argc) {
-            return;
-        }
-        addr.len = 8;
-        length = hex2bin(argv[arg_index], addr.addr, sizeof(addr.addr));
-        if (length != sizeof(addr.addr)) {
-            return;
-        }
-        whitelist_remove(&addr);
-    }
-    response_append("done\r\n");
-}
-
 #endif
 
 static int hex2bin(const char *hex, uint8_t *bin, uint16_t bin_length)
@@ -708,6 +647,66 @@ static void process_status(int argc, char *argv[])
 void process_stop(int argc, char *argv[])
 {
     umesh_stop();
+    response_append("done\r\n");
+}
+
+void process_whitelist(int argc, char *argv[])
+{
+    uint8_t arg_index = 0;
+    int length;
+    mac_address_t addr;
+    int8_t rssi;
+    whitelist_entry_t *entry;
+
+    if (arg_index >= argc) {
+        int i = 0;
+        bool enabled = is_whitelist_enabled();
+        const whitelist_entry_t *whitelist = whitelist_get_entries();
+        response_append("whitelist is %s, entries:\r\n", enabled ? "enabled" : "disabled");
+        for (i = 0; i < WHITELIST_ENTRY_NUM; i++) {
+            if (whitelist[i].valid == false) {
+                continue;
+            }
+            response_append("%02x:%02x:%02x:%02x:%02x:%02x:%02x:%02x\r\n",
+                            whitelist[i].address.addr[0], whitelist[i].address.addr[1],
+                            whitelist[i].address.addr[2], whitelist[i].address.addr[3],
+                            whitelist[i].address.addr[4], whitelist[i].address.addr[5],
+                            whitelist[i].address.addr[6], whitelist[i].address.addr[7]);
+        }
+        return;
+    }
+
+    if (strcmp(argv[arg_index], "add") == 0) {
+        if (++arg_index >= argc) {
+            return;
+        }
+        addr.len = 8;
+        length = hex2bin(argv[arg_index], addr.addr, sizeof(addr.addr));
+        if (length != sizeof(addr.addr)) {
+            return;
+        }
+        entry = whitelist_add(&addr);
+        if (++arg_index < argc && entry) {
+            rssi = (int8_t)strtol(argv[arg_index], NULL, 0);
+            whitelist_set_constant_rssi(entry, rssi);
+        }
+    } else if (strcmp(argv[arg_index], "clear") == 0) {
+        whitelist_clear();
+    } else if (strcmp(argv[arg_index], "disable") == 0) {
+        whitelist_disable();
+    } else if (strcmp(argv[arg_index], "enable") == 0) {
+        whitelist_enable();
+    } else if (strcmp(argv[arg_index], "remove") == 0) {
+        if (++arg_index >= argc) {
+            return;
+        }
+        addr.len = 8;
+        length = hex2bin(argv[arg_index], addr.addr, sizeof(addr.addr));
+        if (length != sizeof(addr.addr)) {
+            return;
+        }
+        whitelist_remove(&addr);
+    }
     response_append("done\r\n");
 }
 
