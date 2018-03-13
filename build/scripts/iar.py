@@ -6,24 +6,12 @@ import shutil
 import xml.etree.ElementTree as etree
 from xml.etree.ElementTree import SubElement
 from os.path import basename
-from utils import xml_indent
+from xml_format import gen_indent
 from config_mk import Projects
 
-fs_encoding = sys.getfilesystemencoding()
 
-iar_workspace = '''<?xml version="1.0" encoding="UTF-8"?>
-
-<workspace>
-  <project>
-    <path>$WS_DIR$\%s</path>
-  </project>
-  <batchBuild/>
-</workspace>
-
-
-'''
-
-def IARAddGroup(parent, name, files, includes, project_path):
+def add_group(parent, name, files, includes, project_path):
+    cur_encoding = sys.getfilesystemencoding()
     group = SubElement(parent, 'group')
     group_name = SubElement(group, 'name')
     group_name.text = name
@@ -55,7 +43,7 @@ def IARAddGroup(parent, name, files, includes, project_path):
   
     for i in includes:
         stateTemp = SubElement(group_data_option3, 'state')
-        stateTemp.text = (aos_relative_path + i).decode(fs_encoding)
+        stateTemp.text = (aos_relative_path + i).decode(cur_encoding)
     
     
     group_config_settings2 = SubElement(group_config, 'settings')
@@ -86,7 +74,7 @@ def IARAddGroup(parent, name, files, includes, project_path):
             f = fnewPath
         file = SubElement(group, 'file')
         file_name = SubElement(file, 'name')
-        file_name.text = (aos_relative_path + f).decode(fs_encoding)
+        file_name.text = (aos_relative_path + f).decode(cur_encoding)
 
 # automation to do
 def changeItemForMcu( tree ):
@@ -103,17 +91,29 @@ def changeItemForMcu( tree ):
                         if 'stm32l432' in buildstring:
                             option.find('state').text = '$PROJ_DIR$\../../../../'+'platform/mcu/stm32l4xx/src/STM32L432KC-Nucleo/STM32L432.icf'
 
-                    
-def IARWorkspace(target):
+                          
+work_space_content = '''<?xml version="1.0" encoding="UTF-8"?>
+
+<workspace>
+  <project>
+    <path>$WS_DIR$\%s</path>
+  </project>
+  <batchBuild/>
+</workspace>
+
+
+'''
+                            
+def gen_workspace(target):
     # make an workspace 
     workspace = target.replace('.ewp', '.eww')
     out = file(workspace, 'wb')
-    xml = iar_workspace % (buildstring+'.ewp')
+    xml = work_space_content % (buildstring+'.ewp')
     out.write(xml)
     out.close()
     
 repeat_path=[]
-def IARProject(target, script):
+def gen_project(target, script):
     project_path = os.path.dirname(os.path.abspath(target))
 
     tree = etree.parse('build/scripts/template.ewp')
@@ -137,10 +137,10 @@ def IARProject(target, script):
     
     # add group
     for group in script:
-        IARAddGroup(root, group['name'], group['src'], group['include'], project_path)       
+        add_group(root, group['name'], group['src'], group['include'], project_path)       
     
     changeItemForMcu(tree)
-    xml_indent(root)
+    gen_indent(root)
     projString = etree.tostring(root, encoding='utf-8')
     if 'stm32l433' in buildstring:
         projString = projString.replace('STM32L475VG','STM32L433RC')
@@ -149,7 +149,7 @@ def IARProject(target, script):
     out.write(projString)
     out.close()
 
-    IARWorkspace(target)
+    gen_workspace(target)
 
 #argv[1]: buildstring, eg: nano@b_l475e
 buildstring = sys.argv[1]
@@ -160,7 +160,7 @@ projectPath = proj_output_dir+'/'+buildstring+'.ewp'
 opt_dir = '$PROJ_DIR$\\opts/'
 
 print 'Making iar project '+buildstring
-IARProject(projectPath, Projects)
+gen_project(projectPath, Projects)
 print 'iar project: '+ projectPath + ' has generated over'
 
 
