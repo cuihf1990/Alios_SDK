@@ -503,6 +503,8 @@ static void on_fw_upgrade_req (ali_ota_t * p_ota, uint8_t * p_data, uint16_t len
 static void on_fw_data (ali_ota_t * p_ota, uint8_t * p_data, uint16_t length, uint8_t num_frames)
 {
     uint32_t err_code;
+    static uint16_t last_percent = 0;
+    uint16_t percent;
 
     VERIFY_PARAM_NOT_NULL_VOID(p_data);
     if (length == 0)
@@ -527,6 +529,13 @@ static void on_fw_data (ali_ota_t * p_ota, uint8_t * p_data, uint16_t length, ui
     p_ota->state = ALI_OTA_STATE_WRITE;
     p_ota->bytes_recvd  += length;
     p_ota->frames_recvd += num_frames;
+
+    /* Display progress, 5% as step */
+    percent = p_ota->bytes_recvd * 100 / p_ota->rx_fw_size; /* Ensure no overflow */
+    if ((percent - last_percent) >= 2) {
+        printf("===>%dB\t%d%% ...\r\n", p_ota->bytes_recvd, percent);
+        last_percent = percent;
+    }
 }
 
 static uint16_t crc16_compute(uint8_t const *add, uint32_t size, void *p)

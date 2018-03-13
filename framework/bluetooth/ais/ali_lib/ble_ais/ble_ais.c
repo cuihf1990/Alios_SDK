@@ -105,7 +105,6 @@ static void connected(struct bt_conn *conn, uint8_t err)
         printf("Connection failed (err %u)\n", err);
     } else {
         printf("Connected\n");
-        printf("FIXME: g_ais->conn_handle not set, you need set it!!!\n");
         g_ais->conn_handle = BLE_CONN_HANDLE_MAGIC;
         g_ali->conn_handle = BLE_CONN_HANDLE_MAGIC;
         g_ais->is_authenticated = false;
