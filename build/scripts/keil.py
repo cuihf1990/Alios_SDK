@@ -4,36 +4,28 @@ import string
 
 import xml.etree.ElementTree as etree
 from xml.etree.ElementTree import SubElement
-from utils import xml_indent
+from xml_format import gen_indent
 from config_mk import Projects
 
-fs_encoding = sys.getfilesystemencoding()
-
-def _get_filetype(fn):
-    if fn.rfind('.cpp') != -1 or fn.rfind('.cxx') != -1:
-        return 8
-
-    if fn.rfind('.c') != -1 or fn.rfind('.C') != -1:
-        return 1
-
-    # assemble file type
-    if fn.rfind('.s') != -1 or fn.rfind('.S') != -1:
+def file_type_value(fn):
+    if fn.endswith('.h') != -1:
+        return 5        
+    if fn.endswith('.s') != -1 or fn.endswith('.S') != -1:
         return 2
-
-    # header type
-    if fn.rfind('.h') != -1:
-        return 5
-
-    if fn.rfind('.lib') != -1:
-        return 4
-
-    # other filetype
+    if fn.endswith('.lib') != -1:
+        return 4        
+    if fn.endswith('.cpp') != -1 or fn.endswith('.cxx') != -1:
+        return 8
+    if fn.endswith('.c') != -1 or fn.endswith('.C') != -1:
+        return 1
+    
     return 5
 
     
 #ProjectFiles use for remove same name files
 #add files
-def MDKAddGroup(parent, name, files, project_path):
+def add_group(parent, name, files, project_path):
+    cur_encoding = sys.getfilesystemencoding()
     group = SubElement(parent, 'Group')
     group_name = SubElement(group, 'GroupName')
     group_name.text = name
@@ -44,11 +36,11 @@ def MDKAddGroup(parent, name, files, project_path):
         file_name = SubElement(file, 'FileName')
         name = os.path.basename(f)
 
-        file_name.text = name.decode(fs_encoding)
+        file_name.text = name.decode(cur_encoding)
         file_type = SubElement(file, 'FileType')
-        file_type.text = '%d' % _get_filetype(name)
+        file_type.text = '%d' % file_type_value(name)
         file_path = SubElement(file, 'FilePath')
-        file_path.text = (aos_relative_path + f).decode(fs_encoding)
+        file_path.text = (aos_relative_path + f).decode(cur_encoding)
 
     return group
 
@@ -68,7 +60,7 @@ def ModifyProjString( projString ):
         projString = projString.replace('STM32L475VGTx','STM32L432KCTx')
     return  projString   
     
-def MDKProject(tree, target, script):
+def gen_project(tree, target, script):
     project_path = os.path.dirname(os.path.abspath(target))
 
     root = tree.getroot()
@@ -89,7 +81,7 @@ def MDKProject(tree, target, script):
     for group in script:
         # don't add an empty group
         if len(group['src']) != 0:
-            group_tree = MDKAddGroup(groups, group['name'], group['src'], project_path)
+            group_tree = add_group(groups, group['name'], group['src'], project_path)
 
             # add GroupOption
             GroupOption     = SubElement(group_tree,  'GroupOption')
@@ -106,17 +98,17 @@ def MDKProject(tree, target, script):
     
     # set <OutputName>B-L475E-IOT01</OutputName> 
     
-    xml_indent(root)
+    gen_indent(root)
     
     changeItemForMcu(tree)
     projString = ModifyProjString( etree.tostring(root, encoding='utf-8') )
     out.write(projString)
     out.close()
 
-def MDK5Project(target, script):
+def gen_main(target, script):
     template_tree = etree.parse('build/scripts/template.uvprojx')
     # create uvprojx file
-    MDKProject(template_tree, target, script)
+    gen_project(template_tree, target, script)
     
     # create uvoptx file
     opt_file = target.replace('.uvprojx', '.uvoptx')
@@ -153,5 +145,5 @@ projectPath = proj_output_dir+'/'+buildstring+'.uvprojx'
 opt_dir = 'opts/'
 
 print 'Making keil project '+buildstring
-MDK5Project(projectPath, Projects)
+gen_main(projectPath, Projects)
 print 'keil project: '+ projectPath + ' has generated over'
