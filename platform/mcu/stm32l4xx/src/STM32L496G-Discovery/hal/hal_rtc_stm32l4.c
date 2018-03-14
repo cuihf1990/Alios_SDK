@@ -27,8 +27,8 @@ int32_t hal_rtc_init(rtc_dev_t *rtc)
     int32_t ret = -1;
 
     if (rtc == NULL) {
-		    return -1;
-		}
+        return -1;
+    }
 
     /*init rtc handle*/
     memset(&rtc_handle, 0, sizeof(rtc_handle));
@@ -36,24 +36,24 @@ int32_t hal_rtc_init(rtc_dev_t *rtc)
     rtc->priv = &rtc_handle;
     ret = rtc_Init(rtc);
 
-		return ret;
+    return ret;
 }
 
 int32_t hal_rtc_get_time(rtc_dev_t *rtc, rtc_time_t *time)
 {
     uint16_t format = 0;
-	  int32_t ret1 = -1;
-	  int32_t ret2 = -1;	
-	  int32_t ret = -1;
-	  RTC_TimeTypeDef time_st;
+    int32_t ret1 = -1;
+    int32_t ret2 = -1;	
+    int32_t ret = -1;
+    RTC_TimeTypeDef time_st;
     RTC_DateTypeDef data_st;
 
     if ((rtc == NULL) || (time == NULL)) {
-		    return -1;
-		}
+        return -1;
+    }
 
-		ret = rtc_format_transform(rtc->config.format, &format);
-		if (ret == 0) {
+    ret = rtc_format_transform(rtc->config.format, &format);
+    if (ret == 0) {
         ret1 = HAL_RTC_GetTime((RTC_HandleTypeDef *)rtc->priv, &time_st, format);
         ret2 = HAL_RTC_GetDate((RTC_HandleTypeDef *)rtc->priv, &data_st, format);
 
@@ -67,10 +67,10 @@ int32_t hal_rtc_get_time(rtc_dev_t *rtc, rtc_time_t *time)
             time->sec = time_st.Seconds;
 
             ret = 0;
-				} else {
+        } else {
             ret = -1;
-				}
-		}
+        }
+    }
 
     return ret;
 }
@@ -78,10 +78,10 @@ int32_t hal_rtc_get_time(rtc_dev_t *rtc, rtc_time_t *time)
 int32_t hal_rtc_set_time(rtc_dev_t *rtc, const rtc_time_t *time)
 {
     uint16_t format = 0;
-	  int32_t ret1 = -1;
-	  int32_t ret2 = -1;	
-	  int32_t ret = -1;
-	  RTC_TimeTypeDef time_st;
+    int32_t ret1 = -1;
+    int32_t ret2 = -1;	
+    int32_t ret = -1;
+    RTC_TimeTypeDef time_st;
     RTC_DateTypeDef data_st;
 
     if ((rtc == NULL) || (time == NULL)) {
@@ -91,8 +91,8 @@ int32_t hal_rtc_set_time(rtc_dev_t *rtc, const rtc_time_t *time)
     memset(&time_st, 0, sizeof(time_st));
     memset(&data_st, 0, sizeof(data_st));
 		
-		ret = rtc_format_transform(rtc->config.format, &format);
-		if (ret == 0) {
+    ret = rtc_format_transform(rtc->config.format, &format);
+    if (ret == 0) {
         data_st.Year = time->year;
         data_st.Month = time->month;
         data_st.Date = time->date;
@@ -106,10 +106,10 @@ int32_t hal_rtc_set_time(rtc_dev_t *rtc, const rtc_time_t *time)
 
         if ((ret1 == 0) && (ret2 == 0)) {
             ret = 0;
-				} else {
+        } else {
             ret = -1;
-				}
-		}
+        }
+    }
 
     return ret;
 }
@@ -119,12 +119,12 @@ int32_t hal_rtc_finalize(rtc_dev_t *rtc)
     int32_t ret = -1;
 
     if (rtc == NULL) {
-		    return -1;
-		}
+        return -1;
+    }
 
     ret = rtc_DeInit();
 
-		return ret;
+    return ret;
 }
 
 int32_t rtc_Init(rtc_dev_t *rtc)
@@ -149,7 +149,7 @@ int32_t rtc_DeInit(void)
 {
     int32_t ret = -1;
 
-	  /* adc1 deinitialization */
+    /* adc1 deinitialization */
     ret = HAL_RTC_DeInit(&rtc_handle);
 
     return ret;
