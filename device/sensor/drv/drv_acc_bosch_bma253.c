@@ -505,7 +505,6 @@ int drv_acc_bosch_bma253_init(void){
     sensor.write      = NULL;
     sensor.ioctl      = drv_acc_bosch_bma253_ioctl;
     sensor.irq_handle = drv_acc_bosch_bma253_irq_handle;
-    sensor.bus = &bma253_ctx;
 
     ret = sensor_create_obj(&sensor);
     if(unlikely(ret)){

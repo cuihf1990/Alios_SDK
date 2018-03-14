@@ -50,8 +50,12 @@
 #define dev_humi_path    "/dev/humi"
 #define dev_hall_path    "/dev/hall"
 #define dev_hr_path      "/dev/hr"
-#define sensor_node_path "/dev/sensor"
+#define dev_gps_path     "/dev/gps"
 
+#define sensor_node_path "/dev/sensor"
+#define gps_node_path    "/dev/nodegps"
+
+#define GPS_STR     "gps: "
 #define SENSOR_STR  "sensor: "   /* sensor debug header */
 #define ERROR_LINE  "error on line is "   
 
@@ -61,18 +65,19 @@
 
 /* add the new sensor type into the last postion  */
 typedef enum{
-    TAG_DEV_ACC = 0,	/* Accelerometer */
-    TAG_DEV_MAG,		/* Magnetometer */
-    TAG_DEV_GYRO,	    /* Gyroscope */
-    TAG_DEV_ALS,	    /* Ambient light sensor */
-    TAG_DEV_PS,	        /* Proximity */
-    TAG_DEV_BARO,	    /* Barometer */
-    TAG_DEV_TEMP,	    /* Temperature  */
-    TAG_DEV_UV,	        /* Ultraviolet */
-    TAG_DEV_HUMI,	    /* Humidity */
-    TAG_DEV_HALL,	    /* HALL */
-    TAG_DEV_HR,	        /* Heart Rate */
-    TAG_DEV_SENSOR_NUM_MAX,	
+    TAG_DEV_ACC = 0,    /* Accelerometer */
+    TAG_DEV_MAG,        /* Magnetometer */
+    TAG_DEV_GYRO,       /* Gyroscope */
+    TAG_DEV_ALS,        /* Ambient light sensor */
+    TAG_DEV_PS,         /* Proximity */
+    TAG_DEV_BARO,       /* Barometer */
+    TAG_DEV_TEMP,       /* Temperature  */
+    TAG_DEV_UV,         /* Ultraviolet */
+    TAG_DEV_HUMI,       /* Humidity */
+    TAG_DEV_HALL,       /* HALL */
+    TAG_DEV_HR,         /* Heart Rate */
+    TAG_DEV_GPS,
+    TAG_DEV_SENSOR_NUM_MAX,
 } sensor_tag_e;
 
 
@@ -112,21 +117,22 @@ typedef enum {
 
 
 typedef enum {
-	DEV_POLLING = 0,
-	DEV_INT,
-	DEV_DATA_READY,
-	DEV_FIFO,
+    DEV_POLLING = 0,
+    DEV_INT,
+    DEV_DATA_READY,
+    DEV_FIFO,
+    DEV_MODE_INV
 } work_mode_e;
 
 typedef enum {
-	mg = 0,
-	uGauss,
-	udps,
-	lux,
-	cm,
-	pa,
-	pecent,
-	bpm,
+    mg = 0,
+    uGauss,
+    udps,
+    lux,
+    cm,
+    pa,
+    pecent,
+    bpm,
     centigrade,
 } value_unit_e;
 
@@ -250,12 +256,10 @@ typedef struct _sensor_obj_t {
     char*                    path;
     sensor_tag_e             tag;
     dev_io_port_e            io_port;
-  //uint8_t                  i2c_addr;
     work_mode_e              mode;
     dev_power_mode_e         power;
     gpio_dev_t               gpio;
     dev_sensor_full_info_t   info;
-    i2c_dev_t*               bus;
     uint8_t                  ref;
     int (*open)(void);
     int (*close)(void);
@@ -287,6 +291,27 @@ typedef enum{
     GYRO_RANGE_2000DPS,
     GYRO_RANGE_MAX
 }gyro_range_e;
+
+
+typedef struct _gps_time
+{
+    int     year;       
+    int     mon;
+    int     day;
+    int     hour;
+    int     min;
+    int     sec;
+    int     hsec;
+} gps_time_t;
+
+
+typedef struct _dev_gps_data_t {
+    uint64_t    timestamp;
+    gps_time_t  utc;
+    float  lat;        
+    float  lon;        
+    float  elv;
+}gps_data_t;
 
     
 #endif /* HAL_SENSOR_H */

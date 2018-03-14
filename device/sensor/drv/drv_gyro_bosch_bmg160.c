@@ -985,7 +985,6 @@ int drv_gyro_bosch_bmg160_init(void)
     sensor.write      = NULL;
     sensor.ioctl      = drv_gyro_bosch_bmg160_ioctl;
     sensor.irq_handle = drv_gyro_bosch_bmg160_irq_handle;
-    sensor.bus = &bmg160_ctx;
 
     ret = sensor_create_obj(&sensor);
     if(unlikely(ret)){
