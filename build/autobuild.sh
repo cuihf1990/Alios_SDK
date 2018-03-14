@@ -17,6 +17,9 @@ esp8266_platforms="esp8266"
 bins_type="app framework kernel"
 mk3239_targets="bluetooth.ble_advertisements bluetooth.ble_show_system_time"
 mk3239_platforms="mk3239"
+scons_build_targets="helloworld@b_l475e mqttapp@b_l475e helloworld@mk3060 yts@linuxhost"
+scons_ide_targets="mqttapp@b_l475e"
+ide_types="keil iar"
 
 DEBUG="no"
 if [ $# -gt 0 ]; then
@@ -37,6 +40,58 @@ fi
 
 branch=`git status | grep "On branch" | sed -r 's/.*On branch //g'`
 cd $(git rev-parse --show-toplevel)
+
+#scons tmp
+aos make clean > /dev/null 2>&1
+for target in ${scons_build_targets}; do
+    if [ "${DEBUG}" != "no" ]; then
+        echo "before scons ${target}@${branch}"
+        pwd && ls
+    fi
+    aos scons ${target} > ${target}@${branch}.log 2>&1
+    ret=$?
+    if [ "${DEBUG}" != "no" ]; then
+        echo "after scons ${target}@${branch}"
+        pwd && ls
+    fi
+    if [ ${ret} -eq 0 ]; then
+        echo "build scons ${target} at ${branch} branch succeed"
+        rm -f ${target}@${branch}.log
+    else
+        echo -e "build scons ${target} at ${branch} branch failed, log:\n"
+        cat ${target}@${branch}.log
+        echo -e "\nbuild ${target} at ${branch} branch failed"
+        aos make clean > /dev/null 2>&1
+        exit 1
+    fi
+done
+
+#tarsfer test
+aos make clean > /dev/null 2>&1
+for target in ${scons_ide_targets}; do
+    for ide in ${ide_types}; do
+        if [ "${DEBUG}" != "no" ]; then
+            echo "before scons ${target} IDE=${ide} @${branch}"
+            pwd && ls
+        fi
+        aos scons ${target} IDE=${ide} > ${target}2IDE_${ide}@${branch}.log 2>&1
+        ret=$?
+        if [ "${DEBUG}" != "no" ]; then
+            echo "after scons ${target} IDE=${ide} @${branch}"
+            pwd && ls
+        fi
+        if [ ${ret} -eq 0 ]; then
+            echo "build scons ${target} IDE=${ide} at ${branch} branch succeed"
+            rm -f ${target}2IDE_${ide}@${branch}.log
+        else
+            echo -e "build scons ${target} IDE=${ide} at ${branch} branch failed, log:\n"
+            cat ${target}2IDE_${ide}@${branch}.log
+            echo -e "\nbuild scons ${target} IDE=${ide} at ${branch} branch failed"
+            aos make clean > /dev/null 2>&1
+            exit 1
+        fi
+    done
+done
 
 #linuxhost posix
 aos make clean > /dev/null 2>&1
