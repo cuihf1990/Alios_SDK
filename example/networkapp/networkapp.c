@@ -325,7 +325,8 @@ int application_start(int argc, char *argv[])
 {
 #if AOS_ATCMD
     at.set_mode(ASYN);
-    at.init(AT_RECV_DELIMITER, AT_SEND_DELIMITER, 1000);
+    at.init(AT_RECV_PREFIX, AT_RECV_SUCCESS_POSTFIX, 
+            AT_RECV_FAIL_POSTFIX, AT_SEND_DELIMITER, 1000);
 #endif
 
 #ifdef WITH_SAL
