@@ -372,26 +372,13 @@ static int gps_simcom_sim868_ioctl(int cmd, unsigned long arg)
 }
 
 
-#ifdef AOS_ATCMD
-static void gps_simcom_sim868_at_uart_config(uart_dev_t *u)
-{
-    u->port                = AT_UART_PORT;
-    u->config.baud_rate    = AT_UART_BAUDRATE;
-    u->config.data_width   = AT_UART_DATA_WIDTH;
-    u->config.parity       = AT_UART_PARITY;
-    u->config.stop_bits    = AT_UART_STOP_BITS;
-    u->config.flow_control = AT_UART_FLOW_CONTROL;
-}
-#endif
 
 static int gps_simcom_sim868_env_init()
 {
     int ret = 0;
 #if AOS_ATCMD
-    uart_dev_t at_uart;
-    gps_simcom_sim868_at_uart_config(&at_uart);
 
-    ret = at.init(&at_uart, AT_RECV_PREFIX, AT_RECV_SUCCESS_POSTFIX, 
+    ret = at.init(AT_RECV_PREFIX, AT_RECV_SUCCESS_POSTFIX, 
                   AT_RECV_FAIL_POSTFIX, AT_SEND_DELIMITER, 10000);
     if(0 != ret){
         LOG("%s :   line %d  ret %d\n",__func__,__LINE__,ret);

@@ -319,8 +319,10 @@ int application_start(int argc, char *argv[])
 
 #ifdef WITH_SAL
     ret = sal_init();
-    LOG("%s fail   line %d  ret %d\n",__func__,__LINE__,ret);
-
+    if(0 != ret){
+        LOG("%s fail   line %d\n",__func__,__LINE__);
+        return -1;
+    }
 #endif
 
     ret = aos_register_event_filter(EV_WIFI, test_gps_udata_service_event, NULL);
@@ -328,7 +330,6 @@ int application_start(int argc, char *argv[])
         LOG("%s fail   line %d\n",__func__,__LINE__);
         return -1;
     }
-
 
     ret = aos_cli_register_command(&gpstcmd);
     if(0 != ret){
