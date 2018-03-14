@@ -133,6 +133,9 @@
 #define BME280_I2C_SLAVE_ADDR_LOW           (0X76)
 #define BME280_I2C_SLAVE_ADDR_HIGN          (0X77)
 
+#define BME280_HUMI_UNIT_RATIO_10           (100)
+#define BME280_HUMI_UNIT_RATIO_1024         (1024)
+
 #define BME280_DEFAULT_ODR_1HZ              (1)
 
 #define BME280_I2C_ADDR_TRANS(n)            ((n)<<1)  
@@ -548,7 +551,7 @@ static int drv_humi_bosch_bme280_comp_humi(humidity_data_t* pdata)
     if (humidity > humidity_max){
         humidity = humidity_max;
     }
-    pdata->h = humidity;
+    pdata->h = (humidity * BME280_HUMI_UNIT_RATIO_10)/BME280_HUMI_UNIT_RATIO_1024;
     return 0;
 }
 
@@ -686,7 +689,7 @@ static int drv_humi_bosch_bme280_ioctl(int cmd, unsigned long arg)
             *(info->model) = "BME280";
             info->range_max = 16;
             info->range_min = 4;
-            info->unit = pecent;
+            info->unit = permillage;
         }break;
        
        default:break;
