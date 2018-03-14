@@ -37,6 +37,9 @@
 #define MAX_RETRY_CONNECT 120
 #define RETRY_INTERVAL_MS 500
 
+#define HOTSPOT_AP "aha"
+#define ROUTER_AP "adha"
+
 typedef struct {
     char ssid[33];
     char pwd[65];
@@ -338,9 +341,15 @@ static void netmgr_events_executor(input_event_t *eventinfo, void *priv_data)
             break;
         case CODE_WIFI_ON_PRE_GOT_IP:
             if (g_netmgr_cxt.doing_smartconfig) {
-                g_netmgr_cxt.autoconfig_chain->config_result_cb(
-                    0, g_netmgr_cxt.ipv4_owned);
-                g_netmgr_cxt.autoconfig_chain->autoconfig_stop();
+                if (strcmp(g_netmgr_cxt.ap_config.ssid, HOTSPOT_AP) != 0 && \
+                    strcmp(g_netmgr_cxt.ap_config.ssid, ROUTER_AP) != 0) {
+                    LOGI(TAG, "Let's post GOT_IP event.");
+                    g_netmgr_cxt.autoconfig_chain->config_result_cb(
+                        0, g_netmgr_cxt.ipv4_owned);
+                    g_netmgr_cxt.autoconfig_chain->autoconfig_stop();
+                } else {
+                    LOGI(TAG, "In hotspot/router mode, do not post GOT_IP event here.");
+                }
             } else {
                 aos_post_event(EV_WIFI, CODE_WIFI_ON_GOT_IP,
                                (unsigned long)(&g_netmgr_cxt.ipv4_owned));
@@ -423,7 +432,6 @@ void netmgr_clear_ap_config(void)
 }
 AOS_EXPORT(void, netmgr_clear_ap_config, void);
 
-#define HOTSPOT_AP "aha"
 int netmgr_set_ap_config(netmgr_ap_config_t *config)
 {
     int ret = 0;
