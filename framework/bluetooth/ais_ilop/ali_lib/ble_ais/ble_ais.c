@@ -94,10 +94,13 @@ static void notify_svc_enabled (ble_ais_t * p_ais)
 
     if (p_ais->is_indication_enabled && p_ais->is_notification_enabled)
     {
+        printf("Let's notify that service is enabled.\r\n");
         evt.type = BLE_AIS_EVT_SVC_ENABLED;
         p_ais->event_handler(p_ais->p_context, &evt);
     }
 }
+
+struct bt_conn *g_conn = NULL;
 
 static void connected(struct bt_conn *conn, uint8_t err)
 {
@@ -105,12 +108,12 @@ static void connected(struct bt_conn *conn, uint8_t err)
         printf("Connection failed (err %u)\n", err);
     } else {
         printf("Connected\n");
-        printf("FIXME: g_ais->conn_handle not set, you need set it!!!\n");
         g_ais->conn_handle = BLE_CONN_HANDLE_MAGIC;
         g_ali->conn_handle = BLE_CONN_HANDLE_MAGIC;
         g_ais->is_authenticated = false;
         g_ais->is_indication_enabled   = false;
         g_ais->is_notification_enabled = false;
+        g_conn = conn;
 
         ali_auth_on_connected(&g_ali->auth);
         ble_ais_set_auth(g_ais, true);
