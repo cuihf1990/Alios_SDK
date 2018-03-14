@@ -8,7 +8,7 @@
 #include "hal.h"
 #include "hal_gpio_stm32l4.h"
 
-#define DEMO_TASK_STACKSIZE    2048 //512*cpu_stack_t = 2048byte
+#define DEMO_TASK_STACKSIZE    2048 //2048*cpu_stack_t = 8192byte
 #define DEMO_TASK_PRIORITY     20
 #define UART_DATA_BYTES 10
 
@@ -32,7 +32,7 @@ void demo_task(void *arg)
 
     while (1)
     {
-			  printf("timer3 has been run %d seconds !\n\n", timer3_count);
+        printf("timer3 has been run %d seconds !\n\n", timer3_count);
         hal_uart_test();
         hal_gpio_test();
         hal_rtc_test();

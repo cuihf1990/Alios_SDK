@@ -22,7 +22,7 @@ typedef struct {
  * RTC time
  */
 typedef struct {
-	  uint8_t sec;         /* DEC format:value range from 0 to 59, BCD format:value range from 0x00 to 0x59 */
+    uint8_t sec;         /* DEC format:value range from 0 to 59, BCD format:value range from 0x00 to 0x59 */
     uint8_t min;         /* DEC format:value range from 0 to 59, BCD format:value range from 0x00 to 0x59 */
     uint8_t hr;          /* DEC format:value range from 0 to 23, BCD format:value range from 0x00 to 0x23 */
     uint8_t weekday;     /* DEC format:value range from 1 to  7, BCD format:value range from 0x01 to 0x07 */
