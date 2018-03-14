@@ -396,7 +396,6 @@ int drv_baro_st_lps22hb_init(void){
     sensor.write = drv_baro_st_lps22hb_write;
     sensor.ioctl = drv_baro_st_lps22hb_ioctl;
     sensor.irq_handle = drv_baro_st_lps22hb_irq_handle;
-    sensor.bus = &lps22hb_ctx;
 
 
     ret = sensor_create_obj(&sensor);

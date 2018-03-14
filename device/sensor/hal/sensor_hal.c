@@ -134,9 +134,6 @@ int sensor_create_obj(sensor_obj_t* sensor)
     g_sensor_obj[g_sensor_cnt]->write      = sensor->write;
     g_sensor_obj[g_sensor_cnt]->irq_handle = sensor->irq_handle;
     g_sensor_obj[g_sensor_cnt]->mode       = sensor->mode;
-    g_sensor_obj[g_sensor_cnt]->bus->config.address_width        = sensor->bus->config.address_width;
-    g_sensor_obj[g_sensor_cnt]->bus->config.freq                 = sensor->bus->config.freq;
-    g_sensor_obj[g_sensor_cnt]->bus->port                        = sensor->bus->port;
     g_sensor_obj[g_sensor_cnt]->power      = DEV_POWER_OFF; // will update the status later
     g_sensor_obj[g_sensor_cnt]->ref        = 0; // count the ref of this sensor
     /* register the sensor object into the irq list and vfs */
@@ -164,10 +161,18 @@ static int sensor_hal_get_dev_list(void* buf)
         return -1;
     
     /* load the sensor count and tag list here */
-    list->cnt = g_sensor_cnt;
-    for(int index = 0; index < g_sensor_cnt; index++){
-        list->list[index] = g_sensor_obj[index]->tag;
+
+    if (list->cnt >= TAG_DEV_SENSOR_NUM_MAX){
+        
+        printf("list->cnt == %d    %d\n",list->cnt,TAG_DEV_SENSOR_NUM_MAX);
+        return -1;
     }
+    
+    for(int index = 0; index < g_sensor_cnt; index++){
+        list->list[list->cnt+index] = g_sensor_obj[index]->tag;
+    }
+    
+    list->cnt += g_sensor_cnt;
 
     return 0;
 }

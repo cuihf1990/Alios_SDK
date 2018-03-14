@@ -267,7 +267,7 @@ int sim800_uart_selfadaption(const char *command, const char *rsp, uint32_t rspl
     }
 
     memset(buffer, 0, rsplen * 3 + 1);
-    at.set_mode(NORMAL);
+
     aos_timer_new(&test_timer, at_start_test, command, 10, 1);
     aos_timer_start(&test_timer);
     
@@ -281,7 +281,7 @@ int sim800_uart_selfadaption(const char *command, const char *rsp, uint32_t rspl
     aos_timer_stop(&test_timer);
     aos_timer_free(&test_timer);
     aos_free(buffer);
-    at.set_mode(ASYN);
+
     return 0;
 }
 

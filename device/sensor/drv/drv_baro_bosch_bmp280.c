@@ -815,7 +815,6 @@ int drv_baro_bosch_bmp280_init(void)
     sensor.write = drv_baro_bosch_bmp280_write;
     sensor.ioctl = drv_baro_bosch_bmp280_ioctl;
     sensor.irq_handle = drv_baro_bosch_bmp280_irq_handle;
-    sensor.bus = &bmp280_ctx;
 
     ret = sensor_create_obj(&sensor);
     if(unlikely(ret)){

@@ -514,7 +514,6 @@ int drv_acc_st_lsm6dsl_init(void){
     sensor.write      = NULL;
     sensor.ioctl      = drv_acc_st_lsm6dsl_ioctl;
     sensor.irq_handle = drv_acc_st_lsm6dsl_irq_handle;
-    sensor.bus = &lsm6dsl_ctx;
 
     ret = sensor_create_obj(&sensor);
     if(unlikely(ret)){
@@ -807,7 +806,6 @@ int drv_gyro_st_lsm6dsl_init(void){
     sensor.write      = NULL;
     sensor.ioctl      = drv_gyro_st_lsm6dsl_ioctl;
     sensor.irq_handle = drv_gyro_st_lsm6dsl_irq_handle;
-    sensor.bus = &lsm6dsl_ctx;
 
     ret = sensor_create_obj(&sensor);
     if(unlikely(ret)){

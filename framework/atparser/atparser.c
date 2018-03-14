@@ -241,12 +241,12 @@ static int at_write(const char *data, int size)
         LOGE(MODULE_NAME, "at have not init yet\r\n");
         return -1;
     }
-
+#if 0
     if (at._mode != NORMAL){
         LOGE(MODULE_NAME, "AT mode is aysn, can no use at_write \r\n");
         return -1;
     }
-    
+#endif
     aos_mutex_lock(&at.at_uart_send_mutex, AOS_WAIT_FOREVER);
     if (hal_uart_send(at._pstuart, (void *)data, size, AOS_WAIT_FOREVER) != 0){
         return -1;
