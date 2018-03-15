@@ -17,7 +17,7 @@ esp8266_platforms="esp8266"
 bins_type="app framework kernel"
 mk3239_targets="bluetooth.ble_advertisements bluetooth.ble_show_system_time"
 mk3239_platforms="mk3239"
-scons_build_targets="helloworld@b_l475e helloworld@mk3060 yts@linuxhost"
+scons_build_targets="helloworld@b_l475e helloworld@mk3060"
 scons_ide_targets=""
 ide_types="keil iar"
 
