@@ -124,9 +124,10 @@ static void* internal_realloc(void* pointer, size_t size)
     return realloc(pointer, size);
 }
 #else
-#define internal_malloc malloc
-#define internal_free free
-#define internal_realloc realloc
+#include "aos/kernel.h"
+#define internal_malloc aos_malloc
+#define internal_free aos_free
+#define internal_realloc aos_realloc
 #endif
 
 static internal_hooks global_hooks = { internal_malloc, internal_free, internal_realloc };
