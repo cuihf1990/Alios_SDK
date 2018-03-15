@@ -50,17 +50,27 @@ static void mbedtls_zeroize( void *v, size_t n ) {
 #endif
 
 #if defined(MBEDTLS_PLATFORM_ALT)
-
+#if defined(XTENSE_MALLOC_IRAM)
+extern void *pvPortMalloc( size_t xWantedSize );
+extern void vPortFree( void *pv );
+extern int xPortGetFreeHeapSize();
+#endif
 void *mbedtls_calloc( size_t n, size_t size )
 {
-    void *buf;
+    void *buf = NULL;
 
     if (n == 0 || size == 0) {
         return NULL;
     }
 
-    buf = malloc(n * size);
-    if (NULL == buf) {
+#if defined(XTENSE_MALLOC_IRAM)
+    buf = pvPortMalloc(n * size);
+#endif
+    if(!buf) {
+        buf = malloc(n *size);
+    }
+
+    if(NULL ==  buf) {
         return NULL;
     } else {
         memset(buf, 0, n * size);
@@ -72,10 +82,18 @@ void *mbedtls_calloc( size_t n, size_t size )
 void mbedtls_free( void *ptr )
 {
     if (NULL == ptr) {
-        return;
+	return;
     }
 
+#if defined(XTENSE_MALLOC_IRAM)
+    if((uint32_t)ptr >= 0x40108000 && (uint32_t)ptr < 0x4010c000) {
+	vPortFree(ptr);
+	return;
+    }
+#endif
+
     free(ptr);
+
 }
 
 #endif
