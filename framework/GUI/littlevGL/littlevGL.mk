@@ -11,7 +11,7 @@ else ifeq ($(COMPILER),armcc)
 GLOBAL_DEFINES      += __BSD_VISIBLE
 endif
 
-GLOBAL_INCLUDES     += include
+GLOBAL_INCLUDES     += .
 GLOBAL_DEFINES      += AOS_LITTLEVGL
 
 ifneq ($(IDE),keil)

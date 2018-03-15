@@ -37,7 +37,7 @@ def process_component_test(source_directory):
     source_codes += "#include <aos/aos.h>\n\n"
 
     components = re.findall(r"COMPONENTS\s+\:\=\s+.+\n", config_mk_str)[0]
-    for name in re.findall(r"[a-zA-Z0-9]*_test", components):
+    for name in re.findall(r"[a-zA-Z0-9]*_test$", components):
         location = name + "_LOCATION\s+\:\=\s+.+"
         # find all source code files related to test components
         for root, dirs, files in chain.from_iterable(os.walk(path.strip()) for path in \
