@@ -917,9 +917,9 @@ static int drv_gyro_bosch_bmg160_read(void *buf, size_t len)
     if(unlikely(ret)){
         return ret;
     }
-    gyro->data[DATA_AXIS_X] = (int16_t)((((int32_t)((int8_t)reg[1]))<< BMG160_SHIFT_EIGHT_BITS)|reg[0]);
-    gyro->data[DATA_AXIS_Y] = (int16_t)((((int32_t)((int8_t)reg[3]))<< BMG160_SHIFT_EIGHT_BITS)|reg[2]);
-    gyro->data[DATA_AXIS_Z] = (int16_t)((((int32_t)((int8_t)reg[5]))<< BMG160_SHIFT_EIGHT_BITS)|reg[4]);
+    gyro->data[DATA_AXIS_X] = (int32_t)((((int32_t)((int8_t)reg[1]))<< BMG160_SHIFT_EIGHT_BITS)|reg[0]);
+    gyro->data[DATA_AXIS_Y] = (int32_t)((((int32_t)((int8_t)reg[3]))<< BMG160_SHIFT_EIGHT_BITS)|reg[2]);
+    gyro->data[DATA_AXIS_Z] = (int32_t)((((int32_t)((int8_t)reg[5]))<< BMG160_SHIFT_EIGHT_BITS)|reg[4]);
 
     if(current_factor != 0){
         //the unit of gyro is uDPS, 1000 000 uDPS = 1 DPS
@@ -960,7 +960,7 @@ static int drv_gyro_bosch_bmg160_ioctl(int cmd, unsigned long arg)
             dev_sensor_info_t *info =arg;
             *(info->model) = "BMG160";
             info->range_max = 2000;
-            info->range_min = 150;
+            info->range_min = 125;
             info->unit = udps;
         }break;
        

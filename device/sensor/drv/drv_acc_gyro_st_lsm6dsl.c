@@ -175,15 +175,15 @@
 #define LSM6DSL_GYRO_RANGE_MSK              (0X0C)
 #define LSM6DSL_GYRO_RANGE_POS              (2)
 
-#define LSM6DSL_GYRO_SENSITIVITY_245DPS     (875)
-#define LSM6DSL_GYRO_SENSITIVITY_500DPS     (1750)
-#define LSM6DSL_GYRO_SENSITIVITY_1000DPS    (3500)
-#define LSM6DSL_GYRO_SENSITIVITY_2000DPS    (7000)
+#define LSM6DSL_GYRO_SENSITIVITY_245DPS     (8750)
+#define LSM6DSL_GYRO_SENSITIVITY_500DPS     (17500)
+#define LSM6DSL_GYRO_SENSITIVITY_1000DPS    (35000)
+#define LSM6DSL_GYRO_SENSITIVITY_2000DPS    (70000)
 
 #define LSM6DSL_SHIFT_EIGHT_BITS            (8)
 #define LSM6DSL_16_BIT_SHIFT                (0xFF)
 #define LSM6DSL_ACC_MUL                     (1000)
-#define LSM6DSL_GYRO_MUL                    (100)
+#define LSM6DSL_GYRO_MUL                    (1)
 
 #define LSM6DSL_ACC_DEFAULT_ODR_100HZ       (100)
 #define LSM6DSL_GYRO_DEFAULT_ODR_100HZ      (100)
@@ -454,8 +454,8 @@ static int drv_acc_st_lsm6dsl_read(void *buf, size_t len)
         accel->data[DATA_AXIS_X] = (accel->data[DATA_AXIS_X] * cur_acc_factor)/LSM6DSL_ACC_MUL;
         accel->data[DATA_AXIS_Y] = (accel->data[DATA_AXIS_Y] * cur_acc_factor)/LSM6DSL_ACC_MUL;
         accel->data[DATA_AXIS_Z] = (accel->data[DATA_AXIS_Z] * cur_acc_factor)/LSM6DSL_ACC_MUL;
-
     }
+    
     accel->timestamp = aos_now_ms();
 
     return (int)size;
@@ -781,9 +781,9 @@ static int drv_gyro_st_lsm6dsl_ioctl(int cmd, unsigned long arg)
             /* fill the dev info here */
             dev_sensor_info_t *info =arg;
             *(info->model) = "LSM6DSL";
-            info->range_max = 16;
-            info->range_min = 2;
-            info->unit = mg;
+            info->range_max = 2000;
+            info->range_min = 125;
+            info->unit = udps;
         }break;
        
        default:break;

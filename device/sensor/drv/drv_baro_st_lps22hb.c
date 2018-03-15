@@ -336,7 +336,7 @@ static int drv_baro_st_lps22hb_read(void *buf, size_t len)
         pdata->p |= 0xFF000000;
     }
     pdata->p = ((pdata->p)*100)/4096;
-    pdata->p = pdata->p/100;
+    //pdata->p = pdata->p/100;
     pdata->timestamp = aos_now_ms();
     
     return (int)size;
@@ -369,8 +369,8 @@ static int drv_baro_st_lps22hb_ioctl(int cmd, unsigned long arg)
             /* fill the dev info here */
             dev_sensor_info_t *info =arg;
             *(info->model) = "LPS22HB";
-            info->range_max = 16;
-            info->range_min = 4;
+            info->range_max = 1260;
+            info->range_min = 260;
             info->unit = pa;
 
         }break;
