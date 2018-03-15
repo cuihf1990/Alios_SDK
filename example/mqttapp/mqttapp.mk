@@ -18,3 +18,7 @@ ifeq ($(LWIP),1)
 $(NAME)_COMPONENTS  += protocols.net
 no_with_lwip := 0
 endif
+
+ifeq ($(no_tls),1)
+GLOBAL_DEFINES += IOTX_WITHOUT_TLS  MQTT_DIRECT
+endif
