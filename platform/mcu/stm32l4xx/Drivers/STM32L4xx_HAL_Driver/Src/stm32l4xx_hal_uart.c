@@ -911,7 +911,7 @@ HAL_StatusTypeDef HAL_UART_Transmit_IT(UART_HandleTypeDef *huart, uint8_t *pData
   * @param Size  Amount of data to be received.
   * @retval HAL status
   */
-HAL_StatusTypeDef HAL_UART_Receive_IT_Buf_Queue_1byte(UART_HandleTypeDef *huart, uint8_t *pData)
+HAL_StatusTypeDef HAL_UART_Receive_IT_Buf_Queue_1byte(UART_HandleTypeDef *huart, uint8_t *pData, uint32_t timeout)
 {
   size_t rev_size = 0;
   int ret = 0;
@@ -989,7 +989,15 @@ HAL_StatusTypeDef HAL_UART_Receive_IT_Buf_Queue_1byte(UART_HandleTypeDef *huart,
 
   if (huart->buffer_queue != NULL)
   {
-    ret = krhino_buf_queue_recv(huart->buffer_queue, RHINO_WAIT_FOREVER, pData, &rev_size);
+    if(timeout != HAL_MAX_DELAY)
+    {
+      ret = krhino_buf_queue_recv(huart->buffer_queue, timeout, pData, &rev_size);
+    }
+    else
+    {
+      ret = krhino_buf_queue_recv(huart->buffer_queue, RHINO_WAIT_FOREVER, pData, &rev_size);
+    }
+
     if((ret == 0) && (rev_size == 1))
     {
       ret = HAL_OK;
