@@ -393,7 +393,7 @@ static int at_send_raw_self_define_respone_formate_internal(const char *command,
     }
     LOGD(MODULE_NAME, "Sending delimiter %s", at._send_delimiter);
 
-    if ((ret = aos_sem_wait(&tsk->smpr, AOS_WAIT_FOREVER)) != 0) {
+    if ((ret = aos_sem_wait(&tsk->smpr, TASK_DEFAULT_WAIT_TIME)) != 0) {
         LOGD(MODULE_NAME, "sem_wait failed");
         goto end;
     }
@@ -445,7 +445,7 @@ static int at_send_raw(const char *command, char *rsp, uint32_t rsplen)
  *   3. Send data (second stage) in 'len' length.
  */
 static int at_send_data_2stage(const char *fst, const char *data, 
-                               uint32_t len, char *rsp, uint32_t rsplen/*, at_send_t t*/)
+                               uint32_t len, char *rsp, uint32_t rsplen)
 {
     int ret = 0;
     char datadelimiter[2] = {0};
@@ -513,7 +513,7 @@ static int at_send_data_2stage(const char *fst, const char *data,
     }
     LOGD(MODULE_NAME, "Sending 2stage data %s", data);
 
-    if ((ret = aos_sem_wait(&tsk->smpr, AOS_WAIT_FOREVER)) != 0) {
+    if ((ret = aos_sem_wait(&tsk->smpr, TASK_DEFAULT_WAIT_TIME)) != 0) {
         LOGE(MODULE_NAME, "sem_wait failed");
         goto end;
     }
