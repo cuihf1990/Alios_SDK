@@ -39,7 +39,7 @@ def main(firmware='lb-mk3060.bin', model='mk3060'):
 
     at=Autotest()
     logname=time.strftime('%Y-%m-%d@%H-%M')
-    logname = 'mcast-' + logname +'.log'
+    logname = 'multicast-' + logname +'.log'
     if at.start(server, port, logname) == False:
         print 'error: start failed'
         return [1, 'connect testbed failed']
@@ -114,11 +114,11 @@ def main(firmware='lb-mk3060.bin', model='mk3060'):
     print_device_attrs(device_attr)
 
     #udp multicast test
-    [pass_num, fail_num] = mcast_test(at, device_list, device_attr)
+    [pass_num, fail_num] = multicast_test(at, device_list, device_attr)
 
     restore_device_status(at, device_list)
     at.stop()
-    return [0, 'succeed. mcast: pass-{0} fail-{1}'.format(pass_num, fail_num)]
+    return [0, 'succeed. multicast: pass-{0} fail-{1}'.format(pass_num, fail_num)]
 
 if __name__ == '__main__':
     #flush to output immediately
