@@ -22,6 +22,7 @@ src = Split('''
    src/utilities/memory.c 
    src/utilities/configs.c 
    src/utilities/maths.c 
+   src/utilities/mac_whitelist.c
    src/tools/cli.c
 ''')
 
@@ -37,7 +38,7 @@ else:
 if aos_global_config.get_aos_global_config('MESHDEBUG') == None:
     aos_global_config.set_aos_global_config('MESHDEBUG','1')
 if aos_global_config.get_aos_global_config('MESHDEBUG') == '1': 
-    component.add_sources('src/tools/diags.c','src/utilities/mac_whitelist.c', 'src/utilities/logging.c')
+    component.add_sources('src/tools/diags.c', 'src/utilities/logging.c')
     component.add_global_macro('CONFIG_AOS_MESH_DEBUG')
 
 if aos_global_config.get_aos_global_config('MESHSUPER') == None:

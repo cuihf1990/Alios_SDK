@@ -172,6 +172,7 @@ src = Split('''
         hal/ringbuf.c
         hal/StringUtils.c
         hal/wifi_port.c
+        port/ota_port.c
 ''')
 
 src.append('mx108/mx378/func/hostapd-2.5/src/crypto/crypto_ali.c')
@@ -320,11 +321,57 @@ global_cflags = Split('''
         -mthumb-interwork
         -mlittle-endian
         -w
-        -marm
         -MD
 ''')
 for cflags in global_cflags:
     component.add_global_cflags(cflags)
+
+
+locals_cflags = Split('''
+        -Wall
+        -Werror
+        -Wno-unused-variable
+        -Wno-unused-parameter
+        -Wno-implicit-function-declaration
+        -Wno-type-limits-Wno-sign-compare
+        -Wno-pointer-sign
+        -Wno-uninitialized
+        -Wno-return-type
+        -Wno-unused-function
+        -Wno-unused-but-set-variable
+        -Wno-unused-value
+        -Wno-strict-aliasing
+        -Wall
+        -Werror
+        -Wno-unused-variable
+        -Wno-unused-parameter
+        -Wno-implicit-function-declaration
+        -Wno-type-limits
+        -Wno-sign-compare
+        -Wno-pointer-sign
+        -Wno-uninitialized
+        -Wno-return-type
+        -Wno-unused-function
+        -Wno-unused-but-set-variable
+        -Wno-unused-value
+        -Wno-strict-aliasing
+        -Wall
+        -Werror
+        -Wno-unused-variable
+        -Wno-unused-parameter
+        -Wno-implicit-function-declaration
+        -Wno-type-limits
+        -Wno-sign-compare
+        -Wno-pointer-sign
+        -Wno-uninitialized
+        -Wno-return-type
+        -Wno-unused-function
+        -Wno-unused-but-set-variable
+        -Wno-unused-value
+        -Wno-strict-aliasing
+''')
+for cflags in locals_cflags:
+    component.add_cflags(cflags)
 
 global_ldflags = Split('''
         -mcpu=arm968e-s

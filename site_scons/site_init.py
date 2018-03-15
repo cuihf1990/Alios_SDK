@@ -138,9 +138,9 @@ class aos_component:
     def get_self_env(self):
         env = aos_global_config.aos_env.Clone()
         env.Prepend(CPPPATH=self.include_directories)
-        env.Prepend(CPPDEFINES=self.macros)
-        env.Prepend(CCFLAGS=self.cflags)
-        env.Prepend(ASFLAGS=self.asflags)
+        env.Append(CPPDEFINES=self.macros)
+        env.Append(CCFLAGS=self.cflags)
+        env.Append(ASFLAGS=self.asflags)
         return env
 
     def add_command(self, target, source, command):
@@ -158,7 +158,7 @@ class aos_component:
         return aos_global_config.arch
 
     @staticmethod
-    def get_globao_mcu_family():
+    def get_global_mcu_family():
         return aos_global_config.mcu_family
 
 
@@ -338,12 +338,12 @@ class dependency_process_impl(process):
         # board config tool chain, must add first.
         self.__load_one_component('board/' + aos_global_config.board)
         if (len(aos_global_config.components)) != 1:
-            print('Unsupport board, make sure %s in board directory...' % aos_global_config.board)
+            print('Unsupported board, make sure %s in board directory...' % aos_global_config.board)
             exit(-1)
 
         self.__load_one_component('example/' + aos_global_config.app)
         if (len(aos_global_config.components)) != 2:
-            print('Unsupport board, make sure %s in example directory...' % aos_global_config.app)
+            print('Unsupported app, make sure %s in example directory...' % aos_global_config.app)
             exit(-1)
 
         self.__load_one_component('kernel/init')
