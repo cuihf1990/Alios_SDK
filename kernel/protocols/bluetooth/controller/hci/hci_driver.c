@@ -44,11 +44,9 @@
 #define NODE_RX(_node) CONTAINER_OF(_node, struct radio_pdu_node_rx, \
 				    hdr.onion.node)
 
-/*static K_SEM_DEFINE(sem_prio_recv, 0, UINT_MAX);*/
-struct k_sem sem_prio_recv;
+static K_SEM_DEFINE(sem_prio_recv, 0, UINT_MAX);
 
-/*static K_FIFO_DEFINE(recv_fifo);*/
-struct k_fifo recv_fifo;
+static K_FIFO_DEFINE(recv_fifo);
 
 struct k_thread prio_recv_thread_data;
 static BT_STACK_NOINIT(prio_recv_thread_stack,

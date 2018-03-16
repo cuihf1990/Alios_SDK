@@ -2,8 +2,8 @@
  * Copyright (C) 2015-2017 Alibaba Group Holding Limited
  */
 
-#ifndef PORT_H
-#define PORT_H
+#ifndef KPORT_H
+#define KPORT_H
 #include "config.h"
 #include "aos/log.h"
 
@@ -16,10 +16,17 @@
 
 #include <k_types.h>
 
+#define UINT_MAX 0xffffffff
 typedef aos_queue_t _queue_t;
 typedef aos_sem_t  _sem_t;
 typedef aos_task_t _task_t;
 typedef cpu_stack_t _stack_element_t;
+typedef aos_mutex_t  _mutex_t;
+
+#define _POLL_EVENT_OBJ_INIT(obj) \
+        .poll_events = SYS_DLIST_STATIC_INIT(&obj.poll_events),
+#define _POLL_EVENT sys_dlist_t poll_events
+
 
 #define _K_SEM_INITIALIZER(obj, initial_count, count_limit)  { }
 
@@ -29,6 +36,17 @@ typedef cpu_stack_t _stack_element_t;
         struct k_sem name \
                 __in_section(_k_sem, static, name) = \
                 _K_SEM_INITIALIZER(name, initial_count, count_limit)
+
+
+#define _K_MUTEX_INITIALIZER(obj) { 0 }
+
+#define K_MUTEX_INITIALIZER DEPRECATED_MACRO _K_MUTEX_INITIALIZER
+
+#define K_MUTEX_DEFINE(name) \
+	struct k_mutex name \
+		__in_section(_k_mutex, static, name) = \
+		_K_MUTEX_INITIALIZER(name)
+		
 
 /* Log define*/
 enum {
@@ -52,14 +70,6 @@ enum {
 
 typedef sys_dlist_t _wait_q_t;
 
-#define _POLL_EVENT_OBJ_INIT(obj) \
-        .poll_events = SYS_DLIST_STATIC_INIT(&obj.poll_events),
-#define _POLL_EVENT sys_dlist_t poll_events
-
-#define _POLL_EVENT_OBJ_INIT(obj) \
-        .poll_events = SYS_DLIST_STATIC_INIT(&obj.poll_events),
-#define _POLL_EVENT sys_dlist_t poll_events
-
 #define SYS_LOG_DBG(...) LOGD(BT_MOD,##__VA_ARGS__)
 #define SYS_LOG_INF(...) LOGI(BT_MOD,##__VA_ARGS__)
 #define SYS_LOG_WRN(...) LOGW(BT_MOD,##__VA_ARGS__)
@@ -71,6 +81,7 @@ struct k_queue {
         sys_dlist_t poll_events;
 };
 
+/*attention: this is intialied as zero,the queue variable shoule use k_queue_init\k_lifo_init\k_fifo_init again*/
 #define _K_QUEUE_INITIALIZER(obj) { 0 }
 #define K_QUEUE_INITIALIZER DEPRECATED_MACRO _K_QUEUE_INITIALIZER
 
@@ -219,6 +230,15 @@ int k_sem_delete(struct k_sem *sem);
  */
 unsigned int k_sem_count_get(struct k_sem *sem);
 
+
+/* mutex define*/
+struct k_mutex {
+    _mutex_t mutex;
+    sys_dlist_t poll_events;
+};
+
+
+
 typedef void (*k_timer_handler_t)(void *timer, void *args);
 typedef struct k_timer {
     aos_timer_t timer;
@@ -357,5 +377,5 @@ void irq_unlock(unsigned int key);
 
 #define SYS_TRACING_OBJ_INIT(name, obj) do { } while ((0))
 
-#endif /* PORT_H */
+#endif /* KPORT_H */
 

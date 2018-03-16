@@ -16,7 +16,7 @@
 #include "kport.h"
 
 
-/*K_MUTEX_DEFINE(mutex_rand);*/
+K_MUTEX_DEFINE(mutex_rand);
 struct k_mutex mutex_rand;
 
 

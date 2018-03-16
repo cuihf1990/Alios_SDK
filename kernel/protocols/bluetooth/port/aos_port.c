@@ -165,6 +165,46 @@ unsigned int k_sem_count_get(struct k_sem *sem)
     return 0;
 }
 
+
+void k_mutex_init(struct k_mutex *mutex)
+{
+
+    if (NULL == mutex) {
+        BT_ERR("mutex is NULL\n");
+        return ;
+    }
+
+    aos_mutex_new(&mutex->mutex);
+    sys_dlist_init(&mutex->poll_events);
+    return ;
+}
+
+
+int k_mutex_lock(struct k_mutex *mutex, s32_t timeout)
+{
+    unsigned int t = timeout;
+
+    if (timeout == K_FOREVER) {
+        t = AOS_WAIT_FOREVER;
+    } else if (timeout == K_NO_WAIT) {
+        t = AOS_NO_WAIT;
+    }
+    return aos_mutex_lock(&mutex->mutex, t);
+    
+}
+
+void k_mutex_unlock(struct k_mutex *mutex)
+{
+    if (NULL == mutex) {
+        BT_ERR("mutex is NULL\n");
+        return;
+    }
+
+    aos_mutex_unlock(&mutex->mutex);
+    return ;
+}
+
+
 int64_t k_uptime_get()
 {
     return aos_now_ms();
