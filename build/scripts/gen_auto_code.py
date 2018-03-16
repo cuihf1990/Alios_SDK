@@ -37,17 +37,18 @@ def process_component_test(source_directory):
     source_codes += "#include <aos/aos.h>\n\n"
 
     components = re.findall(r"COMPONENTS\s+\:\=\s+.+\n", config_mk_str)[0]
-    for name in re.findall(r"[a-zA-Z0-9]*_test$", components):
-        location = name + "_LOCATION\s+\:\=\s+.+"
-        # find all source code files related to test components
-        for root, dirs, files in chain.from_iterable(os.walk(path.strip()) for path in \
-                re.findall(location, config_mk_str)[0].split(":= ")[1:]):
-            for source in [source for source in files if source.endswith(".c")]:
-                with open(os.path.join(root, source), "r") as head:
-                    codes = head.read()
-                    # find AOS_TESTCASE macro function
-                    for code in re.findall("AOS_TESTCASE\s*\((.+\)\s*;)", codes):
-                        code_list.append(code[:len(code)-2])
+    for name in components.split(" "):
+        if name.endswith("_test"):
+            location = name + "_LOCATION\s+\:\=\s+.+"
+            # find all source code files related to test components
+            for root, dirs, files in chain.from_iterable(os.walk(path.strip()) for path in \
+                    re.findall(location, config_mk_str)[0].split(":= ")[1:]):
+                for source in [source for source in files if source.endswith(".c")]:
+                    with open(os.path.join(root, source), "r") as head:
+                        codes = head.read()
+                        # find AOS_TESTCASE macro function
+                        for code in re.findall("AOS_TESTCASE\s*\((.+\)\s*;)", codes):
+                            code_list.append(code[:len(code)-2])
 
     
     for code in code_list:
