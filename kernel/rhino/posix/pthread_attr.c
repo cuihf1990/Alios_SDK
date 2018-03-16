@@ -2,8 +2,8 @@
 
 int pthread_attr_init(pthread_attr_t *attr)
 {
-    attr->stacksize                 = DEFAULT_STACK_SIZE;
-    attr->schedparam.sched_priority = DEFAULT_PRIORITY;
+    attr->stacksize                 = DEFAULT_THREAD_STACK_SIZE;
+    attr->schedparam.sched_priority = DEFAULT_THREAD_PRIORITY;
     return 0;
 }
 
@@ -48,56 +48,56 @@ int pthread_attr_getschedparam(const pthread_attr_t *attr,
                                       struct sched_param *param)
 
 {
-    param->sched_priority = attr->priority;
+    param->sched_priority = attr->schedparam.sched_priority;
     return 0;
 }
 
 int pthread_attr_setstacksize(pthread_attr_t *attr, size_t stacksize)
 {
-    attr->stacksize = stack_size;
+    attr->stacksize = stacksize;
     return 0;
 }
 
 int pthread_attr_getstacksize(const pthread_attr_t *attr, size_t *stacksize)
 {
-   *stack_size = attr->stacksize;
+   *stacksize = attr->stacksize;
     return 0;
 }
 
-int pthread_attr_setstackaddr(pthread_attr_t *attr, void *stack_addr)
+int pthread_attr_setstackaddr(pthread_attr_t *attr, void *stackaddr)
 {
-    attr->stackaddr = stack_addr;
+    attr->stackaddr = stackaddr;
     return 0;
 }
 
-int pthread_attr_getstackaddr(pthread_attr_t const *attr, void **stack_addr)
+int pthread_attr_getstackaddr(const pthread_attr_t *attr, void **stackaddr)
 {
-   *stack_addr = attr->stackaddr;
+   *stackaddr = attr->stackaddr;
     return 0;
 }
 
 int pthread_attr_setstack(pthread_attr_t *attr,
                                  void *stackaddr, size_t stacksize)
 {
-    attr->stackaddr = stack_base;
-    attr->stacksize = stack_size;
+    attr->stackaddr = stackaddr;
+    attr->stacksize = stacksize;
     return 0;
 }
 
 int pthread_attr_getstack(const pthread_attr_t *attr,
                                  void **stackaddr, size_t *stacksize)
 {
-   *stack_base = attr->stackaddr;
-   *stack_size = attr->stacksize
+   *stackaddr = attr->stackaddr;
+   *stacksize = attr->stacksize;
     return 0;
 }
 
-int pthread_attr_setguardsize(pthread_attr_t *attr, size_t guard_size)
+int pthread_attr_setguardsize(pthread_attr_t *attr, size_t guardsize)
 {
     return 0;
 }
 
-int pthread_attr_getguardsize(pthread_attr_t const *attr, size_t *guard_size)
+int pthread_attr_getguardsize(const pthread_attr_t *attr, size_t *guardsize)
 {
     return 0;
 }
@@ -107,7 +107,7 @@ int pthread_attr_setscope(pthread_attr_t *attr, int scope)
     return 0;
 }
 
-int pthread_attr_getscope(pthread_attr_t const *attr)
+int pthread_attr_getscope(const pthread_attr_t *attr, int *scope)
 {
     return 0;
 }
