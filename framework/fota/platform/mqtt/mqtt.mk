@@ -4,6 +4,5 @@ $(NAME)_TYPE := kernel
 $(NAME)_SOURCES := ota_transport.c
 $(NAME)_INCLUDES := ../ \
                     ../../ \
-                    ../../connectivity/mqtt/ \
-                    ../../../protocol/alink-ilop/sdk-encap \
-                    ../../../protocol/alink-ilop/base/utils                  
+                    ../../../mqtt/sdk-impl \
+                    ../../../mqtt/platform          
