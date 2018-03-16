@@ -20,6 +20,8 @@ mk3239_platforms="mk3239"
 scons_build_targets="helloworld@b_l475e helloworld@mk3060"
 scons_ide_targets=""
 ide_types="keil iar"
+pca10056_targets="bluetooth.bleperipheral bluetooth.aisilopapp bluetooth.aisapp"
+pca10056_platforms="pca10056"
 
 DEBUG="no"
 if [ $# -gt 0 ]; then
@@ -329,6 +331,35 @@ for target in ${mk3239_targets}; do
             pwd && ls
         fi
         echo "Building mk3239"
+        aos make ${target}@${platform} JOBS=${JNUM} > ${target}@${platform}@${branch}.log 2>&1
+        ret=$?
+        if [ "${DEBUG}" != "no" ]; then
+            echo "after make ${target}@${platform}@${branch}"
+            pwd && ls
+        fi
+        if [ ${ret} -eq 0 ]; then
+            rm -f ${target}@${platform}@${branch}.log
+            echo "build ${target}@${platform} at ${branch} branch succeed"
+        else
+            echo -e "build ${target}@${platform} at ${branch} branch failed, log:\n"
+            cat ${target}@${platform}@${branch}.log
+            rm -f ${target}@${platform}@${branch}.log
+            echo -e "\nbuild ${target}@${platform} at ${branch} branch failed"
+            aos make clean > /dev/null 2>&1
+            exit 1
+        fi
+    done
+done
+
+#single-bin, pca10056
+aos make clean > /dev/null 2>&1
+for target in ${pca10056_targets}; do
+    for platform in ${pca10056_platforms}; do
+        if [ "${DEBUG}" != "no" ]; then
+            echo "before make ${target}@${platform}@${branch}"
+            pwd && ls
+        fi
+        echo "Building pca10056"
         aos make ${target}@${platform} JOBS=${JNUM} > ${target}@${platform}@${branch}.log 2>&1
         ret=$?
         if [ "${DEBUG}" != "no" ]; then

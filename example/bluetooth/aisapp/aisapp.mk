@@ -8,4 +8,4 @@ $(NAME)_COMPONENTS := protocols.bluetooth yloop bluetooth.ais.ble_app_ali blueto
 
 GLOBAL_CFLAGS += -DCONFIG_BT_DEVICE_NAME=\"BleAisDevice\"
 
-GLOBAL_DEFINES += DEBUG CONFIG_BT_SMP
+GLOBAL_DEFINES += DEBUG CONFIG_BT_SMP CONFIG_AIS_NO_OTA
