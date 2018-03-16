@@ -38,8 +38,14 @@ typedef struct {
 
 int pthread_create(pthread_t *thread, const pthread_attr_t *attr,
                           void *(*start_routine) (void *), void *arg);
-
-void pthread_exit(void *value);
+void pthread_exit(void *retval);
+int pthread_detach(pthread_t thread);
+int pthread_join(pthread_t thread, void **retval);
+int  pthread_cancel(pthread_t thread);
+void pthread_testcancel(void);
+int pthread_setcancelstate(int state, int *oldstate);
+int pthread_setcanceltype(int type, int *oldtype);
+int  pthread_kill(pthread_t thread, int sig);
 
 #endif
 
