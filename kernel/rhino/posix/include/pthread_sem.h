@@ -1,5 +1,6 @@
 #ifndef PTHREAD_SEM_H
 #define PTHREAD_SEM_H
+#include <time.h>
 
 typedef ksem_t *sem_t;
 
