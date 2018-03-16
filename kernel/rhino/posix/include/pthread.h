@@ -19,6 +19,8 @@ typedef ktask_t *pthread_t;
 #define DEFAULT_THREAD_STACK_SIZE  2048
 #define DEFAULT_THREAD_PRIORITY    30
 
+typedef int pid_t;
+
 struct sched_param {
   int sched_priority;           /* Process execution scheduling priority */
 };
@@ -46,6 +48,12 @@ void pthread_testcancel(void);
 int pthread_setcancelstate(int state, int *oldstate);
 int pthread_setcanceltype(int type, int *oldtype);
 int  pthread_kill(pthread_t thread, int sig);
+int pthread_equal(pthread_t t1, pthread_t t2);
+
+int sched_yield(void);
+int sched_get_priority_min(int policy);
+int sched_get_priority_max(int policy);
+int sched_setscheduler(pid_t pid, int policy);
 
 #endif
 
