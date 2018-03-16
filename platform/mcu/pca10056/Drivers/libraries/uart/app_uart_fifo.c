@@ -84,7 +84,7 @@ static void uart_event_handler(nrf_drv_uart_event_t * p_event, void* p_context)
         case NRF_DRV_UART_EVT_RX_DONE:
             // Write received byte to FIFO.
             bytedata = p_event->data.rxtx.p_data[0];
-            krhino_buf_queue_send(&g_buf_queue_uart, bytedata, 1);
+            krhino_buf_queue_send(&g_buf_queue_uart, &bytedata, 1);
             
             err_code = app_fifo_put(&m_rx_fifo, p_event->data.rxtx.p_data[0]);
             if (err_code != NRF_SUCCESS)
