@@ -74,16 +74,23 @@ class Server:
         if uuid not in self.terminals or self.terminals[uuid]['valid'] == False:
             return
         devices = []
-        for device in self.terminals[uuid]['devices']:
-            try:
-                [cuuid, port] = device.split(':')
-            except:
-                continue
-            if cuuid in self.clients and port in self.clients[cuuid]['devices'] and \
-                    self.clients[cuuid]['devices'][port]['valid'] == True:
-                devices.append(cuuid + ',' + port + '|' + str(self.clients[cuuid]['devices'][port]['using']))
-            else:
-                devices.append(cuuid + ',' + port + '|' + '-1')
+        if self.terminals[uuid]['devices'] == [uuid + ':all']:
+            if uuid in self.clients:
+                for port in self.clients[uuid]['devices']:
+                    if self.clients[uuid]['devices'][port]['valid'] == False:
+                        continue
+                    devices.append(uuid + ',' + port + '|' + str(self.clients[uuid]['devices'][port]['using']))
+        else:
+            for device in self.terminals[uuid]['devices']:
+                try:
+                    [cuuid, port] = device.split(':')
+                except:
+                    continue
+                if cuuid in self.clients and port in self.clients[cuuid]['devices'] and \
+                        self.clients[cuuid]['devices'][port]['valid'] == True:
+                    devices.append(cuuid + ',' + port + '|' + str(self.clients[cuuid]['devices'][port]['using']))
+                else:
+                    devices.append(cuuid + ',' + port + '|' + '-1')
         dev_str = ':'.join(devices)
         self.send_packet(self.terminals[uuid]['socket'], pkt.ALL_DEV, dev_str)
 
@@ -128,6 +135,7 @@ class Server:
                             self.conn_timeout[conn]['timeout'] = time.time() + 30
                             self.report_status_to_controller()
                             print "client {0} connected @ {1}, tag={2}".format(uuid, addr, repr(tag))
+                            all_dev_str = uuid + ':all'
                         continue
 
                     self.conn_timeout[conn]['timeout'] = time.time() + 30
@@ -147,16 +155,19 @@ class Server:
                                         'valid':True,
                                         'using':0,
                                         'status':'{}'}
-                                dev_str = client['uuid'] + ':' + port
-                                if dev_str in self.device_subscribe_map:
-                                    self.send_device_list_to_terminal(self.device_subscribe_map[dev_str])
                             else:
                                 print "device {0} re-added to client {1}".format(port, client['uuid'])
                                 client['devices'][port]['status'] = '{}'
                                 client['devices'][port]['valid'] = True
-                                dev_str = client['uuid'] + ':' + port
-                                if dev_str in self.device_subscribe_map:
-                                    self.send_device_list_to_terminal(self.device_subscribe_map[dev_str])
+
+                            dev_str = client['uuid'] + ':' + port
+                            uuid = None
+                            if dev_str in self.device_subscribe_map:
+                                uuid = self.device_subscribe_map[dev_str]
+                            elif all_dev_str in self.device_subscribe_map:
+                                uuid = client['uuid']
+                            if uuid != None:
+                                self.send_device_list_to_terminal(uuid)
 
                         for port in list(client['devices']):
                             if port in new_devices:
@@ -168,8 +179,13 @@ class Server:
                             client['devices'][port]['valid'] = False
                             print "device {0} removed from client {1}".format(port, client['uuid'])
                             dev_str = client['uuid'] + ':' + port
+                            uuid = None
                             if dev_str in self.device_subscribe_map:
-                                self.send_device_list_to_terminal(self.device_subscribe_map[dev_str])
+                                uuid = self.device_subscribe_map[dev_str]
+                            elif all_dev_str in self.device_subscribe_map:
+                                uuid = client['uuid']
+                            if uuid != None:
+                                self.send_device_list_to_terminal(uuid)
 
                         if device_list_changed:
                             self.report_status_to_controller()
@@ -185,9 +201,13 @@ class Server:
                             continue
                         #forwad log to subscribed devices
                         dev_str = client['uuid'] + ':' + port
-                        if dev_str in self.device_subscribe_map and client['tag'] not in value:
-                            log = client['uuid'] + ',' + value
+                        uuid = None
+                        if dev_str in self.device_subscribe_map:
                             uuid = self.device_subscribe_map[dev_str]
+                        elif all_dev_str in self.device_subscribe_map:
+                            uuid = client['uuid']
+                        if uuid != None and client['tag'] not in value:
+                            log = client['uuid'] + ',' + value
                             if self.terminals[uuid]['valid']:
                                 self.send_packet(self.terminals[uuid]['socket'], type, log)
 
@@ -228,10 +248,14 @@ class Server:
                             continue
                         client['devices'][port]['status'] = value[len(port)+1:]
                         dev_str = client['uuid'] + ':' + port
-                        if dev_str not in self.device_subscribe_map:
-                            continue
                         log = client['uuid'] + ',' + value
-                        uuid = self.device_subscribe_map[dev_str]
+                        uuid = None
+                        if dev_str in self.device_subscribe_map:
+                            uuid = self.device_subscribe_map[dev_str]
+                        elif all_dev_str in self.device_subscribe_map:
+                            uuid = client['uuid']
+                        if uuid == None:
+                            continue
                         if self.terminals[uuid]['valid'] == False:
                             continue
                         self.send_packet(self.terminals[uuid]['socket'], type, log)
@@ -275,6 +299,8 @@ class Server:
                     continue
                 uuid = self.device_subscribe_map[dev_str]
                 self.send_device_list_to_terminal(uuid)
+            if all_dev_str in self.device_subscribe_map:
+                self.send_device_list_to_terminal(client['uuid'])
             client['valid'] = False
             print "client {0} @ {1} disconnected".format(client['uuid'], addr)
             self.report_status_to_controller()
@@ -319,10 +345,13 @@ class Server:
             client['devices'][port]['using'] += 1
         using_list.append([client['uuid'], port])
         dev_str = client['uuid'] + ':' + port
-        if dev_str not in self.device_subscribe_map:
-            return
-        uuid = self.device_subscribe_map[dev_str]
-        self.send_device_list_to_terminal(uuid)
+        all_dev_str = client['uuid'] + ':all'
+        if dev_str in self.device_subscribe_map:
+            uuid = self.device_subscribe_map[dev_str]
+            self.send_device_list_to_terminal(uuid)
+        if all_dev_str in self.device_subscribe_map:
+            self.send_device_list_to_terminal(client['uuid'])
+        return
 
     def terminal_serve_thread(self, conn, addr):
         using_list = []
@@ -364,19 +393,28 @@ class Server:
                             self.conn_timeout[conn]['timeout'] = time.time() + 30
                             print "terminal {0}@{1} logedin".format(uuid, addr)
                             self.send_device_list_to_terminal(terminal['uuid'])
-                            for device in terminal['devices']:
-                                try:
-                                    [uuid, port] = device.split(':')
-                                except:
-                                    continue
-                                if uuid not in self.clients:
-                                    continue
-                                if port not in self.clients[uuid]['devices']:
-                                    continue
-                                if self.clients[uuid]['devices'][port]['valid'] == False:
-                                    continue
-                                data = uuid + ',' + port + ':' + self.clients[uuid]['devices'][port]['status']
-                                self.send_packet(conn, pkt.DEVICE_STATUS, data)
+                            if terminal['devices'] == [terminal['uuid'] + ':all']:
+                                uuid = terminal['uuid']
+                                if uuid in self.clients:
+                                    for port in self.clients[uuid]['devices']:
+                                        if self.clients[uuid]['devices'][port]['valid'] == False:
+                                            continue
+                                        data = uuid + ',' + port + ':' + self.clients[uuid]['devices'][port]['status']
+                                        self.send_packet(conn, pkt.DEVICE_STATUS, data)
+                            else:
+                                for device in terminal['devices']:
+                                    try:
+                                        [uuid, port] = device.split(':')
+                                    except:
+                                        continue
+                                    if uuid not in self.clients:
+                                        continue
+                                    if port not in self.clients[uuid]['devices']:
+                                        continue
+                                    if self.clients[uuid]['devices'][port]['valid'] == False:
+                                        continue
+                                    data = uuid + ',' + port + ':' + self.clients[uuid]['devices'][port]['status']
+                                    self.send_packet(conn, pkt.DEVICE_STATUS, data)
                             self.report_status_to_controller()
                         continue
 

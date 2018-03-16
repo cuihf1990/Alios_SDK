@@ -20,7 +20,6 @@ def new_device(device):
 
 def erase(device):
     retry = 8
-    baudrate = 912600
     error = 'fail'
     flash_tool_path = os.path.dirname(os.path.realpath(__file__)) + '/esptool.py'
     while retry > 0:
@@ -29,8 +28,6 @@ def erase(device):
         script += ['esp32']
         script += ['--port']
         script += [device]
-        script += ['--baud']
-        script += [str(baudrate)]
         script += ['erase_flash']
         ret = subprocess.call(script)
         if ret == 0:
@@ -42,7 +39,6 @@ def erase(device):
 
 def program(device, address, file):
     retry = 8
-    baudrate = 921600
     error = 'fail'
     flash_tool_path = os.path.dirname(os.path.realpath(__file__)) + '/esptool.py'
     while retry > 0:
@@ -51,18 +47,11 @@ def program(device, address, file):
         script += ['esp32']
         script += ['--port']
         script += [device]
-        script += ['--baud']
-        script += [str(baudrate)]
-        script += ['--before']
-        script += ['default_reset']
+        #script += ['--baud']
+        #script += ['460800']
         script += ['write_flash']
         script += ['-z']
-        script += ['--flash_mode']
-        script += ['dio']
-        script += ['--flash_freq']
-        script += ['40m']
-        script += ['--flash_size']
-        script += ['4MB']
+        script += ['--flash_size=detect']
         script += [address]
         script += [file]
         ret = subprocess.call(script)

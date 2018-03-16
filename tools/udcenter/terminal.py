@@ -61,7 +61,7 @@ class Terminal:
                 self.alias_tuples = json.load(file)
                 file.close()
             except:
-                print "read alias record failed"
+                print 'read alias record failed'
 
         cmd_history_file = path.join(path.expanduser('~'), '.udterminal', '.cmd_history')
         if path.exists(cmd_history_file) == True:
@@ -70,7 +70,7 @@ class Terminal:
                 self.cmd_history = json.load(file)
                 file.close()
             except:
-                print "read command history failed"
+                print 'read command history failed'
 
         accesskey_file = path.join(path.expanduser('~'), '.udterminal', '.accesskey')
         if path.exists(accesskey_file) == True:
@@ -79,15 +79,15 @@ class Terminal:
                 self.uuid = json.load(file)
                 file.close()
             except:
-                print "read access key failed"
+                print 'read access key failed'
         while self.uuid == None:
             try:
-                uuid = raw_input("please input your access key: ")
+                uuid = raw_input('please input your access key: ')
             except:
                 return 'read access key fail'
             is_valid_uuid = re.match('^[0-9a-f]{10,20}$', uuid)
             if is_valid_uuid == None:
-                print "invalid access key {0}, please enter a valid access key".format(uuid)
+                print 'invalid access key {0}, please enter a valid access key'.format(uuid)
                 continue
             self.uuid = uuid
             try:
@@ -96,7 +96,7 @@ class Terminal:
                 json.dump(self.uuid, file)
                 file.close()
             except:
-                print "error: save access key to file failed"
+                print 'error: save access key to file failed'
 
         #initialize UI
         try:
@@ -116,10 +116,10 @@ class Terminal:
             curses.init_pair(7, curses.COLOR_WHITE, -1)
             self.curseslock = threading.Lock();
             self.window_redraw()
-            return "success"
+            return 'success'
         except:
             if DEBUG: traceback.print_exc()
-            return "UI failed"
+            return 'UI failed'
 
     def window_redraw(self):
         global LOG_WINDOW_WIDTH
@@ -152,14 +152,14 @@ class Terminal:
         x = 1; y = 1 + LOG_WINDOW_HEIGHT + 1;
         self.cmd_window = curses.newwin(CMD_WINDOW_HEIGHT, LOG_WINDOW_WIDTH + 1 + DEV_WINDOW_WIDTH, y, x)
         self.cmd_window.keypad(1)
-        self.log_window.addstr(0, 0, "Logs", curses.A_BOLD)
+        self.log_window.addstr(0, 0, 'Logs', curses.A_BOLD)
         self.log_window.move(1, 0)
         self.log_window.refresh()
-        self.dev_window.addstr(0, 0, "Devices", curses.A_BOLD)
-        self.dev_window.addstr(0, DEV_WINDOW_WIDTH-4, "USE")
+        self.dev_window.addstr(0, 0, 'Devices', curses.A_BOLD)
+        self.dev_window.addstr(0, DEV_WINDOW_WIDTH-4, 'USE')
         self.dev_window.move(1, 0)
         self.dev_window.refresh()
-        self.cmd_window.addstr(0, 0, "Command:", curses.A_BOLD)
+        self.cmd_window.addstr(0, 0, 'Command:', curses.A_BOLD)
         self.cmd_window.refresh()
         self.curseslock.release()
 
@@ -167,21 +167,21 @@ class Terminal:
         colors = escape[2:-1].split(';')
         self.cur_color_pair = 7
         for color in colors:
-            if color == "30":
+            if color == '30':
                 self.cur_color_pair = 0
-            elif color == "31":
+            elif color == '31':
                 self.cur_color_pair = 1
-            elif color == "32":
+            elif color == '32':
                 self.cur_color_pair = 2
-            elif color == "33":
+            elif color == '33':
                 self.cur_color_pair = 3
-            elif color == "34":
+            elif color == '34':
                 self.cur_color_pair = 4
-            elif color == "35":
+            elif color == '35':
                 self.cur_color_pair = 5
-            elif color == "36":
+            elif color == '36':
                 self.cur_color_pair = 6
-            elif color == "37":
+            elif color == '37':
                 self.cur_color_pair = 7
 
     def log_parse_oneline(self, log):
@@ -268,7 +268,7 @@ class Terminal:
                 self.curseslock.release()
                 if DEBUG:
                     print log_dsp_buffer[i]
-                    print "len:", len(log_dsp_buffer[i][1])
+                    print 'len:', len(log_dsp_buffer[i][1])
                     raise
                 return
 
@@ -317,11 +317,11 @@ class Terminal:
 
     def cmdrun_command_display(self, cmd, postion):
         self.curseslock.acquire()
-        self.cmd_window.move(0, len("Command:"))
-        self.cmd_window.addstr(' ' * (LOG_WINDOW_WIDTH + DEV_WINDOW_WIDTH - len("Command:")))
-        self.cmd_window.move(0, len("Command:"))
+        self.cmd_window.move(0, len('Command:'))
+        self.cmd_window.addstr(' ' * (LOG_WINDOW_WIDTH + DEV_WINDOW_WIDTH - len('Command:')))
+        self.cmd_window.move(0, len('Command:'))
         self.cmd_window.addstr(cmd)
-        self.cmd_window.move(0, len("Command:") + postion)
+        self.cmd_window.move(0, len('Command:') + postion)
         self.cmd_window.refresh()
         self.curseslock.release()
 
@@ -364,7 +364,7 @@ class Terminal:
             self.output_queue.put([type, content], True, timeout)
             return True
         except Queue.Full:
-            if DEBUG: self.log_display(time.time(), "error: ouput buffer full, drop packet [{0] {1}]".format(type, content))
+            if DEBUG: self.log_display(time.time(), 'error: ouput buffer full, drop packet [{0] {1}]'.format(type, content))
         return False
 
     def get_devstr_by_index(self, index):
@@ -416,12 +416,12 @@ class Terminal:
         rets = value.split(',')
         if type != pkt.ACCESS_LOGIN or rets[0] != 'success':
             if rets[0] == 'invalid access key':
-                self.log_display(time.time(), "login to controller failed, invalid access key")
+                self.log_display(time.time(), 'login to controller failed, invalid access key')
                 accesskey_file = path.join(path.expanduser('~'), '.udterminal', '.accesskey')
                 if path.exists(accesskey_file):
                     os.remove(accesskey_file)
             else:
-                self.log_display(time.time(), "login to controller failed, ret={0}".format(value))
+                self.log_display(time.time(), 'login to controller failed, ret={0}'.format(value))
             sock.close()
             return None
 
@@ -445,9 +445,9 @@ class Terminal:
                 self.output_queue.get()
             self.service_socket = sock
             self.connected = True
-            return "success"
+            return 'success'
         except:
-            return "fail"
+            return 'fail'
 
     def server_interaction(self):
         self.connected = False
@@ -483,7 +483,6 @@ class Terminal:
                     if type == pkt.FILE_END:
                         if 'file' in locals():
                             file.close()
-                            self.log_display(time.time(), 'log file downloaded to {0}'.format(file.name))
                         continue
                     if type == pkt.ALL_DEV:
                         new_list = {}
@@ -540,7 +539,7 @@ class Terminal:
                         try:
                             [dev, result] = value.split(':')
                         except:
-                            self.log_display(time.time(), "error: wrong data {0} {1}".format(type,value))
+                            self.log_display(time.time(), 'error: wrong data {0} {1}'.format(type,value))
                             continue
                         if dev not in list(self.device_list):
                             continue
@@ -563,7 +562,7 @@ class Terminal:
                     if type == pkt.TERMINAL_LOGIN:
                         if value == 'success':
                             continue
-                        self.cmdrun_status_display("login to server failed, retry later ...")
+                        self.cmdrun_status_display('login to server failed, retry later ...')
                         time.sleep(10)
                         continue
             except ConnectionLost:
@@ -668,7 +667,7 @@ class Terminal:
 
                     if device not in debug_sessions:
                         continue
-                    self.log_display(time.time(), "stop debugging {0}: {1}".format(index, result))
+                    self.log_display(time.time(), 'stop debugging {0}: {1}'.format(index, result))
                     if 'serve_sock' in debug_sessions[device]:
                         debug_sessions[device]['serve_sock'].close()
                     debug_sessions[device]['listen_sock'].close()
@@ -747,7 +746,7 @@ class Terminal:
         self.cmd_excute_return = None
         self.cmd_excute_event.clear()
         if self.cmd_excute_event.wait(timeout) == False:
-            self.cmd_excute_state = "timeout"
+            self.cmd_excute_state = 'timeout'
 
     def send_file_to_client(self, filename, index):
         status_str = 'sending file {0} to {1}...'.format(filename, self.get_devstr_by_index(index).split(',')[0])
@@ -840,7 +839,7 @@ class Terminal:
     def erase_devices(self, args):
         devs = args
         if devs == []:
-            self.cmdrun_status_display("Usage error: please specify devices you want to programg")
+            self.cmdrun_status_display('Usage error: please specify devices you want to programg')
             return False
         succeed = []; failed = []
         for dev in devs:
@@ -857,7 +856,7 @@ class Terminal:
                 self.wait_cmd_excute_done(10)
                 status_str += self.cmd_excute_state
                 self.cmdrun_status_display(status_str)
-                if self.cmd_excute_state == "done":
+                if self.cmd_excute_state == 'done':
                     succeed.append(index)
                 else:
                     failed.append(index)
@@ -866,36 +865,36 @@ class Terminal:
                     self.using_list.append(dev_str)
         status_str = ''
         if succeed != []:
-            status_str += "succeed: {0}".format(succeed)
+            status_str += 'succeed: {0}'.format(succeed)
         if failed != []:
             if status_str != '':
                 status_str += ', '
-            status_str += "failed: {0}".format(failed)
+            status_str += 'failed: {0}'.format(failed)
         self.cmdrun_status_display(status_str)
 
     def program_devices(self, args):
         if len(args) < 3:
-            self.cmdrun_status_display("Usage: programg addresse filename device0 [device1 device2 ... deviceN]")
+            self.cmdrun_status_display('Usage: programg addresse filename device0 [device1 device2 ... deviceN]')
             return False
         if args[0].startswith('0x') == False:
-            self.cmdrun_status_display("Usage error: wrong address input {0}, address should start with 0x".format(args[0]))
+            self.cmdrun_status_display('Usage error: wrong address input {0}, address should start with 0x'.format(args[0]))
             return False
         address  = args[0]
         filename = args[1]
         try:
             expandname = path.expanduser(filename)
         except:
-            self.cmdrun_status_display("{0} does not exist".format(filename))
+            self.cmdrun_status_display('{0} does not exist'.format(filename))
             return False
         if path.exists(expandname) == False:
-            self.cmdrun_status_display("{0} does not exist".format(filename))
+            self.cmdrun_status_display('{0} does not exist'.format(filename))
             return False
         filehash = pkt.hash_of_file(expandname)
 
         devs = args[2:]
         file_exist_at = []
         if devs == []:
-            self.cmdrun_status_display("Usage error: please specify devices you want to programg")
+            self.cmdrun_status_display('Usage error: please specify devices you want to programg')
             return False
         succeed = []; failed = []
         for dev in devs:
@@ -918,7 +917,7 @@ class Terminal:
                 self.wait_cmd_excute_done(270)
                 status_str += self.cmd_excute_state
                 self.cmdrun_status_display(status_str)
-                if self.cmd_excute_state == "done":
+                if self.cmd_excute_state == 'done':
                     succeed.append(index)
                 else:
                     failed.append(index)
@@ -927,19 +926,19 @@ class Terminal:
                     self.using_list.append(dev_str)
         status_str = ''
         if succeed != []:
-            status_str += "succeed: {0}".format(succeed)
+            status_str += 'succeed: {0}'.format(succeed)
         if failed != []:
             if status_str != '':
                 status_str += ', '
-            status_str += "failed: {0}".format(failed)
+            status_str += 'failed: {0}'.format(failed)
         self.cmdrun_status_display(status_str)
 
     def control_devices(self, operate, args):
         if len(args) < 1:
-            self.cmdrun_status_display("Usage error, usage: reset devices")
+            self.cmdrun_status_display('Usage error, usage: reset devices')
             return False
 
-        operations = {"start":pkt.DEVICE_START, "stop":pkt.DEVICE_STOP, "reset":pkt.DEVICE_RESET}
+        operations = {'start':pkt.DEVICE_START, 'stop':pkt.DEVICE_STOP, 'reset':pkt.DEVICE_RESET}
         operate = operations[operate]
         succeed = []; failed = []
         for dev in args:
@@ -952,7 +951,7 @@ class Terminal:
                 dev_str = self.get_devstr_by_index(index)
                 self.send_packet(operate, dev_str)
                 self.wait_cmd_excute_done(1.5)
-                if self.cmd_excute_state == "done":
+                if self.cmd_excute_state == 'done':
                     succeed.append(index)
                 else:
                     failed.append(index)
@@ -961,24 +960,24 @@ class Terminal:
                     self.using_list.append(dev_str)
         status_str = ''
         if succeed != []:
-            status_str += "succeed: {0}".format(succeed)
+            status_str += 'succeed: {0}'.format(succeed)
         if failed != []:
             if status_str != '':
                 status_str += ', '
-            status_str += "failed: {0}".format(failed)
+            status_str += 'failed: {0}'.format(failed)
         self.cmdrun_status_display(status_str)
 
     def log_on_off(self, args):
         if len(args) < 2:
-            self.cmdrun_status_display("Usage error, usage: log on/off devices")
+            self.cmdrun_status_display('Usage error, usage: log on/off devices')
             return False
 
-        if args[0] == "on":
+        if args[0] == 'on':
             type = pkt.LOG_SUB
-        elif args[0] == "off":
+        elif args[0] == 'off':
             type = pkt.LOG_UNSUB
         else:
-            self.cmdrun_status_display("Usage error, usage: log on/off devices")
+            self.cmdrun_status_display('Usage error, usage: log on/off devices')
             return False
 
         for dev in args[1:]:
@@ -997,7 +996,7 @@ class Terminal:
 
     def log_download(self, args):
         if len(args) < 1:
-            self.cmdrun_status_display("Usage error, usage: logdownload device0 [device1 ... deviceN]")
+            self.cmdrun_status_display('Usage error, usage: logdownload device0 [device1 ... deviceN]')
             return False
 
         succeed = []; failed = []
@@ -1013,25 +1012,25 @@ class Terminal:
                 content = ','.join(device)
                 self.send_packet(pkt.LOG_DOWNLOAD, content)
                 self.wait_cmd_excute_done(480)
-                if self.cmd_excute_state == "done":
+                if self.cmd_excute_state == 'done':
                     succeed.append(index)
                 else:
                     failed.append(index)
                 self.cmd_excute_state = 'idle'
         status_str = ''
         if succeed != []:
-            status_str += "succeed: {0}".format(succeed)
+            status_str += 'succeed: {0}'.format(succeed)
         if failed != []:
             if status_str != '':
                 status_str += ', '
-            status_str += "failed: {0}".format(failed)
+            status_str += 'failed: {0}'.format(failed)
         self.cmdrun_status_display(status_str)
         return (len(failed) == 0)
 
     def run_command(self, args, uselast = False):
         if uselast == False:
             if len(args) < 2:
-                self.cmdrun_status_display("Usage error, usage: runcmd device cmd_arg0 [cmd_arg1 cmd_arg2 ... cmd_argN]")
+                self.cmdrun_status_display('Usage error, usage: runcmd device cmd_arg0 [cmd_arg1 cmd_arg2 ... cmd_argN]')
                 return False
 
             indexes = self.parse_device_index(args[0])
@@ -1046,11 +1045,11 @@ class Terminal:
                 return False
 
             if len(args) < 1:
-                self.cmdrun_status_display("Usage error, usage: !cmd_arg0 [cmd_arg1 cmd_arg2 ... cmd_argN]")
+                self.cmdrun_status_display('Usage error, usage: !cmd_arg0 [cmd_arg1 cmd_arg2 ... cmd_argN]')
                 return False
 
             if self.last_runcmd_dev not in list(self.device_list):
-                self.cmdrun_status_display("Error: remembered target no longer exists")
+                self.cmdrun_status_display('Error: remembered target no longer exists')
                 return False
             indexes = [self.get_index_by_devstr(self.last_runcmd_dev)]
 
@@ -1060,14 +1059,14 @@ class Terminal:
             content = dev_str + ':' + '|'.join(args)
             self.send_packet(pkt.DEVICE_CMD, content)
             self.wait_cmd_excute_done(1.5)
-            if self.cmd_excute_state == "done":
+            if self.cmd_excute_state == 'done':
                 succeed.append(index)
             else:
                 failed.append(index)
             self.cmd_excute_state = 'idle'
             if self.cmd_excute_return == None:
-                self.cmd_excute_return = "timeout"
-            status_str = '{0} run: '.format(index) + ' '.join(args) + ", " + self.cmd_excute_return
+                self.cmd_excute_return = 'timeout'
+            status_str = '{0} run: '.format(index) + ' '.join(args) + ', ' + self.cmd_excute_return
             self.cmdrun_status_display(status_str)
             if dev_str not in self.using_list:
                 self.using_list.append(dev_str)
@@ -1075,17 +1074,17 @@ class Terminal:
             return True
         status_str = ''
         if succeed != []:
-            status_str += "succeed: {0}".format(succeed)
+            status_str += 'succeed: {0}'.format(succeed)
         if failed != []:
             if status_str != '':
                 status_str += ', '
-            status_str += "failed: {0}".format(failed)
+            status_str += 'failed: {0}'.format(failed)
         self.cmdrun_status_display(status_str)
         return (len(failed) == 0)
 
     def run_debug(self, args, uselast = False):
         if len(args) < 2 or args[0] not in ['start', 'stop']:
-            self.cmdrun_status_display("Usage error, usage: debug start/stop device1 [device2 .. deviceN] ")
+            self.cmdrun_status_display('Usage error, usage: debug start/stop device1 [device2 .. deviceN] ')
             return False
         operation = args[0]
         devs = args[1:]
@@ -1110,29 +1109,29 @@ class Terminal:
                 continue
             self.send_packet(type, device)
             self.wait_cmd_excute_done(2)
-            if self.cmd_excute_state == "done":
+            if self.cmd_excute_state == 'done':
                 succeed.append(devices[device])
             else:
                 failed.append(devices[device])
         status_str = ''
         if succeed != []:
-            status_str += "succeed: {0}".format(succeed)
+            status_str += 'succeed: {0}'.format(succeed)
         if failed != []:
             if status_str != '':
                 status_str += ', '
-            status_str += "failed: {0}".format(failed)
+            status_str += 'failed: {0}'.format(failed)
         self.cmdrun_status_display(status_str)
         return (len(failed) == 0)
 
     def client_alias(self, args):
         if len(args) < 1:
-            self.cmdrun_status_display("Usage error, usage: alias id0:name0 [id1:name1 ... idN:nameN]")
+            self.cmdrun_status_display('Usage error, usage: alias id0:name0 [id1:name1 ... idN:nameN]')
             return False
 
         for arg in args:
             alias = arg.split(':')
             if len(alias) != 2:
-                self.cmdrun_status_display("Usage error, unrecongnized alias tuple {0}".format(arg))
+                self.cmdrun_status_display('Usage error, unrecongnized alias tuple {0}'.format(arg))
                 continue
             self.alias_tuples[alias[0]] = alias[1]
         try:
@@ -1141,36 +1140,43 @@ class Terminal:
             json.dump(self.alias_tuples, file)
             file.close()
         except:
-            self.cmdrun_status_display("error: save alias record failed")
+            self.cmdrun_status_display('error: save alias record failed')
         self.device_list_display()
 
     def print_help_info(self):
-        self.log_display(time.time(), "supported commands and usage examples:")
-        self.log_display(time.time(), " 1.erase      [er]: erase flash of devices")
-        self.log_display(time.time(), "           example: erase 0 1 2-5")
-        self.log_display(time.time(), " 2.program    [pg]: program fireware to devices")
-        self.log_display(time.time(), "           example: program 0x40000 aos_esp32.bin 0 1 5-10")
-        self.log_display(time.time(), " 3.reset      [rs]: reset/restart devices")
-        self.log_display(time.time(), "           example: reset 0 1 3-8")
-        self.log_display(time.time(), " 4.stop       [sp]: stop devices")
-        self.log_display(time.time(), "           example: stop 0 5-7 9")
-        self.log_display(time.time(), " 5.start      [st]: start devices")
-        self.log_display(time.time(), "           example: start 3-5 0 1")
-        self.log_display(time.time(), " 6.runcmd     [rc]: run command at remote device")
-        self.log_display(time.time(), "           example: runcmd 0 ping fc:00:00:10:11:22:33:44")
-        self.log_display(time.time(), "                    runcmd 0-10 umesh status")
-        self.log_display(time.time(), " 7.^              : run command at latest (runcmd) remote device")
-        self.log_display(time.time(), "           example: ^ping fc:00:00:10:11:22:33:44")
-        self.log_display(time.time(), " 8.debug      [db]: start/stop debugging remote device")
-        self.log_display(time.time(), "           example: debug start 0")
-        self.log_display(time.time(), "                    debug stop 1")
-        self.log_display(time.time(), " 9.log        [lg]: turn on/off log display for devices, eg.: log on 1")
-        self.log_display(time.time(), "           example: log on 1 2 5-8; log off 2-5 7")
-        self.log_display(time.time(), " 10.logdownload[ld]: download log file of device from server")
-        self.log_display(time.time(), "           example: logdownload 0-2 5")
-        self.log_display(time.time(), " 11.alias     [al]: alias names to client ids")
-        self.log_display(time.time(), "           example: alias 1234567890123456:Pi1@HZ")
-        self.log_display(time.time(), " 12.help          : print help infomation")
+        self.log_display(time.time(), 'Supported commands and usage examples:')
+        self.log_display(time.time(), ' 1.erase      [er]: erase flash of devices')
+        self.log_display(time.time(), '           example: erase 0 1 2-5')
+        self.log_display(time.time(), ' 2.program    [pg]: program fireware to devices')
+        self.log_display(time.time(), '           example: program 0x40000 aos_esp32.bin 0 1 5-10')
+        self.log_display(time.time(), ' 3.reset      [rs]: reset/restart devices')
+        self.log_display(time.time(), '           example: reset 0 1 3-8')
+        self.log_display(time.time(), ' 4.stop       [sp]: stop devices')
+        self.log_display(time.time(), '           example: stop 0 5-7 9')
+        self.log_display(time.time(), ' 5.start      [st]: start devices')
+        self.log_display(time.time(), '           example: start 3-5 0 1')
+        self.log_display(time.time(), ' 6.runcmd     [rc]: run command at remote device')
+        self.log_display(time.time(), '           example: runcmd 0 ping fc:00:00:10:11:22:33:44')
+        self.log_display(time.time(), '                    runcmd 0-10 umesh status')
+        self.log_display(time.time(), ' 7.^              : run command at latest (runcmd) remote device')
+        self.log_display(time.time(), '           example: ^ping fc:00:00:10:11:22:33:44')
+        self.log_display(time.time(), ' 8.debug      [db]: start/stop debugging remote device')
+        self.log_display(time.time(), '           example: debug start 0')
+        self.log_display(time.time(), '                    debug stop 1')
+        self.log_display(time.time(), ' 9.log        [lg]: turn on/off log display for devices, eg.: log on 1')
+        self.log_display(time.time(), '           example: log on 1 2 5-8; log off 2-5 7')
+        self.log_display(time.time(), ' 10.logdownload[ld]: download log file of device from server')
+        self.log_display(time.time(), '           example: logdownload 0-2 5')
+        self.log_display(time.time(), ' 11.alias     [al]: alias names to client ids')
+        self.log_display(time.time(), '           example: alias 1234567890123456:Pi1@HZ')
+        self.log_display(time.time(), ' 12.quit       [q]: quit this terminal')
+        self.log_display(time.time(), ' 13.help       [h]: print help infomation')
+        self.log_display(time.time(), ' ')
+        self.log_display(time.time(), 'Supported command editing shortcuts:')
+        self.log_display(time.time(), ' Ctrl + a - go to the start of the command line')
+        self.log_display(time.time(), ' Ctrl + e - go to the end of the command line')
+        self.log_display(time.time(), ' Ctrl + k - delete from cursor to the end of the command line')
+        self.log_display(time.time(), ' Ctrl + u - delete from cursor to the start of the command line')
 
     def process_cmd(self, cmd):
         if self.connected == False:
@@ -1178,36 +1184,36 @@ class Terminal:
         cmd_argv = cmd.split(' ')
         self.cmdrun_status_display('')
         cmd = cmd_argv[0]; args = cmd_argv[1:]
-        if cmd == "erase" or cmd == "er":
+        if cmd == 'erase' or cmd == 'er':
             self.erase_devices(args)
-        elif cmd == "program" or cmd == "pg":
+        elif cmd == 'program' or cmd == 'pg':
             self.program_devices(args)
-        elif cmd == "reset" or cmd == "rs":
+        elif cmd == 'reset' or cmd == 'rs':
             self.control_devices('reset', args)
-        elif cmd == "start" or cmd == "st":
+        elif cmd == 'start' or cmd == 'st':
             self.control_devices('start', args)
-        elif cmd == "stop" or cmd == "sp":
+        elif cmd == 'stop' or cmd == 'sp':
             self.control_devices('stop', args)
-        elif cmd == "log" or cmd == "lg":
+        elif cmd == 'log' or cmd == 'lg':
             self.log_on_off(args)
-        elif cmd == "logdownload" or cmd == 'ld':
+        elif cmd == 'logdownload' or cmd == 'ld':
             self.log_download(args)
-        elif cmd == "runcmd" or cmd == "rc":
+        elif cmd == 'runcmd' or cmd == 'rc':
             self.run_command(args, uselast=False)
-        elif cmd == "debug" or cmd == "db":
+        elif cmd == 'debug' or cmd == 'db':
             self.run_debug(args)
         elif cmd[0] == '^':
             self.run_command([cmd[1:]] + args, uselast=True)
-        elif cmd == "alias" or cmd == 'al':
+        elif cmd == 'alias' or cmd == 'al':
             self.client_alias(args)
-        elif cmd == "help":
+        elif cmd == 'help' or cmd == 'h':
             self.print_help_info()
         else:
-            self.cmdrun_status_display("unknown command:" + cmd)
+            self.cmdrun_status_display('unknown command:' + cmd)
 
     def user_interaction(self):
-        cmd = ""
-        saved_cmd = ""
+        cmd = ''
+        saved_cmd = ''
         history_index = -1
         p = 0
         while self.keep_running:
@@ -1216,20 +1222,20 @@ class Terminal:
                 if self.log_curr_line != -1:
                     self.log_curr_line = -1
                     self.log_display(time.time(), '')
-                if cmd == "q" :
+                if cmd == 'quit' or cmd == 'q' :
                     self.keep_running = False
                     time.sleep(0.2)
                     break
-                elif cmd != "":
+                elif cmd != '':
                     self.process_cmd(cmd)
                     self.cmd_history = [cmd] + self.cmd_history
-                cmd = ""
-                saved_cmd = ""
+                cmd = ''
+                saved_cmd = ''
                 history_index = -1
                 p = 0
                 self.cmdrun_command_display(cmd, 0)
             elif c == curses.KEY_BACKSPACE or c == 127 or c == 8: #DELETE
-                if cmd[0:p] == "":
+                if cmd[0:p] == '':
                     continue
                 newcmd = cmd[0:p-1] + cmd[p:]
                 cmd = newcmd
@@ -1263,6 +1269,27 @@ class Terminal:
                 if p < len(cmd):
                     p += 1
                     self.cmdrun_command_display(cmd, p)
+                continue
+            elif c == 1: #ctrl-a: go to the start of the command line
+                p = 0
+                self.cmdrun_command_display(cmd, p)
+                continue
+            elif c == 3: #ctrl-c: quit
+                self.keep_running = False
+                time.sleep(0.2)
+                break
+            elif c == 5: #ctrl-e: go to the end of the command line
+                p = len(cmd)
+                self.cmdrun_command_display(cmd, p)
+                continue
+            elif c == 11: #ctrl-k: delete from cursor to the end of the command line
+                cmd = cmd[0:p]
+                self.cmdrun_command_display(cmd, p)
+                continue
+            elif c == 21: #ctrl-u: delete from cursor to the start of the command line
+                cmd = cmd[p:]
+                p = 0
+                self.cmdrun_command_display(cmd, p)
                 continue
             elif c == curses.KEY_MOUSE:
                 mouse_state = curses.getmouse()[4]
@@ -1300,7 +1327,7 @@ class Terminal:
                     cmd = newcmd
                     p += 1
                 except:
-                    self.cmdrun_status_display("Error: unsupported unicode character {0}".format(c))
+                    self.cmdrun_status_display('Error: unsupported unicode character {0}'.format(c))
                     continue
                 self.cmdrun_command_display(cmd, p)
 
@@ -1335,15 +1362,15 @@ class Terminal:
                 json.dump(self.cmd_history, file)
                 file.close()
         except:
-            self.cmdrun_status_display("error: save command history failed")
+            self.cmdrun_status_display('error: save command history failed')
 
     def terminal_func(self, controller_ip, controller_port):
         ret = self.init()
         if ret == 'read access key fail':
             print ''
             return
-        if ret == "success":
+        if ret == 'success':
             self.run(controller_ip, controller_port)
-        if ret == "UI failed":
-            print "initilize UI window failed, try increase your terminal window size first"
+        if ret == 'UI failed':
+            print 'initilize UI window failed, try increase your terminal window size first'
         self.deinit()

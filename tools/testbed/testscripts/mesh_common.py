@@ -226,7 +226,7 @@ def udp_test(at, device_list, device_attr):
     for device in device_list:
         ret = at.device_run_cmd(device, ['umesh', 'help'], 1, 1, ['autotest'])
         if ret != ['autotest']:
-            print "udp test aborted: do not support 'umesh autotest' operationr"
+            print "udp test aborted: 'umesh autotest' operation not supported\n"
             return [0, 0]
     retry = 5
     print 'test connectivity with udp:'
@@ -258,7 +258,7 @@ def multicast_test(at, device_list, device_attr):
     for device in device_list:
         ret = at.device_run_cmd(device, ['umesh', 'help'], 1, 1, ['autotest'])
         if ret != ['autotest']:
-            print 'multicast test aborted: "umesh autotest" operation not supported'.format(device_list[device])
+            print "multicast test aborted: 'umesh autotest' operation not supported\n"
             return [0, 0]
     retry = 20
     print 'test multicast connectivity:'

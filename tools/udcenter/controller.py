@@ -2,12 +2,12 @@ import os, sys, re, time, socket, ssl, signal, tty, termios
 import select, thread, Queue, json, traceback
 import sqlite3 as sql
 import packet as pkt
+from os import path
 
 CONFIG_TIMEOUT = 30
 CONFIG_MAXMSG_LENTH = 8192
 ENCRYPT = True
 DEBUG = True
-EMERGENCY_DEBUG = True
 
 def signal_handler(sig, frame):
     print "received SIGINT"
@@ -56,16 +56,32 @@ class Controller():
         self.selector = None
         self.user_cmd = ''
         self.cur_pos = 0
-        self.serve_funcs = {'none':    self.login_process, 'client':  self.client_process,
-                            'server':  self.server_process, 'terminal':self.terminal_process}
-        self.keyfile = 'controller_key.pem'
-        self.certfile = 'controller_certificate.pem'
-        self.dbase = sql.connect('controller.db', check_same_thread = False)
+        self.serve_funcs = {
+                'none':    self.login_message_process, \
+                'client':  self.client_message_process, \
+                'server':  self.server_message_process, \
+                'terminal':self.terminal_message_process \
+                }
+
+        work_dir = path.join(path.expanduser('~'), '.udcontroller')
+        if path.exists(work_dir) == False:
+            try:
+                os.mkdir(work_dir)
+            except:
+                print "error: create directory {0} failed".format(work_dir)
+
+        self.keyfile = path.join(path.dirname(path.abspath(__file__)), 'controller_key.pem')
+        self.certfile = path.join(path.dirname(path.abspath(__file__)), 'controller_certificate.pem')
+        dbfile = path.join(path.expanduser('~'), '.udcontroller', 'controller.db')
+        self.dbase = sql.connect(dbfile, check_same_thread = False)
         #sqlcmd = 'CREATE TABLE IF NOT EXISTS Users(uuid TEXT, name TEXT, email TEXT, devices TEXT)' #v0.1
         sqlcmd = 'CREATE TABLE IF NOT EXISTS Users(uuid TEXT, name TEXT, info TEXT)' #v0.2
         self.database_excute_sqlcmd(sqlcmd)
 
         sqlcmd = 'CREATE TABLE IF NOT EXISTS Clients(uuid TEXT, name TEXT, info TEXT)'
+        self.database_excute_sqlcmd(sqlcmd)
+
+        sqlcmd = 'CREATE TABLE IF NOT EXISTS Developers(uuid TEXT, name TEXT, info TEXT)'
         self.database_excute_sqlcmd(sqlcmd)
 
         sqlcmd = 'CREATE TABLE IF NOT EXISTS Devices(device TEXT, uuid TEXT, timeout REAL)'
@@ -83,20 +99,22 @@ class Controller():
                 except:
                     print "database error detected while initializing"
 
-        if os.path.exists('controller') == False:
-            try:
-                os.mkdir('controller')
-            except:
-                print "create 'controller' directory failed"
-
         self.cmd_history = []
-        if os.path.exists('controller/.cmd_history') == True:
+        cmd_history_path = path.join(path.expanduser('~'), '.udcontroller', 'cmd_history')
+        if path.exists(cmd_history_path) == True:
             try:
-                file = open('controller/.cmd_history','rb')
+                file = open(cmd_history_path, 'rb')
                 self.cmd_history = json.load(file)
                 file.close()
             except:
                 print "read command history failed"
+
+        log_path = path.join(path.expanduser('~'), '.udcontroller', 'runlog.txt')
+        try:
+            self.flog = open(log_path, 'a+')
+        except:
+            self.flog = None
+            print "create or open log file {0} failed".format(log_path)
 
     def database_excute_sqlcmd(self, sqlcmd):
         with self.dbase:
@@ -110,25 +128,47 @@ class Controller():
                 ret = cur.fetchall()
         return ret
 
+    def debug_log(self, str):
+        if DEBUG and self.flog:
+            try:
+                self.flog.write(time.strftime("%Y-%m-%d %H:%M:%S : ") + str + '\n')
+            except:
+                pass
+
+    def usercmd_print(self):
+        cmd_str = '\r# ' + ' ' * (len(self.user_cmd) + 1)
+        cmd_str += '\r# ' + self.user_cmd
+        cmd_str += '\b' * (len(self.user_cmd) - self.cur_pos)
+        sys.stdout.write(cmd_str)
+        sys.stdout.flush()
+
     def netlog_print(self, log):
         if len(self.user_cmd) >= len(log):
             sys.stdout.write('\r' + ' ' * len(self.user_cmd))
         sys.stdout.write('\r' + log + '\r\n')
-        self.cmd_print()
+        self.usercmd_print()
+        if DEBUG and self.flog:
+            try:
+                self.flog.write(time.strftime("%Y-%m-%d %H:%M:%S : ") + str + '\n')
+            except:
+                pass
 
-    def accept(self, sock):
+    def clilog_print(self, log):
+        sys.stdout.write(log + '\r\n')
+
+    def net_conn_accept(self, sock):
         try:
             conn, addr = sock.accept()
         except:
-            if EMERGENCY_DEBUG: traceback.print_exc()
+            self.debug_log(traceback.format_exc())
             return
-        self.netlog_print('{0} connected'.format(addr))
+        self.debug_log('{0} connected'.format(addr))
         conn.setblocking(False)
-        self.selector.register(conn, selector.EVENT_READ, self.data_read)
+        self.selector.register(conn, selector.EVENT_READ, self.net_receive_data)
         self.connections[conn] = {'role':'none', 'addr': addr, 'inbuff':'', 'outbuff':Queue.Queue(256)}
         self.timeouts[conn] = time.time() + 0.2
 
-    def data_write(self, sock):
+    def net_send_data(self, sock):
         if sock not in self.connections:
             return
         queue = self.connections[sock]['outbuff']
@@ -142,7 +182,7 @@ class Controller():
         if queue.empty():
             self.selector.unregister(sock, selector.EVENT_WRITE)
 
-    def data_read(self, sock):
+    def net_receive_data(self, sock):
         try:
             data = sock.recv(CONFIG_MAXMSG_LENTH)
         except:
@@ -150,7 +190,7 @@ class Controller():
         role = self.connections[sock]['role']
         if not data:
             addr = self.connections[sock]['addr']
-            self.netlog_print("{0} {1} disconnect".format(role, addr))
+            self.debug_log("{0} {1} disconnect".format(role, addr))
             self.selector.unregister(sock, selector.EVENT_READ)
             self.selector.unregister(sock, selector.EVENT_WRITE)
             sock.close()
@@ -163,16 +203,16 @@ class Controller():
             type, length, value, msg = pkt.parse(msg)
             if type == pkt.TYPE_NONE:
                 break
-            if EMERGENCY_DEBUG: self.netlog_print("{0}: enter {1} function".format(time.time(), self.serve_funcs[role].__name__))
+            self.debug_log("{0}: enter {1} function".format(time.time(), self.serve_funcs[role].__name__))
             self.serve_funcs[role](sock, type, value)
-            if EMERGENCY_DEBUG: self.netlog_print("{0}: exit {1} function".format(time.time(), self.serve_funcs[role].__name__))
+            self.debug_log("{0}: exit {1} function".format(time.time(), self.serve_funcs[role].__name__))
 
-    def send_data(self, sock, content):
+    def schedule_data_send(self, sock, content):
         if sock not in self.connections:
             try:
-                self.netlog_print("error: sending data to invalid connection {0}".format(sock.getpeername()))
+                self.debug_log("error: sending data to invalid connection {0}".format(sock.getpeername()))
             except:
-                self.netlog_print("error: sending data to invalid connection {0}".format(repr(sock)))
+                self.debug_log("error: sending data to invalid connection {0}".format(repr(sock)))
             return False
         queue = self.connections[sock]['outbuff']
         if queue.full():
@@ -180,7 +220,7 @@ class Controller():
             self.netlog_print("warning: output buffer for {0} full, discard packet".format(addr))
             return False
         queue.put_nowait(content)
-        self.selector.register(sock, selector.EVENT_WRITE, self.data_write)
+        self.selector.register(sock, selector.EVENT_WRITE, self.net_send_data)
 
     def choose_random_server(self):
         server_list = []
@@ -205,10 +245,24 @@ class Controller():
         for byte in bytes: hexstr += '{0:02x}'.format(ord(byte))
         return hexstr[:len]
 
-    def login_process(self, sock, type, value):
+    def find_server_for_target(self, target, type):
+        type = type + 's'
+        for conn in self.connections:
+            if self.connections[conn]['role'] != 'server':
+                continue
+            if self.connections[conn]['valid'] == False:
+                continue
+            if type not in self.connections[conn]['status']:
+                continue
+            if target not in self.connections[conn]['status'][type]:
+                continue
+            return conn
+        return None
+
+    def login_message_process(self, sock, type, value):
         if type != pkt.ACCESS_LOGIN:
             content = pkt.construct(pkt.ACCESS_LOGIN, 'request')
-            self.send_data(sock, content)
+            self.schedule_data_send(sock, content)
             return
 
         try:
@@ -218,14 +272,14 @@ class Controller():
 
         if role == None or role not in ['client', 'server', 'terminal']:
             content = pkt.construct(pkt.ACCESS_LOGIN, 'argerror')
-            self.send_data(sock, content)
+            self.schedule_data_send(sock, content)
             return
 
         self.connections[sock]['role'] = role
         self.serve_funcs[role](sock, type, value)
 
-    def client_process(self, sock, type, value):
-        self.netlog_print('client {0} {1}'.format(type, value))
+    def client_message_process(self, sock, type, value):
+        #self.netlog_print('client {0} {1}'.format(type, value))
         if type == pkt.ACCESS_LOGIN:
             if value.startswith('client,'):
                 uuid = value[len('client,'):]
@@ -235,30 +289,36 @@ class Controller():
                 is_valid_uuid = None
             if is_valid_uuid == None:
                 content = pkt.construct(pkt.ACCESS_LOGIN, 'invalid access key')
-                self.send_data(sock, content)
+                self.schedule_data_send(sock, content)
+                self.netlog_print('denied invalid client {0} login'.format(uuid))
                 return
 
             sqlcmd = "SELECT * FROM Clients WHERE uuid = '{0}'".format(uuid)
-            ret = self.database_excute_sqlcmd(sqlcmd)
-            if ret == None or len(ret) != 1:
+            client = self.database_excute_sqlcmd(sqlcmd)
+            sqlcmd = "SELECT * FROM Developers WHERE uuid = '{0}'".format(uuid)
+            developer = self.database_excute_sqlcmd(sqlcmd)
+            if (client == None or len(client) != 1) and (developer == None or len(developer) != 1):
                 content = pkt.construct(pkt.ACCESS_LOGIN, 'invalid access key')
-                self.send_data(sock, content)
+                self.schedule_data_send(sock, content)
+                self.netlog_print("denied invalid client '{0}' login".format(uuid))
                 return
 
             if server_sock == None:
                 content = pkt.construct(pkt.ACCESS_LOGIN, 'noserver')
-                self.send_data(sock, content)
+                self.schedule_data_send(sock, content)
+                self.netlog_print('denied client {0} login: no server available'.format(uuid))
                 return
 
             token = self.generate_random_hexstr(16)
             content = '{0},{1}'.format(uuid, token)
             content = pkt.construct(pkt.ACCESS_ADD_CLIENT, content)
-            self.send_data(server_sock, content)
+            self.schedule_data_send(server_sock, content)
             self.connections[sock]['uuid'] = uuid
             self.timeouts[sock] = time.time() + CONFIG_TIMEOUT
+            self.netlog_print('client {0} login ... informing server'.format(uuid))
             return
 
-    def server_process(self, sock, type, value):
+    def server_message_process(self, sock, type, value):
         self.timeouts[sock] = time.time() + CONFIG_TIMEOUT
         if type in [pkt.HEARTBEAT, pkt.ACCESS_UPDATE_TERMINAL, pkt.ACCESS_DEL_TERMINAL, pkt.ACCESS_DEL_CLIENT]:
             return
@@ -286,6 +346,7 @@ class Controller():
             if is_valid_server == False:
                 content = pkt.construct(pkt.ACCESS_LOGIN, 'fail')
                 self.connections[sock]['valid'] = False
+                self.netlog_print('denied server {0} login, info: {1}'.format(self.connections[sock]['addr']), server_info)
             else:
                 content = pkt.construct(pkt.ACCESS_LOGIN, 'ok')
                 self.connections[sock]['uuid'] = server_info['uuid']
@@ -296,7 +357,8 @@ class Controller():
                 else:
                     self.connections[sock]['certificate'] = 'None'
                 self.connections[sock]['valid'] = True
-            self.send_data(sock, content)
+                self.netlog_print('accepted server login, info: {0}'.format(self.connections[sock]))
+            self.schedule_data_send(sock, content)
             return
         if type == pkt.ACCESS_REPORT_STATUS:
             try:
@@ -309,15 +371,16 @@ class Controller():
             else:
                 self.connections[sock]['status'] = status
                 content = pkt.construct(pkt.ACCESS_REPORT_STATUS, 'ok')
-            self.send_data(sock, content)
+            self.schedule_data_send(sock, content)
             return
         if type == pkt.ACCESS_ADD_CLIENT:
             try:
                 [ret, uuid, token] = value.split(',')
             except:
-                if DEBUG: self.netlog_print("error: invalid return value {0}".format(repr(value)))
+                self.netlog_print('error: invalid return value {0}'.format(repr(value)))
                 return
             if ret != 'success':
+                self.netlog_print('client {0} login failed: server rejected'.format(uuid))
                 return #TODO: choose another server for the client
 
             client_sock = None
@@ -338,14 +401,18 @@ class Controller():
             certificate = self.connections[sock]['certificate']
             content = 'success,{0},{1},{2},{3}'.format(server_addr, server_port, token, certificate)
             content = pkt.construct(pkt.ACCESS_LOGIN, content)
-            self.send_data(client_sock, content)
+            self.schedule_data_send(client_sock, content)
+            now = time.strftime('%Y-%m-%d %H:%M:%S : ')
+            self.netlog_print('client {0} login succeed'.format(uuid))
             return
         if type == pkt.ACCESS_ADD_TERMINAL:
             try:
                 [ret, uuid, token] = value.split(',')
             except:
-                if DEBUG: self.netlog_print("error: invalid return value {0}".format(repr(value)))
+                self.netlog_print('error: invalid return value {0}'.format(repr(value)))
                 return
+            if ret != 'success':
+                self.netlog_print('terminal {0} login failed: server rejected'.format(uuid))
 
             terminal_sock = None
             for conn in self.connections:
@@ -362,7 +429,7 @@ class Controller():
 
             if ret != 'success':
                 content = pkt.construct(pkt.ACCESS_LOGIN, 'fail')
-                self.send_data(terminal_sock, content)
+                self.schedule_data_send(terminal_sock, content)
                 return
 
             server_addr = self.connections[sock]['addr'][0]
@@ -370,25 +437,12 @@ class Controller():
             certificate = self.connections[sock]['certificate']
             content = 'success,{0},{1},{2},{3}'.format(server_addr, server_port, token, certificate)
             content = pkt.construct(pkt.ACCESS_LOGIN, content)
-            self.send_data(terminal_sock, content)
+            self.schedule_data_send(terminal_sock, content)
+            self.netlog_print('terminal {0} login succeed'.format(uuid))
             return
 
-    def find_server_for_target(self, target, type):
-        type = type + 's'
-        for conn in self.connections:
-            if self.connections[conn]['role'] != 'server':
-                continue
-            if self.connections[conn]['valid'] == False:
-                continue
-            if type not in self.connections[conn]['status']:
-                continue
-            if target not in self.connections[conn]['status'][type]:
-                continue
-            return conn
-        return None
-
-    def terminal_process(self, sock, type, value):
-        self.netlog_print('terminal {0} {1}'.format(type, value))
+    def terminal_message_process(self, sock, type, value):
+        #self.netlog_print('terminal {0} {1}'.format(type, value))
         if type == pkt.ACCESS_LOGIN:
             if value.startswith('terminal,'):
                 uuid = value[len('terminal,'):]
@@ -397,103 +451,184 @@ class Controller():
                 is_valid_uuid = None
             if is_valid_uuid == None:
                 content = pkt.construct(pkt.ACCESS_LOGIN, 'invalid access key')
-                self.send_data(sock, content)
+                self.schedule_data_send(sock, content)
+                self.netlog_print("denied invalid terminal {0} login".format(uuid))
                 return
 
             sqlcmd = "SELECT * FROM Users WHERE uuid = '{0}'".format(uuid)
-            ret = self.database_excute_sqlcmd(sqlcmd)
-            if ret == None or len(ret) != 1:
+            user = self.database_excute_sqlcmd(sqlcmd)
+            sqlcmd = "SELECT * FROM Developers WHERE uuid = '{0}'".format(uuid)
+            developer = self.database_excute_sqlcmd(sqlcmd)
+            if (user == None or len(user) != 1) and (developer == None or len(developer) != 1):
                 content = pkt.construct(pkt.ACCESS_LOGIN, 'invalid access key')
-                self.send_data(sock, content)
+                self.schedule_data_send(sock, content)
+                self.netlog_print("denied invalid terminal {0} login".format(uuid))
                 return
 
-            devices = []; client_uuids = []; server_sock = None
-            for device in self.devices:
-                if self.devices[device]['uuid'] != uuid:
-                    continue
-                devices.append(device)
-                client_uuid = device[0:16]
-                if client_uuid in client_uuids:
-                    continue
-                client_uuids.append(client_uuid)
-                if server_sock != None:
-                    continue
-                server_sock = self.find_server_for_target(client_uuid, 'client')
-            self.netlog_print("{0} {1}".format(client_uuids, server_sock))
+            if user:
+                devices = []; client_uuids = []; server_sock = None
+                for device in self.devices:
+                    if self.devices[device]['uuid'] != uuid:
+                        continue
+                    devices.append(device)
+                    client_uuid = device[0:16]
+                    if client_uuid in client_uuids:
+                        continue
+                    client_uuids.append(client_uuid)
+                    if server_sock != None:
+                        continue
+                    server_sock = self.find_server_for_target(client_uuid, 'client')
+            else:
+                devices = [uuid + ':all']; client_uuids = [uuid]; server_sock = None
+                server_sock = self.find_server_for_target(uuid, 'client')
+
+            #self.netlog_print("{0} {1}".format(client_uuids, server_sock))
             if devices == []:
                 content = pkt.construct(pkt.ACCESS_LOGIN, 'no allocated device')
-                self.send_data(sock, content)
+                self.schedule_data_send(sock, content)
+                self.netlog_print('denied terminal {0} login: no device allocated'.format(uuid))
                 return
             if server_sock == None:
                 content = pkt.construct(pkt.ACCESS_LOGIN, 'allocated devices not connected')
-                self.send_data(sock, content)
+                self.schedule_data_send(sock, content)
+                self.netlog_print('denied terminal {0} login: allocated devices not connected'.format(uuid))
                 return
 
             token = self.generate_random_hexstr(16)
             devices = '|'.join(devices)
             content = '{0},{1},{2}'.format(uuid, token, devices)
             content = pkt.construct(pkt.ACCESS_ADD_TERMINAL, content)
-            self.send_data(server_sock, content)
+            self.schedule_data_send(server_sock, content)
             self.connections[sock]['uuid'] = uuid
+            self.netlog_print('terminal {0} login ... informing server'.format(uuid))
             return
 
-    def sock_interact_thread(self, port):
-        sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        sock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
-        sock.bind((self.host, port))
-        if ENCRYPT:
-            sock = ssl.wrap_socket(sock, self.keyfile, self.certfile, True)
-        sock.setblocking(False)
-        sock.listen(100)
-        self.selector = selector()
-        self.connections = {}
-        self.timeouts = {}
-        self.selector.register(sock, selector.EVENT_READ, self.accept)
-        while self.keep_running:
-            events = self.selector.select()
-            for [sock, callback] in events:
-                if EMERGENCY_DEBUG: self.netlog_print("{0}: enter {1} function".format(time.time(), callback.__name__))
-                callback(sock)
-                if EMERGENCY_DEBUG: self.netlog_print("{0}: exit {1} function".format(time.time(), callback.__name__))
+    def print_user_info(self, uuid=None):
+        if uuid == None:
+            sqlcmd = "SELECT * FROM Users"
+        else:
+            sqlcmd = "SELECT * FROM Users where uuid = '{0}'".format(uuid)
 
-            #close timeout connections
-            now = time.time()
-            if EMERGENCY_DEBUG: self.netlog_print("{0}: start proccessing timeout".format(time.time()))
-            for conn in list(self.timeouts):
-                if now < self.timeouts[conn]:
-                    continue
-                role = self.connections[conn]['role']
-                addr = self.connections[conn]['addr']
-                self.netlog_print("{0} {1} timeout, close connection".format(role, addr))
-                self.selector.unregister(conn, selector.EVENT_READ)
-                self.selector.unregister(conn, selector.EVENT_WRITE)
-                conn.close()
-                self.timeouts.pop(conn)
-                self.connections.pop(conn)
-            if EMERGENCY_DEBUG: self.netlog_print("{0}: end proccessing timeout".format(time.time()))
-            os.system('touch controller_running')
+        rows = self.database_excute_sqlcmd(sqlcmd)
 
-    def house_keeping_thread(self):
-        while self.keep_running:
-            time.sleep(1)
+        if rows == None:
+            self.clilog_print("error: poll database failed")
+            return
 
-            #remove timeouted devices
-            now = time.time()
-            for device in list(self.devices):
-                if now <= self.devices[device]['timeout']:
-                    continue
-                uuid = self.devices[device]['uuid']
-                self.devices.pop(device)
-                sqlcmd = "DELETE FROM Devices WHERE device = '{0}'".format(device)
-                ret = self.database_excute_sqlcmd(sqlcmd)
-                if ret == None:
-                    self.cmdlog_print("warning: delete device {0} from Devices database failed".format(device))
-                self.inform_server_updates(uuid, 'update_terminal')
+        if uuid == None:
+            user_num = len(rows)
+            self.clilog_print("users({0}):".format(user_num))
+            for row in rows:
+                key = row[0]; name = row[1]; info=row[2]
+                devices = []
+                for device in self.devices:
+                    if self.devices[device]['uuid'] != key:
+                        continue
+                    devices.append(device)
+                device_num = len(devices)
+                if self.find_server_for_target(key, 'terminal') == None:
+                    status = 'offline'
+                else:
+                    status = 'online'
+                self.clilog_print("|--{0} ({1} {2}) {3} {4}".format(key, device_num, status, name, info))
+                for device in devices:
+                    try:
+                        timeout = time.strftime("%Y-%m-%d@%H:%M:%S", time.localtime(self.devices[device]['timeout']))
+                    except:
+                        timeout = 'None'
+                    self.clilog_print("|  |--{0} valid till {1}".format(device, timeout))
+        else:
+            if len(rows) == 0:
+                self.clilog_print("error: uuid {0} does not exist in database".format(repr(uuid)))
+                return
+            self.clilog_print("users:")
+            for row in rows:
+                key = row[0]; name = row[1]; info=row[2]
+                devices = []
+                for device in self.devices:
+                    if self.devices[device]['uuid'] != key:
+                        continue
+                    devices.append(device)
+                device_num = len(devices)
+                if self.find_server_for_target(key, 'terminal') == None:
+                    status = 'offline'
+                else:
+                    status = 'online'
+                self.clilog_print("|--{0} ({1} {2}) {3} {4}".format(key, device_num, status, name, info))
+                for device in devices:
+                    self.clilog_print("|  |--{0}".format(device))
 
-    def cmdlog_print(self, log):
-        sys.stdout.write(log + '\r\n')
+    def print_server_info(self, uuid=None):
+        self.clilog_print("servers:")
+        tab = '  |'
+        for conn in self.connections:
+            if self.connections[conn]['valid'] == False:
+                continue
+            if self.connections[conn]['role'] != 'server':
+                continue
+            if uuid != None and uuid != self.connections[conn]['uuid']:
+                continue
+            server_uuid = self.connections[conn]['uuid']
+            server_port = self.connections[conn]['addr'][1]
+            self.clilog_print("|" + tab*0 + '--' + '{0}-{1}:'.format(server_uuid, server_port))
+            if 'clients' not in self.connections[conn]['status']:
+                continue
+            terminal_num = len(self.connections[conn]['status']['terminals'])
+            self.clilog_print("|" + tab*1 + '--' + 'terminals({0}):'.format(terminal_num))
+            for terminal in self.connections[conn]['status']['terminals']:
+                self.clilog_print('|' + tab*2 + '--' + terminal)
+            if len(self.connections[conn]['status']['clients']) == 0:
+                continue
+            client_num = len(self.connections[conn]['status']['clients'])
+            self.clilog_print("|" + tab*1 + '--' + 'clients({0}):'.format(client_num))
+            for client in self.connections[conn]['status']['clients']:
+                self.clilog_print('|' + tab*2 + '--' + client)
+            if len(self.connections[conn]['status']['devices']) == 0:
+                continue
+            device_num = len(self.connections[conn]['status']['devices'])
+            self.clilog_print("|" + tab*1 + '--' + 'devices({0}):'.format(device_num))
+            for device in self.connections[conn]['status']['devices']:
+                self.clilog_print('|     |--' + device)
 
-    def inform_server_updates(self, uuid, type):
+    def print_client_info(self):
+        sqlcmd = "SELECT * FROM Clients"
+        rows = self.database_excute_sqlcmd(sqlcmd)
+        if rows == None:
+            self.clilog_print("error: poll database failed")
+            return
+
+        num = len(rows)
+        self.clilog_print("clients({0}):".format(num))
+        for row in rows:
+            key = row[0]; name = row[1]; info=row[2]
+            if self.find_server_for_target(key, 'client') == None:
+                status = 'offline'
+            else:
+                status = 'online'
+            self.clilog_print("|--{0} ({1}) {2} {3}".format(key, status, name, info))
+
+    def print_developer_info(self):
+        sqlcmd = "SELECT * FROM Developers"
+        rows = self.database_excute_sqlcmd(sqlcmd)
+        if rows == None:
+            self.clilog_print("error: poll database failed")
+            return
+
+        num = len(rows)
+        self.clilog_print("developers({0}):".format(num))
+        for row in rows:
+            key = row[0]; name = row[1]; info=row[2]
+            if self.find_server_for_target(key, 'terminal') == None:
+                terminal_status = 'offline'
+            else:
+                terminal_status = 'online'
+            if self.find_server_for_target(key, 'client') == None:
+                client_status = 'offline'
+            else:
+                client_status = 'online'
+            self.clilog_print("|--{0} (terminal:{1}, client:{2}) {3} {4}".format(key, terminal_status, client_status, name, info))
+
+    def inform_server_of_updates(self, uuid, type):
         types = ['delete_terminal', 'delete_client', 'update_terminal']
         if type not in types:
             return
@@ -518,17 +653,18 @@ class Controller():
                 devices.append(device)
             devices = '|'.join(devices)
             content = pkt.construct(pkt.ACCESS_UPDATE_TERMINAL, uuid + ',' + devices)
-        self.send_data(conn, content)
+        self.schedule_data_send(conn, content)
 
-    def add_cmd_handler(self, args):
+    def command_add_handler(self, args):
         if len(args) < 2:
-            self.cmdlog_print('usages: add user name [info1 info2 info3 ... infoN]')
-            self.cmdlog_print('        add client name [info1 info2 info3 ... infoN]')
-            self.cmdlog_print('        add device uuid device1|device2|...|deviceN [days]')
+            self.clilog_print('usages: add user name [info1 info2 info3 ... infoN]')
+            self.clilog_print('        add client name [info1 info2 info3 ... infoN]')
+            self.clilog_print('        add developer name [info1 info2 info3 ... infoN]')
+            self.clilog_print('        add device uuid device1|device2|...|deviceN [days]')
             return
 
-        if args[0] in ['user', 'client']:
-            Tables = {'user':'Users', 'client':'Clients'}
+        if args[0] in ['user', 'client', 'developer']:
+            Tables = {'user':'Users', 'client':'Clients', 'developer':'Developers'}
             uuid = self.generate_random_hexstr(16)
             name = args[1]
             info = ' '.join(args[2:])
@@ -536,12 +672,12 @@ class Controller():
             sqlcmd = "INSERT INTO {0} VALUES('{1}', '{2}', '{3}')".format(table, uuid, name, info)
             ret = self.database_excute_sqlcmd(sqlcmd)
             if ret == None:
-                self.cmdlog_print("add {0} '{1}' failed".format(args[0], name))
+                self.clilog_print("add {0} '{1}' failed".format(args[0], name))
             else:
-                self.cmdlog_print("add {0} '{1}' succeed, uuid={2}".format(args[0], name, uuid))
+                self.clilog_print("add {0} '{1}' succeed, uuid={2}".format(args[0], name, uuid))
         elif args[0] == 'device':
             if len(args) < 3:
-                self.cmdlog_print('usage error, usage: add device uuid devices [days]')
+                self.clilog_print('usage error, usage: add device uuid devices [days]')
                 return
             uuid = args[1]
             dev_str = args[2]
@@ -549,7 +685,7 @@ class Controller():
                 try:
                     days = float(args[3])
                 except:
-                    self.cmdlog_print('error: invalid input {0}'.format(repr(args[3])))
+                    self.clilog_print('error: invalid input {0}'.format(repr(args[3])))
                     return
             else:
                 days = 7
@@ -559,17 +695,17 @@ class Controller():
             sqlcmd = "SELECT * FROM Users WHERE uuid = '{0}'".format(uuid)
             rows = self.database_excute_sqlcmd(sqlcmd)
             if len(rows) < 1:
-                self.cmdlog_print("error: user '{0}' does not exist".format(uuid))
+                self.clilog_print("error: user '{0}' does not exist".format(uuid))
                 return
 
             devs = dev_str.split('|')
             devices = []
             for dev in devs:
                 if re.match("^[0-9a-f]{16}:.", dev) == None:
-                    self.cmdlog_print("error: invalid device {0}".format(dev))
+                    self.clilog_print("error: invalid device {0}".format(dev))
                     return
                 if dev in self.devices and self.devices[dev]['uuid'] != uuid:
-                    self.cmdlog_print("error: device {0} already alloated".format(dev))
+                    self.clilog_print("error: device {0} already alloated".format(dev))
                     return
                 devices += [dev]
             for device in devices:
@@ -580,21 +716,21 @@ class Controller():
                     sqlcmd = "UPDATE Devices SET timeout = '{0}' WHERE device = '{1}'".format(timeout, device)
                     ret = self.database_excute_sqlcmd(sqlcmd)
                 if ret == None:
-                    self.cmdlog_print("add device '{0}' failed: error adding device to database".format(device))
+                    self.clilog_print("add device '{0}' failed: error adding device to database".format(device))
                     return
                 self.devices[device] = {'uuid': uuid, 'timeout': timeout}
 
-            self.cmdlog_print("succeed")
-            self.inform_server_updates(uuid, 'update_terminal')
+            self.clilog_print("succeed")
+            self.inform_server_of_updates(uuid, 'update_terminal')
         else:
-            self.cmdlog_print("error: invalid command option {0}".format(repr(args[0])))
+            self.clilog_print("error: invalid command option {0}".format(repr(args[0])))
         return
 
-    def del_cmd_handler(self, args):
+    def command_del_handler(self, args):
         if len(args) < 2:
-            self.cmdlog_print('usage: del user uuid')
-            self.cmdlog_print('       del client uuid')
-            self.cmdlog_print('       del device uuid device1|device2|...|deviceN')
+            self.clilog_print('usage: del user uuid')
+            self.clilog_print('       del client uuid')
+            self.clilog_print('       del device uuid device1|device2|...|deviceN')
             return
 
         option = args[0]
@@ -607,20 +743,20 @@ class Controller():
             sqlcmd = "SELECT * FROM Clients WHERE uuid = '{0}'".format(uuid)
             rows = self.database_excute_sqlcmd(sqlcmd)
             if len(rows) < 1:
-                self.cmdlog_print("error: client '{0}' does not exist".format(uuid))
+                self.clilog_print("error: client '{0}' does not exist".format(uuid))
                 return
         else:
             sqlcmd = "SELECT * FROM Users WHERE uuid = '{0}'".format(uuid)
             rows = self.database_excute_sqlcmd(sqlcmd)
             if len(rows) < 1:
-                self.cmdlog_print("error: user '{0}' does not exist".format(uuid))
+                self.clilog_print("error: user '{0}' does not exist".format(uuid))
                 return
 
         if option == 'user':
             sqlcmd = "DELETE FROM Devices WHERE uuid = '{0}'".format(uuid)
             ret = self.database_excute_sqlcmd(sqlcmd)
             if ret == None:
-                self.cmdlog_print("warning: delete devices of {0} from database failed".format(uuid))
+                self.clilog_print("warning: delete devices of {0} from database failed".format(uuid))
             for device in list(self.devices):
                 if self.devices[device]['uuid'] != uuid:
                     continue
@@ -628,32 +764,32 @@ class Controller():
             sqlcmd = "DELETE FROM Users WHERE uuid = '{0}'".format(uuid)
             ret = self.database_excute_sqlcmd(sqlcmd)
             if ret == None:
-                self.cmdlog_print("failed")
+                self.clilog_print("failed")
             else:
-                self.cmdlog_print("succeed")
-            self.inform_server_updates(uuid, 'delete_terminal')
+                self.clilog_print("succeed")
+            self.inform_server_of_updates(uuid, 'delete_terminal')
             return
         elif option == 'client':
             sqlcmd = "DELETE FROM Clients WHERE uuid = '{0}'".format(uuid)
             ret = self.database_excute_sqlcmd(sqlcmd)
             if ret == None:
-                self.cmdlog_print("failed")
+                self.clilog_print("failed")
             else:
-                self.cmdlog_print("succeed")
-            self.inform_server_updates(uuid, 'delete_client')
+                self.clilog_print("succeed")
+            self.inform_server_of_updates(uuid, 'delete_client')
             return
         elif option == 'device':
             if dev_str == None:
-                self.cmdlog_print("error: please input the devices you want to delete")
+                self.clilog_print("error: please input the devices you want to delete")
                 return
 
             del_devices = dev_str.split('|')
             for device in del_devices:
                 if re.match("^[0-9a-f]{12,16}:.", device) == None:
-                    self.cmdlog_print("error: invalid device {0}".format(device))
+                    self.clilog_print("error: invalid device {0}".format(device))
                     return
                 if device not in self.devices or self.devices[device]['uuid'] != uuid:
-                    self.cmdlog_print("error: user {0} does not own device {1} ".format(uuid, device))
+                    self.clilog_print("error: user {0} does not own device {1} ".format(uuid, device))
                     return
             if del_devices == []:
                 return
@@ -661,19 +797,19 @@ class Controller():
                 sqlcmd = "DELETE FROM Devices WHERE device = '{0}'".format(device)
                 ret = self.database_excute_sqlcmd(sqlcmd)
                 if ret == None:
-                    self.cmdlog_print("warning: delete device {0} from database failed".format(device))
+                    self.clilog_print("warning: delete device {0} from database failed".format(device))
                 self.devices.pop(device)
-            self.cmdlog_print("succeed")
-            self.inform_server_updates(uuid, 'update_terminal')
+            self.clilog_print("succeed")
+            self.inform_server_of_updates(uuid, 'update_terminal')
             return
         else:
-            self.cmdlog_print('usage error, invalid argument {0}'.format(repr(option)))
+            self.clilog_print('usage error, invalid argument {0}'.format(repr(option)))
             return
         return
 
-    def allocate_cmd_handler(self, args):
+    def command_alloc_handler(self, args):
         if len(args) < 3:
-            self.cmdlog_print('usage: allocate uuid nubmer model [days]')
+            self.clilog_print('usage: allocate uuid nubmer model [days]')
             return
 
         uuid = args[0]
@@ -683,7 +819,7 @@ class Controller():
             try:
                 days = float(args[3])
             except:
-                self.cmdlog_print('error: invalid input {0}'.format(repr(args[3])))
+                self.clilog_print('error: invalid input {0}'.format(repr(args[3])))
                 return
         else:
             days = 7
@@ -691,7 +827,7 @@ class Controller():
         sqlcmd = "SELECT * FROM Users WHERE uuid = '{0}'".format(uuid)
         rows = self.database_excute_sqlcmd(sqlcmd)
         if len(rows) < 1:
-            self.cmdlog_print("error: user '{0}' does not exist".format(uuid))
+            self.clilog_print("error: user '{0}' does not exist".format(uuid))
             return
 
         try:
@@ -699,7 +835,7 @@ class Controller():
         except:
             number = 0
         if number <= 0:
-            self.cmdlog_print('error: invalid input {0}, input a positive integer'.format(args[1]))
+            self.clilog_print('error: invalid input {0}, input a positive integer'.format(args[1]))
             return
 
         ext_server = None
@@ -714,7 +850,7 @@ class Controller():
             ext_server = conn
             break
         if ext_devices != [] and ext_server == None:
-            self.cmdlog_print('error: can not locate the exist server for {0}'.format(uuid))
+            self.clilog_print('error: can not locate the exist server for {0}'.format(uuid))
             return
         if ext_server == None:
             allocated = []
@@ -748,184 +884,136 @@ class Controller():
                     break
 
         if len(allocated) < number:
-            self.cmdlog_print('failed')
+            self.clilog_print('failed')
             return
         timeout = time.time() + 3600 * 24 * days
         for device in allocated:
             sqlcmd = "INSERT INTO Devices VALUES('{0}', '{1}', '{2}')".format(device, uuid, timeout)
             ret = self.database_excute_sqlcmd(sqlcmd)
             if ret == None:
-                self.cmdlog_print("add device '{0}' failed: error adding device to database".format(device))
+                self.clilog_print("add device '{0}' failed: error adding device to database".format(device))
                 return
             self.devices[device] = {'uuid': uuid, 'timeout': timeout}
-        self.cmdlog_print('succeed, allocat: {0}'.format('|'.join(allocated)))
-        self.inform_server_updates(uuid, 'update_terminal')
+        self.clilog_print('succeed, allocat: {0}'.format('|'.join(allocated)))
+        self.inform_server_of_updates(uuid, 'update_terminal')
 
-    def print_user(self, uuid=None):
-        if uuid == None:
-            sqlcmd = "SELECT * FROM Users"
-        else:
-            sqlcmd = "SELECT * FROM Users where uuid = '{0}'".format(uuid)
-
-        rows = self.database_excute_sqlcmd(sqlcmd)
-
-        if rows == None:
-            self.cmdlog_print("error: poll database failed")
-            return
-
-        if uuid == None:
-            user_num = len(rows)
-            self.cmdlog_print("users({0}):".format(user_num))
-            for row in rows:
-                key = row[0]; name = row[1]; info=row[2]
-                devices = []
-                for device in self.devices:
-                    if self.devices[device]['uuid'] != key:
-                        continue
-                    devices.append(device)
-                device_num = len(devices)
-                if self.find_server_for_target(key, 'terminal') == None:
-                    status = 'offline'
-                else:
-                    status = 'online'
-                self.cmdlog_print("|--{0} ({1} {2}) {3} {4}".format(key, device_num, status, name, info))
-                for device in devices:
-                    try:
-                        timeout = time.strftime("%Y-%m-%d@%H:%M:%S", time.localtime(self.devices[device]['timeout']))
-                    except:
-                        timeout = 'None'
-                    self.cmdlog_print("|  |--{0} valid till {1}".format(device, timeout))
-        else:
-            if len(rows) == 0:
-                self.cmdlog_print("error: uuid {0} does not exist in database".format(repr(uuid)))
-                return
-            self.cmdlog_print("users:")
-            for row in rows:
-                key = row[0]; name = row[1]; info=row[2]
-                devices = []
-                for device in self.devices:
-                    if self.devices[device]['uuid'] != key:
-                        continue
-                    devices.append(device)
-                device_num = len(devices)
-                if self.find_server_for_target(key, 'terminal') == None:
-                    status = 'offline'
-                else:
-                    status = 'online'
-                self.cmdlog_print("|--{0} ({1} {2}) {3} {4}".format(key, device_num, status, name, info))
-                for device in devices:
-                    self.cmdlog_print("|  |--{0}".format(device))
-
-    def print_server(self, uuid=None):
-        self.cmdlog_print("servers:")
-        tab = '  |'
-        for conn in self.connections:
-            if self.connections[conn]['valid'] == False:
-                continue
-            if self.connections[conn]['role'] != 'server':
-                continue
-            if uuid != None and uuid != self.connections[conn]['uuid']:
-                continue
-            server_uuid = self.connections[conn]['uuid']
-            server_port = self.connections[conn]['addr'][1]
-            self.cmdlog_print("|" + tab*0 + '--' + '{0}-{1}:'.format(server_uuid, server_port))
-            if 'clients' not in self.connections[conn]['status']:
-                continue
-            terminal_num = len(self.connections[conn]['status']['terminals'])
-            self.cmdlog_print("|" + tab*1 + '--' + 'terminals({0}):'.format(terminal_num))
-            for terminal in self.connections[conn]['status']['terminals']:
-                self.cmdlog_print('|' + tab*2 + '--' + terminal)
-            if len(self.connections[conn]['status']['clients']) == 0:
-                continue
-            client_num = len(self.connections[conn]['status']['clients'])
-            self.cmdlog_print("|" + tab*1 + '--' + 'clients({0}):'.format(client_num))
-            for client in self.connections[conn]['status']['clients']:
-                self.cmdlog_print('|' + tab*2 + '--' + client)
-            if len(self.connections[conn]['status']['devices']) == 0:
-                continue
-            device_num = len(self.connections[conn]['status']['devices'])
-            self.cmdlog_print("|" + tab*1 + '--' + 'devices({0}):'.format(device_num))
-            for device in self.connections[conn]['status']['devices']:
-                self.cmdlog_print('|     |--' + device)
-
-    def print_client(self):
-        sqlcmd = "SELECT * FROM Clients"
-        rows = self.database_excute_sqlcmd(sqlcmd)
-        if rows == None:
-            self.cmdlog_print("error: poll database failed")
-            return
-
-        num = len(rows)
-        self.cmdlog_print("clients({0}):".format(num))
-        for row in rows:
-            key = row[0]; name = row[1]; info=row[2]
-            if self.find_server_for_target(key, 'client') == None:
-                status = 'offline'
-            else:
-                status = 'online'
-            self.cmdlog_print("|--{0} ({1}) {2} {3}".format(key, status, name, info))
-
-    def list_cmd_handler(self, args):
+    def command_list_handler(self, args):
         if len(args) == 0:
-            self.print_user(None)
-            self.cmdlog_print('')
-            self.print_server()
-            self.cmdlog_print('')
-            self.print_client()
+            self.print_user_info(None)
+            self.clilog_print('')
+            self.print_client_info()
+            self.clilog_print('')
+            self.print_developer_info()
+            self.clilog_print('')
+            self.print_server_info()
 
         if len(args) >= 1:
             if args[0] == 'user':
                 uuid = None
                 if len(args) >= 2:
                     uuid = args[1]
-                self.print_user(uuid)
+                self.print_user_info(uuid)
             elif args[0] == 'server':
                 uuid = None
                 if len(args) >= 2:
                     uuid = args[1]
-                self.print_server(uuid)
+                self.print_server_info(uuid)
             elif args[0] == 'client':
-                self.print_client()
+                self.print_client_info()
+            elif args[0] == 'developer':
+                self.print_developer_info()
         return
 
-    def help_cmd_handler(self, args):
-        self.cmdlog_print("Usages:")
-        self.cmdlog_print("    add user name info")
-        self.cmdlog_print("    add client name info")
-        self.cmdlog_print("    add device uuid device1|deice2|...|deviceN [days(7)]")
-        self.cmdlog_print("    del user uuid")
-        self.cmdlog_print("    del device uuid devic1|device2|...|deviceN")
-        self.cmdlog_print("    alloc uuid number model")
-        self.cmdlog_print("    list")
-        self.cmdlog_print("    list user [uuid]")
-        self.cmdlog_print("    list server [uuid]")
+    def command_help_handler(self, args):
+        self.clilog_print("Usages:")
+        self.clilog_print("    add [ad]:")
+        self.clilog_print("        |-add user name info")
+        self.clilog_print("        |-add client name info")
+        self.clilog_print("        |-add developer name info")
+        self.clilog_print("        |-add device uuid device1|deice2|...|deviceN [days(7)]")
+        self.clilog_print("    delete [dl]: user uuid")
+        self.clilog_print("        |-delete user uuid")
+        self.clilog_print("        |-delete device uuid devic1|device2|...|deviceN")
+        self.clilog_print("    allocate [al]: uuid number model")
+        self.clilog_print("        |-allocate uuid number model")
+        self.clilog_print("    list [ls]:")
+        self.clilog_print("        |-list")
+        self.clilog_print("        |-list user [uuid]")
+        self.clilog_print("        |-list server [uuid]")
+        self.clilog_print("        |-list client [uuid]")
         return
 
     def process_cmd(self):
         cmds = self.user_cmd.split()
-        if cmds[0] == 'add':
-            self.add_cmd_handler(cmds[1:])
-        elif cmds[0] == 'del':
-            self.del_cmd_handler(cmds[1:])
-        elif cmds[0] == 'alloc':
-            self.allocate_cmd_handler(cmds[1:])
-        elif cmds[0] == 'list':
-            self.list_cmd_handler(cmds[1:])
-        elif cmds[0] == 'help':
-            self.help_cmd_handler(cmds[1:])
+        if cmds[0] == 'add' or cmds[0] == 'ad':
+            self.command_add_handler(cmds[1:])
+        elif cmds[0] == 'del' or cmds[0] == 'dl':
+            self.command_del_handler(cmds[1:])
+        elif cmds[0] == 'alloc' or cmds[0] == 'al':
+            self.command_alloc_handler(cmds[1:])
+        elif cmds[0] == 'list' or cmds[0] == 'ls':
+            self.command_list_handler(cmds[1:])
+        elif cmds[0] == 'help' or cmds[0] == 'h':
+            self.command_help_handler(cmds[1:])
         else:
             sys.stdout.write("unknow command {0}\r\n".format(repr(self.user_cmd)))
         sys.stdout.flush()
         return
 
-    def cmd_print(self):
-        cmd_str = '\r# ' + ' ' * (len(self.user_cmd) + 1)
-        cmd_str += '\r# ' + self.user_cmd
-        cmd_str += '\b' * (len(self.user_cmd) - self.cur_pos)
-        sys.stdout.write(cmd_str)
-        sys.stdout.flush()
+    def sock_interact_thread(self, port):
+        sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        sock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+        sock.bind((self.host, port))
+        if ENCRYPT:
+            sock = ssl.wrap_socket(sock, self.keyfile, self.certfile, True)
+        sock.setblocking(False)
+        sock.listen(100)
+        self.selector = selector()
+        self.connections = {}
+        self.timeouts = {}
+        self.selector.register(sock, selector.EVENT_READ, self.net_conn_accept)
+        while self.keep_running:
+            events = self.selector.select()
+            for [sock, callback] in events:
+                self.debug_log("{0}: enter {1} function".format(time.time(), callback.__name__))
+                callback(sock)
+                self.debug_log("{0}: exit {1} function".format(time.time(), callback.__name__))
 
-    def user_interaction(self):
+            #close timeout connections
+            now = time.time()
+            self.debug_log("{0}: start proccessing timeout".format(time.time()))
+            for conn in list(self.timeouts):
+                if now < self.timeouts[conn]:
+                    continue
+                role = self.connections[conn]['role']
+                addr = self.connections[conn]['addr']
+                self.netlog_print("{0} {1} timeout, close connection".format(role, addr))
+                self.selector.unregister(conn, selector.EVENT_READ)
+                self.selector.unregister(conn, selector.EVENT_WRITE)
+                conn.close()
+                self.timeouts.pop(conn)
+                self.connections.pop(conn)
+            self.debug_log("{0}: end proccessing timeout".format(time.time()))
+            os.system('touch ~/.udcontroller/running')
+
+    def house_keeping_thread(self):
+        while self.keep_running:
+            time.sleep(1)
+
+            #remove timeouted devices
+            now = time.time()
+            for device in list(self.devices):
+                if now <= self.devices[device]['timeout']:
+                    continue
+                uuid = self.devices[device]['uuid']
+                self.devices.pop(device)
+                sqlcmd = "DELETE FROM Devices WHERE device = '{0}'".format(device)
+                ret = self.database_excute_sqlcmd(sqlcmd)
+                if ret == None:
+                    self.clilog_print("warning: delete device {0} from Devices database failed".format(device))
+                self.inform_server_of_updates(uuid, 'update_terminal')
+
+    def user_cli_thread(self):
         self.user_cmd = ''
         self.cur_pos = 0
         saved_cmd = ""
@@ -933,7 +1021,7 @@ class Controller():
         escape = None
         old_settings = termios.tcgetattr(sys.stdin.fileno())
         tty.setraw(sys.stdin.fileno())
-        self.cmd_print()
+        self.usercmd_print()
         while self.keep_running:
             try:
                 c = sys.stdin.read(1)
@@ -957,7 +1045,7 @@ class Controller():
                         sys.stdout.write("\r  " + " " * len(self.user_cmd))
                         self.user_cmd = self.cmd_history[history_index]
                         self.cur_pos = len(self.user_cmd)
-                        self.cmd_print()
+                        self.usercmd_print()
                         continue
                     if ord(c) == 66: #KEY_DOWN
                         if history_index <= -1:
@@ -970,19 +1058,19 @@ class Controller():
                         else:
                             self.user_cmd = saved_cmd
                         self.cur_pos = len(self.user_cmd)
-                        self.cmd_print()
+                        self.usercmd_print()
                         continue
                     if ord(c) == 68: #KEY_LEFT
                         if self.cur_pos <= 0:
                             continue
                         self.cur_pos -= 1
-                        self.cmd_print()
+                        self.usercmd_print()
                         continue
                     if ord(c) == 67: #KEY_RIGHT
                         if self.cur_pos >= len(self.user_cmd):
                             continue
                         self.cur_pos += 1
-                        self.cmd_print()
+                        self.usercmd_print()
                         continue
 
             if ord(c) == 27: #ESCAPE
@@ -1002,7 +1090,7 @@ class Controller():
                 saved_cmd = ""
                 history_index = -1
                 self.cur_pos = 0
-                self.cmd_print()
+                self.usercmd_print()
                 continue
             if c == '\x08' or c == '\x7f': #DELETE
                 if self.user_cmd[0:self.cur_pos] == "":
@@ -1010,7 +1098,7 @@ class Controller():
                 newcmd = self.user_cmd[0:self.cur_pos-1] + self.user_cmd[self.cur_pos:]
                 self.user_cmd = newcmd
                 self.cur_pos -= 1
-                self.cmd_print()
+                self.usercmd_print()
                 continue
             if ord(c) == 3: #CTRL+C
                 self.keep_running = False
@@ -1021,16 +1109,17 @@ class Controller():
                 newcmd = self.user_cmd[0:self.cur_pos] + c + self.user_cmd[self.cur_pos:]
                 self.user_cmd = newcmd
                 self.cur_pos += 1
-                self.cmd_print()
+                self.usercmd_print()
             except:
                 if DEBUG: traceback.print_exc()
                 sys.stdout.write("\rError: unsupported unicode character {0}\n".format(c))
-                self.cmd_print()
+                self.usercmd_print()
                 continue
         termios.tcsetattr(sys.stdin.fileno(), termios.TCSADRAIN, old_settings)
         try:
             if len(self.cmd_history) > 0:
-                file = open("controller/.cmd_history",'wb')
+                cmd_history_path = path.join(path.expanduser('~'), '.udcontroller', 'cmd_history')
+                file = open(cmd_history_path,'wb')
                 json.dump(self.cmd_history, file)
                 file.close()
         except:
@@ -1038,9 +1127,9 @@ class Controller():
         print ''
         return
 
-    def run(self):
+    def main(self):
         signal.signal(signal.SIGINT, signal_handler)
         self.keep_running = True
         thread.start_new_thread(self.sock_interact_thread, (self.port,))
         thread.start_new_thread(self.house_keeping_thread, ())
-        self.user_interaction()
+        self.user_cli_thread()
