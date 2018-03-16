@@ -9,15 +9,20 @@
 #include "iot_import.h"
 #include "iot_export.h"
 #include "aos/log.h"
+//#include "json_parser.h"
 #include "aos/yloop.h"
 #include "aos/network.h"
 #include <netmgr.h>
 #include <aos/kernel.h>
-#include <k_err.h>
+//#include <k_err.h>
+//#include "aliot_platform.h"
+//#include "aliot_log.h"
+//#include "aliot_mqtt_client.h"
+//#include "aliot_auth.h"
+//#include "aliot_device.h"
 #include <netmgr.h>
 #include <aos/cli.h>
 #include <aos/cloud.h>
-#include "iot_export_mqtt.h"
 
 #ifdef AOS_ATCMD
 #include <atparser.h>
@@ -35,9 +40,9 @@
     #define DEVICE_NAME             "TestDeviceForDemo"
     #define DEVICE_SECRET           "fSCl9Ns5YPnYN8Ocg0VEel1kXFnRlV6c"
 */
-    #define PRODUCT_KEY             "fb6pcJ5Z5q5"
-    #define DEVICE_NAME             "zt02"
-    #define DEVICE_SECRET           "qKIMZhAqu5swqHckXzcKUmVJe7PAVmZ3"
+    #define PRODUCT_KEY             "BfKxBDSjWCH"
+    #define DEVICE_NAME             "aos_mqtt_test"
+    #define DEVICE_SECRET           "zcBZ5TB9cfAylUGo1flH0o47PxS8Mqu2"
 
 #endif
 
@@ -49,7 +54,7 @@
 
 #define MSG_LEN_MAX             (2048)
 
-int cnt = 0;
+static int cnt = 0;
 static int is_subscribed = 0;
 
 typedef struct ota_device_info {
@@ -337,25 +342,12 @@ static struct cli_command mqttcmd = {
     .function = handle_mqtt
 };
 
-#ifdef AOS_ATCMD
-static void at_uart_configure(uart_dev_t *u)
-{
-    u->port                = AT_UART_PORT;
-    u->config.baud_rate    = AT_UART_BAUDRATE;
-    u->config.data_width   = AT_UART_DATA_WIDTH;
-    u->config.parity       = AT_UART_PARITY;
-    u->config.stop_bits    = AT_UART_STOP_BITS;
-    u->config.flow_control = AT_UART_FLOW_CONTROL;
-}
-#endif
-
 int application_start(int argc, char *argv[])
 {
 #if AOS_ATCMD
-    uart_dev_t at_uart;
-    at_uart_configure(&at_uart);
-    at.init(&at_uart, AT_RECV_DELIMITER, AT_SEND_DELIMITER, 1000);
     at.set_mode(ASYN);
+    at.init(AT_RECV_PREFIX, AT_RECV_SUCCESS_POSTFIX, 
+            AT_RECV_FAIL_POSTFIX, AT_SEND_DELIMITER, 1000);
 #endif
 
 #ifdef WITH_SAL
