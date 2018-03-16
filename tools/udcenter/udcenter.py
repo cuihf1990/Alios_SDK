@@ -122,7 +122,7 @@ def main():
             sys.exit(1)
         open(tmpfile, 'a').close()
         cntr = Controller('', host_port)
-        cntr.run()
+        cntr.main()
         os.remove(tmpfile)
     else:
         print_usage()
