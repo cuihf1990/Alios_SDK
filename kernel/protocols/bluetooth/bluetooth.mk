@@ -30,10 +30,11 @@ $(NAME)_SOURCES := core/atomic_c.c \
                    host/crypto.c \
                    host/smp.c \
                    host/keys.c \
+                   core/tinycrypt/source/cmac_mode.c \
+                   core/tinycrypt/source/aes_encrypt.c \
                    core/rpa.c \
-                   core/work.c
-
-$(NAME)_SOURCES += port/aos_port.c
+                   core/work.c \
+                   port/aos_port.c
 
 $(NAME)_SOURCES += host/hci_ecc.c \
                    core/tinycrypt/source/utils.c \
@@ -45,6 +46,39 @@ $(NAME)_SOURCES += host/hci_ecc.c \
                    core/tinycrypt/source/ecc.c \
                    core/tinycrypt/source/ecc_dh.c
 
+ifeq ($(BLUETOOTH_INC_CONTROL), 1)			   
+$(NAME)_SOURCES += controller/hal/nrf5/cntr.c \
+                   controller/hal/nrf5/ecb.c \
+                   controller/hal/nrf5/radio.c \
+				   controller/hal/nrf5/rand.c \
+				   controller/hci/hci.c \
+				   controller/hci/hci_driver.c \
+				   controller/ll_sw/ctrl.c \
+				   controller/ll_sw/ll.c \
+				   controller/ll_sw/ll_adv.c \
+				   controller/ll_sw/ll_filter.c \
+				   controller/ll_sw/ll_master.c \
+				   controller/ll_sw/ll_scan.c \
+				   controller/ll_sw/crypto.c \
+				   controller/ticker/ticker.c \
+				   controller/util/mayfly.c \
+				   controller/util/mem.c \
+				   controller/util/memq.c \
+				   controller/util/util.c \
+				   common/dummy.c \
+				   common/irq_manage.c \
+				   controller/hal/device.c
+
+$(NAME)_INCLUDES += common \
+					controller \
+                    controller/hal/nrf5 \
+					controller/hci \
+					controller/include \
+					controller/ll_sw \
+					controller/ticker \
+					controller/util
+endif				   
+				   
 ifeq ($(hci_h4),1)
 $(NAME)_SOURCES += hci_drivers/h4.c
 endif

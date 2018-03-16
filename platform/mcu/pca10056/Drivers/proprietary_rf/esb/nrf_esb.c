@@ -883,6 +883,7 @@ static uint32_t nrf_esb_get_clear_interrupts(uint32_t * p_interrupts)
 
 void RADIO_IRQHandler()
 {
+	krhino_intrpt_enter();
     if (NRF_RADIO->EVENTS_READY && (NRF_RADIO->INTENSET & RADIO_INTENSET_READY_Msk))
     {
         NRF_RADIO->EVENTS_READY = 0;
@@ -917,6 +918,7 @@ void RADIO_IRQHandler()
     DEBUG_PIN_CLR(DEBUGPIN2);
     DEBUG_PIN_CLR(DEBUGPIN3);
     DEBUG_PIN_CLR(DEBUGPIN4);
+	krhino_intrpt_exit();
 }
 
 
