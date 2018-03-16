@@ -243,20 +243,26 @@ int bt_hci_cmd_send(u16_t opcode, struct net_buf *buf)
 int bt_hci_cmd_send_sync(u16_t opcode, struct net_buf *buf,
 			 struct net_buf **rsp)
 {
-	struct k_sem sync_sem;
+	struct k_sem *sync_sem;
 	int err;
+
+        sync_sem = aos_malloc(sizeof(struct k_sem));
+        if (sync_sem == NULL) {
+            return ENOBUFS;
+        }
 
 	if (!buf) {
 		buf = bt_hci_cmd_create(opcode, 0);
 		if (!buf) {
-			return -ENOBUFS;
+                       err = -ENOBUFS;
+                       goto exit;
 		}
 	}
 
 	BT_DBG("buf %p opcode 0x%04x len %u", buf, opcode, buf->len);
 
-	k_sem_init(&sync_sem, 0, 1);
-	cmd(buf)->sync = &sync_sem;
+	k_sem_init(sync_sem, 0, 1);
+	cmd(buf)->sync = sync_sem;
 
 	/* Make sure the buffer stays around until the command completes */
 	net_buf_ref(buf);
@@ -264,7 +270,7 @@ int bt_hci_cmd_send_sync(u16_t opcode, struct net_buf *buf,
 	net_buf_put(&bt_dev.cmd_tx_queue, buf);
         k_sem_give(&g_poll_sem);
 
-	err = k_sem_take(&sync_sem, HCI_CMD_TIMEOUT);
+	err = k_sem_take(sync_sem, HCI_CMD_TIMEOUT);
 	__ASSERT(err == 0, "k_sem_take failed with err %d", err);
 
 	BT_DBG("opcode 0x%04x status 0x%02x", opcode, cmd(buf)->status);
@@ -281,6 +287,9 @@ int bt_hci_cmd_send_sync(u16_t opcode, struct net_buf *buf,
 		}
 	}
 
+exit:
+        k_sem_delete(sync_sem);
+        aos_free(sync_sem);
 	return err;
 }
 
