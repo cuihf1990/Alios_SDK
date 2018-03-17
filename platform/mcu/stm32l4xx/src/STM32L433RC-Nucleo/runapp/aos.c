@@ -48,6 +48,9 @@ static void sys_init(void)
     hw_start_hal();
     board_init();
     var_init();
+#ifdef CONFIG_AOS_CLI_BOARD
+    board_cli_init();
+#endif
     aos_kernel_init(&kinit);
 #endif
 }

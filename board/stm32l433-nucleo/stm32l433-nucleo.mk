@@ -8,12 +8,12 @@ HOST_MCU_FAMILY      := stm32l4xx
 SUPPORT_BINS         := no
 HOST_MCU_NAME        := STM32L433RC-Nucleo
 
-$(NAME)_SOURCES += board.c st7789.c
+$(NAME)_SOURCES += board.c board_cli.c st7789.c 
 
 GLOBAL_INCLUDES += .
 
 GLOBAL_DEFINES += STDIO_UART=0
-
+GLOBAL_DEFINES += CONFIG_AOS_CLI_BOARD
 sal ?= 1
 ifeq (1,$(sal))
 $(NAME)_COMPONENTS += sal
