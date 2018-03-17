@@ -139,10 +139,6 @@ RHINO_INLINE k_mm_list_t *init_mm_region(void *regionaddr, size_t len)
     firstblk->owner = 0;
 #endif
 
-    region = (k_mm_region_info_t *)firstblk->mbinfo.buffer;
-    region->next = 0;
-    region->end = lastblk;
-
     /*last mmblk for stop merge */
     lastblk = (k_mm_list_t *)((char *)regionaddr + len - MMLIST_HEAD_SIZE);
 
@@ -160,6 +156,10 @@ RHINO_INLINE k_mm_list_t *init_mm_region(void *regionaddr, size_t len)
     lastblk->dye    = RHINO_MM_CORRUPT_DYE;
     lastblk->owner  = 0;
 #endif
+
+    region = (k_mm_region_info_t *)firstblk->mbinfo.buffer;
+    region->next = 0;
+    region->end = lastblk;
 
     return firstblk;
 }

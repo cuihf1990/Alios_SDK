@@ -398,11 +398,11 @@ void dump_kmm_statistic_info(k_mm_head *mmhead)
           mmhead->maxused_size);
     print("\r\n");
     print("-----------------alloc size statistic:-----------------\r\n");
-    for (i = 0; i < MM_MAX_BIT - 1; i++) {
+    for (i = 0; i < MM_BIT_LEVEL; i++) {
         if (i % 4 == 0 && i != 0) {
             print("\r\n");
         }
-        print("[2^%02d] bytes: %5d   |", (i + 2), mmhead->mm_size_stats[i]);
+        print("[2^%02d] bytes: %5d   |", (i+MM_MIN_BIT), mmhead->mm_size_stats[i]);
     }
     print("\r\n");
 #endif
