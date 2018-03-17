@@ -170,7 +170,7 @@ struct cli_command module_ota_cli_cmd[] = {
     }
 };
 
-static void fota_event_handler(void *arg, char *buf, int buflen)
+void fota_event_handler(void *arg, char *buf, int buflen)
 {
     int ret = -1;
     
@@ -189,6 +189,19 @@ end:
     aos_sem_signal(&fota_status.stmoduelfotasem);
 }
 
+static void wifi_event_handler(input_event_t *event, void *priv_data)
+{
+    if (event->type != EV_WIFI) 
+        return;
+    
+    if (event->code == CODE_WIFI_ON_GOT_IP){
+        at.oob(FOTA_OOB_PREFIX, FOTA_OOB_POSTFIX, 64, fota_event_handler, NULL);
+        aos_cli_register_commands(&module_ota_cli_cmd[0],sizeof(module_ota_cli_cmd) / sizeof(struct cli_command));
+        LOG("Hello, WiFi GOT_IP event! at %s %d\r\n", __FILE__, __LINE__);
+    }
+}
+
+
 int board_cli_init(void)
 {
     int ret = 0;
@@ -197,8 +210,8 @@ int board_cli_init(void)
         printf("fail to creat sem4  %s %d \r\n", __FILE__, __LINE__);
     }
     fota_status.ret = 0;
-    at.oob(FOTA_OOB_PREFIX, FOTA_OOB_POSTFIX, 64, fota_event_handler, NULL);
-    aos_cli_register_commands(&module_ota_cli_cmd[0],sizeof(module_ota_cli_cmd) / sizeof(struct cli_command));
+
+    aos_register_event_filter(EV_WIFI, wifi_event_handler, NULL);
 }
 
 
