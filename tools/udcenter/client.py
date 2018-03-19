@@ -439,8 +439,12 @@ class Client:
                 if exit_condition.is_set() == True:
                     break
                 if DEBUG: traceback.print_exc()
-                self.devices[device]['handle'].close()
-                self.devices[device]['handle'].open()
+                try:
+                    self.devices[device]['handle'].close()
+                    self.devices[device]['handle'].open()
+                except:
+                    exit_condition.set()
+                    break
         print 'devie command process thread for {0} exited'.format(device)
 
     def device_log_filter(self, device, log):
@@ -518,7 +522,10 @@ class Client:
         print 'device {0} removed'.format(device)
         self.devices[device]['valid'] = False
         exit_condition.set()
-        self.devices[device]['handle'].close()
+        try:
+            self.devices[device]['handle'].close()
+        except:
+            pass
         self.send_device_list()
         print 'device log poll thread for {0} exited'.format(device)
 
@@ -808,13 +815,14 @@ class Client:
                         break
 
                     for hash in list(file_receiving):
-                        if time.time() > file_receiving[hash]['timeout']:
-                            file_receiving[hash]['handle'].close()
-                            try:
-                                os.remove(file_receiving[hash]['name'])
-                            except:
-                                pass
-                            file_receiving.pop(hash)
+                        if time.time() < file_receiving[hash]['timeout']:
+                            continue
+                        file_receiving[hash]['handle'].close()
+                        try:
+                            os.remove(file_receiving[hash]['name'])
+                        except:
+                            pass
+                        file_receiving.pop(hash)
 
                     if type == pkt.FILE_BEGIN:
                         try:
@@ -833,6 +841,7 @@ class Client:
                         if hash in file_receiving:
                             content = term + ',' + 'busy'
                             self.send_packet(type, content)
+                            print "busy: refused to recive {0}:{1}".format(filename, hash)
                             continue
 
                         filename = path.join(path.expanduser('~'), '.udclient', path.basename(fname))
@@ -858,10 +867,12 @@ class Client:
                         if hash not in file_receiving:
                             content = term + ',' + 'noexist'
                             self.send_packet(type, content)
+                            print "error: drop data fragment {0}:{1}, hash not in receiving file".format(hash, seq)
                             continue
                         if file_receiving[hash]['seq'] != seq and file_receiving[hash]['seq'] != seq + 1:
                             content = term + ',' + 'seqerror'
                             self.send_packet(type, content)
+                            print "error: drop data fragment {0}:{1}, sequence error".format(hash, seq)
                             continue
                         if file_receiving[hash]['seq'] == seq:
                             file_receiving[hash]['handle'].write(data)
@@ -976,9 +987,7 @@ class Client:
                         except:
                             print "argument error: {0} {1}".format(type, value)
                             continue
-                        cmd = value[term_dev_len:]
-                        if type == pkt.DEVICE_CMD:
-                            cmd = cmd.replace('|', ' ')
+                        cmd = value[term_dev_len:].replace('|', ' ')
                         if device in self.devices and self.devices[device]['valid'] == True:
                             if self.devices[device]['ucmd_queue'].full() == False:
                                 self.devices[device]['ucmd_queue'].put([type, term, cmd])

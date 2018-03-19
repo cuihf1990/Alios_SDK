@@ -21,9 +21,8 @@ def new_device(device):
 def erase(device):
     retry = 8
     error = 'fail'
-    flash_tool_path = os.path.dirname(os.path.realpath(__file__)) + '/esptool.py'
     while retry > 0:
-        script = ['python', flash_tool_path]
+        script = ['esptool.py']
         script += ['--chip']
         script += ['esp32']
         script += ['--port']
@@ -40,9 +39,8 @@ def erase(device):
 def program(device, address, file):
     retry = 8
     error = 'fail'
-    flash_tool_path = os.path.dirname(os.path.realpath(__file__)) + '/esptool.py'
     while retry > 0:
-        script = ['python', flash_tool_path]
+        script = ['esptool.py']
         script += ['--chip']
         script += ['esp32']
         script += ['--port']

@@ -1,12 +1,12 @@
 #!/usr/bin/python
 
-import os, sys, time, socket, ssl, traceback
+import os, sys, time, socket, ssl, traceback, Queue
 import subprocess, thread, threading, random, re
 from operator import itemgetter
 import TBframe
 
-MAX_MSG_LENTH = 8192
-ENCRYPT = False
+MAX_MSG_LENGTH = 8192
+ENCRYPT = True
 DEBUG = True
 
 class ConnectionLost(Exception):
@@ -29,20 +29,38 @@ class Autotest:
         self.filter_event.set()
         self.esc_seq = re.compile(r'\x1b[^m]*m')
 
-    def send_data(self, data):
-        try:
-            self.service_socket.send(data)
-        except:
-            self.connected = False
-
-    def heartbeat_func(self):
+    def packet_send_thread(self):
         heartbeat_timeout = time.time() + 10
         while self.keep_running:
-            time.sleep(0.05)
-            if time.time() < heartbeat_timeout:
+            try:
+                [type, content] = self.output_queue.get(block=True, timeout=0.1)
+            except Queue.Empty:
+                type = None
+                pass
+            if self.service_socket == None:
                 continue
-            self.send_data(TBframe.construct(TBframe.HEARTBEAT, ''))
-            heartbeat_timeout += 10
+            if type == None:
+                if time.time() < heartbeat_timeout:
+                    continue
+                heartbeat_timeout += 10
+                data = pkt.construct(pkt.HEARTBEAT,'')
+            else:
+                data = pkt.construct(type, content)
+            try:
+                self.service_socket.send(data)
+            except:
+                self.connected = False
+                continue
+
+    def send_packet(self, type, content, timeout=0.1):
+        if self.service_socket == None:
+            return False
+        try:
+            self.output_queue.put([type, content], True, timeout)
+            return True
+        except Queue.Full:
+            if DEBUG: self.log_display(time.time(), 'error: ouput buffer full, drop packet [{0] {1}]'.format(type, content))
+        return False
 
     def get_devname_by_devstr(self, devstr):
         if devstr in list(self.subscribed_reverse):
@@ -96,7 +114,7 @@ class Autotest:
         msg = ''
         while self.keep_running:
             try:
-                new_msg = self.service_socket.recv(MAX_MSG_LENTH)
+                new_msg = self.service_socket.recv(MAX_MSG_LENGTH)
                 if new_msg == '':
                     raise ConnectionLost
                     break
@@ -176,10 +194,8 @@ class Autotest:
                 random.seed()
                 time.sleep(1.2 + random.random())
                 for devname in self.subscribed:
-                    data = TBframe.construct(TBframe.LOG_SUB, self.subscribed[devname])
-                    self.send_data(data)
-                    data = TBframe.construct(TBframe.DEVICE_CMD, self.subscribed[devname] + ':help')
-                    self.send_data(data)
+                    self.send_packet(TBframe.LOG_SUB, self.subscribed[devname])
+                    self.send_packet(TBframe.DEVICE_CMD, self.subscribed[devname] + ':help')
             except:
                 if DEBUG:
                     traceback.print_exc()
@@ -222,10 +238,9 @@ class Autotest:
 
         #send file begin
         content = devstr  + ':' + filehash + ':' + filename.split('/')[-1]
-        data = TBframe.construct(TBframe.FILE_BEGIN, content)
         retry = 4
         while retry > 0:
-            self.send_data(data)
+            self.send_packet(TBframe.FILE_BEGIN, content)
             self.wait_cmd_excute_done(0.3)
             if self.cmd_excute_state == 'timeout':
                 retry -= 1;
@@ -251,10 +266,9 @@ class Autotest:
         header = devstr  + ':' + filehash + ':' + str(seq) + ':'
         content = file.read(1024)
         while(content):
-            data = TBframe.construct(TBframe.FILE_DATA, header + content)
             retry = 4
             while retry > 0:
-                self.send_data(data)
+                self.send_packet(TBframe.FILE_DATA, header + content)
                 self.wait_cmd_excute_done(0.3)
                 if self.cmd_excute_return == None:
                     retry -= 1;
@@ -275,10 +289,9 @@ class Autotest:
 
         #send file end
         content = devstr  + ':' + filehash + ':' + filename.split('/')[-1]
-        data = TBframe.construct(TBframe.FILE_END, content)
         retry = 4
         while retry > 0:
-            self.send_data(data)
+            self.send_packet(TBframe.FILE_END, content)
             self.wait_cmd_excute_done(0.3)
             if self.cmd_excute_return == None:
                 retry -= 1;
@@ -294,10 +307,9 @@ class Autotest:
         if self.connected == False:
             return []
         content = ','.join([type, str(number), purpose])
-        data = TBframe.construct(TBframe.DEVICE_ALLOC, content)
         timeout += time.time()
         while time.time() < timeout:
-            self.send_data(data)
+            self.send_packet(TBframe.DEVICE_ALLOC, content)
             self.wait_cmd_excute_done(0.8)
             if self.cmd_excute_return == None or self.cmd_excute_return == []:
                 time.sleep(8)
@@ -322,16 +334,14 @@ class Autotest:
                 self.subscribed[devname] = devstr;
                 self.subscribed_reverse[devstr] = devname
         for devname in devices:
-            data = TBframe.construct(TBframe.LOG_SUB, self.subscribed[devname])
-            self.send_data(data)
+            self.send_packet(TBframe.LOG_SUB, self.subscribed[devname])
         return True
 
     def device_unsubscribe(self, devices):
         for devname in list(devices):
             if devname not in self.subscribed:
                 continue
-            data = TBframe.construct(TBframe.LOG_UNSUB, self.subscribed[devname])
-            self.send_data(data)
+            self.send_packet(TBframe.LOG_UNSUB, self.subscribed[devname])
             self.subscribed_reverse.pop(self.subscribed[devname])
             self.subscribed.pop(devname)
 
@@ -342,8 +352,7 @@ class Autotest:
             print "error: device {0} not subscribed".format(devname)
             return False
         content = self.subscribed[devname]
-        data = TBframe.construct(TBframe.DEVICE_ERASE, content);
-        self.send_data(data)
+        self.send_packet(TBframe.DEVICE_ERASE, content);
         self.wait_cmd_excute_done(10)
         if self.cmd_excute_state == "done":
             ret = True
@@ -374,8 +383,7 @@ class Autotest:
 
         filehash = TBframe.hash_of_file(expandname)
         content = self.subscribed[devname] + ',' + address + ',' + filehash
-        data = TBframe.construct(TBframe.DEVICE_PROGRAM, content);
-        self.send_data(data)
+        self.send_packet(TBframe.DEVICE_PROGRAM, content);
         self.wait_cmd_excute_done(270)
         if self.cmd_excute_state == "done":
             ret = True
@@ -395,8 +403,7 @@ class Autotest:
             return False
 
         content = self.subscribed[devname]
-        data = TBframe.construct(operations[operation], content)
-        self.send_data(data)
+        self.send_packet(operations[operation], content)
         return True
 
     def device_run_cmd(self, devname, args, expect_lines = 0, timeout=0.8, filters=[""]):
@@ -408,7 +415,6 @@ class Autotest:
             return False
         content = self.subscribed[devname]
         content += ':' + '|'.join(args)
-        data = TBframe.construct(TBframe.DEVICE_CMD, content)
         with self.filter_lock:
             self.filter['devname'] = devname
             self.filter['cmdstr'] = ' '.join(args)
@@ -419,7 +425,7 @@ class Autotest:
 
         retry = 3
         while retry > 0:
-            self.send_data(data)
+            self.send_packet(TBframe.DEVICE_CMD, content)
             self.filter_event.clear()
             self.filter_event.wait(timeout)
             if self.filter['lines_num'] > 0:
@@ -465,8 +471,8 @@ class Autotest:
                 print "open logfile {0} failed".format(logfile)
                 return False
 
+        thread.start_new_thread(self.packet_send_thread, ())
         thread.start_new_thread(self.server_interaction, ())
-        thread.start_new_thread(self.heartbeat_func, ())
         time.sleep(0.5)
         return True
 

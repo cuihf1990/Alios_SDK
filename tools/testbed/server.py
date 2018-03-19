@@ -1,10 +1,9 @@
-import os, sys, time, socket, ssl, signal, re
+import os, sys, time, socket, ssl, signal, re, Queue
 import thread, threading, json, traceback, shutil
-import TBframe
+import TBframe as pkt
 
-MAX_MSG_LENTH = 8192
-ENCRYPT_CLIENT = False
-ENCRYPT_TERMINAL = False
+MAX_MSG_LENGTH = 65536
+ENCRYPT = True
 DEBUG = True
 
 def signal_handler(sig, frame):
@@ -13,10 +12,11 @@ def signal_handler(sig, frame):
 
 class Server:
     def __init__(self):
-        self.keyfile = 'server_key.pem'
-        self.certfile = 'server_cert.pem'
-        self.client_socket = 0
-        self.terminal_socket = 0
+        self.keyfile = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'key.pem')
+        self.certfile = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'certificate.pem')
+        self.output_queue = Queue.Queue(256)
+        self.client_socket = None
+        self.terminal_socket = None
         self.client_list = []
         self.terminal_list = []
         self.timeouts = {}
@@ -44,6 +44,27 @@ class Server:
         #self.alloc_exclude_set += ['/dev/mk3060-DN02RDVV']
         #self.alloc_exclude_set += ['/dev/esp32-3.x.x']
 
+    def packet_send_thread(self):
+        while self.keep_running:
+            try:
+                [sock, type, content] = self.output_queue.get(block=True, timeout=0.1)
+            except Queue.Empty:
+                type = None
+                continue
+            data = pkt.construct(type, content)
+            try:
+                sock.send(data)
+            except:
+                continue
+
+    def send_packet(self, sock, type, content, timeout=0.1):
+        try:
+            self.output_queue.put([sock, type, content], True, timeout)
+            return True
+        except Queue.Full:
+            print "error: ouput buffer full, drop packet [{0] {1}]".format(type, content)
+        return False
+
     def construct_dev_list(self):
         l = []
         for client in self.client_list:
@@ -60,17 +81,12 @@ class Server:
 
     def send_device_list_to_terminal(self, terminal):
         devs = self.construct_dev_list()
-        data = TBframe.construct(TBframe.ALL_DEV, devs)
-        terminal['socket'].send(data)
+        self.send_packet(terminal['socket'], pkt.ALL_DEV, devs)
 
     def send_device_list_to_all(self):
         devs = self.construct_dev_list()
-        data = TBframe.construct(TBframe.ALL_DEV, devs)
         for t in self.terminal_list:
-            try:
-                t['socket'].send(data)
-            except:
-                continue
+            self.send_packet(t['socket'], pkt.ALL_DEV, devs)
 
     def client_serve_thread(self, conn, addr):
         file = {}
@@ -79,21 +95,20 @@ class Server:
         self.timeouts[conn] = {'type':'client', 'addr': addr, 'timeout': time.time() + 30}
         while self.keep_running:
             try:
-                new_msg = conn.recv(MAX_MSG_LENTH)
+                new_msg = conn.recv(MAX_MSG_LENGTH)
                 if new_msg == '':
                     break
 
                 msg += new_msg
                 while msg != '':
-                    type, length, value, msg = TBframe.parse(msg)
-                    if type == TBframe.TYPE_NONE:
+                    type, length, value, msg = pkt.parse(msg)
+                    if type == pkt.TYPE_NONE:
                         break
 
                     if conn in self.timeouts: self.timeouts[conn]['timeout'] = time.time() + 30
                     if client == None:
-                        if type != TBframe.CLIENT_UUID:
-                            data = TBframe.construct(TBframe.CLIENT_UUID, 'give me your uuid first')
-                            conn.send(data)
+                        if type != pkt.CLIENT_UUID:
+                            self.send_packet(conn, pkt.CLIENT_UUID, 'give me your uuid first')
                             time.sleep(0.1)
                             continue
                         for c in self.client_list:
@@ -116,7 +131,7 @@ class Server:
                             print "client {0} re-connected @ {1}".format(value, addr)
                         continue
 
-                    if type == TBframe.CLIENT_DEV:
+                    if type == pkt.CLIENT_DEV:
                         new_devices = value.split(':')
                         for port in new_devices:
                             if port == "":
@@ -153,7 +168,7 @@ class Server:
                             file[port]['handle'].close()
                             file.pop(port)
                         self.send_device_list_to_all()
-                    elif type == TBframe.DEVICE_LOG:
+                    elif type == pkt.DEVICE_LOG:
                         port = value.split(':')[0]
                         if port not in client['devices']:
                             continue
@@ -161,12 +176,8 @@ class Server:
                         if client['devices'][port]['log_subscribe'] != [] and \
                            ('tag' not in client or client['tag'] not in value):
                             log = client['uuid'] + ',' + value
-                            data = TBframe.construct(type, log)
                             for s in client['devices'][port]['log_subscribe']:
-                                try:
-                                    s.send(data)
-                                except:
-                                    continue
+                                self.send_packet(s, type, log)
 
                         #save log to files
                         try:
@@ -198,7 +209,7 @@ class Server:
                                 print "error: can not open/create file ", filename
                         if port in file and file[port]['date'] == logdatestr:
                             file[port]['handle'].write(logstr)
-                    elif type == TBframe.DEVICE_STATUS:
+                    elif type == pkt.DEVICE_STATUS:
                         #print value
                         port = value.split(':')[0]
                         if port not in client['devices']:
@@ -207,17 +218,13 @@ class Server:
                         if client['devices'][port]['status_subscribe'] != []:
                             log = client['uuid'] + ',' + port
                             log += value[len(port):]
-                            data = TBframe.construct(type, log)
                             for s in client['devices'][port]['status_subscribe']:
-                                try:
-                                    s.send(data)
-                                except:
-                                    continue
-                    elif type == TBframe.DEVICE_ERASE or type == TBframe.DEVICE_PROGRAM or \
-                         type == TBframe.DEVICE_START or type == TBframe.DEVICE_STOP or \
-                         type == TBframe.DEVICE_RESET or type == TBframe.DEVICE_CMD or \
-                         type == TBframe.FILE_BEGIN or type == TBframe.FILE_DATA or \
-                         type == TBframe.FILE_END:
+                                self.send_packet(s, type, log)
+                    elif type == pkt.DEVICE_ERASE or type == pkt.DEVICE_PROGRAM or \
+                         type == pkt.DEVICE_START or type == pkt.DEVICE_STOP or \
+                         type == pkt.DEVICE_RESET or type == pkt.DEVICE_CMD or \
+                         type == pkt.FILE_BEGIN or type == pkt.FILE_DATA or \
+                         type == pkt.FILE_END:
                         values = value.split(',')
                         addr = (values[0], int(values[1]))
                         terminal = None
@@ -226,11 +233,10 @@ class Server:
                                 terminal = t
                         if terminal != None:
                             if values[2] != 'success' and values[2] != 'ok':
-                                data = TBframe.construct(TBframe.CMD_ERROR, ','.join(values[2:]))
+                                self.send_packet(terminal['socket'], pkt.CMD_ERROR, ','.join(values[2:]))
                             else:
-                                data = TBframe.construct(TBframe.CMD_DONE, ','.join(values[2:]))
-                            terminal['socket'].send(data)
-                    elif type == TBframe.CLIENT_TAG:
+                                self.send_packet(terminal['socket'], pkt.CMD_DONE, ','.join(values[2:]))
+                    elif type == pkt.CLIENT_TAG:
                         client['tag'] = value
                         print 'client {0} tag: {1}'.format(client['uuid'],repr(value))
             except:
@@ -258,27 +264,23 @@ class Server:
         print "sending {0} to {1} ...".format(filename, dst['addr']),
         file = open(filename,'r')
         content = filename.split('/')[-1]
-        data = TBframe.construct(TBframe.FILE_BEGIN, content)
-        try:
-            dst['socket'].send(data)
-        except:
+        sock = dst['socket']
+        ret = self.send_packet(sock, pkt.FILE_BEGIN, content)
+        if ret == False:
             print "failed"
             return False
+
         content = file.read(1024)
         while(content):
-            data = TBframe.construct(TBframe.FILE_DATA, content)
-            try:
-                dst['socket'].send(data)
-            except:
+            ret = self.send_packet(sock, pkt.FILE_DATA, content)
+            if ret == False:
                 print "failed"
                 return False
             content = file.read(1024)
         file.close()
         content = filename.split('/')[-1]
-        data = TBframe.construct(TBframe.FILE_END, content)
-        try:
-            dst['socket'].send(data)
-        except:
+        ret = self.send_packet(sock, pkt.FILE_END, content)
+        if ret == False:
             print "failed"
             return False
         print "succeed"
@@ -415,57 +417,51 @@ class Server:
         self.send_device_list_to_terminal(terminal)
         while self.keep_running:
             try:
-                new_msg = terminal['socket'].recv(MAX_MSG_LENTH);
+                new_msg = terminal['socket'].recv(MAX_MSG_LENGTH);
                 if new_msg == '':
                     break
 
                 msg += new_msg
                 while msg != '':
-                    type, length, value, msg = TBframe.parse(msg)
-                    if type == TBframe.TYPE_NONE:
+                    type, length, value, msg = pkt.parse(msg)
+                    if type == pkt.TYPE_NONE:
                         break
 
                     if conn in self.timeouts: self.timeouts[conn]['timeout'] = time.time() + 30
-                    if type == TBframe.FILE_BEGIN or type == TBframe.FILE_DATA or type == TBframe.FILE_END:
+                    if type == pkt.FILE_BEGIN or type == pkt.FILE_DATA or type == pkt.FILE_END:
                         dev_str = value.split(':')[0]
                         uuid = dev_str.split(',')[0]
                         target_data = value[len(dev_str):]
                         client = self.get_client_by_uuid(uuid)
                         if client == None:
-                            data = TBframe.construct(TBframe.CMD_ERROR, 'nonexist')
-                            terminal['socket'].send(data)
+                            seld.send_packet(terminal['socket'], pkt.CMD_ERROR, 'nonexist')
                             continue
                         content  = terminal['addr'][0] + ',' + str(terminal['addr'][1])
                         content += target_data
-                        data = TBframe.construct(type, content)
-                        client['socket'].send(data)
-                    elif type == TBframe.DEVICE_ERASE or type == TBframe.DEVICE_PROGRAM or \
-                         type == TBframe.DEVICE_START or type == TBframe.DEVICE_STOP or \
-                         type == TBframe.DEVICE_RESET or type == TBframe.DEVICE_CMD:
+                        self.send_packet(client['socket'], type, content)
+                    elif type == pkt.DEVICE_ERASE or type == pkt.DEVICE_PROGRAM or \
+                         type == pkt.DEVICE_START or type == pkt.DEVICE_STOP or \
+                         type == pkt.DEVICE_RESET or type == pkt.DEVICE_CMD:
                         dev_str_split = value.split(':')[0].split(',')[0:2]
                         if len(dev_str_split) != 2:
-                            data = TBframe.construct(TBframe.CMD_ERROR,'argerror')
-                            terminal['socket'].send(data)
+                            self.send_packet(terminal['socket'], pkt.CMD_ERROR,'argerror')
                             continue
                         [uuid, port] = dev_str_split
                         client = self.get_client_by_uuid(uuid)
                         if client == None:
-                            data = TBframe.construct(TBframe.CMD_ERROR,'nonexist')
-                            terminal['socket'].send(data)
+                            self.send_packet(terminal['socket'], pkt.CMD_ERROR,'nonexist')
                             continue
                         content = terminal['addr'][0]
                         content += ',' + str(terminal['addr'][1])
                         content += value[len(uuid):]
-                        data = TBframe.construct(type, content)
-                        client['socket'].send(data)
+                        self.send_packet(client['socket'], type, content)
                         self.increase_device_refer(client, port, using_list)
-                    elif type == TBframe.DEVICE_ALLOC:
+                    elif type == pkt.DEVICE_ALLOC:
                         result = self.allocate_devices(value)
                         content = ','.join(result)
-                        data = TBframe.construct(TBframe.DEVICE_ALLOC, content)
-                        terminal['socket'].send(data)
-                    elif type == TBframe.LOG_SUB or type == TBframe.LOG_UNSUB or \
-                         type == TBframe.STATUS_SUB or type == TBframe.STATUS_UNSUB:
+                        self.send_packet(terminal['socket'], pkt.DEVICE_ALLOC, content)
+                    elif type == pkt.LOG_SUB or type == pkt.LOG_UNSUB or \
+                         type == pkt.STATUS_SUB or type == pkt.STATUS_UNSUB:
                         dev_str_split = value.split(',')
                         if len(dev_str_split) != 2:
                             continue
@@ -475,19 +471,19 @@ class Server:
                             continue
                         if port not in list(client['devices']):
                             continue
-                        if type == TBframe.LOG_SUB:
+                        if type == pkt.LOG_SUB:
                             if terminal['socket'] in client['devices'][port]['log_subscribe']:
                                 continue
                             client['devices'][port]['log_subscribe'].append(terminal['socket'])
                             print "terminal {0}:{1}".format(terminal['addr'][0], terminal['addr'][1]),
                             print "subscribed log of device {0}:{1}".format(uuid, port)
-                        elif type == TBframe.LOG_UNSUB:
+                        elif type == pkt.LOG_UNSUB:
                             if terminal['socket'] not in client['devices'][port]['log_subscribe']:
                                 continue
                             client['devices'][port]['log_subscribe'].remove(terminal['socket'])
                             print "terminal {0}:{1}".format(terminal['addr'][0], terminal['addr'][1]),
                             print "unsubscribed log of device {0}:{1}".format(uuid, port)
-                        elif type == TBframe.STATUS_SUB:
+                        elif type == pkt.STATUS_SUB:
                             if terminal['socket'] in client['devices'][port]['status_subscribe']:
                                 continue
                             client['devices'][port]['status_subscribe'].append(terminal['socket'])
@@ -495,15 +491,14 @@ class Server:
                             print "subscribed status of device {0}:{1}".format(uuid, port)
                             content = client['uuid'] + ',' + port
                             content += ':' + client['devices'][port]['status']
-                            data = TBframe.construct(TBframe.DEVICE_STATUS, content)
-                            terminal['socket'].send(data)
-                        elif type == TBframe.STATUS_UNSUB:
+                            self.send_packet(terminal['socket'], pkt.DEVICE_STATUS, content)
+                        elif type == pkt.STATUS_UNSUB:
                             if terminal['socket'] not in client['devices'][port]['status_subscribe']:
                                 continue
                             client['devices'][port]['status_subscribe'].remove(terminal['socket'])
                             print "terminal {0}:{1}".format(terminal['addr'][0], terminal['addr'][1]),
                             print "unsubscribed status of device {0}:{1}".format(uuid, port)
-                    elif type == TBframe.LOG_DOWNLOAD:
+                    elif type == pkt.LOG_DOWNLOAD:
                         dev_str_split = value.split(',')
                         if len(dev_str_split) != 2:
                             continue
@@ -512,15 +507,13 @@ class Server:
                         filename = 'server/' + datestr + '/' + uuid + '-' + port.split('/')[-1] + '.log'
                         client = self.get_client_by_uuid(uuid)
                         if client == None or port not in list(client['devices']) or os.path.exists(filename) == False:
-                            data = TBframe.construct(TBframe.CMD_ERROR,'fail')
-                            terminal['socket'].send(data)
+                            self.send_packet(terminal['socket'], pkt.CMD_ERROR,'fail')
                             print "terminal {0}:{1}".format(terminal['addr'][0], terminal['addr'][1]),
                             print "downloading log of device {0}:{1} ... failed".format(uuid, port)
                             continue
                         self.send_file_to_someone(terminal, filename)
                         heartbeat_timeout = time.time() + 30
-                        data = TBframe.construct(TBframe.CMD_DONE, 'success')
-                        terminal['socket'].send(data)
+                        self.send_packet(terminal['socket'], pkt.CMD_DONE, 'success')
                         print "terminal {0}:{1}".format(terminal['addr'][0], terminal['addr'][1]),
                         print "downloading log of device {0}:{1} ... succeed".format(uuid, port)
             except:
@@ -553,7 +546,7 @@ class Server:
 
     def client_listen_thread(self):
         self.client_socket.listen(5)
-        if ENCRYPT_CLIENT:
+        if ENCRYPT:
             self.client_socket = ssl.wrap_socket(self.client_socket, self.keyfile, self.certfile, True)
         while self.keep_running:
             try:
@@ -564,7 +557,7 @@ class Server:
 
     def terminal_listen_thread(self):
         self.terminal_socket.listen(5)
-        if ENCRYPT_TERMINAL:
+        if ENCRYPT:
             self.terminal_socket = ssl.wrap_socket(self.terminal_socket, self.keyfile, self.certfile, True)
         while self.keep_running:
             try:
@@ -703,6 +696,7 @@ class Server:
     def run(self):
         signal.signal(signal.SIGINT, signal_handler)
         try:
+            thread.start_new_thread(self.packet_send_thread, ())
             thread.start_new_thread(self.client_listen_thread, ())
             thread.start_new_thread(self.terminal_listen_thread, ())
             thread.start_new_thread(self.statistics_thread, ())
