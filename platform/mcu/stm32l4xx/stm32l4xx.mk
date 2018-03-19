@@ -48,6 +48,8 @@ $(NAME)_SOURCES += aos/soc_impl.c \
                    
 ifeq ($(HOST_MCU_NAME), STM32L433RC-Nucleo)
 GLOBAL_CFLAGS += -DSTM32L433xx
+$(NAME)_SOURCES += src/$(HOST_MCU_NAME)/hal/hal_gpio_stm32l4.c \
+                   src/$(HOST_MCU_NAME)/hal/hal_i2c_stm32l4.c 
 else ifeq ($(HOST_MCU_NAME), STM32L432KC-Nucleo)
 GLOBAL_CFLAGS += -DSTM32L432xx 
 endif
@@ -71,9 +73,7 @@ $(NAME)_SOURCES += src/$(HOST_MCU_NAME)/runapp/soc_init.c \
                    src/$(HOST_MCU_NAME)/hal/hal_uart_stm32l4.c \
                    src/$(HOST_MCU_NAME)/hal/hw.c \
                    src/$(HOST_MCU_NAME)/hal/flash_l4.c \
-                   src/$(HOST_MCU_NAME)/hal/flash_port.c \
-                   src/$(HOST_MCU_NAME)/hal/hal_gpio_stm32l4.c \
-                   src/$(HOST_MCU_NAME)/hal/hal_i2c_stm32l4.c 
+                   src/$(HOST_MCU_NAME)/hal/flash_port.c 
 
 ifeq ($(COMPILER),armcc)
 GLOBAL_CFLAGS   += --c99 --cpu=7E-M -D__MICROLIB -g --apcs=interwork --split_sections
