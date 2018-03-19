@@ -444,6 +444,38 @@ class ota_bin(aos_command):
 binary = aos_global_config.toolchain.binary
 target = binary.replace('elf', 'ota.bin')
 source = binary.replace('.elf', '.bin')
-
 component.add_command(target, source, ota_bin(aos_global_config))
 
+
+class debug_config(aos_command):
+    def __init__(self, aos_global_config):
+        self.config = aos_global_config
+
+    def dispatch_action(self, target, source, env):
+        gdb_config_file = target[0].get_path()
+        cwd = os.getcwd()
+        with open(gdb_config_file, 'w') as f:
+            f.write('set remotetimeout 20\n')
+
+            gdb_init_string = 'shell -c "trap \\\\"\\\\" 2;"'
+            if sys.platform.startswith('win'):
+                f.write('shell build/cmd/win32/taskkill /F /IM openocd.exe\n')
+                gdb_init_string += os.path.join(cwd, 'build/OpenOCD/Win32/openocd').replace(os.path.sep, '/')
+            elif sys.platform.startswith('darwin'):
+                f.write('shell killall openocd\n')
+                gdb_init_string += os.path.join(cwd, 'build/OpenOCD/OSX/openocd')
+            else:
+                f.write('shell killall openocd_run\n')
+                gdb_init_string += os.path.join(cwd, 'build/OpenOCD/Linux64/openocd')
+
+            gdb_init_string += '"'
+            gdb_init_string += ' -f ' + os.path.join(cwd, 'build/OpenOCD/interface/jlink.cfg').replace(os.path.sep, '/')
+            gdb_init_string += ' -f ' + os.path.join(cwd, 'build/OpenOCD/moc108/moc108.cfg').replace(os.path.sep, '/')
+            gdb_init_string += ' -f ' + os.path.join(cwd, 'build/OpenOCD/moc108/moc108_gdb_jtag.cfg').replace(os.path.sep, '/')
+            gdb_init_string += ' -l ' + os.path.join(cwd, 'out/openocd.log').replace(os.path.sep, '/')
+            gdb_init_string += ' &"\n'
+            f.write(gdb_init_string)
+
+target = '.gdbinit'
+source = binary.replace('.elf', '.bin')
+component.add_command(target, source, debug_config(aos_global_config))
