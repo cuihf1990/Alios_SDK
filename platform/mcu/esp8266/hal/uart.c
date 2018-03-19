@@ -8,10 +8,10 @@
 #include "k_api.h"
 #define uart_dev_t aos_uart_dev_t
 #define uart_config_t aos_uart_config_t
-#include <hal/soc/soc.h>
+#include <hal/soc/uart.h>
 #undef uart_dev_t
 #undef uart_config_t
-#include <hal/soc/soc.h>
+#include <hal/soc/uart.h>
 int32_t uart_receive_buffer_queue(uint8_t *data);
 
 extern void uart_init_new(void);
