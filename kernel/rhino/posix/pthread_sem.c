@@ -38,7 +38,7 @@ int sem_timedwait(sem_t *sem, const struct timespec *abs_timeout)
     ticks = abs_timeout.tv_sec * RHINO_CONFIG_TICKS_PER_SECOND + 
        (abs_timeout.tv_nsec / 1000000) / (1000 / RHINO_CONFIG_TICKS_PER_SECOND);
 
-    stat = krhino_sem_take(*sem, tick_t ticks);
+    stat = krhino_sem_take(*sem, ticks);
 
     if (stat == RHINO_SUCCESS) {
         return 0;
