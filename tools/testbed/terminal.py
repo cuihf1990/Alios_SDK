@@ -1,11 +1,12 @@
 #!/usr/bin/python
 
 import os, sys, time, curses, socket, ssl, random
-import subprocess, thread, threading, pickle
+import subprocess, thread, threading, json, Queue
 from operator import itemgetter
-import TBframe
+from os import path
+import TBframe as pkt
 
-MAX_MSG_LENTH = 8192
+MAX_MSG_LENGTH = 65536
 CMD_WINDOW_HEIGHT = 2
 DEV_WINDOW_WIDTH  = 36
 LOG_WINDOW_HEIGHT = 30
@@ -13,7 +14,7 @@ LOG_WINDOW_WIDTH  = 80
 LOG_HISTORY_LENGTH = 5000
 MOUSE_SCROLL_UP = 0x80000
 MOUSE_SCROLL_DOWN = 0x8000000
-ENCRYPT = False
+ENCRYPT = True
 DEBUG = True
 
 class ConnectionLost(Exception):
@@ -32,6 +33,7 @@ class Terminal:
         self.cmd_excute_state = 'idle'
         self.cmd_excute_return = ''
         self.cmd_excute_event = threading.Event()
+        self.output_queue = Queue.Queue(256)
         self.log_content = []
         self.log_curr_line = -1
         self.log_subscribed = []
@@ -43,24 +45,27 @@ class Terminal:
         self.last_runcmd_dev = []
 
     def init(self):
-        if os.path.exists('terminal') == False:
-            subprocess.call(['mkdir','terminal'])
+        work_dir = path.join(path.expanduser('~'), '.tbterminal')
+        if path.exists(work_dir) == False:
+            os.mkdir(work_dir)
 
-        if os.path.exists('terminal/.alias') == True:
+        alias_file = path.join(path.expanduser('~'), '.tbterminal', '.alias')
+        if path.exists(alias_file) == True:
             try:
-                file = open('terminal/.alias','rb')
-                self.alias_tuples = pickle.load(file)
+                file = open(alias_file, 'rb')
+                self.alias_tuples = json.load(file)
                 file.close()
             except:
-                print "read alias record failed"
+                print 'read alias record failed'
 
-        if os.path.exists('terminal/.cmd_history') == True:
+        cmd_history_file = path.join(path.expanduser('~'), '.tbterminal', '.cmd_history')
+        if path.exists(cmd_history_file) == True:
             try:
-                file = open('terminal/.cmd_history','rb')
-                self.cmd_history = pickle.load(file)
+                file = open(cmd_history_file, 'rb')
+                self.cmd_history = json.load(file)
                 file.close()
             except:
-                print "read command history failed"
+                print 'read command history failed'
 
         #initialize UI
         try:
@@ -71,7 +76,6 @@ class Terminal:
             curses.mouseinterval(0)
             curses.start_color()
             curses.use_default_colors()
-            curses.init_pair(0, curses.COLOR_BLACK, -1)
             curses.init_pair(1, curses.COLOR_RED, -1)
             curses.init_pair(2, curses.COLOR_GREEN, -1)
             curses.init_pair(3, curses.COLOR_YELLOW, -1)
@@ -81,9 +85,10 @@ class Terminal:
             curses.init_pair(7, curses.COLOR_WHITE, -1)
             self.curseslock = threading.Lock();
             self.window_redraw()
-            return "success"
+            return 'success'
         except:
-            return "UI failed"
+            if DEBUG: traceback.print_exc()
+            return 'UI failed'
 
     def window_redraw(self):
         global LOG_WINDOW_WIDTH
@@ -116,14 +121,14 @@ class Terminal:
         x = 1; y = 1 + LOG_WINDOW_HEIGHT + 1;
         self.cmd_window = curses.newwin(CMD_WINDOW_HEIGHT, LOG_WINDOW_WIDTH + 1 + DEV_WINDOW_WIDTH, y, x)
         self.cmd_window.keypad(1)
-        self.log_window.addstr(0, 0, "Logs", curses.A_BOLD)
+        self.log_window.addstr(0, 0, 'Logs', curses.A_BOLD)
         self.log_window.move(1, 0)
         self.log_window.refresh()
-        self.dev_window.addstr(0, 0, "Devices", curses.A_BOLD)
-        self.dev_window.addstr(0, DEV_WINDOW_WIDTH-4, "USE")
+        self.dev_window.addstr(0, 0, 'Devices', curses.A_BOLD)
+        self.dev_window.addstr(0, DEV_WINDOW_WIDTH-4, 'USE')
         self.dev_window.move(1, 0)
         self.dev_window.refresh()
-        self.cmd_window.addstr(0, 0, "Command:", curses.A_BOLD)
+        self.cmd_window.addstr(0, 0, 'Command:', curses.A_BOLD)
         self.cmd_window.refresh()
         self.curseslock.release()
 
@@ -131,27 +136,30 @@ class Terminal:
         colors = escape[2:-1].split(';')
         self.cur_color_pair = 7
         for color in colors:
-            if color == "30":
+            if color == '30':
                 self.cur_color_pair = 0
-            elif color == "31":
+            elif color == '31':
                 self.cur_color_pair = 1
-            elif color == "32":
+            elif color == '32':
                 self.cur_color_pair = 2
-            elif color == "33":
+            elif color == '33':
                 self.cur_color_pair = 3
-            elif color == "34":
+            elif color == '34':
                 self.cur_color_pair = 4
-            elif color == "35":
+            elif color == '35':
                 self.cur_color_pair = 5
-            elif color == "36":
+            elif color == '36':
                 self.cur_color_pair = 6
-            elif color == "37":
+            elif color == '37':
                 self.cur_color_pair = 7
 
     def log_parse_oneline(self, log):
         log_buffer = []
 
-        log_index = log.split(':')[0] + ':'
+        if ':' in log:
+            log_index = log.split(':')[0] + ':'
+        else:
+            log_index = ''
         log = log[len(log_index):]
         log = log.replace('\t', ' ' * 8)
         line_length = len(log)
@@ -229,7 +237,7 @@ class Terminal:
                 self.curseslock.release()
                 if DEBUG:
                     print log_dsp_buffer[i]
-                    print "len:", len(log_dsp_buffer[i][1])
+                    print 'len:', len(log_dsp_buffer[i][1])
                     raise
                 return
 
@@ -278,11 +286,11 @@ class Terminal:
 
     def cmdrun_command_display(self, cmd, postion):
         self.curseslock.acquire()
-        self.cmd_window.move(0, len("Command:"))
-        self.cmd_window.addstr(' ' * (LOG_WINDOW_WIDTH + DEV_WINDOW_WIDTH - len("Command:")))
-        self.cmd_window.move(0, len("Command:"))
+        self.cmd_window.move(0, len('Command:'))
+        self.cmd_window.addstr(' ' * (LOG_WINDOW_WIDTH + DEV_WINDOW_WIDTH - len('Command:')))
+        self.cmd_window.move(0, len('Command:'))
         self.cmd_window.addstr(cmd)
-        self.cmd_window.move(0, len("Command:") + postion)
+        self.cmd_window.move(0, len('Command:') + postion)
         self.cmd_window.refresh()
         self.curseslock.release()
 
@@ -295,20 +303,38 @@ class Terminal:
         self.cmd_window.refresh()
         self.curseslock.release()
 
-    def send_data(self, data):
-        try:
-            self.service_socket.send(data)
-        except:
-            self.connected = False
-
-    def heartbeat_func(self):
+    def packet_send_thread(self):
         heartbeat_timeout = time.time() + 10
         while self.keep_running:
-            time.sleep(0.05)
-            if time.time() < heartbeat_timeout:
+            try:
+                [type, content] = self.output_queue.get(block=True, timeout=0.1)
+            except Queue.Empty:
+                type = None
+                pass
+            if self.service_socket == None:
                 continue
-            self.send_data(TBframe.construct(TBframe.HEARTBEAT, ''))
-            heartbeat_timeout += 10
+            if type == None:
+                if time.time() < heartbeat_timeout:
+                    continue
+                heartbeat_timeout += 10
+                data = pkt.construct(pkt.HEARTBEAT,'')
+            else:
+                data = pkt.construct(type, content)
+            try:
+                self.service_socket.send(data)
+            except:
+                self.connected = False
+                continue
+
+    def send_packet(self, type, content, timeout=0.1):
+        if self.service_socket == None:
+            return False
+        try:
+            self.output_queue.put([type, content], True, timeout)
+            return True
+        except Queue.Full:
+            if DEBUG: self.log_display(time.time(), 'error: ouput buffer full, drop packet [{0] {1}]'.format(type, content))
+        return False
 
     def get_devstr_by_index(self, index):
         devices = list(self.device_list)
@@ -321,33 +347,41 @@ class Terminal:
         return devices.index(devstr)
 
     def server_interaction(self):
+        self.connected = False
+        self.service_socket = None
         msg = ''
         while self.keep_running:
             try:
-                new_msg = self.service_socket.recv(MAX_MSG_LENTH)
+                if self.connected == False:
+                    raise ConnectionLost
+
+                new_msg = self.service_socket.recv(MAX_MSG_LENGTH)
                 if new_msg == '':
                     raise ConnectionLost
                     break
 
                 msg += new_msg
                 while msg != '':
-                    type, length, value, msg = TBframe.parse(msg)
-                    if type == TBframe.TYPE_NONE:
+                    type, length, value, msg = pkt.parse(msg)
+                    if type == pkt.TYPE_NONE:
                         break
 
                     #print type, length
-                    if type == TBframe.FILE_BEGIN:
+                    if type == pkt.FILE_BEGIN:
                         if 'file' in locals() and file.closed == False:
                             file.close()
-                        filename = 'terminal/' + value
+                        filename = path.join(path.expanduser('~'), '.tbterminal', value)
                         file = open(filename, 'w')
-                    elif type == TBframe.FILE_DATA:
+                        continue
+                    if type == pkt.FILE_DATA:
                         if 'file' in locals() and file.closed == False:
                             file.write(value)
-                    elif type == TBframe.FILE_END:
+                        continue
+                    if type == pkt.FILE_END:
                         if 'file' in locals():
                             file.close()
-                    if type == TBframe.ALL_DEV:
+                        continue
+                    if type == pkt.ALL_DEV:
                         new_list = {}
                         clients = value.split(':')
                         for c in clients:
@@ -369,7 +403,8 @@ class Terminal:
                             if dev not in list(new_list):
                                 self.device_list.pop(dev)
                         self.device_list_display()
-                    if type == TBframe.DEVICE_LOG:
+                        continue
+                    if type == pkt.DEVICE_LOG:
                         dev = value.split(':')[0]
                         logtime = value.split(':')[1]
                         log = value[len(dev) + 1 + len(logtime):]
@@ -383,33 +418,36 @@ class Terminal:
                         if dev in self.log_subscribed:
                             log =  str(index) + log
                             self.log_display(logtime, log)
-                    if type == TBframe.CMD_DONE:
+                    if type == pkt.CMD_DONE:
                         self.cmd_excute_return = value
                         self.cmd_excute_state = 'done'
                         self.cmd_excute_event.set()
-                    if type == TBframe.CMD_ERROR:
+                        continue
+                    if type == pkt.CMD_ERROR:
                         self.cmd_excute_return = value
                         self.cmd_excute_state = 'error'
                         self.cmd_excute_event.set()
+                        continue
             except ConnectionLost:
                 self.connected = False
-                self.cmdrun_status_display('connection to server lost, try reconnecting...')
-                self.service_socket.close()
-                self.service_socket = None
-                while True:
-                    result = self.connect_to_server(self.server_ip, self.server_port)
-                    if result == 'success':
-                        break
-                    time.sleep(1)
-                self.cmdrun_status_display('connection to server resumed')
+                if self.service_socket != None:
+                    self.service_socket.close()
+                    self.service_socket = None
+                    self.cmdrun_status_display('connection to server lost, try reconnecting...')
+
+                result = self.connect_to_server(self.server_ip, self.server_port)
+                if result == 'success':
+                    self.cmdrun_status_display('connect to server succeeded')
+                else:
+                    self.cmdrun_status_display('connect to server failed, retry later ...')
+                    time.sleep(5)
+                    continue
                 random.seed()
                 time.sleep(1.2 + random.random())
                 for dev_str in self.log_subscribed:
-                    data = TBframe.construct(TBframe.LOG_SUB, dev_str)
-                    self.send_data(data)
+                    self.send_packet(pkt.LOG_SUB, dev_str)
                 for dev_str in self.using_list:
-                    data = TBframe.construct(TBframe.DEVICE_CMD, dev_str + ':help')
-                    self.send_data(data)
+                    self.send_packet(pkt.DEVICE_CMD, dev_str + ':help')
             except:
                 if DEBUG:
                     raise
@@ -439,7 +477,7 @@ class Terminal:
                 return range(start, end - 1, -1)
         else:
             if index_str.isdigit() == False:
-                return
+                return []
             try:
                 index = int(index_str)
             except:
@@ -453,20 +491,19 @@ class Terminal:
         self.cmd_excute_return = None
         self.cmd_excute_event.clear()
         if self.cmd_excute_event.wait(timeout) == False:
-            self.cmd_excute_state = "timeout"
+            self.cmd_excute_state = 'timeout'
 
     def send_file_to_client(self, filename, index):
         status_str = 'sending file {0} to {1}...'.format(filename, self.get_devstr_by_index(index).split(',')[0])
         self.cmdrun_status_display(status_str)
-        filehash = TBframe.hash_of_file(filename)
+        filehash = pkt.hash_of_file(filename)
         devstr = self.get_devstr_by_index(index)
 
         #send file begin
         content = devstr  + ':' + filehash + ':' + filename.split('/')[-1]
-        data = TBframe.construct(TBframe.FILE_BEGIN, content)
         retry = 4
         while retry > 0:
-            self.send_data(data)
+            self.send_packet(pkt.FILE_BEGIN, content)
             self.wait_cmd_excute_done(0.2)
             if self.cmd_excute_state == 'timeout':
                 retry -= 1;
@@ -494,12 +531,11 @@ class Terminal:
         seq = 0
         file = open(filename,'r')
         header = devstr  + ':' + filehash + ':' + str(seq) + ':'
-        content = file.read(1024)
+        content = file.read(8192)
         while(content):
-            data = TBframe.construct(TBframe.FILE_DATA, header + content)
             retry = 4
             while retry > 0:
-                self.send_data(data)
+                self.send_packet(pkt.FILE_DATA, header + content)
                 self.wait_cmd_excute_done(0.2)
                 if self.cmd_excute_return == None:
                     retry -= 1;
@@ -519,15 +555,14 @@ class Terminal:
 
             seq += 1
             header = devstr  + ':' + filehash + ':' + str(seq) + ':'
-            content = file.read(1024)
+            content = file.read(8192)
         file.close()
 
         #send file end
         content = devstr  + ':' + filehash + ':' + filename.split('/')[-1]
-        data = TBframe.construct(TBframe.FILE_END, content)
         retry = 4
         while retry > 0:
-            self.send_data(data)
+            self.send_packet(pkt.FILE_END, content)
             self.wait_cmd_excute_done(0.2)
             if self.cmd_excute_return == None:
                 retry -= 1;
@@ -549,7 +584,7 @@ class Terminal:
     def erase_devices(self, args):
         devs = args
         if devs == []:
-            self.cmdrun_status_display("Usage error: please specify devices you want to programg")
+            self.cmdrun_status_display('Usage error: please specify devices you want to programg')
             return False
         succeed = []; failed = []
         for dev in devs:
@@ -562,12 +597,11 @@ class Terminal:
                 status_str = 'erasing {0}.{1}...'.format(index, self.get_devstr_by_index(index))
                 self.cmdrun_status_display(status_str)
                 dev_str = self.get_devstr_by_index(index)
-                data = TBframe.construct(TBframe.DEVICE_ERASE, dev_str);
-                self.send_data(data)
+                self.send_packet(pkt.DEVICE_ERASE, dev_str);
                 self.wait_cmd_excute_done(10)
                 status_str += self.cmd_excute_state
                 self.cmdrun_status_display(status_str)
-                if self.cmd_excute_state == "done":
+                if self.cmd_excute_state == 'done':
                     succeed.append(index)
                 else:
                     failed.append(index)
@@ -576,36 +610,36 @@ class Terminal:
                     self.using_list.append(dev_str)
         status_str = ''
         if succeed != []:
-            status_str += "succeed: {0}".format(succeed)
+            status_str += 'succeed: {0}'.format(succeed)
         if failed != []:
             if status_str != '':
                 status_str += ', '
-            status_str += "failed: {0}".format(failed)
+            status_str += 'failed: {0}'.format(failed)
         self.cmdrun_status_display(status_str)
 
     def program_devices(self, args):
         if len(args) < 3:
-            self.cmdrun_status_display("Usage: programg addresse filename device0 [device1 device2 ... deviceN]")
+            self.cmdrun_status_display('Usage: programg addresse filename device0 [device1 device2 ... deviceN]')
             return False
         if args[0].startswith('0x') == False:
-            self.cmdrun_status_display("Usage error: wrong address input {0}, address should start with 0x".format(args[0]))
+            self.cmdrun_status_display('Usage error: wrong address input {0}, address should start with 0x'.format(args[0]))
             return False
         address  = args[0]
         filename = args[1]
         try:
-            expandname = os.path.expanduser(filename)
+            expandname = path.expanduser(filename)
         except:
-            self.cmdrun_status_display("{0} does not exist".format(filename))
+            self.cmdrun_status_display('{0} does not exist'.format(filename))
             return False
-        if os.path.exists(expandname) == False:
-            self.cmdrun_status_display("{0} does not exist".format(filename))
+        if path.exists(expandname) == False:
+            self.cmdrun_status_display('{0} does not exist'.format(filename))
             return False
-        filehash = TBframe.hash_of_file(expandname)
+        filehash = pkt.hash_of_file(expandname)
 
         devs = args[2:]
         file_exist_at = []
         if devs == []:
-            self.cmdrun_status_display("Usage error: please specify devices you want to programg")
+            self.cmdrun_status_display('Usage error: please specify devices you want to programg')
             return False
         succeed = []; failed = []
         for dev in devs:
@@ -624,12 +658,11 @@ class Terminal:
                 status_str = 'programming {0} to {1}.{2}:{3}...'.format(filename, index, uuid, port.replace('/dev/', ''))
                 self.cmdrun_status_display(status_str)
                 content = dev_str + ',' + address + ',' + filehash
-                data = TBframe.construct(TBframe.DEVICE_PROGRAM, content);
-                self.send_data(data)
+                self.send_packet(pkt.DEVICE_PROGRAM, content);
                 self.wait_cmd_excute_done(270)
                 status_str += self.cmd_excute_state
                 self.cmdrun_status_display(status_str)
-                if self.cmd_excute_state == "done":
+                if self.cmd_excute_state == 'done':
                     succeed.append(index)
                 else:
                     failed.append(index)
@@ -638,19 +671,19 @@ class Terminal:
                     self.using_list.append(dev_str)
         status_str = ''
         if succeed != []:
-            status_str += "succeed: {0}".format(succeed)
+            status_str += 'succeed: {0}'.format(succeed)
         if failed != []:
             if status_str != '':
                 status_str += ', '
-            status_str += "failed: {0}".format(failed)
+            status_str += 'failed: {0}'.format(failed)
         self.cmdrun_status_display(status_str)
 
     def control_devices(self, operate, args):
         if len(args) < 1:
-            self.cmdrun_status_display("Usage error, usage: reset devices")
+            self.cmdrun_status_display('Usage error, usage: reset devices')
             return False
 
-        operations = {"start":TBframe.DEVICE_START, "stop":TBframe.DEVICE_STOP, "reset":TBframe.DEVICE_RESET}
+        operations = {'start':pkt.DEVICE_START, 'stop':pkt.DEVICE_STOP, 'reset':pkt.DEVICE_RESET}
         operate = operations[operate]
         succeed = []; failed = []
         for dev in args:
@@ -661,10 +694,9 @@ class Terminal:
 
             for index in indexes:
                 dev_str = self.get_devstr_by_index(index)
-                data = TBframe.construct(operate, dev_str)
-                self.send_data(data)
+                self.send_packet(operate, dev_str)
                 self.wait_cmd_excute_done(1.5)
-                if self.cmd_excute_state == "done":
+                if self.cmd_excute_state == 'done':
                     succeed.append(index)
                 else:
                     failed.append(index)
@@ -673,24 +705,24 @@ class Terminal:
                     self.using_list.append(dev_str)
         status_str = ''
         if succeed != []:
-            status_str += "succeed: {0}".format(succeed)
+            status_str += 'succeed: {0}'.format(succeed)
         if failed != []:
             if status_str != '':
                 status_str += ', '
-            status_str += "failed: {0}".format(failed)
+            status_str += 'failed: {0}'.format(failed)
         self.cmdrun_status_display(status_str)
 
     def log_on_off(self, args):
         if len(args) < 2:
-            self.cmdrun_status_display("Usage error, usage: log on/off devices")
+            self.cmdrun_status_display('Usage error, usage: log on/off devices')
             return False
 
-        if args[0] == "on":
-            type = TBframe.LOG_SUB
-        elif args[0] == "off":
-            type = TBframe.LOG_UNSUB
+        if args[0] == 'on':
+            type = pkt.LOG_SUB
+        elif args[0] == 'off':
+            type = pkt.LOG_UNSUB
         else:
-            self.cmdrun_status_display("Usage error, usage: log on/off devices")
+            self.cmdrun_status_display('Usage error, usage: log on/off devices')
             return False
 
         for dev in args[1:]:
@@ -700,18 +732,16 @@ class Terminal:
                 continue
             for index in indexes:
                 dev_str = self.get_devstr_by_index(index)
-                if type == TBframe.LOG_SUB and dev_str not in self.log_subscribed:
-                    data = TBframe.construct(type, dev_str)
-                    self.send_data(data)
+                if type == pkt.LOG_SUB and dev_str not in self.log_subscribed:
+                    self.send_packet(type, dev_str)
                     self.log_subscribed.append(dev_str)
-                elif type == TBframe.LOG_UNSUB and dev_str in self.log_subscribed:
-                    data = TBframe.construct(type, dev_str)
-                    self.send_data(data)
+                elif type == pkt.LOG_UNSUB and dev_str in self.log_subscribed:
+                    self.send_packet(type, dev_str)
                     self.log_subscribed.remove(dev_str)
 
     def log_download(self, args):
         if len(args) < 1:
-            self.cmdrun_status_display("Usage error, usage: logdownload device0 [device1 ... deviceN]")
+            self.cmdrun_status_display('Usage error, usage: logdownload device0 [device1 ... deviceN]')
             return False
 
         succeed = []; failed = []
@@ -725,28 +755,27 @@ class Terminal:
                 status_str = 'downloading log file for {0}.{1}:{2}...'.format(index, device[0], device[1].replace('/dev/', ''))
                 self.cmdrun_status_display(status_str)
                 content = ','.join(device)
-                data = TBframe.construct(TBframe.LOG_DOWNLOAD, content)
-                self.send_data(data)
+                self.send_packet(pkt.LOG_DOWNLOAD, content)
                 self.wait_cmd_excute_done(480)
-                if self.cmd_excute_state == "done":
+                if self.cmd_excute_state == 'done':
                     succeed.append(index)
                 else:
                     failed.append(index)
                 self.cmd_excute_state = 'idle'
         status_str = ''
         if succeed != []:
-            status_str += "succeed: {0}".format(succeed)
+            status_str += 'succeed: {0}'.format(succeed)
         if failed != []:
             if status_str != '':
                 status_str += ', '
-            status_str += "failed: {0}".format(failed)
+            status_str += 'failed: {0}'.format(failed)
         self.cmdrun_status_display(status_str)
         return (len(failed) == 0)
 
     def run_command(self, args, uselast = False):
         if uselast == False:
             if len(args) < 2:
-                self.cmdrun_status_display("Usage error, usage: runcmd device cmd_arg0 [cmd_arg1 cmd_arg2 ... cmd_argN]")
+                self.cmdrun_status_display('Usage error, usage: runcmd device cmd_arg0 [cmd_arg1 cmd_arg2 ... cmd_argN]')
                 return False
 
             indexes = self.parse_device_index(args[0])
@@ -761,11 +790,11 @@ class Terminal:
                 return False
 
             if len(args) < 1:
-                self.cmdrun_status_display("Usage error, usage: !cmd_arg0 [cmd_arg1 cmd_arg2 ... cmd_argN]")
+                self.cmdrun_status_display('Usage error, usage: !cmd_arg0 [cmd_arg1 cmd_arg2 ... cmd_argN]')
                 return False
 
             if self.last_runcmd_dev not in list(self.device_list):
-                self.cmdrun_status_display("Error: remembered target no longer exists")
+                self.cmdrun_status_display('Error: remembered target no longer exists')
                 return False
             indexes = [self.get_index_by_devstr(self.last_runcmd_dev)]
 
@@ -773,17 +802,16 @@ class Terminal:
         for index in indexes:
             dev_str = self.get_devstr_by_index(index)
             content = dev_str + ':' + '|'.join(args)
-            data = TBframe.construct(TBframe.DEVICE_CMD, content)
-            self.send_data(data)
+            self.send_packet(pkt.DEVICE_CMD, content)
             self.wait_cmd_excute_done(1.5)
-            if self.cmd_excute_state == "done":
+            if self.cmd_excute_state == 'done':
                 succeed.append(index)
             else:
                 failed.append(index)
             self.cmd_excute_state = 'idle'
             if self.cmd_excute_return == None:
-                self.cmd_excute_return = "timeout"
-            status_str = '{0} run: '.format(index) + ' '.join(args) + ", " + self.cmd_excute_return
+                self.cmd_excute_return = 'timeout'
+            status_str = '{0} run: '.format(index) + ' '.join(args) + ', ' + self.cmd_excute_return
             self.cmdrun_status_display(status_str)
             if dev_str not in self.using_list:
                 self.using_list.append(dev_str)
@@ -791,56 +819,73 @@ class Terminal:
             return True
         status_str = ''
         if succeed != []:
-            status_str += "succeed: {0}".format(succeed)
+            status_str += 'succeed: {0}'.format(succeed)
         if failed != []:
             if status_str != '':
                 status_str += ', '
-            status_str += "failed: {0}".format(failed)
+            status_str += 'failed: {0}'.format(failed)
+        self.cmdrun_status_display(status_str)
+        return (len(failed) == 0)
+
+        if failed != []:
+            if status_str != '':
+                status_str += ', '
+            status_str += 'failed: {0}'.format(failed)
         self.cmdrun_status_display(status_str)
         return (len(failed) == 0)
 
     def client_alias(self, args):
         if len(args) < 1:
-            self.cmdrun_status_display("Usage error, usage: alias id0:name0 [id1:name1 ... idN:nameN]")
+            self.cmdrun_status_display('Usage error, usage: alias id0:name0 [id1:name1 ... idN:nameN]')
+            return False
 
         for arg in args:
             alias = arg.split(':')
             if len(alias) != 2:
-                self.cmdrun_status_display("Usage error, unrecongnized alias tuple {0}".format(arg))
+                self.cmdrun_status_display('Usage error, unrecongnized alias tuple {0}'.format(arg))
                 continue
             self.alias_tuples[alias[0]] = alias[1]
         try:
-            file = open("terminal/.alias",'wb')
-            pickle.dump(self.alias_tuples, file, protocol=pickle.HIGHEST_PROTOCOL)
+            alias_file = path.join(path.expanduser('~'), '.tbterminal', '.alias')
+            file = open(alias_file, 'wb')
+            json.dump(self.alias_tuples, file)
             file.close()
         except:
-            self.cmdrun_status_display("error: save alias record failed")
+            self.cmdrun_status_display('error: save alias record failed')
         self.device_list_display()
 
     def print_help_info(self):
-        self.log_display(time.time(), "supported commands and usage examples:")
-        self.log_display(time.time(), " 1.erase      [er]: erase flash of devices")
-        self.log_display(time.time(), "           example: erase 0 1 2-5")
-        self.log_display(time.time(), " 2.program    [pg]: program fireware to devices")
-        self.log_display(time.time(), "           example: program 0x40000 aos_esp32.bin 0 1 5-10")
-        self.log_display(time.time(), " 3.reset      [rs]: reset/restart devices")
-        self.log_display(time.time(), "           example: reset 0 1 3-8")
-        self.log_display(time.time(), " 4.stop       [sp]: stop devices")
-        self.log_display(time.time(), "           example: stop 0 5-7 9")
-        self.log_display(time.time(), " 5.start      [st]: start devices")
-        self.log_display(time.time(), "           example: start 3-5 0 1")
-        self.log_display(time.time(), " 6.runcmd     [rc]: run command at remote device")
-        self.log_display(time.time(), "           example: runcmd 0 ping fc:00:00:10:11:22:33:44")
-        self.log_display(time.time(), "                    runcmd 0-10 umesh status")
-        self.log_display(time.time(), " 7.^              : run command at latest (runcmd) remote device")
-        self.log_display(time.time(), "           example: ^ping fc:00:00:10:11:22:33:44")
-        self.log_display(time.time(), " 8.log        [lg]: turn on/off log display for devices, eg.: log on 1")
-        self.log_display(time.time(), "           example: log on 1 2 5-8; log off 2-5 7")
-        self.log_display(time.time(), " 9.logdownload[ld]: download log file of device from server")
-        self.log_display(time.time(), "           example: logdownload 0-2 5")
-        self.log_display(time.time(), " 10.alias     [al]: alias names to client ids")
-        self.log_display(time.time(), "           example: alias 123456789012:Pi1@HZ")
-        self.log_display(time.time(), " 11.help          : print help infomation")
+        self.log_display(time.time(), 'Supported commands and usage examples:')
+        self.log_display(time.time(), ' 1.erase      [er]: erase flash of devices')
+        self.log_display(time.time(), '           example: erase 0 1 2-5')
+        self.log_display(time.time(), ' 2.program    [pg]: program fireware to devices')
+        self.log_display(time.time(), '           example: program 0x40000 aos_esp32.bin 0 1 5-10')
+        self.log_display(time.time(), ' 3.reset      [rs]: reset/restart devices')
+        self.log_display(time.time(), '           example: reset 0 1 3-8')
+        self.log_display(time.time(), ' 4.stop       [sp]: stop devices')
+        self.log_display(time.time(), '           example: stop 0 5-7 9')
+        self.log_display(time.time(), ' 5.start      [st]: start devices')
+        self.log_display(time.time(), '           example: start 3-5 0 1')
+        self.log_display(time.time(), ' 6.runcmd     [rc]: run command at remote device')
+        self.log_display(time.time(), '           example: runcmd 0 ping fc:00:00:10:11:22:33:44')
+        self.log_display(time.time(), '                    runcmd 0-10 umesh status')
+        self.log_display(time.time(), ' 7.^              : run command at latest (runcmd) remote device')
+        self.log_display(time.time(), '           example: ^ping fc:00:00:10:11:22:33:44')
+        self.log_display(time.time(), ' 8.log        [lg]: turn on/off log display for devices, eg.: log on 1')
+        self.log_display(time.time(), '           example: log on 1 2 5-8; log off 2-5 7')
+        self.log_display(time.time(), ' 9.logdownload[ld]: download log file of device from server')
+        self.log_display(time.time(), '           example: logdownload 0-2 5')
+        self.log_display(time.time(), ' 10.alias     [al]: alias names to client ids')
+        self.log_display(time.time(), '           example: alias 1234567890123456:Pi1@HZ')
+        self.log_display(time.time(), ' 11.quit       [q]: quit this terminal')
+        self.log_display(time.time(), ' 12.help       [h]: print help infomation')
+        self.log_display(time.time(), ' ')
+        self.log_display(time.time(), 'Supported command editing shortcuts:')
+        self.log_display(time.time(), ' Ctrl + a - go to the start of the command line')
+        self.log_display(time.time(), ' Ctrl + e - go to the end of the command line')
+        self.log_display(time.time(), ' Ctrl + k - delete from cursor to the end of the command line')
+        self.log_display(time.time(), ' Ctrl + u - delete from cursor to the start of the command line')
+        self.log_display(time.time(), ' ')
 
     def process_cmd(self, cmd):
         if self.connected == False:
@@ -848,34 +893,34 @@ class Terminal:
         cmd_argv = cmd.split(' ')
         self.cmdrun_status_display('')
         cmd = cmd_argv[0]; args = cmd_argv[1:]
-        if cmd == "erase" or cmd == "er":
+        if cmd == 'erase' or cmd == 'er':
             self.erase_devices(args)
-        elif cmd == "program" or cmd == "pg":
+        elif cmd == 'program' or cmd == 'pg':
             self.program_devices(args)
-        elif cmd == "reset" or cmd == "rs":
+        elif cmd == 'reset' or cmd == 'rs':
             self.control_devices('reset', args)
-        elif cmd == "start" or cmd == "st":
+        elif cmd == 'start' or cmd == 'st':
             self.control_devices('start', args)
-        elif cmd == "stop" or cmd == "sp":
+        elif cmd == 'stop' or cmd == 'sp':
             self.control_devices('stop', args)
-        elif cmd == "log" or cmd == "lg":
+        elif cmd == 'log' or cmd == 'lg':
             self.log_on_off(args)
-        elif cmd == "logdownload" or cmd == 'ld':
+        elif cmd == 'logdownload' or cmd == 'ld':
             self.log_download(args)
-        elif cmd == "runcmd" or cmd == "rc":
+        elif cmd == 'runcmd' or cmd == 'rc':
             self.run_command(args, uselast=False)
         elif cmd[0] == '^':
             self.run_command([cmd[1:]] + args, uselast=True)
-        elif cmd == "alias" or cmd == 'al':
+        elif cmd == 'alias' or cmd == 'al':
             self.client_alias(args)
-        elif cmd == "help":
+        elif cmd == 'help' or cmd == 'h':
             self.print_help_info()
         else:
-            self.cmdrun_status_display("unknown command:" + cmd)
+            self.cmdrun_status_display('unknown command:' + cmd)
 
     def user_interaction(self):
-        cmd = ""
-        saved_cmd = ""
+        cmd = ''
+        saved_cmd = ''
         history_index = -1
         p = 0
         while self.keep_running:
@@ -884,20 +929,20 @@ class Terminal:
                 if self.log_curr_line != -1:
                     self.log_curr_line = -1
                     self.log_display(time.time(), '')
-                if cmd == "q" :
+                if cmd == 'quit' or cmd == 'q' :
                     self.keep_running = False
                     time.sleep(0.2)
                     break
-                elif cmd != "":
+                elif cmd != '':
                     self.process_cmd(cmd)
                     self.cmd_history = [cmd] + self.cmd_history
-                cmd = ""
-                saved_cmd = ""
+                cmd = ''
+                saved_cmd = ''
                 history_index = -1
                 p = 0
                 self.cmdrun_command_display(cmd, 0)
-            elif c == curses.KEY_BACKSPACE or c == 127: #DELETE
-                if cmd[0:p] == "":
+            elif c == curses.KEY_BACKSPACE or c == 127 or c == 8: #DELETE
+                if cmd[0:p] == '':
                     continue
                 newcmd = cmd[0:p-1] + cmd[p:]
                 cmd = newcmd
@@ -931,6 +976,27 @@ class Terminal:
                 if p < len(cmd):
                     p += 1
                     self.cmdrun_command_display(cmd, p)
+                continue
+            elif c == 1: #ctrl-a: go to the start of the command line
+                p = 0
+                self.cmdrun_command_display(cmd, p)
+                continue
+            elif c == 3: #ctrl-c: quit
+                self.keep_running = False
+                time.sleep(0.2)
+                break
+            elif c == 5: #ctrl-e: go to the end of the command line
+                p = len(cmd)
+                self.cmdrun_command_display(cmd, p)
+                continue
+            elif c == 11: #ctrl-k: delete from cursor to the end of the command line
+                cmd = cmd[0:p]
+                self.cmdrun_command_display(cmd, p)
+                continue
+            elif c == 21: #ctrl-u: delete from cursor to the start of the command line
+                cmd = cmd[p:]
+                p = 0
+                self.cmdrun_command_display(cmd, p)
                 continue
             elif c == curses.KEY_MOUSE:
                 mouse_state = curses.getmouse()[4]
@@ -968,14 +1034,15 @@ class Terminal:
                     cmd = newcmd
                     p += 1
                 except:
-                    self.cmdrun_status_display("Error: unsupported unicode character {0}".format(c))
+                    self.cmdrun_status_display('Error: unsupported unicode character {0}'.format(c))
                     continue
                 self.cmdrun_command_display(cmd, p)
 
     def connect_to_server(self, server_ip, server_port):
         sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         if ENCRYPT:
-            sock = ssl.wrap_socket(sock, cert_reqs=ssl.CERT_REQUIRED, ca_certs='server_cert.pem')
+            cert_file = path.join(path.dirname(path.abspath(__file__)), 'certificate.pem')
+            sock = ssl.wrap_socket(sock, cert_reqs=ssl.CERT_REQUIRED, ca_certs='certificate.pem')
         try:
             sock.connect((server_ip, server_port))
             self.service_socket = sock
@@ -988,12 +1055,8 @@ class Terminal:
         #connect to server
         self.server_ip = server_ip
         self.server_port = server_port
-        result = self.connect_to_server(server_ip, server_port)
-        if result != 'success':
-            print "connect to server {0}:{1} failed".format(server_ip, server_port)
-            return
+        thread.start_new_thread(self.packet_send_thread, ())
         thread.start_new_thread(self.server_interaction, ())
-        thread.start_new_thread(self.heartbeat_func, ())
         while self.keep_running:
             try:
                 self.user_interaction()
@@ -1013,11 +1076,12 @@ class Terminal:
             self.service_socket.close()
         try:
             if len(self.cmd_history) > 0:
-                file = open("terminal/.cmd_history",'wb')
-                pickle.dump(self.cmd_history, file, protocol=pickle.HIGHEST_PROTOCOL)
+                cmd_history_file = path.join(path.expanduser('~'), '.tbterminal', '.cmd_history')
+                file = open(cmd_history_file, 'wb')
+                json.dump(self.cmd_history, file)
                 file.close()
         except:
-            self.cmdrun_status_display("error: save command history failed")
+            self.cmdrun_status_display('error: save command history failed')
 
     def terminal_func(self, server_ip, server_port):
         ret = self.init()
