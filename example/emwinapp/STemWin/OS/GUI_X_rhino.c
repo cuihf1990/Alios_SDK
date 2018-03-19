@@ -3,8 +3,8 @@
  */
 
 #include <k_api.h>
-#include "GUI_Private.H"
-#include "stdio.H"
+#include "GUI_Private.h"
+#include "stdio.h"
 
 static  kmutex_t disp_mutex;
 static  ksem_t   event_sem;
