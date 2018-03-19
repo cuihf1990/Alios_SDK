@@ -40,8 +40,8 @@ static uint8_t mm_break_case1(void)
     ptr = k_mm_alloc(pmmhead, DEF_FIX_BLK_SIZE + 1);
 
     MYASSERT(ptr != NULL);
-    MYASSERT((pmmhead->used_size - oldsize ) == (DEF_FIX_BLK_SIZE + 4 +
-                                                 MMLIST_HEAD_SIZE));
+    MYASSERT((pmmhead->used_size - oldsize ) == 
+      (DEF_FIX_BLK_SIZE + MM_ALIGN_SIZE + MMLIST_HEAD_SIZE));
     k_mm_free(pmmhead, ptr);
 #endif
 
