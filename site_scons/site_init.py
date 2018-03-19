@@ -45,8 +45,8 @@ class aos_global_config:
         aos_global_config.global_config_dict[key] = value
 
     @staticmethod
-    def get_aos_global_config(key):
-        ret_value = None
+    def get_aos_global_config(key, default=None):
+        ret_value = default
         if key in aos_global_config.global_config_dict:
             ret_value = aos_global_config.global_config_dict[key]
 
@@ -249,6 +249,7 @@ class base_process_impl(process):
                                                      aos_global_config.app + '@' + aos_global_config.board)
         #temporarily disable muti bin
         aos_global_config.aos_env.Append(CPPDEFINES='BUILD_BIN')
+
 
 class dependency_process_impl(process):
     def __init__(self, aos_global_config):
