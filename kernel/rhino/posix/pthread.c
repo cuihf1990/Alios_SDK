@@ -6,7 +6,9 @@ int pthread_create(pthread_t *thread, const pthread_attr_t *attr,
     kstat_t ret;
 
     if (attr == NULL) {
-        ret = krhino_task_dyn_create(thread, "pthread_task", arg, 30, 0, 2048, (task_entry_t)start_routine, 1u);
+        ret = krhino_task_dyn_create(thread, "pthread_task", arg,
+                                     DEFAULT_THREAD_PRIORITY, 0, DEFAULT_THREAD_STACK_SIZE,
+                                     (task_entry_t)start_routine, 1u);
     }
 
     return ret;
