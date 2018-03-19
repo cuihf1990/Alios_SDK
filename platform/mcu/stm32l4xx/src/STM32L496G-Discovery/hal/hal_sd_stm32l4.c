@@ -148,7 +148,7 @@ int32_t hal_sd_finalize(sd_dev_t *sd)
         ret = -1;
     }
 
-    memset(sd, 0, sizeof(sd));
+    memset(sd, 0, sizeof(sd_dev_t));
 
     return -1;
 }
