@@ -7,6 +7,8 @@ $(NAME)_TYPE := kernel
 $(NAME)_COMPONENTS := framework.common modules.fs.kv cli libc
 $(NAME)_COMPONENTS += protocols.net alicrypto hal
 
+use_private_lwip := 1
+
 ESP_INC_PATH     := bsp/include
 GLOBAL_INCLUDES  += $(ESP_INC_PATH)
 GLOBAL_INCLUDES  += $(ESP_INC_PATH)/xtensa $(ESP_INC_PATH)/espressif $(ESP_INC_PATH)/espressif/esp8266
