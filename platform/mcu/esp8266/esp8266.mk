@@ -7,6 +7,8 @@ $(NAME)_TYPE := kernel
 $(NAME)_COMPONENTS := framework.common modules.fs.kv libc
 $(NAME)_COMPONENTS += protocols.net alicrypto hal
 
+use_private_lwip := 1
+
 ESP_INC_PATH     := bsp/include
 GLOBAL_INCLUDES  += $(ESP_INC_PATH)
 GLOBAL_INCLUDES  += $(ESP_INC_PATH)/xtensa $(ESP_INC_PATH)/espressif $(ESP_INC_PATH)/espressif/esp8266
@@ -55,7 +57,6 @@ GLOBAL_CFLAGS    += -DXT_USE_THREAD_SAFE_CLIB=0
 $(NAME)_SOURCES  := bsp/entry.c
 $(NAME)_SOURCES  += bsp/heap_iram.c
 $(NAME)_SOURCES  += bsp/syscall.c
-$(NAME)_SOURCES  += bsp/conn.c
 $(NAME)_SOURCES  += bsp/key.c
 
 $(NAME)_SOURCES  += bsp/driver/interrupt.c
