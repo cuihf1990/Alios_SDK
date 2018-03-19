@@ -335,6 +335,29 @@ int sensor_init(void){
 #ifdef AOS_SENSOR_BARO_ST_LPS22HB
     drv_baro_st_lps22hb_init();
 #endif /* AOS_SENSOR_BARO_ST_LPS22HB */
+
+
+#ifdef AOS_SENSOR_ACC_MIR3_DA217
+    drv_acc_mir3_da217_init();
+#endif /* AOS_SENSOR_ACC_MIR3_DA217 */
+
+#ifdef AOS_SENSOR_ALS_LITEON_LTR553
+    drv_als_liteon_ltr553_init();
+#endif /* AOS_SENSOR_ALS_LITEON_LTR553 */
+
+#ifdef AOS_SENSOR_PS_LITEON_LTR553
+    drv_ps_liteon_ltr553_init();
+#endif /* AOS_SENSOR_PS_LITEON_LTR553 */
+
+#ifdef AOS_SENSOR_TEMP_SENSIRION_SHTC1
+    drv_temp_sensirion_shtc1_init();
+#endif /* AOS_SENSOR_TEMP_SENSIRION_SHTC1 */
+
+#ifdef AOS_SENSOR_HUMI_SENSIRION_SHTC1
+    drv_humi_sensirion_shtc1_init();
+#endif /* AOS_SENSOR_HUMI_SENSIRION_SHTC1 */
+
+
     ret = sensor_hal_register();
     if(ret != 0){
         return -1;

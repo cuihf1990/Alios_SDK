@@ -653,12 +653,12 @@ static int drv_humi_bosch_bme280_read(void *buf, size_t len)
 
     ret  = drv_humi_bosch_bme280_cali_temp();
     if(unlikely(ret)){
-        return ret;
+        return -1;
     }
 
     ret  = drv_humi_bosch_bme280_read_humi(pdata);
     if(unlikely(ret)){
-        return ret;
+        return -1;
     }
     
     pdata->timestamp = aos_now_ms();

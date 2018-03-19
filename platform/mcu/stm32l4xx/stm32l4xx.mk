@@ -71,7 +71,9 @@ $(NAME)_SOURCES += src/$(HOST_MCU_NAME)/runapp/soc_init.c \
                    src/$(HOST_MCU_NAME)/hal/hal_uart_stm32l4.c \
                    src/$(HOST_MCU_NAME)/hal/hw.c \
                    src/$(HOST_MCU_NAME)/hal/flash_l4.c \
-                   src/$(HOST_MCU_NAME)/hal/flash_port.c
+                   src/$(HOST_MCU_NAME)/hal/flash_port.c \
+                   src/$(HOST_MCU_NAME)/hal/hal_gpio_stm32l4.c \
+                   src/$(HOST_MCU_NAME)/hal/hal_i2c_stm32l4.c 
 
 ifeq ($(COMPILER),armcc)
 GLOBAL_CFLAGS   += --c99 --cpu=7E-M -D__MICROLIB -g --apcs=interwork --split_sections

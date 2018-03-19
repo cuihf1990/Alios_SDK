@@ -915,7 +915,7 @@ static int drv_gyro_bosch_bmg160_read(void *buf, size_t len)
     ret |= sensor_i2c_read(&bmg160_ctx, BMG160_RATE_Z_LSB_ADDR,  &reg[4], I2C_REG_LEN, I2C_OP_RETRIES);
     ret |= sensor_i2c_read(&bmg160_ctx, BMG160_RATE_Z_MSB_ADDR,  &reg[5], I2C_REG_LEN, I2C_OP_RETRIES);
     if(unlikely(ret)){
-        return ret;
+        return -1;
     }
     gyro->data[DATA_AXIS_X] = (int32_t)((((int32_t)((int8_t)reg[1]))<< BMG160_SHIFT_EIGHT_BITS)|reg[0]);
     gyro->data[DATA_AXIS_Y] = (int32_t)((((int32_t)((int8_t)reg[3]))<< BMG160_SHIFT_EIGHT_BITS)|reg[2]);
