@@ -81,8 +81,6 @@ static void sys_init(void)
 
 #ifdef CONFIG_AOS_CLI
     aos_cli_init();
-    log_cli_init();
-
 #endif
 
 #ifdef AOS_KV
