@@ -136,45 +136,6 @@ static struct bt_conn_cb conn_callbacks = {
         .disconnected = disconnected,
 };
 
-typedef enum {
-    HDLS_AIS = 0x50,
-
-    /* read characteristic */
-    HDLC_AIS_RC,
-    HDLC_AIS_RC_VALUE,
-    HDLC_AIS_RC_DESCRIPTION,
-    HDLC_AIS_RC_CCC,
-    HDLC_AIS_RC_SCC,
-
-    /* write characteristic */
-    HDLC_AIS_WC,
-    HDLC_AIS_WC_VALUE,
-    HDLC_AIS_WC_DESCRIPTION,
-    HDLC_AIS_WC_CCC,
-    HDLC_AIS_WC_SCC,
-
-    /* indicate characteristic */
-    HDLC_AIS_IC,
-    HDLC_AIS_IC_VALUE,
-    HDLC_AIS_IC_DESCRIPTION,
-    HDLC_AIS_IC_CCC,
-    HDLC_AIS_IC_SCC,
-
-    /* write without response characteristic */
-    HDLC_AIS_WWNRC,
-    HDLC_AIS_WWNRC_VALUE,
-    HDLC_AIS_WWNRC_DESCRIPTION,
-    HDLC_AIS_WWNRC_CCC,
-    HDLC_AIS_WWNRC_SCC,
-
-    /* notify characteristic */
-    HDLC_AIS_NC,
-    HDLC_AIS_NC_VALUE,
-    HDLC_AIS_NC_DESCRIPTION,
-    HDLC_AIS_NC_CCC,
-    HDLC_AIS_NC_SCC,
-} ais_handle_t;
-
 /* UUIDs */
 //#define BLE_UUID_AIS_SERVICE 0xFEB3 /* The UUID of the Alibaba IOT Service. */
 #define BLE_UUID_AIS_RC      0xFED4 /* The UUID of the "Read Characteristics" Characteristic. */
@@ -314,73 +275,43 @@ static ssize_t read_ais_nc(struct bt_conn *conn,
 
 static struct bt_gatt_attr ais_attrs[] = {
     /* AIS service */
-    BT_GATT_PRIMARY_SERVICE2(BT_UUID_AIS_SERVICE, HDLS_AIS),
+    BT_GATT_PRIMARY_SERVICE(BT_UUID_AIS_SERVICE),
 
     /* RC */
-    BT_GATT_CHARACTERISTIC2(BT_UUID_AIS_RC, BT_GATT_CHRC_READ, HDLC_AIS_RC),
-    BT_GATT_DESCRIPTOR2(BT_UUID_AIS_RC, BT_GATT_PERM_READ | \
-                        BT_GATT_PERM_READ_AUTHEN, read_ais_rc, \
-                        NULL, NULL, HDLC_AIS_RC_VALUE),
+    BT_GATT_CHARACTERISTIC(BT_UUID_AIS_RC, BT_GATT_CHRC_READ),
+    BT_GATT_DESCRIPTOR(BT_UUID_AIS_RC, BT_GATT_PERM_READ | \
+                        BT_GATT_PERM_READ_AUTHEN, read_ais_rc, NULL, NULL),
 
     /* WC */
-    BT_GATT_CHARACTERISTIC2(BT_UUID_AIS_WC, BT_GATT_CHRC_READ | \
-                            BT_GATT_CHRC_WRITE, HDLC_AIS_WC),
-    BT_GATT_DESCRIPTOR2(BT_UUID_AIS_WC, BT_GATT_PERM_READ | \
+    BT_GATT_CHARACTERISTIC(BT_UUID_AIS_WC, BT_GATT_CHRC_READ | \
+                            BT_GATT_CHRC_WRITE),
+    BT_GATT_DESCRIPTOR(BT_UUID_AIS_WC, BT_GATT_PERM_READ | \
                         BT_GATT_PERM_WRITE, \
-                        read_ais_wc, write_ais_wc, NULL, HDLC_AIS_WC_VALUE),
+                        read_ais_wc, write_ais_wc, NULL),
 
     /* IC */
-    BT_GATT_CHARACTERISTIC2(BT_UUID_AIS_IC, BT_GATT_CHRC_READ | \
-                            BT_GATT_CHRC_INDICATE, HDLC_AIS_IC),
-    BT_GATT_DESCRIPTOR2(BT_UUID_AIS_IC, BT_GATT_PERM_READ, \
-                        read_ais_ic, NULL, NULL, HDLC_AIS_IC_VALUE),
-    BT_GATT_CCC2(ais_ic_ccc_cfg, ais_ic_ccc_cfg_changed, HDLC_AIS_IC_CCC),
+    BT_GATT_CHARACTERISTIC(BT_UUID_AIS_IC, BT_GATT_CHRC_READ | \
+                            BT_GATT_CHRC_INDICATE),
+    BT_GATT_DESCRIPTOR(BT_UUID_AIS_IC, BT_GATT_PERM_READ, \
+                        read_ais_ic, NULL, NULL),
+    BT_GATT_CCC(ais_ic_ccc_cfg, ais_ic_ccc_cfg_changed),
 
     /* WWNRC */
-    BT_GATT_CHARACTERISTIC2(BT_UUID_AIS_WWNRC, BT_GATT_CHRC_READ | \
-                            BT_GATT_CHRC_WRITE_WITHOUT_RESP, \
-                            HDLC_AIS_WWNRC),
-    BT_GATT_DESCRIPTOR2(BT_UUID_AIS_WWNRC, BT_GATT_PERM_READ | \
+    BT_GATT_CHARACTERISTIC(BT_UUID_AIS_WWNRC, BT_GATT_CHRC_READ | \
+                            BT_GATT_CHRC_WRITE_WITHOUT_RESP),
+    BT_GATT_DESCRIPTOR(BT_UUID_AIS_WWNRC, BT_GATT_PERM_READ | \
                         BT_GATT_PERM_WRITE, read_ais_wwnrc, \
-                        write_ais_wwnrc, NULL, HDLC_AIS_WWNRC_VALUE),
+                        write_ais_wwnrc, NULL),
 
     /* NC */
-    BT_GATT_CHARACTERISTIC2(BT_UUID_AIS_NC, BT_GATT_CHRC_READ | \
-                            BT_GATT_CHRC_NOTIFY, HDLC_AIS_NC),
-    BT_GATT_DESCRIPTOR2(BT_UUID_AIS_NC, BT_GATT_PERM_READ, \
-                        read_ais_nc, NULL, NULL, HDLC_AIS_NC_VALUE),
-    BT_GATT_CCC2(ais_nc_ccc_cfg, ais_nc_ccc_cfg_changed, HDLC_AIS_NC_CCC),
+    BT_GATT_CHARACTERISTIC(BT_UUID_AIS_NC, BT_GATT_CHRC_READ | \
+                            BT_GATT_CHRC_NOTIFY),
+    BT_GATT_DESCRIPTOR(BT_UUID_AIS_NC, BT_GATT_PERM_READ, \
+                        read_ais_nc, NULL, NULL),
+    BT_GATT_CCC(ais_nc_ccc_cfg, ais_nc_ccc_cfg_changed),
 };
 
 static struct bt_gatt_service ais_svc = BT_GATT_SERVICE(ais_attrs);
-
-static void assign_ais_handles(ble_ais_t * p_ais)
-{
-    /* AIS Service. */
-    p_ais->service_handle = HDLS_AIS;
-
-    /* RC */
-    p_ais->rc_handles.chrc_handle = HDLC_AIS_RC;
-    p_ais->rc_handles.value_handle = HDLC_AIS_RC_VALUE;
-
-    /* WC */
-    p_ais->wc_handles.chrc_handle = HDLC_AIS_WC;
-    p_ais->wc_handles.value_handle = HDLC_AIS_WC_VALUE;
-
-    /* IC */
-    p_ais->ic_handles.chrc_handle = HDLC_AIS_IC;
-    p_ais->ic_handles.value_handle = HDLC_AIS_IC_VALUE;
-    p_ais->ic_handles.cccd_handle = HDLC_AIS_IC_CCC;
-
-    /* WWNRC */
-    p_ais->wwnrc_handles.chrc_handle = HDLC_AIS_WWNRC;
-    p_ais->wwnrc_handles.value_handle = HDLC_AIS_WWNRC_VALUE;
-
-    /* NC */
-    p_ais->nc_handles.chrc_handle = HDLC_AIS_NC;
-    p_ais->nc_handles.value_handle = HDLC_AIS_NC_VALUE;
-    p_ais->nc_handles.cccd_handle = HDLC_AIS_NC_CCC;
-}
 
 static void ble_event_handler(input_event_t *event, void *priv_data)
 {
@@ -423,7 +354,6 @@ uint32_t ble_ais_init(ble_ais_t * p_ais, const ble_ais_init_t * p_ais_init)
     p_ais->is_authenticated        = false;
     p_ais->max_pkt_size            = p_ais_init->mtu - 3;
 
-    assign_ais_handles(p_ais);
     bt_conn_cb_register(&conn_callbacks);
     bt_gatt_service_register(&ais_svc);
     return NRF_SUCCESS;
