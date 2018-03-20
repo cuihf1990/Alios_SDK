@@ -139,6 +139,19 @@ extern uart_dev_t brd_uart1_dev;
 #define SWO_Pin GPIO_PIN_3
 #define SWO_GPIO_Port GPIOB
 
+#define LCD_DCX_Pin GPIO_PIN_1
+#define LCD_DCX_GPIO_Port GPIOB
+#define LCD_PWR_Pin GPIO_PIN_0
+#define LCD_PWR_GPIO_Port GPIOA
+#define LCD_RST_Pin GPIO_PIN_1
+#define LCD_RST_GPIO_Port GPIOA
+#define LCD_NSS_Pin GPIO_PIN_4
+#define LCD_NSS_GPIO_Port GPIOA
+#define LCD_SCK_Pin GPIO_PIN_5
+#define LCD_SCK_GPIO_Port GPIOA
+#define LCD_TX_Pin GPIO_PIN_7
+#define LCD_TX_GPIO_Port GPIOA
+
 /* ########################## Assert Selection ############################## */
 /**
   * @brief Uncomment the line below to expanse the "assert_param" macro in the 
