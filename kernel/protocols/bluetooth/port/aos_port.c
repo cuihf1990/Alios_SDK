@@ -38,14 +38,15 @@ void k_queue_init(struct k_queue *queue)
     void *msg_start;
     int size = 20;
     int stat;
+    uint8_t blk_size = sizeof(void *) + 1;
 
-    msg_start = (void*)aos_malloc(size * sizeof(void *));
+    msg_start = (void*)aos_malloc(size * blk_size);
     assert(msg_start);
 
     queue->_queue = (aos_queue_t *)aos_malloc(sizeof(aos_queue_t));
     assert(queue->_queue);
 
-    stat = aos_queue_new(queue->_queue, msg_start, size * sizeof(void *), sizeof(void *));
+    stat = aos_queue_new(queue->_queue, msg_start, size * blk_size, sizeof(void *));
     assert(stat == 0);
 
     sys_dlist_init(&queue->poll_events);
@@ -57,7 +58,10 @@ void k_queue_cancel_wait(struct k_queue *queue)
 
 void k_queue_insert(struct k_queue *queue, void *prev, void *data)
 {
-    aos_queue_send(queue->_queue, &data, sizeof(void *));
+    int ret;
+
+    ret = aos_queue_send(queue->_queue, &data, sizeof(void *));
+    assert(ret == 0);
 }
 
 void k_queue_append(struct k_queue *queue, void *data)

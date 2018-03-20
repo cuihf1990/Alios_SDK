@@ -469,6 +469,9 @@ uint32_t ble_ais_send_indication(ble_ais_t * p_ais, uint8_t * p_data, uint16_t l
     err = bt_gatt_indicate(NULL, ind_params);
 
     if (err) {
+        aos_free(param->ind_params);
+        slist_del(&param->next, &params_list);
+        aos_free(param);
         return NRF_ERROR_GATT_INDICATE;
     } else {
         return NRF_SUCCESS;
