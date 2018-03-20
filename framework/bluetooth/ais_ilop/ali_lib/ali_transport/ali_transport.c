@@ -282,14 +282,7 @@ static ret_code_t try_send (ali_transport_t * p_transport)
             p_transport->tx.frame_seq++;
             p_transport->tx.bytes_sent += len;
             bytes_left = tx_bytes_left(p_transport);
-        }
-        else if (ret == NRF_ERROR_BUSY && p_transport->tx.active_func == p_transport->tx.indicate_func)
-        {
-            ret = NRF_SUCCESS;
-            break;              // wait until timeout or tx-done
-        }
-        else
-        {
+        } else {
             VERIFY_SUCCESS(ret);
         }
     } while (bytes_left > 0) ;  // send until there are still bytes
