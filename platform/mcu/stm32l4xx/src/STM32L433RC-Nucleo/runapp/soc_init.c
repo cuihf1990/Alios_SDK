@@ -42,6 +42,7 @@
 #include "hal/soc/uart.h"
 #include "k_config.h"
 #include "stm32l4xx_hal.h"
+//#include "GUI_init.h"
 #include "hal_uart_stm32l4.h"
 #if defined (__CC_ARM) && defined(__MICROLIB)
 #define PUTCHAR_PROTOTYPE int fputc(int ch, FILE *f)
@@ -55,6 +56,8 @@
 #define PUTCHAR_PROTOTYPE int __io_putchar(int ch)
 #define GETCHAR_PROTOTYPE int __io_getchar(void)
 #endif /* defined (__CC_ARM) && defined(__MICROLIB) */
+
+
 /* USER CODE BEGIN Includes */
 
 /* USER CODE END Includes */
@@ -63,6 +66,9 @@
 /*UART_HandleTypeDef huart2;*/
 uart_dev_t uart_0;
 
+SPI_HandleTypeDef hspi1;
+SAI_HandleTypeDef hsai_BlockA1;
+CRC_HandleTypeDef hcrc;
 
 /* USER CODE BEGIN PV */
 /* Private variables ---------------------------------------------------------*/
@@ -75,6 +81,11 @@ static void MX_GPIO_Init(void);
 /*static void MX_USART2_UART_Init(void);*/
 static void uart2_init(void);
 
+static void brd_peri_init(void);
+static void MX_SPI1_Init(void);
+static void MX_SAI1_Init(void);
+static void MX_CRC_Init(void);
+static void MX_DMA_Init(void);
 
 /* USER CODE BEGIN PFP */
 /* Private function prototypes -----------------------------------------------*/
@@ -109,9 +120,18 @@ void stm32_soc_init(void)
   /* USER CODE END SysInit */
 
   /* Initialize all configured peripherals */
-  MX_GPIO_Init();
-  /*MX_USART2_UART_Init();*/
-  uart2_init();
+    MX_GPIO_Init();
+	brd_peri_init();
+    uart2_init();
+    MX_DMA_Init();
+    MX_SAI1_Init();
+	MX_SPI1_Init();
+
+	MX_CRC_Init();
+
+
+	/* Initialize LCD and LEDs */
+    //BSP_GUI_init();
 }
 
 /** System Clock Configuration
@@ -180,7 +200,43 @@ void SystemClock_Config(void)
   HAL_NVIC_SetPriority(SysTick_IRQn, 0, 0);
 }
 
+static gpio_irq_trigger_t mode_rising = IRQ_TRIGGER_RISING_EDGE;
+static gpio_irq_trigger_t mode_falling = IRQ_TRIGGER_FALLING_EDGE;
+static gpio_irq_trigger_t mode_both = IRQ_TRIGGER_BOTH_EDGES;
+static uint8_t gpio_set = 1;
+static uint8_t gpio_reset = 0;
 
+gpio_dev_t brd_gpio_table[] = {
+	{ALS_INT, IRQ_MODE, &mode_rising},
+	{AUDIO_EN, OUTPUT_PUSH_PULL, &gpio_set},
+	{LCD_DCX, OUTPUT_PUSH_PULL, &gpio_reset},
+	{LCD_PWR, OUTPUT_PUSH_PULL, &gpio_reset},
+	{LCD_RST, OUTPUT_PUSH_PULL, &gpio_set},
+	{LED_ALS, OUTPUT_PUSH_PULL, &gpio_set},
+	{LED_GS, OUTPUT_PUSH_PULL, &gpio_set},
+	{LED_HTS, OUTPUT_PUSH_PULL, &gpio_set},
+	{LED_PS, OUTPUT_PUSH_PULL, &gpio_set},
+	{SW_FUNC_A, IRQ_MODE, &mode_rising},
+	{SW_FUNC_B, IRQ_MODE, &mode_rising},
+	{SW_WIFI, IRQ_MODE, &mode_rising},
+	{WIFI_RST, OUTPUT_PUSH_PULL, &gpio_set},
+	{WIFI_WU, OUTPUT_PUSH_PULL, &gpio_set},
+};
+
+i2c_dev_t brd_i2c1_dev = {AOS_PORT_I2C1, {0}, NULL};
+i2c_dev_t brd_i2c2_dev = {AOS_PORT_I2C2, {0}, NULL};
+
+static void brd_peri_init(void)
+{
+	int i;
+	int gpcfg_num = sizeof(brd_gpio_table) / sizeof(brd_gpio_table[0]);
+
+	for (i = 0; i < gpcfg_num; ++i) {
+		hal_gpio_init(&brd_gpio_table[i]);
+	}
+	hal_i2c_init(&brd_i2c1_dev);
+	hal_i2c_init(&brd_i2c2_dev);
+}
 static void uart2_init(void)
 {
     uart_0.port = PORT_UART2;
@@ -246,6 +302,100 @@ static void MX_GPIO_Init(void)
 
 }
 
+
+/** 
+  * Enable DMA controller clock
+  */
+void MX_DMA_Init(void)
+{
+  /* DMA controller clock enable */
+  __HAL_RCC_DMA2_CLK_ENABLE();
+
+  /* DMA interrupt init */
+  /* DMA2_Channel1_IRQn interrupt configuration */
+  HAL_NVIC_SetPriority(DMA2_Channel1_IRQn, 0, 0);
+  HAL_NVIC_EnableIRQ(DMA2_Channel1_IRQn);
+
+}
+
+
+/* SAI1 init function */
+void MX_SAI1_Init(void)
+{
+
+  hsai_BlockA1.Instance = SAI1_Block_A;
+  hsai_BlockA1.Init.Protocol = SAI_FREE_PROTOCOL;
+  hsai_BlockA1.Init.AudioMode = SAI_MODEMASTER_TX;
+  hsai_BlockA1.Init.DataSize = SAI_DATASIZE_8;
+  hsai_BlockA1.Init.FirstBit = SAI_FIRSTBIT_MSB;
+  hsai_BlockA1.Init.ClockStrobing = SAI_CLOCKSTROBING_FALLINGEDGE;
+  hsai_BlockA1.Init.Synchro = SAI_ASYNCHRONOUS;
+  hsai_BlockA1.Init.OutputDrive = SAI_OUTPUTDRIVE_ENABLE;
+  hsai_BlockA1.Init.NoDivider = SAI_MASTERDIVIDER_ENABLE;
+  hsai_BlockA1.Init.FIFOThreshold = SAI_FIFOTHRESHOLD_EMPTY;
+  hsai_BlockA1.Init.AudioFrequency = SAI_AUDIO_FREQUENCY_8K;
+  hsai_BlockA1.Init.SynchroExt = SAI_SYNCEXT_DISABLE;
+  hsai_BlockA1.Init.MonoStereoMode = SAI_STEREOMODE;
+  hsai_BlockA1.Init.CompandingMode = SAI_NOCOMPANDING;
+  hsai_BlockA1.Init.TriState = SAI_OUTPUT_NOTRELEASED;
+  hsai_BlockA1.FrameInit.FrameLength = 16;
+  hsai_BlockA1.FrameInit.ActiveFrameLength = 8;
+  hsai_BlockA1.FrameInit.FSDefinition = SAI_FS_CHANNEL_IDENTIFICATION;
+  hsai_BlockA1.FrameInit.FSPolarity = SAI_FS_ACTIVE_LOW;
+  hsai_BlockA1.FrameInit.FSOffset = SAI_FS_BEFOREFIRSTBIT;
+  hsai_BlockA1.SlotInit.FirstBitOffset = 0;
+  hsai_BlockA1.SlotInit.SlotSize = SAI_SLOTSIZE_DATASIZE;
+  hsai_BlockA1.SlotInit.SlotNumber = 2;
+  hsai_BlockA1.SlotInit.SlotActive = SAI_SLOTACTIVE_ALL;
+  if (HAL_SAI_Init(&hsai_BlockA1) != HAL_OK)
+  {
+    _Error_Handler(__FILE__, __LINE__);
+  }
+
+}
+
+/* SPI1 init function */
+void MX_SPI1_Init(void)
+{
+
+  hspi1.Instance = SPI1;
+  hspi1.Init.Mode = SPI_MODE_MASTER;
+  hspi1.Init.Direction = SPI_DIRECTION_1LINE;
+  hspi1.Init.DataSize = SPI_DATASIZE_8BIT;
+  hspi1.Init.CLKPolarity = SPI_POLARITY_LOW;
+  hspi1.Init.CLKPhase = SPI_PHASE_1EDGE;
+  hspi1.Init.NSS = SPI_NSS_HARD_OUTPUT;
+  hspi1.Init.BaudRatePrescaler = SPI_BAUDRATEPRESCALER_2;
+  hspi1.Init.FirstBit = SPI_FIRSTBIT_MSB;
+  hspi1.Init.TIMode = SPI_TIMODE_DISABLE;
+  hspi1.Init.CRCCalculation = SPI_CRCCALCULATION_DISABLE;
+  hspi1.Init.CRCPolynomial = 7;
+  hspi1.Init.CRCLength = SPI_CRC_LENGTH_DATASIZE;
+  hspi1.Init.NSSPMode = SPI_NSS_PULSE_ENABLE;
+  if (HAL_SPI_Init(&hspi1) != HAL_OK)
+  {
+    _Error_Handler(__FILE__, __LINE__);
+  }
+
+}
+
+
+/* CRC init function */
+void MX_CRC_Init(void)
+{
+
+  hcrc.Instance = CRC;
+  hcrc.Init.DefaultPolynomialUse = DEFAULT_POLYNOMIAL_ENABLE;
+  hcrc.Init.DefaultInitValueUse = DEFAULT_INIT_VALUE_ENABLE;
+  hcrc.Init.InputDataInversionMode = CRC_INPUTDATA_INVERSION_NONE;
+  hcrc.Init.OutputDataInversionMode = CRC_OUTPUTDATA_INVERSION_DISABLE;
+  hcrc.InputDataFormat = CRC_INPUTDATA_FORMAT_BYTES;
+  if (HAL_CRC_Init(&hcrc) != HAL_OK)
+  {
+    _Error_Handler(__FILE__, __LINE__);
+  }
+
+}
 /* USER CODE BEGIN 4 */
 
 /* USER CODE END 4 */

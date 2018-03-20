@@ -43,10 +43,79 @@
 /* Includes ------------------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
 
+#include "hal/hal.h"
+#include "hal/hal_gpio_stm32l4.h"
+#include "hal/hal_i2c_stm32l4.h"
+#include "hal/hal_uart_stm32l4.h"
 /* USER CODE END Includes */
 
 /* Private define ------------------------------------------------------------*/
 
+typedef enum {
+	GPIO_ALS_INT,
+	GPIO_AUDIO_EN,
+	GPIO_LCD_DCX,
+	GPIO_LCD_PWR,
+	GPIO_LCD_RST,
+	GPIO_LED_ALS,
+	GPIO_LED_GS,
+	GPIO_LED_HTS,
+	GPIO_LED_PS,
+	GPIO_SW_FUNC_A,
+	GPIO_SW_FUNC_B,
+	GPIO_SW_WIFI,
+	GPIO_WIFI_RST,
+	GPIO_WIFI_WU,
+	MAX_GPIO_NUM
+} BOARD_GPIO;
+
+extern gpio_dev_t brd_gpio_table[];
+extern i2c_dev_t brd_i2c1_dev;
+extern i2c_dev_t brd_i2c2_dev;
+extern uart_dev_t brd_uart1_dev;
+/* legency definition for the modules have no hal layer */
+#define SW_FUNC_B_Pin GPIO_PIN_13
+#define SW_FUNC_B_GPIO_Port GPIOC
+#define SW_FUNC_B_EXTI_IRQn EXTI15_10_IRQn
+#define LCD_PWR_Pin GPIO_PIN_0
+#define LCD_PWR_GPIO_Port GPIOA
+#define LCD_RST_Pin GPIO_PIN_1
+#define LCD_RST_GPIO_Port GPIOA
+#define LCD_NSS_Pin GPIO_PIN_4
+#define LCD_NSS_GPIO_Port GPIOA
+#define LCD_SCK_Pin GPIO_PIN_5
+#define LCD_SCK_GPIO_Port GPIOA
+#define LCD_TX_Pin GPIO_PIN_7
+#define LCD_TX_GPIO_Port GPIOA
+#define SW_WIFI_Pin GPIO_PIN_0
+#define SW_WIFI_GPIO_Port GPIOB
+#define SW_WIFI_EXTI_IRQn EXTI0_IRQn
+#define LCD_DCX_Pin GPIO_PIN_1
+#define LCD_DCX_GPIO_Port GPIOB
+#define LED_GS_Pin GPIO_PIN_2
+#define LED_GS_GPIO_Port GPIOB
+#define AUDIO_EN_Pin GPIO_PIN_8
+#define AUDIO_EN_GPIO_Port GPIOA
+#define SW_FUNC_A_Pin GPIO_PIN_11
+#define SW_FUNC_A_GPIO_Port GPIOA
+#define SW_FUNC_A_EXTI_IRQn EXTI15_10_IRQn
+#define LED_PS_Pin GPIO_PIN_12
+#define LED_PS_GPIO_Port GPIOA
+#define LED_HTS_Pin GPIO_PIN_15
+#define LED_HTS_GPIO_Port GPIOA
+#define WIFI_RST_Pin GPIO_PIN_4
+#define WIFI_RST_GPIO_Port GPIOB
+#define LED_ALS_Pin GPIO_PIN_5
+#define LED_ALS_GPIO_Port GPIOB
+#define WIFI_TX_Pin GPIO_PIN_6
+#define WIFI_TX_GPIO_Port GPIOB
+#define WIFI_RX_Pin GPIO_PIN_7
+#define WIFI_RX_GPIO_Port GPIOB
+#define ALS_INT_Pin GPIO_PIN_8
+#define ALS_INT_GPIO_Port GPIOB
+#define ALS_INT_EXTI_IRQn EXTI9_5_IRQn
+#define WIFI_WU_Pin GPIO_PIN_9
+#define WIFI_WU_GPIO_Port GPIOB
 #define B1_Pin GPIO_PIN_13
 #define B1_GPIO_Port GPIOC
 #define MCO_Pin GPIO_PIN_0
