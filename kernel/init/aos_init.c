@@ -20,7 +20,6 @@ extern void ota_service_init(void);
 extern int aos_framework_init(void);
 extern void trace_start(void);
 extern void dumpsys_cli_init(void);
-extern void log_cli_init(void);
 extern int application_start(int argc, char **argv);
 //extern void aos_components_init(void);
 
@@ -229,7 +228,6 @@ void cli_service_init(kinit_t *kinit)
 #ifdef VCALL_RHINO
         dumpsys_cli_init();
 #endif
-        log_cli_init();
 #ifndef CONFIG_NO_TCPIP
         tcpip_cli_init();
 #endif

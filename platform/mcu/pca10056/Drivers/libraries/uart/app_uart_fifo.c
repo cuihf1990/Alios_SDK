@@ -86,38 +86,11 @@ static void uart_event_handler(nrf_drv_uart_event_t * p_event, void* p_context)
             bytedata = p_event->data.rxtx.p_data[0];
             krhino_buf_queue_send(&g_buf_queue_uart, &bytedata, 1);
             
-            err_code = app_fifo_put(&m_rx_fifo, p_event->data.rxtx.p_data[0]);
-            if (err_code != NRF_SUCCESS)
-            {
-                app_uart_event.evt_type          = APP_UART_FIFO_ERROR;
-                app_uart_event.data.error_code   = err_code;
-                m_event_handler(&app_uart_event);
-            }
-            // Notify that there are data available.
-            else if (FIFO_LENGTH(m_rx_fifo) != 0)
-            {
-                app_uart_event.evt_type = APP_UART_DATA_READY;
-                m_event_handler(&app_uart_event);
-            }
-
-            // Start new RX if size in buffer.
-            if (FIFO_LENGTH(m_rx_fifo) <= m_rx_fifo.buf_size_mask)
-            {
-                (void)nrf_drv_uart_rx(&app_uart_inst, rx_buffer, 1);
-            }
-            else
-            {
-                // Overflow in RX FIFO.
-                m_rx_ovf = true;
-            }
-
+            (void)nrf_drv_uart_rx(&app_uart_inst, rx_buffer, 1);
             break;
 
         case NRF_DRV_UART_EVT_ERROR:
-            app_uart_event.evt_type                 = APP_UART_COMMUNICATION_ERROR;
-            app_uart_event.data.error_communication = p_event->data.error.error_mask;
             (void)nrf_drv_uart_rx(&app_uart_inst, rx_buffer, 1);
-            m_event_handler(&app_uart_event);
             break;
 
         case NRF_DRV_UART_EVT_TX_DONE:
@@ -129,8 +102,6 @@ static void uart_event_handler(nrf_drv_uart_event_t * p_event, void* p_context)
             else
             {
                 // Last byte from FIFO transmitted, notify the application.
-                app_uart_event.evt_type = APP_UART_TX_EMPTY;
-                m_event_handler(&app_uart_event);
             }
             break;
 
@@ -246,6 +217,32 @@ uint32_t app_uart_put(uint8_t byte)
         // (in 'uart_event_handler') when all preceding bytes are transmitted.
         // But if UART is not transmitting anything at the moment, we must start
         // a new transmission here.
+        
+        if (!nrf_drv_uart_tx_in_progress(&app_uart_inst))
+        {
+            // This operation should be almost always successful, since we've
+            // just added a byte to FIFO, but if some bigger delay occurred
+            // (some heavy interrupt handler routine has been executed) since
+            // that time, FIFO might be empty already.
+            if (app_fifo_get(&m_tx_fifo, tx_buffer) == NRF_SUCCESS)
+            {
+                err_code = nrf_drv_uart_tx(&app_uart_inst, tx_buffer, 1);
+            }
+        }
+    }
+    return err_code;
+}
+
+uint32_t app_uart_putall(void)
+{
+    uint32_t err_code;
+    if (err_code == NRF_SUCCESS)
+    {
+        // The new byte has been added to FIFO. It will be picked up from there
+        // (in 'uart_event_handler') when all preceding bytes are transmitted.
+        // But if UART is not transmitting anything at the moment, we must start
+        // a new transmission here.
+        
         if (!nrf_drv_uart_tx_in_progress(&app_uart_inst))
         {
             // This operation should be almost always successful, since we've
@@ -367,9 +364,11 @@ int32_t hal_uart_send(uart_dev_t *uart, const void *data, uint32_t size, uint32_
     for(i=0;i<size;i++)
     {
         byte = *((uint8_t *)data + i);
-        ret |= app_uart_put( byte);
-        nrf_delay_ms(3);
+        ret |= app_fifo_put(&m_tx_fifo, byte);
+        /*nrf_delay_ms(5);*/
     }
+    app_uart_putall();
+
     return ret;
 
 }
