@@ -4,7 +4,7 @@
 /* Logic partition on flash devices */
 hal_logic_partition_t hal_partitions[HAL_PARTITION_MAX];
 
-void board_init(void)
+static void board_partition_init()
 {
     hal_partitions[HAL_PARTITION_APPLICATION].partition_owner            = HAL_FLASH_EMBEDDED;
     hal_partitions[HAL_PARTITION_APPLICATION].partition_description      = "Application";
@@ -29,4 +29,12 @@ void board_init(void)
     hal_partitions[HAL_PARTITION_PARAMETER_4].partition_start_addr       = 0x0803F000;
     hal_partitions[HAL_PARTITION_PARAMETER_4].partition_length           = 0x1000; //4k bytes
     hal_partitions[HAL_PARTITION_PARAMETER_4].partition_options          = PAR_OPT_READ_EN | PAR_OPT_WRITE_EN;
+}
+
+void board_init(void)
+{
+    board_partition_init();
+
+    board_cli_init();
+
 }
