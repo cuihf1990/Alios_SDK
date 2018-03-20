@@ -68,6 +68,7 @@ $(NAME)_SOURCES += src/$(HOST_MCU_NAME)/runapp/soc_init.c \
                    src/$(HOST_MCU_NAME)/runapp/stm32l4xx_it.c \
                    src/$(HOST_MCU_NAME)/runapp/system_stm32l4xx.c \
                    src/$(HOST_MCU_NAME)/runapp/aos.c  \
+                   src/$(HOST_MCU_NAME)/runapp/st7789.c  \
                    src/$(HOST_MCU_NAME)/hal/hal_uart_stm32l4.c \
                    src/$(HOST_MCU_NAME)/hal/hw.c \
                    src/$(HOST_MCU_NAME)/hal/flash_l4.c \
