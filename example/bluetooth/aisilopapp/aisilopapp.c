@@ -119,8 +119,7 @@ static void ali_lib_init(void)
     get_bd_addr(bd_addr);
 
     memset(&init_alink, 0, sizeof(struct device_config));
-//    init_alink.product_id        = *m_model_id;
-    init_alink.product_id = 76269;
+    init_alink.product_id = 127678;
     init_alink.status_changed_cb = dev_status_changed_handler;
     init_alink.set_cb            = set_dev_status_handler;
     init_alink.get_cb            = get_dev_status_handler;
@@ -130,18 +129,15 @@ static void ali_lib_init(void)
     init_alink.enable_auth       = true;
     init_alink.auth_type         = ALI_AUTH_BY_PRODUCT_SECRET;
     memcpy(init_alink.bd_addr, bd_addr, BD_ADDR_LEN);
-//    init_alink.secret_len        = strlen((char *)m_secret);
-//    memcpy(init_alink.secret, "orW9j8oJqUgdKjo5BKaCuovLhPAFoAhk", init_alink.secret_len);
-    init_alink.secret_len        = strlen("orW9j8oJqUgdKjo5BKaCuovLhPAFoAhk");
-    memcpy(init_alink.secret, "orW9j8oJqUgdKjo5BKaCuovLhPAFoAhk", init_alink.secret_len);
-//    init_alink.product_key_len   = strlen((char *)m_product_key);
-//    memcpy(init_alink.product_key, m_product_key, init_alink.product_key_len);
-//    init_alink.device_key_len    = strlen((char *)m_device_key);
-//    memcpy(init_alink.device_key, m_device_key, init_alink.device_key_len);
-    init_alink.product_key_len   = strlen("a1Qx8BnDSKm");
-    memcpy(init_alink.product_key, "a1Qx8BnDSKm", init_alink.product_key_len);
-    init_alink.device_key_len    = strlen("I4jAI7clsbXjfzKB5B2V");
-    memcpy(init_alink.device_key, "I4jAI7clsbXjfzKB5B2V", init_alink.device_key_len);
+
+    init_alink.secret_len        = strlen("gjeRzfwWcMg8Rw036OjsPEreGPDMl1wI");
+    memcpy(init_alink.secret, "gjeRzfwWcMg8Rw036OjsPEreGPDMl1wI", init_alink.secret_len);
+
+    init_alink.product_key_len   = strlen("a13wpkvcQDQ");
+    memcpy(init_alink.product_key, "a13wpkvcQDQ", init_alink.product_key_len);
+
+    init_alink.device_key_len    = strlen("mSLKAvSYdQz5JsshCyTE");
+    memcpy(init_alink.device_key, "mSLKAvSYdQz5JsshCyTE", init_alink.device_key_len);
 
     memcpy(init_alink.version, SOFTWARE_VERSION, SOFTWARE_VERSION_LEN);
 
