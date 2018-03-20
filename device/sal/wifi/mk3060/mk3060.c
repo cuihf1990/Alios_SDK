@@ -257,7 +257,7 @@ static int sal_wifi_init(void)
         at.send_raw(cmd, out, sizeof(out));
         LOGD(TAG, "The AT response is: %s", out);
         if (strstr(out, CMD_FAIL_RSP) != NULL) {
-            LOGE(TAG, "%s %d failed", __func__, __LINE__);
+            LOGD(TAG, "%s %d failed", __func__, __LINE__);
             //return -1;
         }
 
