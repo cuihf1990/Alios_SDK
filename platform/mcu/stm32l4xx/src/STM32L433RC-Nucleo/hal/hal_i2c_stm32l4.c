@@ -2,7 +2,7 @@
  * Copyright (C) 2015-2017 Alibaba Group Holding Limited
  */
 
-#include "hal.h"
+#include "hal/hal.h"
 #include "soc_init.h"
 #include "k_types.h"
 #include "errno.h"
@@ -27,7 +27,7 @@ static I2C_HandleTypeDef I2c2Handle = {0};
 int32_t hal_i2c_init(i2c_dev_t *i2c)
 {
     int32_t ret = -1;
-	
+
     if (i2c == NULL) {
        return -1;
     }
@@ -37,11 +37,14 @@ int32_t hal_i2c_init(i2c_dev_t *i2c)
             I2C1_Init();
             i2c->priv = &I2c1Handle;
             ret = 0;
+            printf("enter hal_i2c_init\n");
             break;
         case AOS_PORT_I2C2:
             I2C2_Init();
             i2c->priv = &I2c2Handle;
             ret = 0;
+            
+            printf("enter hal_i2c_init 2\n");
             break;
         default:
             break;
