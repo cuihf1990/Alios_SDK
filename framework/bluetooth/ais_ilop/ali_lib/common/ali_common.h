@@ -74,11 +74,11 @@ typedef uint16_t ret_code_t;
 #if defined (NRF51) || defined(CONFIG_ESP32_WITH_BLE)
     #define ALI_BLUETOOTH_VER       0x00        /**< Bluetooth version 4.0 (see spec. v1.0.4 ch. 2.2). */
     #define ALI_MAX_SUPPORTED_MTU   23          /**< Maximum supported MTU. */
-    #define ALI_CONTEXT_SIZE        557         /**< Context size required, in number of 4-byte words. */
+    #define ALI_CONTEXT_SIZE        611         /**< Context size required, in number of 4-byte words. */
 #elif defined (NRF52)
     #define ALI_BLUETOOTH_VER       0x01        /**< Bluetooth version 4.2 (see spec. v1.0.4 ch. 2.2). */
     #define ALI_MAX_SUPPORTED_MTU   247         /**< Maximum supported MTU. */
-    #define ALI_CONTEXT_SIZE        557         /**< Context size required, in number of 4-byte words. */
+    #define ALI_CONTEXT_SIZE        611         /**< Context size required, in number of 4-byte words. */
 #else
     #error No valid target set for ALI_CONTEXT_SIZE.
 #endif

@@ -81,7 +81,7 @@ static void on_timeout_helper (ali_auth_t * p_auth)
 
 static void on_timeout (void * arg1, void * arg2)
 {
-    ali_auth_t *p_auth = (ali_auth_t *)arg1;
+    ali_auth_t *p_auth = (ali_auth_t *)arg2;
     on_timeout_helper(p_auth);
 }
 
