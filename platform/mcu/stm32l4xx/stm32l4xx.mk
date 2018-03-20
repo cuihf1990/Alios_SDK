@@ -21,6 +21,8 @@ GLOBAL_INCLUDES += \
                    src/$(HOST_MCU_NAME)
                    
 $(NAME)_SOURCES := Drivers/STM32L4xx_HAL_Driver/Src/stm32l4xx_hal.c  \
+                   Drivers/STM32L4xx_HAL_Driver/Src/stm32l4xx_hal_crc.c  \
+		   Drivers/STM32L4xx_HAL_Driver/Src/stm32l4xx_hal_crc_ex.c  \
                    Drivers/STM32L4xx_HAL_Driver/Src/stm32l4xx_hal_flash.c  \
                    Drivers/STM32L4xx_HAL_Driver/Src/stm32l4xx_hal_flash_ex.c \
                    Drivers/STM32L4xx_HAL_Driver/Src/stm32l4xx_hal_flash_ramfunc.c \
@@ -34,6 +36,7 @@ $(NAME)_SOURCES := Drivers/STM32L4xx_HAL_Driver/Src/stm32l4xx_hal.c  \
                    Drivers/STM32L4xx_HAL_Driver/Src/stm32l4xx_hal_rtc_ex.c \
                    Drivers/STM32L4xx_HAL_Driver/Src/stm32l4xx_hal_spi.c    \
                    Drivers/STM32L4xx_HAL_Driver/Src/stm32l4xx_hal_spi_ex.c \
+		   Drivers/STM32L4xx_HAL_Driver/Src/stm32l4xx_hal_sai.c    \
                    Drivers/STM32L4xx_HAL_Driver/Src/stm32l4xx_hal_rcc.c    \
                    Drivers/STM32L4xx_HAL_Driver/Src/stm32l4xx_hal_uart.c   \
                    Drivers/STM32L4xx_HAL_Driver/Src/stm32l4xx_hal_uart_ex.c  \

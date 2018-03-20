@@ -8,7 +8,7 @@ HOST_MCU_FAMILY      := stm32l4xx
 SUPPORT_BINS         := no
 HOST_MCU_NAME        := STM32L433RC-Nucleo
 
-$(NAME)_SOURCES += board.c
+$(NAME)_SOURCES += board.c st7789.c
 
 GLOBAL_INCLUDES += .
 
