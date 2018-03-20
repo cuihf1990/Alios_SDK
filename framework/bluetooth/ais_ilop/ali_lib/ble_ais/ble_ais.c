@@ -36,7 +36,6 @@
  */
 #include "ble_ais.h"
 #include "ali_common.h"
-#include "ble_gatt.h"
 #include "ali_core.h"
 
 #include <bluetooth/bluetooth.h>
