@@ -444,7 +444,7 @@ static int drv_acc_st_lsm6dsl_read(void *buf, size_t len)
     ret |= sensor_i2c_read(&lsm6dsl_ctx, LSM6DSL_ACC_GYRO_OUTZ_L_XL,  &reg[4], I2C_REG_LEN, I2C_OP_RETRIES);
     ret |= sensor_i2c_read(&lsm6dsl_ctx, LSM6DSL_ACC_GYRO_OUTZ_H_XL,  &reg[5], I2C_REG_LEN, I2C_OP_RETRIES);
     if(unlikely(ret)){
-        return ret;
+        return -1;
     }
     accel->data[DATA_AXIS_X] = (int16_t)((((int16_t)((int8_t)reg[1]))<< LSM6DSL_SHIFT_EIGHT_BITS)|(reg[0]));
     accel->data[DATA_AXIS_Y] = (int16_t)((((int16_t)((int8_t)reg[3]))<< LSM6DSL_SHIFT_EIGHT_BITS)|(reg[2]));
@@ -738,7 +738,7 @@ static int drv_gyro_st_lsm6dsl_read(void *buf, size_t len)
     ret |= sensor_i2c_read(&lsm6dsl_ctx, LSM6DSL_ACC_GYRO_OUTZ_L_G,  &reg[4], I2C_REG_LEN, I2C_OP_RETRIES);
     ret |= sensor_i2c_read(&lsm6dsl_ctx, LSM6DSL_ACC_GYRO_OUTZ_H_G,  &reg[5], I2C_REG_LEN, I2C_OP_RETRIES);
     if(unlikely(ret)){
-        return ret;
+        return -1;
     }
     gyro->data[DATA_AXIS_X] = (int16_t)((((int32_t)((int8_t)reg[1]))<< LSM6DSL_SHIFT_EIGHT_BITS)|(reg[0]));
     gyro->data[DATA_AXIS_Y] = (int16_t)((((int32_t)((int8_t)reg[3]))<< LSM6DSL_SHIFT_EIGHT_BITS)|(reg[2]));

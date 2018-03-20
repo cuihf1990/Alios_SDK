@@ -745,12 +745,12 @@ static int drv_baro_bosch_bmp280_read(void *buf, size_t len)
     
     ret = drv_baro_bosch_bmp280_cali_temp(&bmp280_ctx);
     if(unlikely(ret)){
-        return ret;
+        return -1;
     }
 
     ret = drv_baro_bosch_bmp280_read_baro(&bmp280_ctx, pdata);
     if(unlikely(ret)){
-        return ret;
+        return -1;
     }
 
     pdata->timestamp = aos_now_ms();

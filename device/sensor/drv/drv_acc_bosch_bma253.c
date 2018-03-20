@@ -435,7 +435,7 @@ static int drv_acc_bosch_bma253_read(void *buf, size_t len)
     ret |= sensor_i2c_read(&bma253_ctx, BMA253_Z_AXIS_LSB_ADDR,  &reg[4], I2C_REG_LEN, I2C_OP_RETRIES);
     ret |= sensor_i2c_read(&bma253_ctx, BMA253_Z_AXIS_MSB_ADDR,  &reg[5], I2C_REG_LEN, I2C_OP_RETRIES);
     if(unlikely(ret)){
-        return ret;
+        return -1;
     }
     
     accel->data[DATA_AXIS_X] = (int32_t)((((int32_t)((int8_t)reg[1]))<< BMA253_SHIFT_EIGHT_BITS)|(reg[0] &BMA253_12_BIT_SHIFT));

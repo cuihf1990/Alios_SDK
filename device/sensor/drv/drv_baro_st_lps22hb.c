@@ -323,7 +323,7 @@ static int drv_baro_st_lps22hb_read(void *buf, size_t len)
     ret |= sensor_i2c_read(&lps22hb_ctx, LPS22HB_PRESS_OUT_L_REG,   &data[1], I2C_DATA_LEN, I2C_OP_RETRIES);
     ret |= sensor_i2c_read(&lps22hb_ctx, LPS22HB_PRESS_OUT_H_REG,   &data[2], I2C_DATA_LEN, I2C_OP_RETRIES);
     if(unlikely(ret)){
-        return ret;
+        return -1;
     }
 
    /* hatch the baro data here*/
