@@ -40,9 +40,7 @@
 #include <stdio.h>                  /* Standard input/output definitions */
 #include <string.h>                 /* String function definitions */
 #include <stdbool.h>
-#include "ble_gatt.h"
 #include <aos/aos.h>
-
 
 #define HEADER_SIZE                 4       /**< Size of packet header. */
 #define MAX_NUM_OF_FRAMES           16      /**< Maximum number of frames. */
@@ -285,13 +283,6 @@ static ret_code_t try_send (ali_transport_t * p_transport)
             p_transport->tx.bytes_sent += len;
             bytes_left = tx_bytes_left(p_transport);
         }
-#if 0
-        else if (ret == BLE_ERROR_NO_TX_PACKETS)
-        {
-            ret = NRF_SUCCESS;
-            break;              // wait until timeout or tx-done
-        }
-#endif
         else if (ret == NRF_ERROR_BUSY && p_transport->tx.active_func == p_transport->tx.indicate_func)
         {
             ret = NRF_SUCCESS;
