@@ -2419,6 +2419,7 @@ int IOT_MQTT_Destroy(void **phandler)
     POINTER_SANITY_CHECK(phandler, NULL_VALUE_ERROR);
     POINTER_SANITY_CHECK(*phandler, NULL_VALUE_ERROR);
 
+    aos_cancel_delayed_action( ((iotx_mc_client_t *)(*phandler))->connect_data.keepAliveInterval * 1000, cb_recv_timeout, (*phandler));
     iotx_mc_release((iotx_mc_client_t *)(*phandler));
     LITE_free(*phandler);
     *phandler = NULL;
