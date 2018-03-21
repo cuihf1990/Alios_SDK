@@ -21,8 +21,8 @@ static void I2C2_MspInit(I2C_HandleTypeDef *hi2c);
 static void I2C2_MspDeInit(I2C_HandleTypeDef *hi2c);
 
 /* handle for i2c */
-static I2C_HandleTypeDef I2c1Handle = {0};
-static I2C_HandleTypeDef I2c2Handle = {0};
+I2C_HandleTypeDef I2c1Handle = {0};
+I2C_HandleTypeDef I2c2Handle = {0};
 
 int32_t hal_i2c_init(i2c_dev_t *i2c)
 {
@@ -57,11 +57,24 @@ int32_t hal_i2c_master_send(i2c_dev_t *i2c, uint16_t dev_addr, const uint8_t *da
                             uint16_t size, uint32_t timeout)
 {
     int ret = -1;
+    I2C_HandleTypeDef *psti2c = NULL;
 
-    if ((i2c != NULL) && (data != NULL)) {
-        ret = HAL_I2C_Master_Transmit((I2C_HandleTypeDef*)(i2c->priv), dev_addr,
-              (uint8_t *)data, size, timeout);
+    if (NULL == i2c || NULL == data){
+        return ret;
     }
+
+    switch (i2c->port) {
+    case AOS_PORT_I2C1:
+        psti2c = &I2c1Handle;
+        break;
+    case AOS_PORT_I2C2:
+        psti2c = &I2c2Handle;
+        break;
+    default:
+        return ret;
+    }
+
+    ret = HAL_I2C_Master_Transmit(psti2c, dev_addr, (uint8_t *)data, size, timeout);
 
     return ret;
 }
@@ -70,11 +83,24 @@ int32_t hal_i2c_master_recv(i2c_dev_t *i2c, uint16_t dev_addr, uint8_t *data,
                             uint16_t size, uint32_t timeout)
 {
     int ret = -1;
+    I2C_HandleTypeDef *psti2c = NULL;
 
-    if ((i2c != NULL) && (data != NULL)) {
-        ret = HAL_I2C_Master_Receive((I2C_HandleTypeDef*)(i2c->priv), dev_addr,
-              data, size, timeout);
+    if (NULL == i2c || NULL == data){
+        return ret;
     }
+
+    switch (i2c->port) {
+    case AOS_PORT_I2C1:
+        psti2c = &I2c1Handle;
+        break;
+    case AOS_PORT_I2C2:
+        psti2c = &I2c2Handle;
+        break;
+    default:
+        return ret;
+    }
+    
+    ret = HAL_I2C_Master_Receive(psti2c, dev_addr, data, size, timeout);
 
     return ret;
 }
@@ -82,11 +108,24 @@ int32_t hal_i2c_master_recv(i2c_dev_t *i2c, uint16_t dev_addr, uint8_t *data,
 int32_t hal_i2c_slave_send(i2c_dev_t *i2c, const uint8_t *data, uint16_t size, uint32_t timeout)
 {
     int ret = -1;
+    I2C_HandleTypeDef *psti2c = NULL;
 
-    if ((i2c != NULL) && (data != NULL)) {
-        ret = HAL_I2C_Slave_Transmit((I2C_HandleTypeDef*)(i2c->priv), (uint8_t *)data,
-              size, timeout);
+    if (NULL == i2c || NULL == data){
+        return ret;
     }
+
+    switch (i2c->port) {
+    case AOS_PORT_I2C1:
+        psti2c = &I2c1Handle;
+        break;
+    case AOS_PORT_I2C2:
+        psti2c = &I2c2Handle;
+        break;
+    default:
+        return ret;
+    }
+
+    ret = HAL_I2C_Slave_Transmit(psti2c, (uint8_t *)data, size, timeout);
 
     return ret;
 }
@@ -94,10 +133,24 @@ int32_t hal_i2c_slave_send(i2c_dev_t *i2c, const uint8_t *data, uint16_t size, u
 int32_t hal_i2c_slave_recv(i2c_dev_t *i2c, uint8_t *data, uint16_t size, uint32_t timeout)
 {
     int ret = -1;
+    I2C_HandleTypeDef *psti2c = NULL;
 
-    if ((i2c != NULL) && (data != NULL)) {
-        ret = HAL_I2C_Slave_Receive((I2C_HandleTypeDef*)(i2c->priv), data, size, timeout);
+    if (NULL == i2c || NULL == data){
+        return ret;
     }
+
+    switch (i2c->port) {
+    case AOS_PORT_I2C1:
+        psti2c = &I2c1Handle;
+        break;
+    case AOS_PORT_I2C2:
+        psti2c = &I2c2Handle;
+        break;
+    default:
+        return ret;
+    }
+
+    ret = HAL_I2C_Slave_Receive(psti2c, data, size, timeout);
 
     return ret;
 }
@@ -107,12 +160,26 @@ int32_t hal_i2c_mem_write(i2c_dev_t *i2c, uint16_t dev_addr, uint16_t mem_addr,
                           uint32_t timeout)
 {
     int ret = -1;
+    I2C_HandleTypeDef *psti2c = NULL;
 
-    if ((i2c != NULL) && (data != NULL)) {
-        ret = HAL_I2C_Mem_Write((I2C_HandleTypeDef*)(i2c->priv), dev_addr, mem_addr, 
-              (uint16_t)mem_addr_size, (uint8_t *)data, size, timeout); 
+    if (NULL == i2c || NULL == data){
+        return ret;
     }
 
+    switch (i2c->port) {
+    case AOS_PORT_I2C1:
+        psti2c = &I2c1Handle;
+        break;
+    case AOS_PORT_I2C2:
+        psti2c = &I2c2Handle;
+        break;
+    default:
+        return ret;
+    }
+
+    ret = HAL_I2C_Mem_Write(psti2c, dev_addr, mem_addr, 
+          (uint16_t)mem_addr_size, (uint8_t *)data, size, timeout); 
+    
     return ret;
 };
 
@@ -121,11 +188,25 @@ int32_t hal_i2c_mem_read(i2c_dev_t *i2c, uint16_t dev_addr, uint16_t mem_addr,
                          uint32_t timeout)
 {
     int ret = -1;
+    I2C_HandleTypeDef *psti2c = NULL;
 
-    if ((i2c != NULL) && (data != NULL)) {
-        ret = HAL_I2C_Mem_Read((I2C_HandleTypeDef*)(i2c->priv), dev_addr, mem_addr,
-              (uint16_t)mem_addr_size, data, size, timeout);
+    if (NULL == i2c || NULL == data){
+        return ret;
     }
+
+    switch (i2c->port) {
+    case AOS_PORT_I2C1:
+        psti2c = &I2c1Handle;
+        break;
+    case AOS_PORT_I2C2:
+        psti2c = &I2c2Handle;
+        break;
+    default:
+        return ret;
+    }
+
+    ret = HAL_I2C_Mem_Read(psti2c, dev_addr, mem_addr,
+          (uint16_t)mem_addr_size, data, size, timeout);
 
     return ret;
 };
@@ -142,11 +223,11 @@ int32_t hal_i2c_finalize(i2c_dev_t *i2c)
         case AOS_PORT_I2C1:
             I2C1_DeInit();
             ret = 0;
-            break;				
+            break;
         case AOS_PORT_I2C2:
             I2C2_DeInit();
             ret = 0;
-            break;				
+            break;
         default:
             break;
     }

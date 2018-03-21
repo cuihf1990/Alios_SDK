@@ -116,41 +116,8 @@ extern uart_dev_t brd_uart1_dev;
 #define ALS_INT_EXTI_IRQn EXTI9_5_IRQn
 #define WIFI_WU_Pin GPIO_PIN_9
 #define WIFI_WU_GPIO_Port GPIOB
-#define B1_Pin GPIO_PIN_13
-#define B1_GPIO_Port GPIOC
-#define MCO_Pin GPIO_PIN_0
-#define MCO_GPIO_Port GPIOH
-#define USART_RX_Pin GPIO_PIN_3
-#define USART_RX_GPIO_Port GPIOA
-#define LD4_Pin GPIO_PIN_5
-#define LD4_GPIO_Port GPIOA
-#define SMPS_EN_Pin GPIO_PIN_12
-#define SMPS_EN_GPIO_Port GPIOB
-#define SMPS_V1_Pin GPIO_PIN_13
-#define SMPS_V1_GPIO_Port GPIOB
-#define SMPS_PG_Pin GPIO_PIN_14
-#define SMPS_PG_GPIO_Port GPIOB
-#define SPMS_SW_Pin GPIO_PIN_15
-#define SPMS_SW_GPIO_Port GPIOB
-#define TMS_Pin GPIO_PIN_13
-#define TMS_GPIO_Port GPIOA
-#define TCK_Pin GPIO_PIN_14
-#define TCK_GPIO_Port GPIOA
-#define SWO_Pin GPIO_PIN_3
-#define SWO_GPIO_Port GPIOB
 
-#define LCD_DCX_Pin GPIO_PIN_1
-#define LCD_DCX_GPIO_Port GPIOB
-#define LCD_PWR_Pin GPIO_PIN_0
-#define LCD_PWR_GPIO_Port GPIOA
-#define LCD_RST_Pin GPIO_PIN_1
-#define LCD_RST_GPIO_Port GPIOA
-#define LCD_NSS_Pin GPIO_PIN_4
-#define LCD_NSS_GPIO_Port GPIOA
-#define LCD_SCK_Pin GPIO_PIN_5
-#define LCD_SCK_GPIO_Port GPIOA
-#define LCD_TX_Pin GPIO_PIN_7
-#define LCD_TX_GPIO_Port GPIOA
+
 
 /* ########################## Assert Selection ############################## */
 /**
