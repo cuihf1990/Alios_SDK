@@ -13,6 +13,10 @@ $(NAME)_CFLAGS  += -Wall -Werror -Wno-unused-variable -Wno-unused-parameter -Wno
 $(NAME)_CFLAGS  += -Wno-type-limits -Wno-sign-compare -Wno-pointer-sign -Wno-uninitialized
 $(NAME)_CFLAGS  += -Wno-return-type -Wno-unused-function -Wno-unused-but-set-variable
 $(NAME)_CFLAGS  += -Wno-unused-value -Wno-strict-aliasing
+else ifeq ($(COMPILER),armcc)
+$(NAME)_CFLAGS  += -D__LONG_LONG_MAX__=LLONG_MAX
+else ifeq ($(COMPILER),iar)
+$(NAME)_CFLAGS  += -D__LONG_LONG_MAX__=LLONG_MAX
 else ifeq ($(COMPILER),gcc)
 $(NAME)_CFLAGS  += -Wall -Werror -Wno-unused-variable -Wno-unused-parameter -Wno-implicit-function-declaration
 $(NAME)_CFLAGS  += -Wno-type-limits -Wno-sign-compare -Wno-pointer-sign -Wno-uninitialized

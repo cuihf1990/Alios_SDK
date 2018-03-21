@@ -86,7 +86,7 @@ void *awss_build_dev_info(int type, void *dev_info, int info_len)
     if (buf == NULL)
         return NULL;
 
-    len += snprintf(dev_info + len, info_len - len - 1, "%s", (char *)wifimgr_get_dev_info(buf, DEV_INFO_LEN_MAX));
+    len += snprintf((char *)dev_info + len, info_len - len - 1, "%s", (char *)wifimgr_get_dev_info(buf, DEV_INFO_LEN_MAX));
     os_free(buf);
 
     switch (type) {
@@ -94,7 +94,7 @@ void *awss_build_dev_info(int type, void *dev_info, int info_len)
         {
             char rand_str[(RANDOM_MAX_LEN << 1) + 1] = {0};
             utils_hex_to_str(aes_random, RANDOM_MAX_LEN, rand_str, sizeof(rand_str));
-            len += snprintf(dev_info + len, info_len - len - 1, AWSS_DEV_TOKEN_FMT, rand_str, 0);
+            len += snprintf((char *)dev_info + len, info_len - len - 1, AWSS_DEV_TOKEN_FMT, rand_str, 0);
             break;
         }
         case AWSS_NOTIFY_DEV_RAND:
@@ -110,7 +110,7 @@ void *awss_build_dev_info(int type, void *dev_info, int info_len)
                 utils_hex_to_str(aes_random, RANDOM_MAX_LEN, rand_str, sizeof(rand_str));
                 utils_hex_to_str(sign, ENROLLEE_SIGN_SIZE, sign_str, sizeof(sign_str));
             }
-            len += snprintf(dev_info + len, info_len - len - 1, AWSS_DEV_RAND_FMT, rand_str, sign_str);
+            len += snprintf((char *)dev_info + len, info_len - len - 1, AWSS_DEV_RAND_FMT, rand_str, sign_str);
             break;
         }
         default:

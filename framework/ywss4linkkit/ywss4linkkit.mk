@@ -19,5 +19,10 @@ else
 $(error "not find correct platform!")
 endif
 
-$(NAME)_PREBUILT_LIBRARY := lib/$(LIB_PATH)/ywss4linkkit.a
-
+ifeq ($(COMPILER),armcc)
+$(NAME)_PREBUILT_LIBRARY := lib/$(LIB_PATH)/KEIL/libywss4linkkit.a
+else ifeq ($(COMPILER),iar)
+$(NAME)_PREBUILT_LIBRARY := lib/$(LIB_PATH)/IAR/libywss4linkkit.a
+else
+$(NAME)_PREBUILT_LIBRARY := lib/$(LIB_PATH)/libywss4linkkit.a
+endif

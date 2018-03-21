@@ -252,7 +252,7 @@ void* dm_lite_malloc(size_t size)
 
 void dm_lite_free_func(void* ptr)
 {
-    return LITE_free_internal(ptr);
+    LITE_free_internal(ptr);
 }
 
 void dm_lite_free(void* ptr)
