@@ -15,6 +15,7 @@
 #include <hal/soc/nand.h>
 #include <hal/soc/nor.h>
 #include <hal/soc/pwm.h>
+#include <hal/soc/qspi.h>
 #include <hal/soc/rng.h>
 #include <hal/soc/rtc.h>
 #include <hal/soc/sd.h>

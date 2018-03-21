@@ -81,6 +81,9 @@ void hal_rtc_test(void)
 
     ret =  hal_rtc_get_time(&dev_rtc, &time_cur);
 
-	  printf("RTC:20%x-%x-%x %x:%x:%x\n\n", time_cur.year, time_cur.month, time_cur.date,
-	      time_cur.hr, time_cur.min, time_cur.sec);
+    if (ret == 0)
+    {
+        printf("RTC:20%x-%x-%x %x:%x:%x\n\n", time_cur.year, time_cur.month, time_cur.date,
+                time_cur.hr, time_cur.min, time_cur.sec);
+    }
 }

@@ -13,7 +13,7 @@
 #include "stm32l4xx_hal_spi.h"
 
 /* Init and deInit function for spi1 */
-static int32_t spi1_init(spi_dev_t *uart);
+static int32_t spi1_init(spi_dev_t *spi);
 static int32_t spi1_DeInit(void);
 static void spi1_MspInit(void);
 static void spi1_DeMspInit(void);
