@@ -86,7 +86,7 @@ def changeItemForMcu( tree ):
                     if option.find('name').text == 'IlinkOutputFile':
                         option.find('state').text = buildstring + '.out'
                     if option.find('name').text == 'IlinkIcfFile': 
-                        if 'stm32l433' in buildstring:
+                        if 'starterkit' in buildstring:
                             option.find('state').text = '$PROJ_DIR$\../../../../'+'platform/mcu/stm32l4xx/src/STM32L433RC-Nucleo/STM32L433.icf'
                         if 'stm32l432' in buildstring:
                             option.find('state').text = '$PROJ_DIR$\../../../../'+'platform/mcu/stm32l4xx/src/STM32L432KC-Nucleo/STM32L432.icf'
@@ -142,7 +142,7 @@ def gen_project(target, script):
     changeItemForMcu(tree)
     gen_indent(root)
     projString = etree.tostring(root, encoding='utf-8')
-    if 'stm32l433' in buildstring:
+    if 'starterkit' in buildstring:
         projString = projString.replace('STM32L475VG','STM32L433RC')
     if 'stm32l432' in buildstring:
         projString = projString.replace('STM32L475VG','STM32L432KC')
