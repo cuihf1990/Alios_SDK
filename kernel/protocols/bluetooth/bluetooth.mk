@@ -77,6 +77,8 @@ $(NAME)_INCLUDES += common \
 					controller/ll_sw \
 					controller/ticker \
 					controller/util
+
+GLOBAL_DEFINES += CONFIG_BT_OBSERVER
 endif				   
 				   
 ifeq ($(hci_h4),1)
