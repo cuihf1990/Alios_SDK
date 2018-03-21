@@ -312,7 +312,7 @@ int mqtt_client_example(void)
     } else{
         aos_register_event_filter(EV_SYS,  mqtt_service_event, gpclient);
     }
-    YUNIT_ASSERT(rc<0);
+    YUNIT_ASSERT(rc == 0);
 
     return rc;
 }
