@@ -121,16 +121,15 @@ void stm32_soc_init(void)
 
   /* Initialize all configured peripherals */
     MX_GPIO_Init();
-	brd_peri_init();
-    uart2_init();
+    brd_peri_init();
     MX_DMA_Init();
-    MX_SAI1_Init();
-	MX_SPI1_Init();
+    //MX_SAI1_Init();
+    MX_SPI1_Init();
 
-	MX_CRC_Init();
+    MX_CRC_Init();
 
 
-	/* Initialize LCD and LEDs */
+    /* Initialize LCD and LEDs */
     //BSP_GUI_init();
 }
 
@@ -145,13 +144,14 @@ void SystemClock_Config(void)
 
     /**Initializes the CPU, AHB and APB busses clocks 
     */
-  RCC_OscInitStruct.OscillatorType = RCC_OSCILLATORTYPE_HSI;
-  RCC_OscInitStruct.HSIState = RCC_HSI_ON;
-  RCC_OscInitStruct.HSICalibrationValue = 16;
+  RCC_OscInitStruct.OscillatorType = RCC_OSCILLATORTYPE_MSI;
+  RCC_OscInitStruct.MSIState = RCC_MSI_ON;
+  RCC_OscInitStruct.MSICalibrationValue = 0;
+  RCC_OscInitStruct.MSIClockRange = RCC_MSIRANGE_6;
   RCC_OscInitStruct.PLL.PLLState = RCC_PLL_ON;
-  RCC_OscInitStruct.PLL.PLLSource = RCC_PLLSOURCE_HSI;
+  RCC_OscInitStruct.PLL.PLLSource = RCC_PLLSOURCE_MSI;
   RCC_OscInitStruct.PLL.PLLM = 1;
-  RCC_OscInitStruct.PLL.PLLN = 10;
+  RCC_OscInitStruct.PLL.PLLN = 40;
   RCC_OscInitStruct.PLL.PLLP = RCC_PLLP_DIV7;
   RCC_OscInitStruct.PLL.PLLQ = RCC_PLLQ_DIV2;
   RCC_OscInitStruct.PLL.PLLR = RCC_PLLR_DIV2;
@@ -174,8 +174,21 @@ void SystemClock_Config(void)
     _Error_Handler(__FILE__, __LINE__);
   }
 
-  PeriphClkInit.PeriphClockSelection = RCC_PERIPHCLK_USART2;
+  PeriphClkInit.PeriphClockSelection = RCC_PERIPHCLK_USART1|RCC_PERIPHCLK_USART2
+                              |RCC_PERIPHCLK_SAI1|RCC_PERIPHCLK_I2C1
+                              |RCC_PERIPHCLK_I2C2;
+  PeriphClkInit.Usart1ClockSelection = RCC_USART1CLKSOURCE_PCLK2;
   PeriphClkInit.Usart2ClockSelection = RCC_USART2CLKSOURCE_PCLK1;
+  PeriphClkInit.I2c1ClockSelection = RCC_I2C1CLKSOURCE_PCLK1;
+  PeriphClkInit.I2c2ClockSelection = RCC_I2C2CLKSOURCE_PCLK1;
+  PeriphClkInit.Sai1ClockSelection = RCC_SAI1CLKSOURCE_PLLSAI1;
+  PeriphClkInit.PLLSAI1.PLLSAI1Source = RCC_PLLSOURCE_MSI;
+  PeriphClkInit.PLLSAI1.PLLSAI1M = 1;
+  PeriphClkInit.PLLSAI1.PLLSAI1N = 35;
+  PeriphClkInit.PLLSAI1.PLLSAI1P = RCC_PLLP_DIV17;
+  PeriphClkInit.PLLSAI1.PLLSAI1Q = RCC_PLLQ_DIV2;
+  PeriphClkInit.PLLSAI1.PLLSAI1R = RCC_PLLR_DIV2;
+  PeriphClkInit.PLLSAI1.PLLSAI1ClockOut = RCC_PLLSAI1_SAI1CLK;
   if (HAL_RCCEx_PeriphCLKConfig(&PeriphClkInit) != HAL_OK)
   {
     _Error_Handler(__FILE__, __LINE__);
@@ -190,11 +203,11 @@ void SystemClock_Config(void)
 
     /**Configure the Systick interrupt time 
     */
-  HAL_SYSTICK_Config(HAL_RCC_GetHCLKFreq()/RHINO_CONFIG_TICKS_PER_SECOND);
+  HAL_SYSTICK_Config(HAL_RCC_GetHCLKFreq()/8/RHINO_CONFIG_TICKS_PER_SECOND);
 
     /**Configure the Systick 
     */
-  HAL_SYSTICK_CLKSourceConfig(SYSTICK_CLKSOURCE_HCLK);
+  HAL_SYSTICK_CLKSourceConfig(SYSTICK_CLKSOURCE_HCLK_DIV8);
 
   /* SysTick_IRQn interrupt configuration */
   HAL_NVIC_SetPriority(SysTick_IRQn, 0, 0);
@@ -207,20 +220,20 @@ static uint8_t gpio_set = 1;
 static uint8_t gpio_reset = 0;
 
 gpio_dev_t brd_gpio_table[] = {
-	{ALS_INT, IRQ_MODE, &mode_rising},
-	{AUDIO_EN, OUTPUT_PUSH_PULL, &gpio_set},
-	{LCD_DCX, OUTPUT_PUSH_PULL, &gpio_reset},
-	{LCD_PWR, OUTPUT_PUSH_PULL, &gpio_reset},
-	{LCD_RST, OUTPUT_PUSH_PULL, &gpio_set},
-	{LED_ALS, OUTPUT_PUSH_PULL, &gpio_set},
-	{LED_GS, OUTPUT_PUSH_PULL, &gpio_set},
-	{LED_HTS, OUTPUT_PUSH_PULL, &gpio_set},
-	{LED_PS, OUTPUT_PUSH_PULL, &gpio_set},
-	{SW_FUNC_A, IRQ_MODE, &mode_rising},
-	{SW_FUNC_B, IRQ_MODE, &mode_rising},
-	{SW_WIFI, IRQ_MODE, &mode_rising},
-	{WIFI_RST, OUTPUT_PUSH_PULL, &gpio_set},
-	{WIFI_WU, OUTPUT_PUSH_PULL, &gpio_set},
+    {ALS_INT, IRQ_MODE, &mode_rising},            //PB8
+    {AUDIO_EN, OUTPUT_PUSH_PULL, &gpio_set},      //PA8
+    {LCD_DCX, OUTPUT_PUSH_PULL, &gpio_reset},     //PB1
+    {LCD_PWR, OUTPUT_PUSH_PULL, &gpio_reset},     //PA0
+    {LCD_RST, OUTPUT_PUSH_PULL, &gpio_set},       //PA1
+    {LED_ALS, OUTPUT_PUSH_PULL, &gpio_set},       //PB5
+    {LED_GS, OUTPUT_PUSH_PULL, &gpio_set},        //PB2
+    {LED_HTS, OUTPUT_PUSH_PULL, &gpio_set},       //PA15
+    {LED_PS, OUTPUT_PUSH_PULL, &gpio_set},        //PA12
+    {SW_FUNC_A, IRQ_MODE, &mode_rising},          //PA11
+    {SW_FUNC_B, IRQ_MODE, &mode_rising},          //PC13
+    {SW_WIFI, IRQ_MODE, &mode_rising},            //PB0
+    {WIFI_RST, OUTPUT_PUSH_PULL, &gpio_set},      //PB4
+    {WIFI_WU, OUTPUT_PUSH_PULL, &gpio_set},       //PB9
 };
 
 i2c_dev_t brd_i2c1_dev = {AOS_PORT_I2C1, {0}, NULL};
@@ -228,14 +241,18 @@ i2c_dev_t brd_i2c2_dev = {AOS_PORT_I2C2, {0}, NULL};
 
 static void brd_peri_init(void)
 {
-	int i;
-	int gpcfg_num = sizeof(brd_gpio_table) / sizeof(brd_gpio_table[0]);
+#if 0
+    int i;
+    int gpcfg_num = sizeof(brd_gpio_table) / sizeof(brd_gpio_table[0]);
 
-	for (i = 0; i < gpcfg_num; ++i) {
-		hal_gpio_init(&brd_gpio_table[i]);
-	}
-	hal_i2c_init(&brd_i2c1_dev);
-	hal_i2c_init(&brd_i2c2_dev);
+    for (i = 0; i < gpcfg_num; ++i) {
+        hal_gpio_init(&brd_gpio_table[i]);
+    }
+#endif
+    uart2_init();
+    hal_i2c_init(&brd_i2c1_dev);
+    hal_i2c_init(&brd_i2c2_dev);
+    
 }
 static void uart2_init(void)
 {
@@ -250,57 +267,6 @@ static void uart2_init(void)
     hal_uart_init(&uart_0);
 }
 
-/** Configure pins as 
-        * Analog 
-        * Input 
-        * Output
-        * EVENT_OUT
-        * EXTI
-*/
-static void MX_GPIO_Init(void)
-{
-
-  GPIO_InitTypeDef GPIO_InitStruct;
-
-  /* GPIO Ports Clock Enable */
-  __HAL_RCC_GPIOC_CLK_ENABLE();
-  __HAL_RCC_GPIOH_CLK_ENABLE();
-  __HAL_RCC_GPIOA_CLK_ENABLE();
-  __HAL_RCC_GPIOB_CLK_ENABLE();
-
-  /*Configure GPIO pin Output Level */
-  HAL_GPIO_WritePin(LD4_GPIO_Port, LD4_Pin, GPIO_PIN_RESET);
-
-  /*Configure GPIO pin Output Level */
-  HAL_GPIO_WritePin(GPIOB, SMPS_EN_Pin|SMPS_V1_Pin|SPMS_SW_Pin, GPIO_PIN_RESET);
-
-  /*Configure GPIO pin : B1_Pin */
-  GPIO_InitStruct.Pin = B1_Pin;
-  GPIO_InitStruct.Mode = GPIO_MODE_IT_FALLING;
-  GPIO_InitStruct.Pull = GPIO_NOPULL;
-  HAL_GPIO_Init(B1_GPIO_Port, &GPIO_InitStruct);
-
-  /*Configure GPIO pin : LD4_Pin */
-  GPIO_InitStruct.Pin = LD4_Pin;
-  GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
-  GPIO_InitStruct.Pull = GPIO_NOPULL;
-  GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
-  HAL_GPIO_Init(LD4_GPIO_Port, &GPIO_InitStruct);
-
-  /*Configure GPIO pins : SMPS_EN_Pin SMPS_V1_Pin SPMS_SW_Pin */
-  GPIO_InitStruct.Pin = SMPS_EN_Pin|SMPS_V1_Pin|SPMS_SW_Pin;
-  GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
-  GPIO_InitStruct.Pull = GPIO_NOPULL;
-  GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
-  HAL_GPIO_Init(GPIOB, &GPIO_InitStruct);
-
-  /*Configure GPIO pin : SMPS_PG_Pin */
-  GPIO_InitStruct.Pin = SMPS_PG_Pin;
-  GPIO_InitStruct.Mode = GPIO_MODE_INPUT;
-  GPIO_InitStruct.Pull = GPIO_NOPULL;
-  HAL_GPIO_Init(SMPS_PG_GPIO_Port, &GPIO_InitStruct);
-
-}
 
 
 /** 
@@ -396,6 +362,70 @@ void MX_CRC_Init(void)
   }
 
 }
+
+/** Configure pins as 
+        * Analog 
+        * Input 
+        * Output
+        * EVENT_OUT
+        * EXTI
+*/
+static void MX_GPIO_Init(void)
+{
+
+  GPIO_InitTypeDef GPIO_InitStruct;
+
+  /* GPIO Ports Clock Enable */
+  __HAL_RCC_GPIOC_CLK_ENABLE();
+  __HAL_RCC_GPIOA_CLK_ENABLE();
+  __HAL_RCC_GPIOB_CLK_ENABLE();
+
+  /*Configure GPIO pin Output Level */
+  HAL_GPIO_WritePin(GPIOA, GPIO_PIN_0|GPIO_PIN_1|GPIO_PIN_8|GPIO_PIN_12 
+                          |GPIO_PIN_15, GPIO_PIN_RESET);
+
+  /*Configure GPIO pin Output Level */
+  HAL_GPIO_WritePin(GPIOB, GPIO_PIN_1|GPIO_PIN_2|GPIO_PIN_4|GPIO_PIN_5 
+                          |GPIO_PIN_9, GPIO_PIN_RESET);
+
+  /*Configure GPIO pin : PC13 */
+  GPIO_InitStruct.Pin = GPIO_PIN_13;
+  GPIO_InitStruct.Mode = GPIO_MODE_IT_RISING;
+  GPIO_InitStruct.Pull = GPIO_NOPULL;
+  HAL_GPIO_Init(GPIOC, &GPIO_InitStruct);
+
+  /*Configure GPIO pins : PA0 PA1 PA8 PA12 
+                           PA15 */
+  GPIO_InitStruct.Pin = GPIO_PIN_0|GPIO_PIN_1|GPIO_PIN_8|GPIO_PIN_12 
+                          |GPIO_PIN_15;
+  GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
+  GPIO_InitStruct.Pull = GPIO_NOPULL;
+  GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
+  HAL_GPIO_Init(GPIOA, &GPIO_InitStruct);
+
+  /*Configure GPIO pins : PB0 PB8 */
+  GPIO_InitStruct.Pin = GPIO_PIN_0|GPIO_PIN_8;
+  GPIO_InitStruct.Mode = GPIO_MODE_IT_RISING;
+  GPIO_InitStruct.Pull = GPIO_NOPULL;
+  HAL_GPIO_Init(GPIOB, &GPIO_InitStruct);
+
+  /*Configure GPIO pins : PB1 PB2 PB4 PB5 
+                           PB9 */
+  GPIO_InitStruct.Pin = GPIO_PIN_1|GPIO_PIN_2|GPIO_PIN_4|GPIO_PIN_5 
+                          |GPIO_PIN_9;
+  GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
+  GPIO_InitStruct.Pull = GPIO_NOPULL;
+  GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
+  HAL_GPIO_Init(GPIOB, &GPIO_InitStruct);
+
+  /*Configure GPIO pin : PA11 */
+  GPIO_InitStruct.Pin = GPIO_PIN_11;
+  GPIO_InitStruct.Mode = GPIO_MODE_IT_RISING;
+  GPIO_InitStruct.Pull = GPIO_NOPULL;
+  HAL_GPIO_Init(GPIOA, &GPIO_InitStruct);
+
+}
+
 /* USER CODE BEGIN 4 */
 
 /* USER CODE END 4 */
