@@ -8,15 +8,15 @@ from xml_format import gen_indent
 from config_mk import Projects
 
 def file_type_value(fn):
-    if fn.endswith('.h') != -1:
+    if fn.endswith('.h'):
         return 5        
-    if fn.endswith('.s') != -1 or fn.endswith('.S') != -1:
+    if fn.endswith('.s') or fn.endswith('.S'):
         return 2
-    if fn.endswith('.lib') != -1:
+    if fn.endswith('.lib'):
         return 4        
-    if fn.endswith('.cpp') != -1 or fn.endswith('.cxx') != -1:
+    if fn.endswith('.cpp') or fn.endswith('.cxx'):
         return 8
-    if fn.endswith('.c') != -1 or fn.endswith('.C') != -1:
+    if fn.endswith('.c') or fn.endswith('.C'):
         return 1
     
     return 5
@@ -47,14 +47,14 @@ def add_group(parent, name, files, project_path):
 # automation to do
 def changeItemForMcu( tree ):
     ScatterFile = tree.find('Targets/Target/TargetOption/TargetArmAds/LDads/ScatterFile')
-    if 'stm32l433' in buildstring:
+    if 'starterkit' in buildstring:
         ScatterFile.text = '..\..\..\..\platform\mcu\stm32l4xx\src\STM32L433RC-Nucleo\STM32L433.sct'
     if 'stm32l432' in buildstring:
         ScatterFile.text = '..\..\..\..\platform\mcu\stm32l4xx\src\STM32L432KC-Nucleo\STM32L432.sct'
     
 # change key word in project file. automation to do
 def ModifyProjString( projString ):
-    if 'stm32l433' in buildstring:
+    if 'starterkit' in buildstring:
         projString = projString.replace('STM32L475VGTx','STM32L433RCTx')
     if 'stm32l432' in buildstring:
         projString = projString.replace('STM32L475VGTx','STM32L432KCTx')
