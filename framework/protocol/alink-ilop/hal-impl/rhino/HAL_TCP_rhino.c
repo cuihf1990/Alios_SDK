@@ -6,7 +6,7 @@
 #include <string.h>
 
 #include <aos/network.h>
-#include <errno.h>
+#include <aos/errno.h>
 //#include "aliot_platform_network.h"
 
 #define PLATFORM_RHINOSOCK_LOG(format, ...) \
