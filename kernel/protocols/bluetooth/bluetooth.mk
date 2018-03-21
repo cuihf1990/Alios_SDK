@@ -3,10 +3,10 @@ NAME := bluetooth
 $(NAME)_TYPE := kernel
 GLOBAL_INCLUDES += include \
                    include/drivers \
-                   core/include \
+                   common/include \
                    port/include
 
-$(NAME)_INCLUDES += core/tinycrypt/include \
+$(NAME)_INCLUDES += common/tinycrypt/include \
                     ../../rhino/core/include
 
 $(NAME)_COMPONENTS += yloop
@@ -17,10 +17,10 @@ $(NAME)_INCLUDES += include/bluetooth/mesh
 GLOBAL_DEFINES += CONFIG_BT_MESH
 endif
 
-$(NAME)_SOURCES := core/atomic_c.c \
-                   core/buf.c \
-                   core/log.c \
-                   core/poll.c \
+$(NAME)_SOURCES := common/atomic_c.c \
+                   common/buf.c \
+                   common/log.c \
+                   common/poll.c \
                    host/uuid.c \
                    host/hci_core.c \
                    host/conn.c \
@@ -30,21 +30,21 @@ $(NAME)_SOURCES := core/atomic_c.c \
                    host/crypto.c \
                    host/smp.c \
                    host/keys.c \
-                   core/tinycrypt/source/cmac_mode.c \
-                   core/tinycrypt/source/aes_encrypt.c \
-                   core/rpa.c \
-                   core/work.c \
+                   common/tinycrypt/source/cmac_mode.c \
+                   common/tinycrypt/source/aes_encrypt.c \
+                   common/rpa.c \
+                   common/work.c \
                    port/aos_port.c
 
 $(NAME)_SOURCES += host/hci_ecc.c \
-                   core/tinycrypt/source/utils.c \
-                   core/tinycrypt/source/sha256.c \
-                   core/tinycrypt/source/hmac.c \
-                   core/tinycrypt/source/hmac_prng.c \
-                   core/tinycrypt/source/cmac_mode.c \
-                   core/tinycrypt/source/aes_encrypt.c \
-                   core/tinycrypt/source/ecc.c \
-                   core/tinycrypt/source/ecc_dh.c
+                   common/tinycrypt/source/utils.c \
+                   common/tinycrypt/source/sha256.c \
+                   common/tinycrypt/source/hmac.c \
+                   common/tinycrypt/source/hmac_prng.c \
+                   common/tinycrypt/source/cmac_mode.c \
+                   common/tinycrypt/source/aes_encrypt.c \
+                   common/tinycrypt/source/ecc.c \
+                   common/tinycrypt/source/ecc_dh.c
 
 ifeq ($(BLUETOOTH_INC_CONTROL), 1)			   
 $(NAME)_SOURCES += controller/hal/nrf5/cntr.c \
