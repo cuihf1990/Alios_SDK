@@ -1,3 +1,7 @@
+/*
+ * Copyright (C) 2015-2017 Alibaba Group Holding Limited
+ */
+
 #if defined(__GNUC__)
 typedef void (*cpp_func) ();
 extern cpp_func __ctors_start__[];
