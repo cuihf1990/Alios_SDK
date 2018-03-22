@@ -550,7 +550,7 @@ do{ \
  * @note None.
  */
     static inline void os_free(_IN_ void *ptr) {
-        return platform_free(ptr);
+        platform_free(ptr);
     }
 
 /**

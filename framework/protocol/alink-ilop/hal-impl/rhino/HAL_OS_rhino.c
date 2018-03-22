@@ -84,7 +84,7 @@ uint64_t HAL_UptimeMs(void)
 
 void HAL_SleepMs(_IN_ uint32_t ms)
 {
-    return aos_msleep(ms);
+    aos_msleep(ms);
 }
 
 uint64_t aliot_platform_time_left(uint64_t t_end, uint64_t t_now)

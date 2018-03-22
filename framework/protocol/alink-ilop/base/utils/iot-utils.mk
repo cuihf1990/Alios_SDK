@@ -16,11 +16,13 @@ $(NAME)_SOURCES  += $(UTIL_SOURCE_DIR)/digest/utils_hmac.c
 $(NAME)_SOURCES  += $(UTIL_SOURCE_DIR)/digest/utils_md5.c
 $(NAME)_SOURCES  += $(UTIL_SOURCE_DIR)/digest/utils_sha1.c
 
+ifeq ($(COMPILER),gcc)
 $(NAME)_CFLAGS += \
     -Wno-unused-function \
     -Wno-implicit-function-declaration \
     -Wno-unused-function \
 #    -Werror
+endif
 
 $(NAME)_CFLAGS += \
     -DLITE_UTILS_CONFIG_H=\"ilop_utils_config.h\" \
@@ -38,9 +40,3 @@ $(NAME)_INCLUDES  += \
                      ./exports \
                     ../../sdk-encap \
                     ../log  
-                    
-
-                    
-                   
-                   
-                    
