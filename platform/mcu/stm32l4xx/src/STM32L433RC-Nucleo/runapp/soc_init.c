@@ -123,7 +123,7 @@ void stm32_soc_init(void)
     MX_GPIO_Init();
     brd_peri_init();
     MX_DMA_Init();
-    //MX_SAI1_Init();
+    MX_SAI1_Init();
     MX_SPI1_Init();
 
     MX_CRC_Init();

@@ -16,8 +16,8 @@ static void app_delayed_action(void *arg)
 int application_start(int argc, char *argv[])
 {
     aos_post_delayed_action(1000, app_delayed_action, NULL);
+    BSP_GUI_init();
     aos_loop_run();
 
     return 0;
 }
-
