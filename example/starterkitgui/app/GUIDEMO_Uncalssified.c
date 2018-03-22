@@ -3,6 +3,8 @@
 #include "stm32l4xx_hal.h"
 #include <aos/uData.h>
 
+#define SHOW_GUIDEMO_UNCLASSIFIED 1
+
 #if (SHOW_GUIDEMO_UNCLASSIFIED)
 
 #define Y_START          43

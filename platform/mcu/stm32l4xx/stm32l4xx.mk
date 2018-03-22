@@ -93,7 +93,10 @@ GLOBAL_CFLAGS += -mcpu=cortex-m4 \
                  -march=armv7-m  \
                  -mlittle-endian \
                  -mthumb -mthumb-interwork \
+                 -mfloat-abi=hard \
+                 -mfpu=fpv4-sp-d16 \
                  -w
+GLOBAL_CFLAGS  += -D__VFP_FP__
 endif
 
 ifeq ($(COMPILER),armcc)
@@ -104,9 +107,10 @@ GLOBAL_ASMFLAGS += --cpu Cortex-M4 \
                    --endian little
 else
 GLOBAL_ASMFLAGS += -mcpu=cortex-m4 \
-                   -march=armv7-m  \
                    -mlittle-endian \
-                   -mthumb -mthumb-interwork \
+                   -mthumb \
+                   -mfloat-abi=hard \
+                   -mfpu=fpv4-sp-d16 \
                    -w
 endif
 
@@ -123,6 +127,8 @@ GLOBAL_LDFLAGS += -mcpu=cortex-m4  \
                   -mlittle-endian  \
                   -mthumb -mthumb-interwork \
                   --specs=nosys.specs \
+                  -mfloat-abi=hard \
+                  -mfpu=fpv4-sp-d16 \
                   $(CLIB_LDFLAGS_NANO_FLOAT)
 endif
 

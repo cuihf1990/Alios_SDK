@@ -178,6 +178,7 @@ for target in ${mk3060_targets}; do
 done
 
 #multi-bins, mk3060
+:`
 aos make clean > /dev/null 2>&1
 for target in ${mk3060_targets}; do
     for platform in ${mk3060_platforms}; do
@@ -209,7 +210,8 @@ for target in ${mk3060_targets}; do
         done
     done
 done
-
+fi
+`
 #single-bin, lpc54102
 aos make clean > /dev/null 2>&1
 for target in ${lpcxpresso54102_targets}; do

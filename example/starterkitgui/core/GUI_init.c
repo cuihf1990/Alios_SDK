@@ -83,19 +83,16 @@ void BSP_GUI_init(void)
   /*## LCD Configuration ##################################################*/
   /* I/O initialization, required before LCD initialization */
   IO_Init();
-  
-  /* LCD initialization */
-    st7789_init();
 
   /* Enable the CRC Module */
   __HAL_RCC_CRC_CLK_ENABLE();
 	
   /* Init the STemWin GUI Library */
-//  GUI_Init();	
+  GUI_Init();	
   GUI_Initialized = 1;
 
   /* Activate the use of memory device feature */
-//  WM_SetCreateFlags(WM_CF_MEMDEV);
+  WM_SetCreateFlags(WM_CF_MEMDEV);
 }
 
 /**

@@ -413,14 +413,13 @@ static void _Main(void) {
   GUIDEMO_Intro();
 	// GUIDEMO_Delay(5000);
 
-//  GUIDEMO_Sensor_Graph();
+  GUIDEMO_Sensor_Graph();
   // GUIDEMO_Delay(5000);
 
   // GUIDEMO_TransparentDialog();
   // GUIDEMO_Graph();	
  //  GUIDEMO_ColorBar();
 //  while (1) {
-    printf("hello world! \n");
     GUIDEMO_Unclassified();
 //  }
 
@@ -465,10 +464,9 @@ static void _Main(void) {
 void GUIDEMO_Main(void) {
   _pfDrawBk = _DrawBkSimple;
 
-//  while (1) {
-	//	 printf("hello world! \n");
+  while (1) {
     _Main();
-  //}
+  }
 }
 
 /*************************** End of file ****************************/
