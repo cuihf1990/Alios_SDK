@@ -51,7 +51,7 @@ RHINO_INLINE void krhino_bitmap_clear(uint32_t *bitmap, int32_t nr)
  ** @param[in]  bitmap  pointer to the bitmap
  ** @return  the first bit position
  **/
-RHINO_INLINE int krhino_find_first_bit(uint32_t *bitmap)
+RHINO_INLINE int32_t krhino_find_first_bit(uint32_t *bitmap)
 {
     int32_t  nr  = 0;
     uint32_t tmp = 0;
