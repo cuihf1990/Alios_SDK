@@ -680,34 +680,6 @@ int aos_workqueue_create(aos_workqueue_t *workqueue, int pri, int stack_size)
 }
 AOS_EXPORT(int, aos_workqueue_create, aos_workqueue_t *, int, int);
 
-void aos_workqueue_del(aos_workqueue_t *workqueue)
-{
-    kstat_t ret;
-
-    if (workqueue == NULL) {
-        return;
-    }
-
-    while (1) {
-        ret = krhino_workqueue_del(workqueue->hdl);
-        if (ret != RHINO_SUCCESS) {
-            /* give time for work queue handler to finish */
-            krhino_task_sleep(1);
-            continue;
-        }
-        else {
-            break;
-        }
-    }
-
-    aos_free(workqueue->hdl);
-    aos_free(workqueue->stk);
-
-    workqueue->hdl = NULL;
-    workqueue->stk = NULL;
-}
-AOS_EXPORT(void, aos_workqueue_del, aos_workqueue_t *);
-
 int aos_work_init(aos_work_t *work, void (*fn)(void *), void *arg, int dly)
 {
     kstat_t  ret;
