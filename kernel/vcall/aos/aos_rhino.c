@@ -222,10 +222,6 @@ int aos_mutex_is_valid(aos_mutex_t *mutex)
         return 0;
     }
 
-    if (k_mutex->blk_obj.obj_type != RHINO_MUTEX_OBJ_TYPE) {
-        return 0;
-    }
-
     return 1;
 }
 #endif
@@ -310,10 +306,6 @@ int aos_sem_is_valid(aos_sem_t *sem)
     k_sem = sem->hdl;
 
     if (k_sem == NULL) {
-        return 0;
-    }
-
-    if (k_sem->blk_obj.obj_type != RHINO_SEM_OBJ_TYPE) {
         return 0;
     }
 
@@ -485,10 +477,6 @@ int aos_queue_is_valid(aos_queue_t *queue)
     k_queue = queue->hdl;
 
     if (k_queue == NULL) {
-        return 0;
-    }
-
-    if (k_queue->blk_obj.obj_type != RHINO_BUF_QUEUE_OBJ_TYPE) {
         return 0;
     }
 
