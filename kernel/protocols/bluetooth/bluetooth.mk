@@ -46,41 +46,12 @@ $(NAME)_SOURCES += host/hci_ecc.c \
                    common/tinycrypt/source/ecc.c \
                    common/tinycrypt/source/ecc_dh.c
 
-ifeq ($(BLUETOOTH_INC_CONTROL), 1)			   
-$(NAME)_SOURCES += controller/hal/nrf5/cntr.c \
-                   controller/hal/nrf5/ecb.c \
-                   controller/hal/nrf5/radio.c \
-				   controller/hal/nrf5/rand.c \
-				   controller/hci/hci.c \
-				   controller/hci/hci_driver.c \
-				   controller/ll_sw/ctrl.c \
-				   controller/ll_sw/ll.c \
-				   controller/ll_sw/ll_adv.c \
-				   controller/ll_sw/ll_filter.c \
-				   controller/ll_sw/ll_master.c \
-				   controller/ll_sw/ll_scan.c \
-				   controller/ll_sw/crypto.c \
-				   controller/ticker/ticker.c \
-				   controller/util/mayfly.c \
-				   controller/util/mem.c \
-				   controller/util/memq.c \
-				   controller/util/util.c \
-				   common/dummy.c \
-				   common/irq_manage.c \
-				   controller/hal/device.c
+bt_controller?=0
+ifeq ($(bt_controller), 1)
+$(NAME)_COMPONENTS += protocols.bluetooth.controller
+GLOBAL_DEFINES += CONFIG_BT_CTLR
+endif
 
-$(NAME)_INCLUDES += common \
-					controller \
-                    controller/hal/nrf5 \
-					controller/hci \
-					controller/include \
-					controller/ll_sw \
-					controller/ticker \
-					controller/util
-
-GLOBAL_DEFINES += CONFIG_BT_OBSERVER
-endif				   
-				   
 ifeq ($(hci_h4),1)
 $(NAME)_SOURCES += hci_drivers/h4.c
 endif
