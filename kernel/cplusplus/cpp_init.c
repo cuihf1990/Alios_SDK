@@ -1,7 +1,7 @@
 #if defined(__GNUC__)
 typedef void (*cpp_func) ();
-extern pfunc __ctors_start__[];
-extern pfunc __ctors_end__[];
+extern cpp_func __ctors_start__[];
+extern cpp_func __ctors_end__[];
 
 void cpp_init(void)
 {
