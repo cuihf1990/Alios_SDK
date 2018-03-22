@@ -274,7 +274,7 @@ $(LDS_FILE_DIR):
 
 # Directory dependency - causes mkdir to be called once for each directory.
 %/.d:
-	$(call GIT_MKDIR, $(dir $@))
+	$(QUIET)$(call MKDIR, $(dir $@))
 	$(QUIET)$(TOUCH) $(@)
 
 %/.i:
