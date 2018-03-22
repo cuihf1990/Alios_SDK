@@ -96,6 +96,7 @@ GLOBAL_CFLAGS += -mcpu=cortex-m4 \
                  -mfloat-abi=hard \
                  -mfpu=fpv4-sp-d16 \
                  -w
+GLOBAL_CFLAGS  += -D__VFP_FP__
 endif
 
 ifeq ($(COMPILER),armcc)
@@ -108,8 +109,8 @@ else
 GLOBAL_ASMFLAGS += -mcpu=cortex-m4 \
                    -mlittle-endian \
                    -mthumb \
-				   -mfloat-abi=hard \
-				   -mfpu=fpv4-sp-d16 \
+                   -mfloat-abi=hard \
+                   -mfpu=fpv4-sp-d16 \
                    -w
 endif
 
