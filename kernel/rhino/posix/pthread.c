@@ -37,7 +37,6 @@ void pthread_testcancel(void)
     return;
 }
 
-
 int pthread_setcancelstate(int state, int *oldstate)
 {
     return 0;
@@ -53,4 +52,10 @@ int pthread_kill(pthread_t thread, int sig)
     krhino_task_dyn_del(thread);
     return 0;
 }
+
+int pthread_equal(pthread_t t1, pthread_t t2)
+{
+    return (int)(t1 == t2);
+}
+
 
