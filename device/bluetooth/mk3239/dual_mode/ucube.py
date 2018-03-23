@@ -1,3 +1,6 @@
+#temporarily disable .a
+
+#in dual_mode_src.mk
 src =Split(''' 
     ../BTE/mico_bt_api/mico_bt_main.c
     ../BTE/Components/gki/common/gki_buffer.c
@@ -157,3 +160,30 @@ cflags =Split('''
 ''')
 for i in cflags:
     component.add_cflags(i)
+
+#in dual_mode.mk    
+includes =Split(''' 
+    .
+    ../include   
+''')
+for i in includes:
+    component.add_global_includes(i)
+    
+component.add_component_dependencis('device/bluetooth/mk3239/firmware')
+
+src =Split(''' 
+    ../BTE_platform/mico_bt_bus.c
+    ../BTE_platform/mico_bt_hcd.c
+    ../BTE_platform/mico_bt_logmsg.c
+    ../BTE_platform/mico_bt_nvram_access.c
+    ../BTE_platform/mico_upio.c
+''')
+for i in src:
+    component.add_sources(i)
+    
+aos_global_config.set_aos_global_config('VALID_PLATFORMS',['MK3238','MK3239'])    
+    
+    
+    
+    
+    
