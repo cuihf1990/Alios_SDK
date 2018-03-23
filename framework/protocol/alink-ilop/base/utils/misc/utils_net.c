@@ -22,6 +22,24 @@
 #include "utils_net.h"
 #include "lite-log.h"
 
+static int tcp_fd=-1;
+int get_tcp_fd()
+{
+    return tcp_fd;
+}
+#ifndef IOTX_WITHOUT_TLS
+extern int get_ssl_fd();
+#endif
+
+static int iotx_fd=-1;
+int get_iotx_fd(){
+#ifdef IOTX_WITHOUT_TLS
+
+    return get_tcp_fd();
+#else    
+    return get_ssl_fd();
+#endif    
+}
 /*** TCP connection ***/
 int read_tcp(utils_network_pt pNetwork, char *buffer, uint32_t len, uint32_t timeout_ms)
 {
@@ -36,12 +54,12 @@ static int write_tcp(utils_network_pt pNetwork, const char *buffer, uint32_t len
 
 static int disconnect_tcp(utils_network_pt pNetwork)
 {
-    if (0 == pNetwork->handle) {
+    if (-1 == pNetwork->handle) {
         return -1;
     }
 
     HAL_TCP_Destroy(pNetwork->handle);
-    pNetwork->handle = 0;
+    pNetwork->handle = -1;
     return 0;
 }
 
@@ -53,7 +71,8 @@ static int connect_tcp(utils_network_pt pNetwork)
     }
 
     pNetwork->handle = HAL_TCP_Establish(pNetwork->pHostAddress, pNetwork->port);
-    if (0 == pNetwork->handle) {
+    tcp_fd=pNetwork->handle;
+    if (-1 == pNetwork->handle) {
         return -1;
     }
 
@@ -123,6 +142,7 @@ int utils_net_read(utils_network_pt pNetwork, char *buffer, uint32_t len, uint32
     int     ret = 0;
 
     if (NULL == pNetwork->ca_crt) {
+        
         ret = read_tcp(pNetwork, buffer, len, timeout_ms);
 #ifndef IOTX_WITHOUT_TLS
     } else {
