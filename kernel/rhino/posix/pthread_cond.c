@@ -1,9 +1,11 @@
 #include <pthread.h>
 #include <pthread_cond.h>
 
+extern int gettimeofday(struct timeval *tv, void *tzp);
+
 int pthread_cond_init(pthread_cond_t *cond, const pthread_condattr_t *attr)
 {
-    krhino_mutex_dyn_create(&cond->lock, "mutex")
+    krhino_mutex_dyn_create(&cond->lock, "mutex");
     krhino_sem_dyn_create(&cond->wait_sem, "sem", 0);
     krhino_sem_dyn_create(&cond->wait_done, "sem", 0);
     cond->waiting = cond->signals = 0;
@@ -17,14 +19,19 @@ int pthread_cond_init(pthread_cond_t *cond, const pthread_condattr_t *attr)
 
 int pthread_cond_destroy(pthread_cond_t *cond)
 {
-    if (cond) {
-        if (cond->wait_sem) {
+    if (cond) 
+    {
+        if (cond->wait_sem) 
+        {
             krhino_sem_dyn_del(cond->wait_sem);
         }
-        if (cond->wait_done) {
+        if (cond->wait_done) 
+        {
             krhino_sem_dyn_del(cond->wait_done);
         }
     }
+
+    return 0;
 }
 
 int pthread_cond_broadcast(pthread_cond_t *cond)
@@ -33,7 +40,7 @@ int pthread_cond_broadcast(pthread_cond_t *cond)
     /* If there are waiting threads not already signalled, then
     signal the condition and wait for the thread to respond.
     */
-    krhino_mutex_lock(&cond->lock, RHINO_WAIT_FOREVER)
+    krhino_mutex_lock(cond->lock, RHINO_WAIT_FOREVER);
 
     if ( cond->waiting > cond->signals ) {
 
@@ -49,11 +56,12 @@ int pthread_cond_broadcast(pthread_cond_t *cond)
         for ( i=0; i<num_waiting; ++i ) {
             krhino_sem_take(cond->wait_done, RHINO_WAIT_FOREVER);
         }
-} else {
-    krhino_mutex_unlock(cond->lock);
-}
+    } else 
+    {
+        krhino_mutex_unlock(cond->lock);
+    }
 
-
+    return 0;
 }
 
 int pthread_cond_signal(pthread_cond_t *cond)
@@ -61,7 +69,7 @@ int pthread_cond_signal(pthread_cond_t *cond)
     /* If there are waiting threads not already signalled, then
     signal the condition and wait for the thread to respond.
     */
-    krhino_mutex_lock(cond->lock);
+    krhino_mutex_lock(cond->lock, RHINO_WAIT_FOREVER);
     if ( cond->waiting > cond->signals ) {
         ++cond->signals;
         krhino_sem_give(cond->wait_sem);
@@ -80,9 +88,12 @@ int pthread_cond_timedwait(pthread_cond_t        *cond,
 {
     kstat_t retval;
     tick_t  ticks;
+    struct timeval now;
 
-    ticks = abstime.tv_sec * RHINO_CONFIG_TICKS_PER_SECOND + 
-               (abstime.tv_nsec / 1000000) / (1000 / RHINO_CONFIG_TICKS_PER_SECOND);
+    gettimeofday(&now, NULL);
+
+    ticks = (abstime->tv_sec - now.tv_sec) * RHINO_CONFIG_TICKS_PER_SECOND + 
+            ((abstime->tv_nsec - now.tv_usec) / 1000000) / (1000 / RHINO_CONFIG_TICKS_PER_SECOND);
 
     /* Obtain the protection mutex, and increment the number of waiters.
        This allows the signal mechanism to only perform a signal if there
@@ -93,7 +104,7 @@ int pthread_cond_timedwait(pthread_cond_t        *cond,
     krhino_mutex_unlock(cond->lock);
 
     /* Unlock the mutex, as is required by condition variable semantics */
-    krhino_mutex_unlock(mutex);
+    krhino_mutex_unlock(*mutex);
 
     /* Wait for a signal */
     retval = krhino_sem_take(cond->wait_sem, ticks);
@@ -108,7 +119,7 @@ int pthread_cond_timedwait(pthread_cond_t        *cond,
     if (cond->signals > 0) {
         /* If we timed out, we need to eat a condition signal */
         if (retval == RHINO_BLK_TIMEOUT) {
-            krhino_sem_take(cond->wait_sem);
+            krhino_sem_take(cond->wait_sem, RHINO_WAIT_FOREVER);
         }
         /* We always notify the signal thread that we are done */
         krhino_sem_give(cond->wait_done);
@@ -117,10 +128,12 @@ int pthread_cond_timedwait(pthread_cond_t        *cond,
         --cond->signals;
     }
     --cond->waiting;
-     krhino_mutex_unlock(cond->lock);
+    krhino_mutex_unlock(cond->lock);
 
     /* Lock the mutex, as is required by condition variable semantics */
-    krhino_mutex_lock(mutex);
+    krhino_mutex_lock(*mutex, RHINO_WAIT_FOREVER);
+
+    return 0;
 }
 
 
@@ -138,7 +151,7 @@ int pthread_cond_wait(pthread_cond_t *cond, pthread_mutex_t *mutex)
     krhino_mutex_unlock(cond->lock);
 
     /* Unlock the mutex, as is required by condition variable semantics */
-    krhino_mutex_unlock(mutex);
+    krhino_mutex_unlock(*mutex);
 
     /* Wait for a signal */
     retval = krhino_sem_take(cond->wait_sem, RHINO_WAIT_FOREVER);
@@ -153,7 +166,7 @@ int pthread_cond_wait(pthread_cond_t *cond, pthread_mutex_t *mutex)
     if (cond->signals > 0) {
         /* If we timed out, we need to eat a condition signal */
         if (retval == RHINO_BLK_TIMEOUT) {
-            krhino_sem_take(cond->wait_sem);
+            krhino_sem_take(cond->wait_sem, RHINO_WAIT_FOREVER);
         }
         /* We always notify the signal thread that we are done */
         krhino_sem_give(cond->wait_done);
@@ -162,12 +175,12 @@ int pthread_cond_wait(pthread_cond_t *cond, pthread_mutex_t *mutex)
         --cond->signals;
     }
     --cond->waiting;
-     krhino_mutex_unlock(cond->lock);
+    krhino_mutex_unlock(cond->lock);
 
     /* Lock the mutex, as is required by condition variable semantics */
-    krhino_mutex_lock(mutex);
+    krhino_mutex_lock(*mutex, RHINO_WAIT_FOREVER);
 
-
+    return 0;
 }
 
 int pthread_condattr_init(pthread_condattr_t *attr)

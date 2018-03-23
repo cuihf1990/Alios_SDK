@@ -3,12 +3,10 @@
 int pthread_create(pthread_t *thread, const pthread_attr_t *attr,
                           void *(*start_routine) (void *), void *arg)
 {
-    kstat_t ret;
+    kstat_t ret = 0;
 
     if (attr == NULL) {
-        ret = krhino_task_dyn_create(thread, "pthread_task", arg,
-                                     DEFAULT_THREAD_PRIORITY, 0, DEFAULT_THREAD_STACK_SIZE,
-                                     (task_entry_t)start_routine, 1u);
+        ret = krhino_task_dyn_create(thread, "pthread_task", arg, 30, 0, 2048, (task_entry_t)start_routine, 1u);
     }
 
     return ret;
@@ -36,8 +34,9 @@ int pthread_cancel(pthread_t thread)
 
 void pthread_testcancel(void)
 {
-    return 0;
+    return;
 }
+
 
 int pthread_setcancelstate(int state, int *oldstate)
 {
@@ -54,11 +53,4 @@ int pthread_kill(pthread_t thread, int sig)
     krhino_task_dyn_del(thread);
     return 0;
 }
-
-int pthread_equal(pthread_t t1, pthread_t t2)
-{
-    return (t1 == t2);
-
-}
-
 

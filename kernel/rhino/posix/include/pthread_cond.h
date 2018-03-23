@@ -4,21 +4,21 @@
 #include <pthread_mutex.h>
 #include <time.h>
 
-struct new_cond
+typedef struct new_cond
 {
 	kmutex_t *lock;
 	int       waiting;
 	int       signals;
 	ksem_t   *wait_sem;
 	ksem_t   *wait_done;
-};
+} pthread_cond_t;
 
 typedef struct
 {
   int __dummy;
 } pthread_condattr_t;
 
-typedef struct new_cond *pthread_cond_t;
+//typedef struct new_cond *pthread_cond_t;
 
 int pthread_condattr_init(pthread_condattr_t *attr);
 int pthread_condattr_destroy(pthread_condattr_t *attr);

@@ -33,7 +33,7 @@ int mq_send(mqd_t mqdes, const char *msg_ptr, size_t msg_len, unsigned msg_prio)
 {
     kstat_t ret;
 
-    ret = krhino_buf_queue_send(mqdes, msg_ptr, msg_len);
+    ret = krhino_buf_queue_send((kbuf_queue_t *)mqdes, (void *)msg_ptr, msg_len);
 
     if (ret != RHINO_SUCCESS) {
         return 0;
@@ -66,8 +66,8 @@ ssize_t mq_timedreceive(mqd_t           mqdes,
 
    *msg_prio = 0;
 
-    ticks = abs_timeout.tv_sec * RHINO_CONFIG_TICKS_PER_SECOND + 
-           (abs_timeout.tv_nsec / 1000000) / (1000 / RHINO_CONFIG_TICKS_PER_SECOND);
+    ticks = abs_timeout->tv_sec * RHINO_CONFIG_TICKS_PER_SECOND + 
+           (abs_timeout->tv_nsec / 1000000) / (1000 / RHINO_CONFIG_TICKS_PER_SECOND);
 
     ret = krhino_buf_queue_recv(mqdes, ticks, msg_ptr, &msg_size);
 
@@ -79,7 +79,7 @@ ssize_t mq_timedreceive(mqd_t           mqdes,
 }
 
 
-int mq_timedsend(mqd_t                mqdes,
+int mq_timedsend(mqd_t                      mqdes,
                      const char            *msg_ptr,
                      size_t                 msg_len,
                      unsigned               msg_prio,
@@ -89,7 +89,7 @@ int mq_timedsend(mqd_t                mqdes,
 
     (void)msg_prio;
 
-    ret = krhino_buf_queue_send(mqdes, msg_ptr, msg_len);
+    ret = krhino_buf_queue_send((kbuf_queue_t *)mqdes, (void *)msg_ptr, msg_len);
 
     if (ret != RHINO_SUCCESS) {
         return 0;

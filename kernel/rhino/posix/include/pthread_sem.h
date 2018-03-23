@@ -1,8 +1,10 @@
 #ifndef PTHREAD_SEM_H
 #define PTHREAD_SEM_H
+
+#include <k_api.h>
 #include <time.h>
 
-typedef ksem_t *sem_t;
+typedef ksem_t* sem_t;
 
 int sem_init(sem_t *sem, int pshared, unsigned int value);
 sem_t *sem_open(const char *name, int oflag, ...);
