@@ -296,6 +296,8 @@ deps = Split('''
         security/prov
         kernel/hal
         kernel/protocols/net
+        kernel/vcall
+        kernel/init
 ''')
 component.add_component_dependencis(*deps)
 
@@ -327,7 +329,7 @@ for cflags in global_cflags:
     component.add_global_cflags(cflags)
 
 
-locals_cflags = Split('''
+local_cflags = Split('''
         -Wall
         -Werror
         -Wno-unused-variable
@@ -370,7 +372,7 @@ locals_cflags = Split('''
         -Wno-unused-value
         -Wno-strict-aliasing
 ''')
-for cflags in locals_cflags:
+for cflags in local_cflags:
     component.add_cflags(cflags)
 
 global_ldflags = Split('''
