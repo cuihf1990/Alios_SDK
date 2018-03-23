@@ -80,6 +80,8 @@ if aos_global_config.compiler == 'armcc':
 component.add_component_dependencis('platform/arch/arm/armv7m')
 component.add_component_dependencis('utility/libc')
 component.add_component_dependencis('kernel/rhino')
+component.add_component_dependencis('kernel/vcall')
+component.add_component_dependencis('kernel/init')
 component.add_component_dependencis('kernel/hal')
 component.add_component_dependencis('kernel/modules/fs/kv')
 component.add_component_dependencis('kernel/vfs')

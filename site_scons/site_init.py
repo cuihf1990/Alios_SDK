@@ -320,7 +320,7 @@ class dependency_process_impl(process):
 
         return testcase_file
 
-    def  __generate_auto_component(self):      
+    def __generate_auto_component(self):
         auto_component_dir = os.path.join(self.config.out_dir, 'auto_component')
         if not os.path.exists(auto_component_dir):
             os.makedirs(auto_component_dir)
@@ -330,8 +330,7 @@ class dependency_process_impl(process):
         if src_file != '':
             src.append(src_file)
 
-        component = aos_component('auto_component', src)
-
+        aos_component('auto_component', src)
 
     def __generate_all_components(self):
         print('app=' + aos_global_config.app + ', board=' + aos_global_config.board + ', out_dir=' + aos_global_config.out_dir)
@@ -347,9 +346,7 @@ class dependency_process_impl(process):
             print('Unsupported app, make sure %s in example directory...' % aos_global_config.app)
             exit(-1)
 
-        self.__load_one_component('kernel/init')
-        self.__load_one_component('kernel/vcall')
-        if aos_global_config.app == 'yts':          
+        if aos_global_config.app == 'yts':
             for testcase in aos_global_config.testcases:
                 self.__load_one_component(testcase)
 
@@ -547,26 +544,23 @@ class ld_file_process_impl(process):
         return
 
     def __set_ld_file(self):
-        ld_target = ''
+        link_flags = ' -L ' + os.path.join(self.config.out_dir, 'ld')
         for ld in self.config.ld_files:
             if ld.endswith('.S'):
                 tool_chain = aos_global_config.toolchain
                 aos_global_config.aos_env['CPP'] = os.path.join(tool_chain.tools_path, tool_chain.prefix + 'cpp')
                 target = os.path.join(self.config.out_dir, 'ld', os.path.basename(ld)[:-2])
-                aos_global_config.aos_env.Command(target, ld, aos_global_config.aos_env['CPP'] + ' -P $SOURCE -o $TARGET')
+                aos_global_config.aos_env.Command(target, ld, aos_global_config.aos_env['CPP']
+                                                  + ' -P $_CPPINCFLAGS $SOURCE -o $TARGET')
+                link_flags += ' -T ' + os.path.basename(target)
             else:
-                target = os.path.join(self.config.out_dir, 'ld', os.path.basename(ld))
-                aos_global_config.aos_env.Command(target, ld, Copy('$TARGET', '$SOURCE'))
+                link_flags += ' -T ' + os.path.basename(ld) + ' -L ' + os.path.dirname(ld)
 
             self.config.ld_targets.append(target)
-
-            if 'platform' in ld:
-                ld_target = target
-
-        if ld_target:
-            self.config.aos_env.Append(LINKFLAGS='-T ' + os.path.basename(ld_target) + ' -L ' + os.path.dirname(ld_target))
         else:
             print('Pleas config ld file in mcu component...')
+
+        self.config.aos_env.Append(LINKFLAGS=link_flags)
 
 
 class create_bin_process_impl(process):
