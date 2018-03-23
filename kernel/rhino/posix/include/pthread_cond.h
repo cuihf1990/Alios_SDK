@@ -18,8 +18,6 @@ typedef struct
   int __dummy;
 } pthread_condattr_t;
 
-//typedef struct new_cond *pthread_cond_t;
-
 int pthread_condattr_init(pthread_condattr_t *attr);
 int pthread_condattr_destroy(pthread_condattr_t *attr);
 
