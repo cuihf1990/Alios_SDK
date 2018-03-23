@@ -13,7 +13,6 @@
 #include "aos/network.h"
 #include <netmgr.h>
 #include <aos/kernel.h>
-#include <k_err.h>
 #include <netmgr.h>
 #include <aos/cli.h>
 #include <aos/cloud.h>
@@ -221,9 +220,7 @@ int application_start(int argc, char *argv[])
     netmgr_start(false);
 
     aos_cli_register_command(&mqttcmd);
-#ifdef CSP_LINUXHOST
-    mqtt_client_example();
-#endif
+
     aos_loop_run();
     return 0;
 }
