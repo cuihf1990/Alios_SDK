@@ -146,7 +146,7 @@ int sensor_create_obj(sensor_obj_t* sensor)
     //    goto error;
     //}
     g_sensor_cnt++;
-    LOG("%s %s successfully \n", SENSOR_STR, __func__);
+    LOGD(SENSOR_STR, "%s successfully \n", __func__);
     return 0;
 
 error:
@@ -201,7 +201,7 @@ static int sensor_open(inode_t *node, file_t *file)
     }
     g_sensor_obj[index]->ref++;
     
-    LOG("%s %s successfully\n", SENSOR_STR, __func__);
+    LOGD(SENSOR_STR, "%s successfully \n", __func__);
     return 0;
 }
 
@@ -252,7 +252,6 @@ static ssize_t sensor_read(file_t *f, void *buf, size_t len)
         goto error;
     }
     
-    LOG("%s %s successfully\n", SENSOR_STR, __func__);
     return ret;
     
 error:
@@ -291,7 +290,7 @@ static int sensor_ioctl(file_t *f, int cmd, unsigned long arg)
     if(ret != 0){
         return -1;
     }
-    LOG("%s %s successfully\n", SENSOR_STR, __func__);
+    LOGD(SENSOR_STR, "%s successfully \n", __func__);
     return 0;
 }
 
@@ -363,7 +362,7 @@ int sensor_init(void){
         return -1;
     }
 
-    LOG("%s %s successfully\n", SENSOR_STR, __func__);
+    LOGD(SENSOR_STR, "%s successfully \n", __func__);
     return 0;
 }
 

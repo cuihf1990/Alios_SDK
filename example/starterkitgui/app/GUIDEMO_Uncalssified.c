@@ -96,27 +96,6 @@ static int sensor_all_open(void)
 	}
 	fd_acc = fd;
 
-	fd = aos_open(dev_baro_path, O_RDWR);
-	if (fd < 0) {
-		KIDS_A10_PRT("Error: aos_open return %d.\n", fd);
-		return -1;
-	}
-	fd_baro = fd;
-
-	fd = aos_open(dev_temp_path, O_RDWR);
-	if (fd < 0) {
-		KIDS_A10_PRT("Error: aos_open return %d.\n", fd);
-		return -1;
-	}
-	fd_temp = fd;
-
-	fd = aos_open(dev_humi_path, O_RDWR);
-	if (fd < 0) {
-		KIDS_A10_PRT("Error: aos_open return %d.\n", fd);
-		return -1;
-	}
-	fd_humi = fd;
-
 	fd = aos_open(dev_als_path, O_RDWR);
 	if (fd < 0) {
 		KIDS_A10_PRT("Error: aos_open return %d.\n", fd);
@@ -466,7 +445,7 @@ void GUIDEMO_Unclassified(void) {
         GUI_DispStringAt("unknow", (xSize >> 1) + GUIDEMO_UNCLASSIFIED_OFFSET, Y_START + Y_STEP *  2);
         GUI_DispStringAt("unknow", (xSize >> 1) + GUIDEMO_UNCLASSIFIED_OFFSET, Y_START + Y_STEP *  4);
       }
-
+#if 0
       if (!get_baro_data(&baro_data)) {
         GUI_GotoXY((xSize >> 1) + GUIDEMO_UNCLASSIFIED_OFFSET, Y_START + Y_STEP *  6);
         GUI_DispDec(baro_data, DEC_LEN_DEF);
@@ -490,6 +469,7 @@ void GUIDEMO_Unclassified(void) {
       else {
         GUI_DispStringAt("unknow", (xSize >> 1) + GUIDEMO_UNCLASSIFIED_OFFSET, Y_START + Y_STEP *  10);
       }
+#endif
 			
 			if (!get_als_data(&als_data)) {
         GUI_GotoXY((xSize >> 1) + GUIDEMO_UNCLASSIFIED_OFFSET, Y_START + Y_STEP *  12);
