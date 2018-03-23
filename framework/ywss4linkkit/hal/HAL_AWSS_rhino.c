@@ -321,8 +321,10 @@ int HAL_Awss_Connect_Ap(
     strncpy(config.ssid, ssid, sizeof(config.ssid) - 1);
     strncpy(config.pwd, passwd, sizeof(config.pwd) - 1);
     ret = netmgr_set_ap_config(&config);
-
-    //hal_wifi_suspend_station(NULL);
+#ifndef ESP8266_CONFIG
+    printf("------------------------suspend station");
+    hal_wifi_suspend_station(NULL);
+#endif
     LOGI("aos_awss", "Will reconnect wifi: %s %s", ssid, passwd);
     netmgr_reconnect_wifi();
 
