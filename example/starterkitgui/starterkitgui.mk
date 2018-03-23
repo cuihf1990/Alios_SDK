@@ -19,7 +19,6 @@ $(NAME)_SOURCES += STemWin/Config/GUIConf.c
 $(NAME)_SOURCES += STemWin/Config/LCDConf_FlexColor_Template.c
 $(NAME)_SOURCES += STemWin/OS/GUI_X_rhino.c
 
-GLOBAL_DEFINES += AOS_NO_WIFI
 
 $(NAME)_COMPONENTS := yloop cli
 

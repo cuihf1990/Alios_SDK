@@ -37,14 +37,11 @@ int32_t hal_i2c_init(i2c_dev_t *i2c)
             I2C1_Init();
             i2c->priv = &I2c1Handle;
             ret = 0;
-            printf("enter hal_i2c_init\n");
             break;
         case AOS_PORT_I2C2:
             I2C2_Init();
             i2c->priv = &I2c2Handle;
             ret = 0;
-            
-            printf("enter hal_i2c_init 2\n");
             break;
         default:
             break;
