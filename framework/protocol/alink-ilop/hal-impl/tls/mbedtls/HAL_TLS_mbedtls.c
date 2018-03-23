@@ -52,7 +52,12 @@ typedef struct _TLSDataParams {
 
 #define DEBUG_LEVEL 10
 
+static int ssl_fd = -1;
 
+int get_ssl_fd()
+{
+   return ssl_fd;
+}
 
 static unsigned int _avRandom()
 {
@@ -580,6 +585,6 @@ uintptr_t HAL_SSL_Establish(const char *host,
         LITE_free(pTlsData);
         return 0;
     }
-
+    ssl_fd = pTlsData->fd.fd;
     return (uintptr_t)pTlsData;
 }

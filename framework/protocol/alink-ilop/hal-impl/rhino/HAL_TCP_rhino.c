@@ -7,7 +7,10 @@
 
 #include <aos/network.h>
 #include <aos/errno.h>
-//#include "aliot_platform_network.h"
+
+
+
+extern uint64_t aliot_platform_time_left(uint64_t t_end, uint64_t t_now);
 
 #define PLATFORM_RHINOSOCK_LOG(format, ...) \
     do { \
@@ -21,7 +24,7 @@ uintptr_t HAL_TCP_Establish(const char *host, uint16_t port)
     struct addrinfo *addrInfoList = NULL;
     struct addrinfo *cur = NULL;
     int fd = 0;
-    int rc = 0;
+    int rc = -1;
     char service[6];
 
     memset(&hints, 0, sizeof(hints));
@@ -35,20 +38,20 @@ uintptr_t HAL_TCP_Establish(const char *host, uint16_t port)
 
     if ((rc = getaddrinfo(host, service, &hints, &addrInfoList)) != 0) {
         perror("getaddrinfo error");
-        return 0;
+        return -1;
     }
 
     for (cur = addrInfoList; cur != NULL; cur = cur->ai_next) {
         if (cur->ai_family != AF_INET) {
             perror("socket type error");
-            rc = 0;
+            rc = -1;
             continue;
         }
 
         fd = socket(cur->ai_family, cur->ai_socktype, cur->ai_protocol);
         if (fd < 0) {
             perror("create socket error");
-            rc = 0;
+            rc = -1;
             continue;
         }
 
@@ -59,10 +62,10 @@ uintptr_t HAL_TCP_Establish(const char *host, uint16_t port)
 
         close(fd);
         perror("connect error");
-        rc = 0;
+        rc = -1;
     }
 
-    if (0 == rc){
+    if (-1 == rc){
         PLATFORM_RHINOSOCK_LOG("fail to establish tcp");
     } else {
         PLATFORM_RHINOSOCK_LOG("success to establish tcp, fd=%d", rc);

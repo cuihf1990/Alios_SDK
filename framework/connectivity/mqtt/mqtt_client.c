@@ -58,8 +58,8 @@ static int iotx_mc_check_handle_is_identical(iotx_mc_topic_handle_t *messageHand
 static void cb_recv_timeout(void *arg);
 static void cb_recv(int fd, void *arg);
 
-extern int32_t HAL_SSL_GetFd(uintptr_t handle);
-
+//extern int32_t HAL_SSL_GetFd(uintptr_t handle);
+extern int get_iotx_fd();
 /* check rule whether is valid or not */
 static int iotx_mc_check_rule(char *iterm, iotx_mc_topic_type_t type)
 {
@@ -1877,7 +1877,7 @@ static void iotx_mc_keepalive(iotx_mc_client_t *pClient)
             utils_time_countdown_ms(&(pClient->reconnect_param.reconnect_next_time),
                                     pClient->reconnect_param.reconnect_time_interval_ms);
 
-            aos_cancel_poll_read_fd(HAL_SSL_GetFd(pClient->ipstack->handle), cb_recv, pClient);
+            aos_cancel_poll_read_fd(get_iotx_fd(), cb_recv, pClient);
             pClient->ipstack->disconnect(pClient->ipstack);
             iotx_mc_set_client_state(pClient, IOTX_MC_STATE_DISCONNECTED_RECONNECTING);
             break;
@@ -2007,7 +2007,9 @@ static void cb_recv(int fd, void *arg)
 
     int ret = IOT_MQTT_Yield(pClient, 0);
     if(ret) {
-        aos_cancel_poll_read_fd(HAL_SSL_GetFd(pClient->ipstack->handle), cb_recv, pClient);
+        
+        aos_cancel_poll_read_fd(get_iotx_fd(), cb_recv, pClient);
+       // aos_cancel_poll_read_fd(HAL_SSL_GetFd(pClient->ipstack->handle), cb_recv, pClient);
         return;
     }
     //LOG("system heap_size %d, iram mimi free heap size:%d,iram free heap size :%d", system_get_free_heap_size(), xPortGetMinimumEverFreeHeapSize(), xPortGetFreeHeapSize());
@@ -2062,7 +2064,7 @@ static int iotx_mc_connect(iotx_mc_client_t *pClient)
 
     utils_time_countdown_ms(&pClient->next_ping_time, pClient->connect_data.keepAliveInterval * 1000);
 
-    aos_poll_read_fd( HAL_SSL_GetFd(pClient->ipstack->handle), cb_recv, pClient);
+    aos_poll_read_fd(get_iotx_fd(), cb_recv, pClient);
     aos_post_delayed_action( pClient->connect_data.keepAliveInterval * 1000, cb_recv_timeout, pClient);
     aos_post_event(EV_SYS, CODE_SYS_ON_MQTT_READ, 0u);
     log_info("mqtt connect success!");
@@ -2150,7 +2152,7 @@ static int iotx_mc_disconnect(iotx_mc_client_t *pClient)
         return NULL_VALUE_ERROR;
     }
 
-    int fd = HAL_SSL_GetFd(pClient->ipstack->handle);
+    int fd = get_iotx_fd();// HAL_SSL_GetFd(pClient->ipstack->handle);
     if (fd >= 0) {
         aos_cancel_poll_read_fd(fd, cb_recv, pClient);
     }
