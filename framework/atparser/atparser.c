@@ -10,7 +10,7 @@
 #include "atparser.h"
 
 #define MODULE_NAME "atparser"
-#define TASK_DEFAULT_WAIT_TIME 1000
+#define TASK_DEFAULT_WAIT_TIME 5000
 
 static uint8_t inited = 0;
 static uart_dev_t at_uart;
