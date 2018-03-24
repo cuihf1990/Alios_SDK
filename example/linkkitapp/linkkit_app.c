@@ -251,6 +251,7 @@ static linkkit_ops_t alinkops = {
     .thing_prop_changed = thing_prop_changed,
 };
 
+#if 0
 static unsigned long long uptime_sec(void)
 {
     static unsigned long long start_time = 0;
@@ -280,28 +281,19 @@ static int is_active(sample_context_t* sample)
 {
     return sample->cloud_connected && sample->thing_enabled;
 }
+#endif
 
 void linkkit_action(void *params)
 {
-    static unsigned long long now = 0;
-
-    static int now_size = 0;
-    static int last_size = 0;
-
     sample_context_t* sample_ctx = params;
 
     linkkit_dispatch();
 
-    now += 1;
 
 #if 0
-	/* about 60 seconds, assume trigger event about every 60s. */
-    if (now % 600 == 0 && is_active(sample_ctx)) {
-        post_event_error(sample_ctx);
-    }
-#endif
+    static int now_size = 0;
+    static int last_size = 0;
 
-#if 0
     now_size = system_get_free_heap_size();
     if (now_size != last_size) {
         last_size = now_size;
