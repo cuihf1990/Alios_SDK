@@ -14,6 +14,7 @@ static int32_t gpio_para_transform(gpio_dev_t *gpio, GPIO_InitTypeDef * init_str
 static int32_t get_gpio_group(gpio_dev_t *gpio, GPIO_TypeDef **GPIOx);
 static uint32_t get_gpio_pin(uint8_t pin);
 //static GPIO_InitTypeDef  GPIO_InitStruct;
+int32_t gpio_has_priv(gpio_dev_t *gpio, GPIO_InitTypeDef * init_str);
 
 int32_t hal_gpio_init(gpio_dev_t *gpio)
 {
@@ -26,23 +27,29 @@ int32_t hal_gpio_init(gpio_dev_t *gpio)
     }
 
     ret = get_gpio_group(gpio, &GPIOx);
-    if (ret == 0) {
-        if (GPIOx == GPIOA) {
-            __HAL_RCC_GPIOA_CLK_ENABLE();
-        } else if (GPIOx == GPIOB) {
-            __HAL_RCC_GPIOB_CLK_ENABLE();
-        } else if (GPIOx == GPIOC) {
-            __HAL_RCC_GPIOC_CLK_ENABLE();
-        } else {
-            return -1;
-        }
-        ret = gpio_para_transform(gpio, &GPIO_InitStruct);
-        if (ret == 0) {
-            GPIO_InitStruct.Pin = get_gpio_pin(gpio->port);
-            HAL_GPIO_Init(GPIOx, &GPIO_InitStruct);
-        }
+    if (ret){
+        return ret;
     }
 
+    if (GPIOx == GPIOA) {
+        __HAL_RCC_GPIOA_CLK_ENABLE();
+    } else if (GPIOx == GPIOB) {
+        __HAL_RCC_GPIOB_CLK_ENABLE();
+    } else if (GPIOx == GPIOC) {
+        __HAL_RCC_GPIOC_CLK_ENABLE();
+    } else {
+        return -1;
+    }
+    
+    ret = gpio_para_transform(gpio, &GPIO_InitStruct);
+    if (ret){
+        return ret;
+    }
+
+    GPIO_InitStruct.Pin = get_gpio_pin(gpio->port);
+    HAL_GPIO_Init(GPIOx, &GPIO_InitStruct);
+    ret |= gpio_has_priv(gpio, &GPIO_InitStruct);
+    
     return ret;
 }
 
@@ -199,7 +206,6 @@ int32_t gpio_has_priv(gpio_dev_t *gpio, GPIO_InitTypeDef * init_str)
             }
             break;
         default:
-            ret = -1;
             break;
     }
 
@@ -239,20 +245,17 @@ int32_t gpio_para_transform(gpio_dev_t *gpio, GPIO_InitTypeDef * init_str)
             init_str->Mode      = GPIO_MODE_OUTPUT_PP;
             init_str->Pull      = GPIO_NOPULL;
             init_str->Speed     = GPIO_SPEED_FREQ_LOW;
-            ret = gpio_has_priv(gpio, init_str);
             break;        
         case OUTPUT_OPEN_DRAIN_NO_PULL:
             init_str->Mode      = GPIO_MODE_OUTPUT_OD;
             init_str->Pull      = GPIO_NOPULL;
             init_str->Speed     = GPIO_SPEED_FREQ_LOW;
-            ret = gpio_has_priv(gpio, init_str);
             break;
         case OUTPUT_OPEN_DRAIN_PULL_UP:
             init_str->Mode      = GPIO_MODE_OUTPUT_OD;
             init_str->Pull      = GPIO_PULLUP;
             init_str->Speed     = GPIO_SPEED_FREQ_LOW;
-            ret = gpio_has_priv(gpio, init_str);
-            break;          
+            break;
         default:
             ret = -1;
             break;
