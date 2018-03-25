@@ -484,7 +484,7 @@ static int drv_acc_bosch_bma253_ioctl(int cmd, unsigned long arg)
         case SENSOR_IOCTL_GET_INFO:{ 
             /* fill the dev info here */
             dev_sensor_info_t *info = (dev_sensor_info_t *)arg;
-            *(info->model) = "BMA253";
+            info->model = "BMA253";
             info->range_max = 16;
             info->range_min = 2;
             info->unit = mg;
