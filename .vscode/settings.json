@@ -5,7 +5,8 @@
     "aliosStudio.buildList": [
         {"name": "clean"},
         {"name": "helloworld@starterkit"},
-        {"name": "starterkitgui@starterkit"}
+        {"name": "starterkitgui@starterkit"},
+        {"name": "mqttapp@starterkit"}
     ],
     "aliosStudio.build.multiBin": false,
     "aliosStudio.build.multiBinTarget": "app",
