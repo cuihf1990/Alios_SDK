@@ -3,15 +3,10 @@
     "aliosStudio.hardware.board": "starterkit",
     "aliosStudio.name": "helloworld",
     "aliosStudio.buildList": [
-        {
-            "name": "clean"
-        },
-        {
-            "name": "helloworld@starterkit"
-        },
-        {
-            "name": "mqttapp@starterkit"
-        }
+        {"name": "clean"},
+        {"name": "helloworld@starterkit"},
+        {"name": "starterkitgui@starterkit"},
+        {"name": "mqttapp@starterkit"}
     ],
     "aliosStudio.build.multiBin": false,
     "aliosStudio.build.multiBinTarget": "app",
