@@ -1,30 +1,45 @@
-src = Split('''
+src =Split(''' 
     mqtt_client.c
+    mqtt_instance.c
 ''')
+component =aos_component('mqtt', src)
 
-MQTT_UTILS_PATH =  '../../framework/protocol/alink-ilop'
-
-if aos_global_config.board == 'linuxhost':
-    PLATFORM_MQTT = 'linux'
-    #component.add_component_dependencis('utility/iotx-utils/hal/linux')
-else:
-    PLATFORM_MQTT = 'rhino'
-    #component.add_component_dependencis('utility/iotx-utils/hal/rhino')
-
-
-src.append( MQTT_UTILS_PATH+'/hal-imp/'+PLATFORM_MQTT+'/HAL_OS_'+PLATFORM_MQTT+'.c' )
-src.append( MQTT_UTILS_PATH+'/hal-imp/'+PLATFORM_MQTT+'/HAL_TCP_'+PLATFORM_MQTT+'.c' )
-src.append( MQTT_UTILS_PATH+'/hal-imp/tls/HAL_TLS_mbedtls.c' )
-
-component = aos_component('mqtt', src)
-
-dependencis = Split('''
+dependencis =Split(''' 
     framework/connectivity/mqtt/MQTTPacket
-    security/mbedtls
-    framework/connectivity/mqtt
-    utility/digest_algorithm
-    framework/protocol/alink-ilop/iotkit-system
-    framework/protocol/alink-ilop/sdk-encap
+    framework/protocol/alink-ilop
 ''')
 for i in dependencis:
     component.add_component_dependencis(i)
+
+global_includes =Split(''' 
+    ./
+    ../../protocol/alink-ilop/sdk-encap
+    ../../protocol/alink-ilop/base/utils
+''')
+for i in global_includes:
+    component.add_global_includes(i)
+
+global_macros =Split(''' 
+    MQTT_COMM_ENABLED
+    CMP_VIA_MQTT_DIRECT
+    MQTT_DIRECT
+''')
+for i in global_macros:
+    component.add_global_macro(i)
+
+includes =Split(''' 
+    ../../protocol/alink-ilop/iotkit-system
+    ../../protocol/alink-ilop/base/log/LITE-log
+    ../../protocol/alink-ilop/base/utils/LITE-utils/src
+    ../../protocol/alink-ilop/base/utils/misc/
+    ../../protocol/alink-ilop/base/utils/digest
+''')
+for i in includes:
+    component.add_includes(i)
+
+
+cflags =Split(''' 
+    -DOTA_SIGNAL_CHANNEL=1
+''')
+for i in cflags:
+    component.add_cflags(i)

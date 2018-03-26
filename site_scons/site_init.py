@@ -447,6 +447,18 @@ class ide_transfer_process_impl(process):
 
                 f.write('],\n')
                 f.write('},\n')
+
+            #add lib
+            if len(aos_global_config.prebuilt_libs):
+                f.write('{\'name\':\''+'external_lib'+'\',\n')
+                f.write('\'src\':[\n' )
+                for lib in aos_global_config.prebuilt_libs:
+                    f.write( '\'' + lib+ '\',\n'  )
+                f.write('],\n')
+                f.write('\'include\':[\n' )
+                f.write('],\n')
+                f.write('},\n')
+
             f.write(']\n')
 
         # excute transfer
@@ -543,20 +555,25 @@ class ld_file_process_impl(process):
         self.__set_ld_file()
         return
 
-    def __set_ld_file(self):
-        link_flags = ' -L ' + os.path.join(self.config.out_dir, 'ld')
+    def __set_ld_file(self):  
+        link_flags = ''
+        link_time = 0      
         for ld in self.config.ld_files:
+            if link_time == 0:
+                link_flags = ' -L ' + os.path.join(self.config.out_dir, 'ld')
+                link_time = 1
             if ld.endswith('.S'):
                 tool_chain = aos_global_config.toolchain
                 aos_global_config.aos_env['CPP'] = os.path.join(tool_chain.tools_path, tool_chain.prefix + 'cpp')
                 target = os.path.join(self.config.out_dir, 'ld', os.path.basename(ld)[:-2])
                 aos_global_config.aos_env.Command(target, ld, aos_global_config.aos_env['CPP']
                                                   + ' -P $_CPPINCFLAGS $SOURCE -o $TARGET')
-                link_flags += ' -T ' + os.path.basename(target)
+                link_flags += ' -T ' + os.path.basename(target)               
             else:
                 link_flags += ' -T ' + os.path.basename(ld) + ' -L ' + os.path.dirname(ld)
 
             self.config.ld_targets.append(target)
+            
         else:
             print('Pleas config ld file in mcu component...')
 

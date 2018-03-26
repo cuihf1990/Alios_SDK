@@ -24,7 +24,7 @@ tab_space =$(empty)
 colon =:
 split_start =Split(''' 
 split_end = ''')
-component_construct = aos_arch_component('$(NAME)', src)
+component_construct = aos_component('$(NAME)', src)
 
 COMPONENT_DIRECTORIES := . \
 						 example   \
