@@ -27,7 +27,13 @@ $(NAME)_COMPONENTS  += benchmarks
 GLOBAL_DEFINES      += CONFIG_CMD_BENCHMARKS
 endif
 
+ifeq ($(COMPILER),armcc)
+$(NAME)_PREBUILT_LIBRARY := STemWin/Lib/STemWin540_CM4_OS_Keil_ot.lib
+else ifeq ($(COMPILER),iar)
+
+else
 $(NAME)_PREBUILT_LIBRARY := STemWin/Lib/STemWin540_CM4_OS_GCC_ot.a
+endif
 
 $(NAME)_INCLUDES    += core/include/
 $(NAME)_INCLUDES    += STemWin/Config/
