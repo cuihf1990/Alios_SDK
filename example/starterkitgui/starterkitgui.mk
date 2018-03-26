@@ -1,6 +1,7 @@
 NAME := starterkitgui
 
 $(NAME)_SOURCES := starterkitgui.c
+$(NAME)_SOURCES += st7789.c
 
 $(NAME)_SOURCES += app/GUIDEMO.c
 $(NAME)_SOURCES += app/GUIDEMO_BarGraph.c
@@ -38,6 +39,4 @@ endif
 $(NAME)_INCLUDES    += core/include/
 $(NAME)_INCLUDES    += STemWin/Config/
 $(NAME)_INCLUDES    += STemWin/inc/
-
-GLOBAL_CFLAGS += -mfpu=fpv4-sp-d16 -mfloat-abi=hard
-GLOBAL_LDFLAGS += -mfpu=fpv4-sp-d16 -mfloat-abi=hard
+$(NAME)_INCLUDES    += .
