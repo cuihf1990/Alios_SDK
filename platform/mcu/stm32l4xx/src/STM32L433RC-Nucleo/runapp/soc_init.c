@@ -126,10 +126,6 @@ void stm32_soc_init(void)
     MX_SPI1_Init();
 
     MX_CRC_Init();
-
-
-    /* Initialize LCD and LEDs */
-    //BSP_GUI_init();
 }
 
 /** System Clock Configuration

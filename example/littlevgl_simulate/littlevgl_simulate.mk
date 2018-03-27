@@ -2,7 +2,7 @@ NAME := littlevgl_simulate
 
 $(NAME)_SOURCES := littlevgl_simulate.c
 
-GLOBAL_DEFINES += AOS_NO_WIFI
+GLOBAL_DEFINES += LITTLEVGL_SIMULATE
 
 $(NAME)_COMPONENTS := yloop cli
 $(NAME)_COMPONENTS += framework.GUI.littlevGL
