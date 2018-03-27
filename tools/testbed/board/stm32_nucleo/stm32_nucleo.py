@@ -1,4 +1,5 @@
-import os, sys, time, serial, subprocess, shlex, traceback, glob
+import sys, time, serial, subprocess, shlex, traceback, glob
+from os import path
 
 nucleo_stlink_serials = {}
 nucleo_debug_sessions = {}
@@ -7,7 +8,7 @@ def list_devices(host_os):
     return glob.glob('/dev/stm32*-*')
 
 def exist(device):
-    return os.path.exists(device)
+    return path.exists(device)
 
 def new_device(device):
     info = subprocess.check_output(['udevadm', 'info', '-q', 'property', '-n', device])
@@ -100,7 +101,8 @@ def debug_start(device, port):
     for device in nucleo_debug_sessions:
         if nucleo_debug_sessions[device]['port'] == port:
             return 'port_in_use'
-    logfile = 'client/{0}-debuglog.txt'.format(device.split('/')[-1])
+    logfolder = path.dirname(path.abspath(__file__))
+    logfile = path.join(logfolder, '{0}-debuglog.txt'.format(path.basename(device)))
     try:
         flog = open(logfile, 'a+')
     except:

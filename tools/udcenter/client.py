@@ -158,7 +158,8 @@ class Client:
                     port = debug_sessions[sock]['port']
                     interface.debug_stop(device)
                     sock.close()
-                    self.devices[device].pop('debug_socket')
+                    if 'debug_socket' in self.devices[device]:
+                        self.devices[device].pop('debug_socket')
                     debug_sessions.pop(sock)
                     if type == pkt.DEVICE_DEBUG_STOP:
                         content = term + ',' + device + ':' + 'success'
@@ -185,7 +186,8 @@ class Client:
                             print 'restart debugging {0} succeed'.format(device)
                         else:
                             interface.debug_stop(device)
-                            self.devices[device].pop('debug_socket')
+                            if 'debug_socket' in self.devices[device]:
+                                self.devices[device].pop('debug_socket')
                             content = term + ',' + device + ':' + 'fail'
                             self.send_packet(type, content)
                             print 'restart debugging {0} failed, debug session closed'.format(device)
@@ -207,7 +209,8 @@ class Client:
                     interface = self.devices[device]['interface']
                     interface.debug_stop(device)
                     debug_sessions.pop(sock)
-                    self.devices[device].pop('debug_socket')
+                    if 'debug_socket' in self.devices[device]:
+                        self.devices[device].pop('debug_socket')
                     content = term + ',' + device + ':' + 'session closed'
                     self.send_packet(pkt.DEVICE_DEBUG_STOP, content)
                     continue

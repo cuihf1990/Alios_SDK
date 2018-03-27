@@ -260,11 +260,33 @@ class Server:
                             continue
                         self.send_packet(self.terminals[uuid]['socket'], type, log)
                     elif type in [pkt.DEVICE_DEBUG_DATA, pkt.DEVICE_DEBUG_START, pkt.DEVICE_DEBUG_REINIT, pkt.DEVICE_DEBUG_STOP]:
-                        uuid = value.split(',')[0]
-                        if uuid not in self.terminals or self.terminals[uuid]['valid'] == False:
+                        try:
+                            [uuid, device] = value.split(':')[0].split(',')
+                            result = value.split(':')[1]
+                        except:
                             continue
-                        value = client['uuid'] + value[len(uuid):]
-                        self.send_packet(self.terminals[uuid]['socket'], type, value)
+                        if uuid in self.terminals and self.terminals[uuid]['valid']:
+                            value = client['uuid'] + value[len(uuid):]
+                            self.send_packet(self.terminals[uuid]['socket'], type, value)
+                            if device not in client['devices']:
+                                continue
+                            if client['devices'][device]['valid'] == False or type == pkt.DEVICE_DEBUG_STOP:
+                                if 'debug_session' in client['devices'][device]:
+                                    client['devices'][device].pop('debug_session')
+                                continue
+                            if type in [pkt.DEVICE_DEBUG_START, pkt.DEVICE_DEBUG_REINIT] and result == 'success':
+                                client['devices'][device]['debug_session'] = uuid
+                                continue
+                        else:
+                            if device not in client['devices']:
+                                continue
+                            if 'debug_session' not in client['devices'][device]:
+                                continue
+                            if uuid != client['devices'][device]['debug_session']:
+                                continue
+                            client['devices'][device].pop('debug_session')
+                            content = uuid + ',' + device
+                            self.send_packet(conn, pkt.DEVICE_DEBUG_STOP, content)
                     elif type == pkt.DEVICE_ERASE or type == pkt.DEVICE_PROGRAM or \
                          type == pkt.DEVICE_START or type == pkt.DEVICE_STOP or \
                          type == pkt.DEVICE_RESET or type == pkt.DEVICE_CMD or \
@@ -490,6 +512,16 @@ class Server:
         if terminal:
             terminal['valid'] = False
             self.report_status_to_controller()
+            for c in self.clients:
+                c = self.clients[c]
+                for device in c['devices']:
+                    if 'debug_session' not in c['devices'][device]:
+                        continue
+                    if c['devices'][device]['debug_session'] != terminal['uuid']:
+                        continue
+                    c['devices'][device].pop('debug_session')
+                    content = terminal['uuid'] + ',' + device
+                    self.send_packet(c['socket'], pkt.DEVICE_DEBUG_STOP, content)
             print "terminal {0}@{1} disconnected".format(terminal['uuid'], addr)
         else:
             print "terminal {0} disconnected".format(addr)
