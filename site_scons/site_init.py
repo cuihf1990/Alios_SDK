@@ -8,7 +8,7 @@ import sys
 
 class aos_global_config:
     global_config_dict = {}
-    aos_env = Environment(ENV=os.environ, CPPPATH=['#include'])
+    aos_env = Environment(ENV=os.environ, CPPPATH=['#include'],TOOLS=['mingw', 'gcc', 'g++'])
     toolchain = None
     compiler = ''
     out_dir = ''
