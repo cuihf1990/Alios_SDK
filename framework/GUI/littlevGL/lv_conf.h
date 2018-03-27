@@ -10,7 +10,7 @@
 #include "lv_conf_starterkit.h"
 #endif
 
-#ifdef LV_CONF_SIMULATE_H
+#ifdef LITTLEVGL_SIMULATE
 #include "lv_conf_simulate.h"
 #endif
 
