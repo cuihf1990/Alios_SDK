@@ -569,6 +569,7 @@ class ld_file_process_impl(process):
                     link_flags += ' -T ' + os.path.basename(target)               
                 else:
                     link_flags += ' -T ' + os.path.basename(ld) + ' -L ' + os.path.dirname(ld)
+                    target = ld
 
                 self.config.ld_targets.append(target)            
         else:
