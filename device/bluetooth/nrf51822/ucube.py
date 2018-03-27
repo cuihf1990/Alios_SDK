@@ -1,7 +1,7 @@
 src =Split(''' 
     nrf51822.c
 ''')
-component =aos_arch_component('hci_h4_nrf51822', src)
+component =aos_component('hci_h4_nrf51822', src)
 
 
 

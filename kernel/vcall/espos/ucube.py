@@ -10,5 +10,5 @@ src = Split('''
         platform/rhino/espos_timer.c
 ''')
 
-component = aos_arch_component('espos', src)
+component = aos_component('espos', src)
 component.add_global_includes('include')

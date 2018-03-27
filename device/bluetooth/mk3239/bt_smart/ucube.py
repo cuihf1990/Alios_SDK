@@ -13,7 +13,7 @@ src =Split('''
     LinkListUtils.c
     StringUtils.c
 ''')
-component =aos_arch_component('bt_smart', src)
+component =aos_component('bt_smart', src)
 
 
 global_includes =Split(''' 
