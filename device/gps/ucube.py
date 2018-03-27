@@ -2,7 +2,7 @@ src =Split('''
     hal/gps_hal.c
     parse/gps_parse.c
 ''')
-component =aos_arch_component('gps', src)
+component =aos_component('gps', src)
 
 dependencis =Split(''' 
     device/sal

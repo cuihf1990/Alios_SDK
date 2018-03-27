@@ -1,6 +1,6 @@
 src =Split(''' 
 ''')
-component =aos_arch_component('device_sal_sim800', src)
+component =aos_component('device_sal_sim800', src)
 
 dependencis =Split(''' 
     kernel/yloop

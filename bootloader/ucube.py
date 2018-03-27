@@ -5,7 +5,7 @@ src =Split('''
     update_for_ota.c
     ymodem.c
 ''')
-component =aos_arch_component('APP_bootloader', src)
+component =aos_component('APP_bootloader', src)
 
 
 global_includes =Split(''' 

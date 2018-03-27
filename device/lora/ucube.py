@@ -2,7 +2,7 @@ src =Split('''
     sx1276/sx1276.c
     eml3047_lrwan/eml3047.c
 ''')
-component =aos_arch_component('lora ', src)
+component =aos_component('lora ', src)
 
 
 global_includes =Split(''' 

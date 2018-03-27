@@ -3,7 +3,7 @@ src =Split('''
     init_helper.c
     gatt_attr_helper.c
 ''')
-component =aos_arch_component('ble_app_helper_impl', src)
+component =aos_component('ble_app_helper_impl', src)
 
 dependencis =Split(''' 
     device/bluetooth/mk3239/bt_smart

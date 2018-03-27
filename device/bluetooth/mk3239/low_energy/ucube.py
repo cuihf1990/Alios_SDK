@@ -5,7 +5,7 @@ src =Split('''
     ../BTE_platform/mico_bt_nvram_access.c
     ../BTE_platform/mico_upio.c
 ''')
-component =aos_arch_component('lib_ble_low_energy', src)
+component =aos_component('lib_ble_low_energy', src)
 
 dependencis =Split(''' 
     ./device/bluetooth/mk3239/firmware

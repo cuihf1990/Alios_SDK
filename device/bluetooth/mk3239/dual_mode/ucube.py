@@ -104,7 +104,7 @@ src =Split('''
     ../BTE/Projects/bte/embedded/mico/lib/mico_post_reset.c
     ../BTE/Projects/bte/embedded/mico/lib/mico_stubs.c
 ''')
-component =aos_arch_component('BTE_dual_mode', src)
+component =aos_component('BTE_dual_mode', src)
 
 
 
