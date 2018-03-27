@@ -4,11 +4,6 @@
 #include "soc_init.h"
 #include "st7789.h"
 
-
-extern void LcdWriteReg(uint8_t Data);
-extern void LcdWriteData(uint8_t Data);
-extern void LcdWriteDataMultiple(uint8_t * pData, int NumItems);
-
 extern SPI_HandleTypeDef hspi1;
 static SPI_HandleTypeDef *hspi_lcd = NULL;
 
@@ -294,4 +289,34 @@ void BSP_LCD_Clear(uint16_t Color)
 		
 		LcdWriteDataMultiple(black_gui, 480);	 
   }
+}
+
+void ST7789H2_WritePixel(uint16_t Xpos, uint16_t Ypos, uint16_t RGBCode)
+{
+  /* Set Cursor */
+  ST7789H2_SetCursor(Xpos, Ypos);
+
+  /* Prepare to write to LCD RAM */
+  ST7789H2_WriteReg(0x2C, (uint8_t*)NULL, 0);   /* RAM write data command */
+
+  /* Write RAM data */
+  LcdWriteDataMultiple(&RGBCode, 2);
+}
+
+void LcdWriteReg(uint8_t Data) 
+{
+  HAL_GPIO_WritePin(LCD_DCX_GPIO_Port, LCD_DCX_Pin, GPIO_PIN_RESET);
+  HAL_SPI_Transmit(&hspi1, &Data, 1, 10);
+}
+
+void LcdWriteData(uint8_t Data) 
+{
+  HAL_GPIO_WritePin(LCD_DCX_GPIO_Port, LCD_DCX_Pin, GPIO_PIN_SET);
+  HAL_SPI_Transmit(&hspi1, &Data, 1, 10);
+}
+
+void LcdWriteDataMultiple(uint8_t * pData, int NumItems) 
+{
+  HAL_GPIO_WritePin(LCD_DCX_GPIO_Port, LCD_DCX_Pin, GPIO_PIN_SET);
+  HAL_SPI_Transmit(&hspi1, pData, NumItems, 10);
 }

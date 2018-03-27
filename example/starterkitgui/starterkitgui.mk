@@ -1,7 +1,6 @@
 NAME := starterkitgui
 
 $(NAME)_SOURCES := starterkitgui.c
-$(NAME)_SOURCES += st7789.c
 
 $(NAME)_SOURCES += app/GUIDEMO.c
 $(NAME)_SOURCES += app/GUIDEMO_BarGraph.c
