@@ -93,7 +93,7 @@ else:
     component.add_sources('src/STM32L433RC-Nucleo/startup_stm32l433xx.s')
 
 global_cflags = []
-print( "aos_global_config.compiler", aos_global_config.compiler, '!!!')
+
 if aos_global_config.compiler == 'armcc':    
     global_cflags = Split(''' 
         --c99 
