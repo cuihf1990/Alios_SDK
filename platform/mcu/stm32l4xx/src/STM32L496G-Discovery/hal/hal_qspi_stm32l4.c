@@ -113,7 +113,7 @@ int32_t hal_qspi_command(qspi_dev_t *qspi, qspi_cmd_t *cmd, uint32_t timeout)
     return ret;
 }
 
-int32_t hal_qspi_autoPolling(qspi_dev_t *qspi, uint8_t cmd, uint32_t timeout)
+int32_t hal_qspi_auto_polling(qspi_dev_t *qspi, uint32_t cmd, uint32_t timeout)
 {
     int32_t ret = -1;
     QSPI_CommandTypeDef     sCommand;
