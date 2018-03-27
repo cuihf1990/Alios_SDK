@@ -1,5 +1,5 @@
 /**
- * @file lv_conf.h
+ * @file lv_conf_starterkit.h
  * 
  */ /*Remove this to enable the content (Delete the last #endif too!)*/
 
@@ -274,6 +274,6 @@
 #define USE_LV_SLIDER    1
 
 /*Switch (dependencies: lv_slider)*/
-#define USE_LV_SW       1 /*LV_CONF_H*/
+#define USE_LV_SW       1 /*LV_CONF_STARTERKIT_H*/
 
 #endif /*Remove this to enable the content*/
