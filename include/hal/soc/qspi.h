@@ -16,7 +16,7 @@ typedef struct {
 } qspi_dev_t;
 
 typedef struct {
-    uint32_t  instruction;   /* qspi instruction */
+    uint32_t instruction;   /* qspi instruction */
     uint32_t address;       /* qspi cmd address */
     uint32_t size;          /* qspi cmd size */
 } qspi_cmd_t;
