@@ -18,7 +18,7 @@ else:
         component_dependencis.append('kernel/vcall/espos')
 
     if aos_global_config.board == 'linuxhost' or aos_global_config.board == 'mk3060' \
-            or aos_global_config.board == 'mk3239' or aos_global_config.board == 'mk3166':
+            or aos_global_config.board == 'mk3239' or aos_global_config.board == 'mk3166' or aos_global_config.board == 'hobbit1_evb':
         src.append('mico/mico_rhino.c')
     src.append('aos/aos_rhino.c')
 
