@@ -13,7 +13,10 @@ $(NAME)_SOURCES := aos/board_partition.c \
                    hal/hal_uart_stm32l4.c \
                    hal/flash_l4.c \
                    hal/flash_port.c \
-                   hal/hw.c
+                   hal/hw.c \
+                   hal/hal_sd_stm32l4.c \
+                   hal/hal_nand_stm32l4.c \
+                   hal/hal_nor_stm32l4.c
                    
 $(NAME)_SOURCES += Src/stm32l4xx_hal_msp.c 
                    
