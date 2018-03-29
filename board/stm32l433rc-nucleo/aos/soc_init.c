@@ -33,6 +33,10 @@ void stm32_soc_init(void)
     /* Configure the system clock */
     SystemClock_Config();
 
+    /**Configure the Systick interrupt time 
+    */
+    HAL_SYSTICK_Config(HAL_RCC_GetHCLKFreq()/RHINO_CONFIG_TICKS_PER_SECOND);
+    
     /*default uart init*/
     stduart_init();
 }
@@ -48,6 +52,24 @@ static void stduart_init(void)
     uart_0.config.stop_bits = STOP_BITS_1;
 
     hal_uart_init(&uart_0);
+}
+
+/**
+* @brief This function handles System tick timer.
+*/
+void SysTick_Handler(void)
+{
+  /* USER CODE BEGIN SysTick_IRQn 0 */
+
+  /* USER CODE END SysTick_IRQn 0 */
+  HAL_IncTick();
+  krhino_intrpt_enter();
+  krhino_tick_proc();
+  krhino_intrpt_exit();
+  //HAL_SYSTICK_IRQHandler();
+  /* USER CODE BEGIN SysTick_IRQn 1 */
+
+  /* USER CODE END SysTick_IRQn 1 */
 }
 
 /**

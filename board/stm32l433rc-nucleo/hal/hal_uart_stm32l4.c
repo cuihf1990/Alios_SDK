@@ -458,3 +458,12 @@ int32_t uart_mode_transform(hal_uart_mode_t mode_hal, uint32_t *mode_stm32l4)
 
     return ret;
 }
+
+void USART2_IRQHandler(void)
+{
+   krhino_intrpt_enter();
+   HAL_UART_IRQHandler(&uart2_handle);
+   krhino_intrpt_exit();
+}
+
+
