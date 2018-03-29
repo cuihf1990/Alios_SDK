@@ -35,7 +35,7 @@ ENTRY(Reset_Handler)
 /* Highest address of the user mode stack */
 _estack = 0x20010000;    /* end of RAM */
 /* Generate a link error if heap and stack don't fit into RAM */
-_Min_Heap_Size = 0x1000;      /* required amount of heap  */
+_Min_Heap_Size = 0x200;      /* required amount of heap  */
 _Min_Stack_Size = 0x400; /* required amount of stack */
 
 /* Specify the memory areas */
@@ -157,27 +157,27 @@ SECTIONS
   } >RAM
 
   /* User_heap_stack section, used to check that there is enough RAM left */
-  . = ALIGN(8);
-  PROVIDE ( end = . );
-  PROVIDE ( _end = . );
-  PROVIDE ( _stack_base = _estack - _Min_Stack_Size); /* 0x10*/
-  ASSERT ((_stack_base > end), "Error: No room left for the stack")
+  ._user_heap_stack :
+  {
+    . = ALIGN(8);
+    PROVIDE ( end = . );
+    PROVIDE ( _end = . );
+    . = . + _Min_Heap_Size;
+    . = . + _Min_Stack_Size;
+    . = ALIGN(8);
+  } >RAM
 
-  PROVIDE ( heap_start  = _end );
-  PROVIDE ( heap_end    = _stack_base);
-  PROVIDE ( heap_len    = heap_end - heap_start);
-  ASSERT ((heap_len > _Min_Heap_Size), "Error: No room left for the heap")
+  
+
+  /* Remove information from the standard libraries */
+  /DISCARD/ :
+  {
+    libc.a ( * )
+    libm.a ( * )
+    libgcc.a ( * )
+  }
 
   .ARM.attributes 0 : { *(.ARM.attributes) }
 }
-
- GROUP(
-   libgcc.a
-   libg.a
-   libc.a
-   libm.a
-   libnosys.a
- )
-
 
 

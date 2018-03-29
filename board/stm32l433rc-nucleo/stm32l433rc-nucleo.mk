@@ -9,14 +9,14 @@ SUPPORT_BINS         := no
 HOST_MCU_NAME        := STM32L433RC-Nucleo
 
 $(NAME)_SOURCES := aos/board_partition.c \
+                   aos/soc_init.c \
                    hal/hal_uart_stm32l4.c \
                    hal/flash_l4.c \
                    hal/flash_port.c \
                    hal/hw.c
                    
 $(NAME)_SOURCES += Src/stm32l4xx_hal_msp.c \
-                   Src/stm32l4xx_it.c \
-                   Src/soc_init.c
+                   Src/stm32l4xx_it.c
                    
 ifeq ($(COMPILER), armcc)
 $(NAME)_SOURCES += CMSIS/Device/ST/STM32L4xx/Source/Templates/arm/startup_stm32l433xx.s    
@@ -33,14 +33,14 @@ GLOBAL_INCLUDES += . \
 				   
 GLOBAL_CFLAGS += -DSTM32L433xx 
 
-GLOBAL_DEFINES += STDIO_UART=0
+GLOBAL_DEFINES += STDIO_UART=2
 
 ifeq ($(COMPILER),armcc)
 GLOBAL_LDFLAGS += -L --scatter=STM32L433.sct
 else ifeq ($(COMPILER),iar)
 GLOBAL_LDFLAGS += --config STM32L433.icf
 else
-GLOBAL_LDFLAGS += -T board/stm32l433rc-nucleo/STM32L433.ld
+GLOBAL_LDFLAGS += -T board/stm32l433rc-nucleo/STM32L433RCTxP_FLASH.ld
 endif
 
 sal ?= 1

@@ -54,15 +54,19 @@ k_mm_region_t g_mm_region[] = {{(uint8_t *)&Image$$ARM_LIB_HEAP$$Base, (size_t)&
 uint8_t g_heap_buf[HEAP_BUFFER_SIZE];
 k_mm_region_t g_mm_region[] = {{g_heap_buf, HEAP_BUFFER_SIZE}};
 #else /* GCC */
-extern void         *heap_start;
-extern void         *heap_end;
-extern void         *heap_len;
-/* heap_start and heap_len is set by linkscript(*.ld) */
-k_mm_region_t g_mm_region[] = {{(uint8_t*)&heap_start,(size_t)&heap_len}};
+extern void         *_estack;
+extern void         *__bss_end__;
+/* __bss_end__ and _estack is set by linkscript(*.ld)
+   heap and stack begins from __bss_end__ to _estack */
+k_mm_region_t g_mm_region[1];
+int           g_region_num = 1;
+void aos_heap_set()
+{
+    g_mm_region[0].start = (uint8_t*)&__bss_end__;
+    g_mm_region[0].len   = 
+        ((uint8_t*)&_estack - (uint8_t*)&__bss_end__) - RHINO_CONFIG_SYSTEM_STACK_SIZE;
+}
 #endif
-
-int           g_region_num  = sizeof(g_mm_region)/sizeof(k_mm_region_t);
-
 #endif
 
 #if (RHINO_CONFIG_MM_LEAKCHECK > 0 )
