@@ -15,8 +15,7 @@ $(NAME)_SOURCES := aos/board_partition.c \
                    hal/flash_port.c \
                    hal/hw.c
                    
-$(NAME)_SOURCES += Src/stm32l4xx_hal_msp.c \
-                   Src/stm32l4xx_it.c
+$(NAME)_SOURCES += Src/stm32l4xx_hal_msp.c 
                    
 ifeq ($(COMPILER), armcc)
 $(NAME)_SOURCES += CMSIS/Device/ST/STM32L4xx/Source/Templates/arm/startup_stm32l433xx.s    
