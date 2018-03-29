@@ -112,3 +112,7 @@ int32_t hal_sd_finalize(sd_dev_t *sd)
     return -1;
 }
 
+void SDMMC1_IRQHandler(void)
+{
+    HAL_SD_IRQHandler(&sd_handle);
+}
