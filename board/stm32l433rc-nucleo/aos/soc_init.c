@@ -100,13 +100,13 @@ GETCHAR_PROTOTYPE
   int32_t ret = -1;
   
   uint32_t recv_size;
-  ret = hal_uart_recv_II(&uart_0, &ch, 1, &recv_size, 0xFFFFFFFF);
-  if(ret)
-  {
-  	return ret;
-  }
+  ret = hal_uart_recv_II(&uart_0, &ch, 1, &recv_size, HAL_WAIT_FOREVER);
 
-  return ch;
+  if (ret == 0) {
+      return ch;
+  } else {
+      return -1;
+  }
 }
 
 

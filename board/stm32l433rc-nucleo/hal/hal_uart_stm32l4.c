@@ -67,16 +67,10 @@ int32_t hal_uart_init(uart_dev_t *uart)
 
 int32_t hal_uart_send(uart_dev_t *uart, const void *data, uint32_t size, uint32_t timeout)
 {
-    int32_t ret = -1;
-
-    if((uart != NULL) && (data != NULL)) {
-				ret = UART_WaitOnFlagUntilTimeout((UART_HandleTypeDef *)uart->priv, UART_FLAG_TC, RESET, HAL_GetTick(), 1000);
-				if (ret == 0)
-						ret = HAL_UART_Transmit_IT((UART_HandleTypeDef *)uart->priv,
-								(uint8_t *)data, size);
+    if ((uart == NULL) || (data == NULL)) {
+        return -1;
     }
-
-    return ret;
+    return HAL_UART_Transmit((UART_HandleTypeDef *)uart->priv, (uint8_t *)data, size, 30000);
 }
 
 int32_t hal_uart_recv_II(uart_dev_t *uart, void *data, uint32_t expect_size,
