@@ -11,7 +11,7 @@ GLOBAL_DEFINES += CONFIG_AOS_KV_SECOND_PTN=7
 GLOBAL_DEFINES += CONFIG_AOS_KV_PTN_SIZE=4096
 GLOBAL_DEFINES += CONFIG_AOS_KV_BUFFER_SIZE=8192
 
-GLOBAL_INCLUDES += \
+GLOBAL_INCLUDES += hal/ \
                    Drivers/STM32L4xx_HAL_Driver/Inc \
                    Drivers/STM32L4xx_HAL_Driver/Inc/Legacy \
                    Drivers/CMSIS/Include \
@@ -50,7 +50,20 @@ $(NAME)_SOURCES := Drivers/STM32L4xx_HAL_Driver/Src/stm32l4xx_hal.c  \
 
 $(NAME)_SOURCES += aos/soc_impl.c \
                    aos/trace_impl.c \
-                   aos/aos.c
+                   aos/aos.c \
+				   hal/hal_uart_stm32l4.c \
+                   hal/flash_l4.c \
+                   hal/flash_port.c \
+                   hal/hw.c \
+                   hal/hal_sd_stm32l4.c \
+                   hal/hal_adc_stm32l4.c \
+                   hal/hal_i2c_stm32l4.c \
+                   hal/hal_gpio_stm32l4.c \
+                   hal/hal_rtc_stm32l4.c \
+                   hal/hal_spi_stm32l4.c \
+                   hal/hal_qspi_stm32l4.c \
+                   hal/hal_nand_stm32l4.c \
+                   hal/hal_nor_stm32l4.c
 
 ifeq ($(COMPILER),armcc)
 GLOBAL_CFLAGS   += --c99 --cpu=Cortex-M4 --apcs=/hardfp --fpu=vfpv4_sp_d16 -D__MICROLIB -g --split_sections

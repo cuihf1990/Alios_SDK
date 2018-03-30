@@ -173,6 +173,7 @@ void I2C1_DeInit(void)
 
 void I2C2_Init(void)
 {
+#if !defined(STM32L432xx)
     if (HAL_I2C_GetState(&I2c2Handle) == HAL_I2C_STATE_RESET) {
         I2c2Handle.Instance              = I2C2_INSTANCE;
         I2c2Handle.Init.Timing           = I2C2_TIMING;
@@ -186,6 +187,7 @@ void I2C2_Init(void)
         /* Init the I2C */
         HAL_I2C_Init(&I2c2Handle);
     }
+#endif
 }
 
 void I2C2_DeInit(void)

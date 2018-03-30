@@ -9,20 +9,7 @@ SUPPORT_BINS         := no
 HOST_MCU_NAME        := STM32L433RC-Nucleo
 
 $(NAME)_SOURCES += aos/board_partition.c \
-                   aos/soc_init.c \
-                   hal/hal_uart_stm32l4.c \
-                   hal/flash_l4.c \
-                   hal/flash_port.c \
-                   hal/hw.c \
-                   hal/hal_sd_stm32l4.c \
-                   hal/hal_adc_stm32l4.c \
-                   hal/hal_i2c_stm32l4.c \
-                   hal/hal_gpio_stm32l4.c \
-                   hal/hal_rtc_stm32l4.c \
-                   hal/hal_spi_stm32l4.c \
-                   hal/hal_qspi_stm32l4.c \
-                   hal/hal_nand_stm32l4.c \
-                   hal/hal_nor_stm32l4.c
+                   aos/soc_init.c
                    
 $(NAME)_SOURCES += Src/stm32l4xx_hal_msp.c 
                    
@@ -36,7 +23,6 @@ endif
 
 GLOBAL_INCLUDES += . \
                    aos/ \
-                   hal/ \
                    Inc/
 				   
 GLOBAL_CFLAGS += -DSTM32L433xx 

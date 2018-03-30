@@ -1,6 +1,7 @@
 /*
  * Copyright (C) 2015-2017 Alibaba Group Holding Limited
  */
+#if !defined(STM32L432xx)
 
 #include "hal_sd_stm32l4.h"
 
@@ -116,3 +117,4 @@ void SDMMC1_IRQHandler(void)
 {
     HAL_SD_IRQHandler(&sd_handle);
 }
+#endif

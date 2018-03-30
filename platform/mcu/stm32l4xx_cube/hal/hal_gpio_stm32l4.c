@@ -284,12 +284,14 @@ int32_t get_gpio_group(gpio_dev_t *gpio, GPIO_TypeDef **GPIOx)
         case GROUP_GPIOC:
             *GPIOx = GPIOC;
             break;
+#if !defined(STM32L432xx)
         case GROUP_GPIOD:
             *GPIOx = GPIOD;
             break;
         case GROUP_GPIOE:
             *GPIOx = GPIOE;
             break;
+#endif
         default:
           ret = -1;
             break;
