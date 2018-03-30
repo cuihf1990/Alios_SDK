@@ -73,10 +73,11 @@ const char *cal_passwd(void *key, void *random, void *passwd)
 void produce_random(unsigned char *random, unsigned int len)
 {
     int i = 0;
-    long long seed = aos_now();
+    long long  seed = aos_now();
     srand((unsigned int)seed);
     for (i = 0; i < len; i ++) {
-        random[i] = rand() & 0xFF;
+        unsigned int  _rand = (((unsigned int)rand() << 16) + rand());
+        random[i] = _rand & 0xFF;
     }
 }
 
