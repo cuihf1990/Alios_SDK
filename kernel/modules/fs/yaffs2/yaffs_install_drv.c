@@ -1,3 +1,7 @@
+/*
+ * Copyright (C) 2015-2017 Alibaba Group Holding Limited
+ */
+
 #include "yportenv.h"
 #include "yaffs_guts.h"
 #include "yaffs_install_drv.h"
