@@ -37,8 +37,7 @@ endif
 GLOBAL_INCLUDES += . \
                    aos/ \
                    hal/ \
-                   Inc/ \
-                   ../../include/hal
+                   Inc/
 				   
 GLOBAL_CFLAGS += -DSTM32L433xx 
 

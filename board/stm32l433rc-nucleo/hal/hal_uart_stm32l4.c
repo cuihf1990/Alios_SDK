@@ -5,7 +5,6 @@
 #include <k_api.h>
 #include <stdio.h>
 #include <stdlib.h>
-#include "stm32l4xx_hal.h"
 #include "hal/hal.h"
 #include "stm32l4xx_hal.h"
 #include "hal_uart_stm32l4.h"
@@ -451,6 +450,14 @@ int32_t uart_mode_transform(hal_uart_mode_t mode_hal, uint32_t *mode_stm32l4)
     }
 
     return ret;
+}
+
+void USART1_IRQHandler(void)
+{
+    krhino_intrpt_enter();
+    HAL_UART_IRQHandler(&uart1_handle);
+    krhino_intrpt_exit();
+
 }
 
 void USART2_IRQHandler(void)

@@ -5,9 +5,8 @@
 #include <k_api.h>
 #include <stdio.h>
 #include <stdlib.h>
-#include "stm32l4xx_hal.h"
-#include "main.h"
 #include "hal/hal.h"
+#include "stm32l4xx_hal.h"
 #include "hal_gpio_stm32l4.h"
 
 static int32_t gpio_para_transform(gpio_dev_t *gpio, GPIO_InitTypeDef * init_str);
