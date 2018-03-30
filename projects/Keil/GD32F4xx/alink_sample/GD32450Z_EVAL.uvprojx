@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8" standalone="no" ?>
-<Project xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="project_proj.xsd">
+<Project xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="project_projx.xsd">
 
-  <SchemaVersion>1.1</SchemaVersion>
+  <SchemaVersion>2.1</SchemaVersion>
 
   <Header>### uVision Project, (C) Keil Software</Header>
 
@@ -15,12 +15,14 @@
         <TargetCommonOption>
           <Device>GD32F450ZK</Device>
           <Vendor>GigaDevice</Vendor>
-          <Cpu>IRAM(0x20000000-0x2002FFFF) IRAM2(0x10000000-0x1000FFFF) IROM(0x08000000-0x082FFFFF) CLOCK(16000000) CPUTYPE("Cortex-M4") FPU2</Cpu>
+          <PackID>GigaDevice.GD32F4xx_DFP.1.0.2</PackID>
+          <PackURL>http://gd32mcu.21ic.com/data/documents/yingyongruanjian/GD32F4</PackURL>
+          <Cpu>IROM(0x08000000,0x0300000) IRAM(0x20000000,0x030000) IRAM2(0x10000000,0x010000) CPUTYPE("Cortex-M4") FPU2 CLOCK(12000000) ELITTLE</Cpu>
           <FlashUtilSpec></FlashUtilSpec>
-          <StartupFile>"Startup\GD\GD32F4xx\startup_gd32f4xx.s" ("GD32F4xx Startup Code")</StartupFile>
-          <FlashDriverDll>UL2CM3(-O207 -S0 -C0 -FO7 -FD20000000 -FC800 -FN1 -FF0GD32F4xx_3MB -FS08000000 -FL0300000)</FlashDriverDll>
+          <StartupFile></StartupFile>
+          <FlashDriverDll>UL2CM3(-S0 -C0 -P0 -FD20000000 -FC1000 -FN1 -FF0GD32F4xx_3MB -FS08000000 -FL0300000 -FP0($$Device:GD32F450ZK$Flash\GD32F4xx_3MB.FLM))</FlashDriverDll>
           <DeviceId>0</DeviceId>
-          <RegisterFile>gd32f4xx0.h</RegisterFile>
+          <RegisterFile>$$Device:GD32F450ZK$Device\F4XX\Include\gd32f4xx.h</RegisterFile>
           <MemoryEnv></MemoryEnv>
           <Cmp></Cmp>
           <Asm></Asm>
@@ -30,14 +32,14 @@
           <SLE66CMisc></SLE66CMisc>
           <SLE66AMisc></SLE66AMisc>
           <SLE66LinkerMisc></SLE66LinkerMisc>
-          <SFDFile>SFD\GD\GD32F4xx\GD32F4xx.SFR</SFDFile>
+          <SFDFile>$$Device:GD32F450ZK$SVD\GD32F4xx.svd</SFDFile>
           <bCustSvd>0</bCustSvd>
           <UseEnv>0</UseEnv>
           <BinPath></BinPath>
           <IncludePath></IncludePath>
           <LibPath></LibPath>
-          <RegisterFilePath>GD\GD32F4xx\</RegisterFilePath>
-          <DBRegisterFilePath>GD\GD32F4xx\</DBRegisterFilePath>
+          <RegisterFilePath></RegisterFilePath>
+          <DBRegisterFilePath></DBRegisterFilePath>
           <TargetStatus>
             <Error>0</Error>
             <ExitCodeStop>0</ExitCodeStop>
@@ -123,47 +125,6 @@
             <HexOffset>0</HexOffset>
             <Oh166RecLen>16</Oh166RecLen>
           </OPTHX>
-          <Simulator>
-            <UseSimulator>0</UseSimulator>
-            <LoadApplicationAtStartup>1</LoadApplicationAtStartup>
-            <RunToMain>1</RunToMain>
-            <RestoreBreakpoints>1</RestoreBreakpoints>
-            <RestoreWatchpoints>1</RestoreWatchpoints>
-            <RestoreMemoryDisplay>1</RestoreMemoryDisplay>
-            <RestoreFunctions>1</RestoreFunctions>
-            <RestoreToolbox>1</RestoreToolbox>
-            <LimitSpeedToRealTime>0</LimitSpeedToRealTime>
-            <RestoreSysVw>1</RestoreSysVw>
-          </Simulator>
-          <Target>
-            <UseTarget>1</UseTarget>
-            <LoadApplicationAtStartup>1</LoadApplicationAtStartup>
-            <RunToMain>1</RunToMain>
-            <RestoreBreakpoints>1</RestoreBreakpoints>
-            <RestoreWatchpoints>1</RestoreWatchpoints>
-            <RestoreMemoryDisplay>1</RestoreMemoryDisplay>
-            <RestoreFunctions>0</RestoreFunctions>
-            <RestoreToolbox>1</RestoreToolbox>
-            <RestoreTracepoints>1</RestoreTracepoints>
-            <RestoreSysVw>1</RestoreSysVw>
-          </Target>
-          <RunDebugAfterBuild>0</RunDebugAfterBuild>
-          <TargetSelection>3</TargetSelection>
-          <SimDlls>
-            <CpuDll></CpuDll>
-            <CpuDllArguments></CpuDllArguments>
-            <PeripheralDll></PeripheralDll>
-            <PeripheralDllArguments></PeripheralDllArguments>
-            <InitializationFile></InitializationFile>
-          </SimDlls>
-          <TargetDlls>
-            <CpuDll></CpuDll>
-            <CpuDllArguments></CpuDllArguments>
-            <PeripheralDll></PeripheralDll>
-            <PeripheralDllArguments></PeripheralDllArguments>
-            <InitializationFile></InitializationFile>
-            <Driver>Segger\JL2CM3.dll</Driver>
-          </TargetDlls>
         </DebugOption>
         <Utilities>
           <Flash1>
@@ -176,7 +137,7 @@
           </Flash1>
           <bUseTDR>1</bUseTDR>
           <Flash2>BIN\UL2CM3.DLL</Flash2>
-          <Flash3>"" ()</Flash3>
+          <Flash3></Flash3>
           <Flash4></Flash4>
           <pFcarmOut></pFcarmOut>
           <pFcarmGrp></pFcarmGrp>
@@ -221,7 +182,7 @@
             <hadIRAM>1</hadIRAM>
             <hadXRAM>0</hadXRAM>
             <uocXRam>0</uocXRam>
-            <RvdsVP>1</RvdsVP>
+            <RvdsVP>2</RvdsVP>
             <hadIRAM2>1</hadIRAM2>
             <hadIROM2>0</hadIROM2>
             <StupSel>8</StupSel>
@@ -367,14 +328,11 @@
             <v6LangP>1</v6LangP>
             <vShortEn>1</vShortEn>
             <vShortWch>1</vShortWch>
-            <v6Lto>0</v6Lto>
-            <v6WtE>0</v6WtE>
-            <v6Rtti>0</v6Rtti>
             <VariousControls>
               <MiscControls>-DSYSINFO_APP_VERSION=\"APP-1.0.0-20171214.1512\" -DSYSINFO_PRODUCT_MODEL=\"ALI_AOS_MK3060\" -DSYSINFO_DEVICE_NAME=\"MK3060\" -DSYSINFO_KERNEL_VERSION=\"AOS-R-1.2.1\"</MiscControls>
               <Define>USE_STDPERIPH_DRIVER,GD32F450,WITH_LWIP,AOS_ATCMD,AOS_AT_ADAPTER,AOS_LOOP,AOS_KV,AOS_VFS,CONFIG_AOS_CLI,VCALL_RHINO,AOS_FRAMEWORK_COMMON</Define>
               <Undefine></Undefine>
-              <IncludePath>..\..\..\..\platform\mcu\gd32f4xx\driver\Firmware\CMSIS;..\..\..\..\platform\mcu\gd32f4xx\driver\Firmware\CMSIS\GD\GD32F4xx\Include;..\..\..\..\platform\mcu\gd32f4xx\driver\Firmware\GD32F4xx_standard_peripheral\Include;..\..\..\..\platform\mcu\gd32f4xx\driver\Utilities;..\..\..\..\include;..\..\..\..\kernel\rhino\core\include;..\..\..\..\platform\arch\arm\armv7m\armcc\m4;..\..\..\..\kernel\vcall\aos;..\..\..\..\kernel\protocols\net\include;..\..\..\..\kernel\protocols\net\port\include;..\..\..\..\kernel\modules\fs\kv\include;..\..\..\..\kernel\vfs\include;..\..\..\..\platform\mcu\gd32f4xx\lwip-2.0.2\port;..\..\..\..\security\alicrypto\libalicrypto\inc;..\..\..\..\security\mbedtls\include;..\..\..\..\framework\protocol\alink\os;..\..\..\..\framework\protocol\alink;..\..\..\..\framework\protocol\alink\system;..\..\..\..\framework\protocol\alink\accs;..\..\..\..\framework\connectivity\wsf;..\..\..\..\framework\protocol\alink\json;..\..\..\..\framework\protocol\alink\cota;..\..\..\..\framework\netmgr\include;..\..\..\..\framework\atparser;..\..\..\..\tools\at_adapter;..\..\..\..\utility\cjson\include;..\..\..\..\utility\digest_algorithm;..\..\..\..\platform\mcu\gd32f4xx\include;..\..\..\..\platform\mcu\gd32f4xx\hal;..\..\..\..\platform\mcu\gd32f4xx\src\alink_sample;..\..\..\..\utility\libc\compilers\armlibc;..\..\..\..\framework\ywss</IncludePath>
+              <IncludePath>..\..\..\..\platform\mcu\gd32f4xx\driver\Firmware\CMSIS;..\..\..\..\platform\mcu\gd32f4xx\driver\Firmware\CMSIS\GD\GD32F4xx\Include;..\..\..\..\platform\mcu\gd32f4xx\driver\Firmware\GD32F4xx_standard_peripheral\Include;..\..\..\..\platform\mcu\gd32f4xx\driver\Utilities;..\..\..\..\include;..\..\..\..\kernel\rhino\core\include;..\..\..\..\platform\arch\arm\armv7m\armcc\m4;..\..\..\..\kernel\vcall\aos;..\..\..\..\kernel\protocols\net\include;..\..\..\..\kernel\protocols\net\port\include;..\..\..\..\kernel\modules\fs\kv\include;..\..\..\..\kernel\vfs\include;..\..\..\..\platform\mcu\gd32f4xx\lwip-2.0.2\port;..\..\..\..\security\alicrypto\libalicrypto\inc;..\..\..\..\security\mbedtls\include;..\..\..\..\framework\protocol\alink\os;..\..\..\..\framework\protocol\alink;..\..\..\..\framework\protocol\alink\system;..\..\..\..\framework\protocol\alink\accs;..\..\..\..\framework\connectivity\wsf;..\..\..\..\framework\protocol\alink\json;..\..\..\..\framework\protocol\alink\cota;..\..\..\..\framework\netmgr\include;..\..\..\..\framework\atparser;..\..\..\..\tools\at_adapter;..\..\..\..\utility\cjson\include;..\..\..\..\utility\digest_algorithm;..\..\..\..\platform\mcu\gd32f4xx\include;..\..\..\..\platform\mcu\gd32f4xx\hal;..\..\..\..\platform\mcu\gd32f4xx\src\alink_sample;..\..\..\..\utility\libc\compilers\armlibc;..\..\..\..\framework\ywss;..\..\..\..\device\sal\wifi\mk3060</IncludePath>
             </VariousControls>
           </Cads>
           <Aads>
@@ -387,7 +345,6 @@
             <NoWarn>0</NoWarn>
             <uSurpInc>0</uSurpInc>
             <useXO>0</useXO>
-            <uClangAs>0</uClangAs>
             <VariousControls>
               <MiscControls></MiscControls>
               <Define></Define>
@@ -677,11 +634,6 @@
               <FilePath>..\..\..\..\kernel\rhino\core\k_obj.c</FilePath>
             </File>
             <File>
-              <FileName>k_obj_set.c</FileName>
-              <FileType>1</FileType>
-              <FilePath>..\..\..\..\kernel\rhino\core\k_obj_set.c</FilePath>
-            </File>
-            <File>
               <FileName>k_pend.c</FileName>
               <FileType>1</FileType>
               <FilePath>..\..\..\..\kernel\rhino\core\k_pend.c</FilePath>
@@ -747,9 +699,9 @@
               <FilePath>..\..\..\..\kernel\rhino\core\k_workqueue.c</FilePath>
             </File>
             <File>
-              <FileName>aos_init.c</FileName>
+              <FileName>k_trace.c</FileName>
               <FileType>1</FileType>
-              <FilePath>..\..\..\..\kernel\init\aos_init.c</FilePath>
+              <FilePath>..\..\..\..\kernel\rhino\common\k_trace.c</FilePath>
             </File>
             <File>
               <FileName>k_fifo.c</FileName>
@@ -757,9 +709,9 @@
               <FilePath>..\..\..\..\kernel\rhino\common\k_fifo.c</FilePath>
             </File>
             <File>
-              <FileName>k_trace.c</FileName>
+              <FileName>aos_init.c</FileName>
               <FileType>1</FileType>
-              <FilePath>..\..\..\..\kernel\rhino\common\k_trace.c</FilePath>
+              <FilePath>..\..\..\..\kernel\init\aos_init.c</FilePath>
             </File>
           </Files>
         </Group>
@@ -810,6 +762,16 @@
               <FileName>vfs_register.c</FileName>
               <FileType>1</FileType>
               <FilePath>..\..\..\..\kernel\vfs\vfs_register.c</FilePath>
+            </File>
+            <File>
+              <FileName>select.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\..\..\..\kernel\vfs\select.c</FilePath>
+            </File>
+            <File>
+              <FileName>vfs_file.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\..\..\..\kernel\vfs\vfs_file.c</FilePath>
             </File>
           </Files>
         </Group>
@@ -1203,9 +1165,6 @@
                     <v6LangP>0</v6LangP>
                     <vShortEn>2</vShortEn>
                     <vShortWch>2</vShortWch>
-                    <v6Lto>2</v6Lto>
-                    <v6WtE>2</v6WtE>
-                    <v6Rtti>2</v6Rtti>
                     <VariousControls>
                       <MiscControls></MiscControls>
                       <Define></Define>
@@ -1259,17 +1218,17 @@
             <File>
               <FileName>libmbedtls.lib</FileName>
               <FileType>4</FileType>
-              <FilePath>C:\Users\mli\Desktop\AliOS\GD_Porting_450\security\mbedtls\lib\Cortex-M4\KEIL\libmbedtls.lib</FilePath>
+              <FilePath>..\..\..\..\security\mbedtls\lib\Cortex-M4\KEIL\libmbedtls.lib</FilePath>
             </File>
             <File>
               <FileName>libalicrypto.lib</FileName>
               <FileType>4</FileType>
-              <FilePath>C:\Users\mli\Desktop\AliOS\GD_Porting_450\security\alicrypto\lib\Cortex-M4\KEIL\libalicrypto.lib</FilePath>
+              <FilePath>..\..\..\..\security\alicrypto\lib\Cortex-M4\KEIL\libalicrypto.lib</FilePath>
             </File>
             <File>
               <FileName>libmbedcrypto.lib</FileName>
               <FileType>4</FileType>
-              <FilePath>C:\Users\mli\Desktop\AliOS\GD_Porting_450\security\alicrypto\lib\Cortex-M4\KEIL\libmbedcrypto.lib</FilePath>
+              <FilePath>..\..\..\..\security\alicrypto\lib\Cortex-M4\KEIL\libmbedcrypto.lib</FilePath>
             </File>
             <File>
               <FileName>mbedtls_alt.c</FileName>
@@ -1413,8 +1372,24 @@
             </File>
           </Files>
         </Group>
+        <Group>
+          <GroupName>::CMSIS</GroupName>
+        </Group>
       </Groups>
     </Target>
   </Targets>
+
+  <RTE>
+    <apis/>
+    <components>
+      <component Cclass="CMSIS" Cgroup="CORE" Cvendor="ARM" Cversion="4.3.0" condition="Cortex-M Device">
+        <package name="CMSIS" schemaVersion="1.3" url="http://www.keil.com/pack/" vendor="ARM" version="4.5.0"/>
+        <targetInfos>
+          <targetInfo name="GD32F450Z_EVAL"/>
+        </targetInfos>
+      </component>
+    </components>
+    <files/>
+  </RTE>
 
 </Project>
