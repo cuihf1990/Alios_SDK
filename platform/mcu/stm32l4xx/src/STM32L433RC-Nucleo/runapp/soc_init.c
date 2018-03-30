@@ -242,10 +242,11 @@ static void brd_peri_init(void)
     for (i = 0; i < gpcfg_num; ++i) {
         hal_gpio_init(&brd_gpio_table[i]);
     }
-
-    uart2_init();
-    hal_i2c_init(&brd_i2c1_dev);
+    
+	hal_i2c_init(&brd_i2c1_dev);
     hal_i2c_init(&brd_i2c2_dev);
+    
+    uart2_init();
     
 }
 static void uart2_init(void)

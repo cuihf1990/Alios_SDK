@@ -311,7 +311,7 @@
           </ArmAdsMisc>
           <Cads>
             <interw>1</interw>
-            <Optim>4</Optim>
+            <Optim>3</Optim>
             <oTime>0</oTime>
             <SplitLS>0</SplitLS>
             <OneElfS>1</OneElfS>
@@ -419,6 +419,11 @@
               <FileName>vcom.c</FileName>
               <FileType>1</FileType>
               <FilePath>..\..\..\board\eml3047\src\vcom.c</FilePath>
+            </File>
+            <File>
+              <FileName>lorawan_port.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\..\..\board\eml3047\src\lorawan_port.c</FilePath>
             </File>
           </Files>
         </Group>
@@ -597,16 +602,6 @@
               <FileName>utilities.c</FileName>
               <FileType>1</FileType>
               <FilePath>..\..\..\kernel\protocols\lorawan\Lora\Utilities\utilities.c</FilePath>
-            </File>
-          </Files>
-        </Group>
-        <Group>
-          <GroupName>kernel/protocols/lora/hal</GroupName>
-          <Files>
-            <File>
-              <FileName>lorawan_port.c</FileName>
-              <FileType>1</FileType>
-              <FilePath>..\..\..\kernel\protocols\lorawan\Lora\hal\lorawan_port.c</FilePath>
             </File>
           </Files>
         </Group>
