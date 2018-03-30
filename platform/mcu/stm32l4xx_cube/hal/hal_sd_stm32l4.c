@@ -39,6 +39,7 @@ int32_t hal_sd_blks_read(sd_dev_t *sd, uint8_t *data, uint32_t blk_addr,
                          uint32_t blks, uint32_t timeout)
 {
     if (HAL_SD_ReadBlocks(sd->priv, data, blk_addr, blks, timeout) == HAL_OK) {
+        while (HAL_SD_GetCardState(sd->priv) != HAL_SD_CARD_TRANSFER) {}
         return HAL_OK;
     } else {
         return -1;
@@ -49,6 +50,7 @@ int32_t hal_sd_blks_write(sd_dev_t *sd, uint8_t *data, uint32_t blk_addr,
                           uint32_t blks, uint32_t timeout)
 {
     if (HAL_SD_WriteBlocks(sd->priv, data, blk_addr, blks, timeout) == HAL_OK) {
+        while (HAL_SD_GetCardState(sd->priv) != HAL_SD_CARD_TRANSFER) {}
         return HAL_OK;
     } else {
         return -1;
@@ -59,6 +61,7 @@ int32_t hal_sd_blks_write(sd_dev_t *sd, uint8_t *data, uint32_t blk_addr,
 int32_t hal_sd_erase(sd_dev_t *sd, uint32_t blk_start_addr, uint32_t blk_end_addr)
 {
     if (HAL_SD_Erase(sd->priv, blk_start_addr, blk_end_addr) == HAL_OK) {
+        while (HAL_SD_GetCardState(sd->priv) != HAL_SD_CARD_TRANSFER) {}
         return HAL_OK;
     } else {
         return -1;
