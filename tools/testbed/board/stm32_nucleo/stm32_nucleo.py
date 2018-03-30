@@ -1,4 +1,4 @@
-import sys, time, serial, subprocess, shlex, traceback, glob
+import os, sys, time, serial, subprocess, shlex, traceback, glob
 from os import path
 
 nucleo_stlink_serials = {}
@@ -108,7 +108,7 @@ def debug_start(device, port):
     except:
         traceback.print_exc()
         return 'open_log_fail'
-    command = 'st-util -m --serial {0} -p {1}'.format(nucleo_stlink_serials[device], port)
+    command = 'st-util --serial {0} -p {1}'.format(nucleo_stlink_serials[device], port)
     command = shlex.split(command)
     p = subprocess.Popen(command, stdout=flog, stderr=flog)
     time.sleep(0.2)
@@ -120,6 +120,7 @@ def debug_start(device, port):
 def debug_stop(device):
     if device not in nucleo_debug_sessions:
         return 'fail'
+    time.sleep(0.2)
     nucleo_debug_sessions[device]['process'].kill()
     nucleo_debug_sessions[device]['flog'].close()
     nucleo_debug_sessions.pop(device)

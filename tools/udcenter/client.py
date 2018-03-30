@@ -215,7 +215,10 @@ class Client:
                     self.send_packet(pkt.DEVICE_DEBUG_STOP, content)
                     continue
                 content = term + ',' + device + ':' + data
+                #print 'send:', content
                 self.send_packet(pkt.DEVICE_DEBUG_DATA, content)
+        print 'debug daemon thread exited'
+        print 'keep_running = {0}'.format(self.keep_running)
 
     def send_device_list(self):
         device_list = []
@@ -827,6 +830,7 @@ class Client:
                             pass
                         file_receiving.pop(hash)
 
+                    #print type, value
                     if type == pkt.FILE_BEGIN:
                         try:
                             [term, hash, fname] = value.split(':')
@@ -1004,6 +1008,7 @@ class Client:
                         content = term + ',' + result
                         self.send_packet(type, content)
                     elif type == pkt.DEVICE_DEBUG_DATA:
+                        #print 'recv:', value[:80]
                         term_dev = value.split(':')[0]
                         term_dev_len = len(term_dev) + 1
                         try:
@@ -1016,7 +1021,7 @@ class Client:
                         if device not in self.devices or 'debug_socket' not in self.devices[device]:
                             content = term + ',' + device + ':' + 'session nonexist'
                             self.send_packet(pkt.DEVICE_DEBUG_STOP, content)
-                            return
+                            continue
 
                         try:
                             self.devices[device]['debug_socket'].send(data)
