@@ -101,7 +101,7 @@ CoAPContext *CoAPServer_init()
 
     return (CoAPContext *)context;
 }
-
+#ifndef COAP_WITH_YLOOP
 void *CoAPServer_yield(void *param)
 {
     CoAPContext *context = (CoAPContext *)param;
@@ -120,7 +120,7 @@ void *CoAPServer_yield(void *param)
     COAP_INFO("Exit the CoAP daemon task");
     return NULL;
 }
-
+#endif
 void CoAPServer_deinit0(CoAPContext *context)
 {
     COAP_INFO("CoAP Server deinit");
@@ -188,7 +188,7 @@ int CoAPServerResp_send(CoAPContext *context, NetworkAddr *remote, unsigned char
 
     return ret;
 }
-
+#ifndef COAP_WITH_YLOOP
 void CoAPServer_loop(CoAPContext *context)
 {
     int stack_used;
@@ -198,3 +198,4 @@ void CoAPServer_loop(CoAPContext *context)
     g_coap_running = 1;
     HAL_ThreadCreate(&g_coap_thread, CoAPServer_yield, (void *)context, &p, &stack_used);
 }
+#endif

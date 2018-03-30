@@ -77,10 +77,10 @@ int awss_cmp_coap_register_cb(char *topic, void* cb)
 int awss_cmp_coap_loop(void *param)
 {
     if (g_coap_ctx == NULL) g_coap_ctx = CoAPServer_init();
-
+#ifndef COAP_WITH_YLOOP
     awss_debug("create thread\r\n");
     CoAPServer_loop(g_coap_ctx);
-
+#endif
     return 0;
 }
 
