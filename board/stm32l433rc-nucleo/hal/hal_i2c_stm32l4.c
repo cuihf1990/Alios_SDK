@@ -3,7 +3,7 @@
  */
 
 #include "hal.h"
-#include "soc_init.h"
+#include "main.h"
 #include "k_types.h"
 #include "errno.h"
 #include "hal_i2c_stm32l4.h"

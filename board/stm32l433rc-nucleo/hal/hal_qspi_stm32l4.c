@@ -6,7 +6,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include "stm32l4xx_hal.h"
-#include "soc_init.h"
+#include "main.h"
 #include "hal.h"
 #include "stm32l4xx_hal.h"
 #include "hal_qspi_stm32l4.h"
