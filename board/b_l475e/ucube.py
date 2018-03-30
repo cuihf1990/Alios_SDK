@@ -3,11 +3,22 @@ src     = Split('''
         osa_flash.c
 ''')
 
-component = aos_component('board_b_l475e', src)
-component.add_component_dependencis('platform/mcu/stm32l475')
-component.add_component_dependencis('device/sal')
 
-aos_global_config.set_aos_global_config('module','wifi.mk3060')
+component = aos_arch_component('board_b_l475e', src)
+component.add_component_dependencis('platform/mcu/stm32l475')
+
+component.set_global_arch('Cortex-M4')
+component.set_global_mcu_family('stm32l475')
+
+if aos_global_config.get_aos_global_config('sal') == None:
+    print( 'set_aos_global_config sal' )
+    aos_global_config.set_aos_global_config('sal',1)
+if aos_global_config.get_aos_global_config('sal') == 1:
+    component.add_component_dependencis('device/sal')
+    if aos_global_config.get_aos_global_config('module') == None:
+        aos_global_config.set_aos_global_config('module','wifi.mk3060')
+else:
+    component.add_global_macro('CONFIG_NO_TCPIP')
 
 component.add_global_includes('.')
 

@@ -17,14 +17,14 @@ if aos_global_config.get_aos_global_config('sal') == 1:
     aos_global_config.set_aos_global_config('gateway', 0)
 
 if aos_global_config.mcu_family.startswith('linux'):
-    if not aos_global_config.get_aos_global_config('gateway'):
+    if aos_global_config.get_aos_global_config('gateway') == None:
         aos_global_config.set_aos_global_config('gateway', 0)
 elif aos_global_config.mcu_family == 'stm32f4xx' \
         or aos_global_config.mcu_family == 'xr871':
-    if not aos_global_config.get_aos_global_config('gateway'):
+    if aos_global_config.get_aos_global_config('gateway') == None:
         aos_global_config.set_aos_global_config('gateway', 0)
 else:
-    if not aos_global_config.get_aos_global_config('gateway'):
+    if aos_global_config.get_aos_global_config('gateway') == None:
         aos_global_config.set_aos_global_config('gateway', 1)
 
 
