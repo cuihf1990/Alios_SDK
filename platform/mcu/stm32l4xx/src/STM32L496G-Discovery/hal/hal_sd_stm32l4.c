@@ -4,60 +4,19 @@
 
 #include "hal_sd_stm32l4.h"
 
-SD_HandleTypeDef sd_handle;
+static SD_HandleTypeDef sd_handle;
 static int sd_initialize = 0;
-
-void HAL_SD_MspInit(SD_HandleTypeDef * hsd)
-{
-    GPIO_InitTypeDef GPIO_InitStruct;
-    if(hsd->Instance == SDMMC1) {
-      /* Peripheral clock enable */
-      __HAL_RCC_SDMMC1_CLK_ENABLE();
-    
-      GPIO_InitStruct.Pin = GPIO_PIN_2;
-      GPIO_InitStruct.Mode = GPIO_MODE_AF_PP;
-      GPIO_InitStruct.Pull = GPIO_NOPULL;
-      GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_VERY_HIGH;
-      GPIO_InitStruct.Alternate = GPIO_AF12_SDMMC1;
-      HAL_GPIO_Init(GPIOD, &GPIO_InitStruct);
-    
-      GPIO_InitStruct.Pin = GPIO_PIN_10|GPIO_PIN_11|GPIO_PIN_12|GPIO_PIN_9 
-                            |GPIO_PIN_8;
-      GPIO_InitStruct.Mode = GPIO_MODE_AF_PP;
-      GPIO_InitStruct.Pull = GPIO_NOPULL;
-      GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_VERY_HIGH;
-      GPIO_InitStruct.Alternate = GPIO_AF12_SDMMC1;
-      HAL_GPIO_Init(GPIOC, &GPIO_InitStruct);
-    }
-}
-
-void HAL_SD_MspDeInit(SD_HandleTypeDef* hsd)
-{
-
-  if(hsd->Instance == SDMMC1)
-  {
-    /* Peripheral clock disable */
-    __HAL_RCC_SDMMC1_CLK_DISABLE();
-  
-    HAL_GPIO_DeInit(GPIOD, GPIO_PIN_2);
-
-    HAL_GPIO_DeInit(GPIOC, GPIO_PIN_10|GPIO_PIN_11|GPIO_PIN_12|GPIO_PIN_9 
-                          |GPIO_PIN_8);
-  }
-
-}
-
 
 int32_t hal_sd_init(sd_dev_t *sd)
 {
     if (!sd_initialize) {
-        sd_handle.Instance                  = SDMMC1;
-        sd_handle.Init.ClockEdge            = SDMMC_CLOCK_EDGE_RISING;
-        sd_handle.Init.ClockBypass          = SDMMC_CLOCK_BYPASS_DISABLE;
-        sd_handle.Init.ClockPowerSave       = SDMMC_CLOCK_POWER_SAVE_DISABLE;
-        sd_handle.Init.BusWide              = SDMMC_BUS_WIDE_1B;
-        sd_handle.Init.HardwareFlowControl  = SDMMC_HARDWARE_FLOW_CONTROL_ENABLE;
-        sd_handle.Init.ClockDiv             = SDMMC_TRANSFER_CLK_DIV;
+        sd_handle.Instance                  = SD_INSTANCE;
+        sd_handle.Init.ClockEdge            = SD_INIT_CLK_EDGE;
+        sd_handle.Init.ClockBypass          = SD_INIT_CLK_BYPASS;
+        sd_handle.Init.ClockPowerSave       = SD_INIT_CLK_POWER_SAVE;
+        sd_handle.Init.BusWide              = SD_INIT_BUS_WIDE;
+        sd_handle.Init.HardwareFlowControl  = SD_INIT_HW_FLOW_CTRL;
+        sd_handle.Init.ClockDiv             = SD_INIT_CLK_DIVISION;
 
         if (HAL_SD_Init(&sd_handle) != HAL_OK) {
             return -1;
@@ -153,3 +112,7 @@ int32_t hal_sd_finalize(sd_dev_t *sd)
     return -1;
 }
 
+void SDMMC1_IRQHandler(void)
+{
+    HAL_SD_IRQHandler(&sd_handle);
+}
