@@ -58,7 +58,7 @@ static get_dev_status_cb     m_query_handler;           /**< Handler for the pay
 static bool                  m_new_firmware;            /**< Flag indicating whether there is a new firmware pending for commit. */
 extern uint16_t              m_conn_handle;             /**< Handle of the current connection. */
 
-extern uint32_t m_ali_context[ALI_CONTEXT_SIZE];        /**< Global context of ali_core. */
+uint32_t m_ali_context[ALI_CONTEXT_SIZE];        /**< Global context of ali_core. */
 
 
 static void notify_status (alink_event_t event)
@@ -212,4 +212,7 @@ void alink_post_fast (uint8_t * buffer, uint32_t length)
     VERIFY_SUCCESS_VOID(err_code);
 }
 
-
+uint32_t *fetch_ali_context()
+{
+    return m_ali_context;
+}
