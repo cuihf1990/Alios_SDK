@@ -40,7 +40,7 @@ static char SWReq = 0;
 static char PendSvIsPosted = 0;
 
 unsigned cpu_sr;
-uint32_t g_nmilock_cnt;
+volatile uint32_t g_nmilock_cnt;
 
 /* Each task maintains its own interrupt status in the critical nesting
 variable. */

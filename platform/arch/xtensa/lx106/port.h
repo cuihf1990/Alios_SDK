@@ -26,33 +26,34 @@ void   cpu_task_switch(void);
 void   cpu_first_task_start(void);
 void  *cpu_task_stack_init(cpu_stack_t *base, size_t size, void *arg, task_entry_t entry);
 
-//#if 0
+#if 0
 #define CPSR_ALLOC() size_t cpsr
 #define RHINO_CPU_INTRPT_DISABLE() { cpsr = XTOS_SET_INTLEVEL(XCHAL_EXCM_LEVEL); }
 #define RHINO_CPU_INTRPT_ENABLE()  { XTOS_RESTORE_JUST_INTLEVEL(cpsr); }
-//#else
+#else
 #define INT_ENA_WDEV        0x3ff20c18
 #define WDEV_TSF0_REACH_INT (BIT(27))
-extern uint32_t g_nmilock_cnt;
+extern volatile uint32_t g_nmilock_cnt;
 extern uint32_t WDEV_INTEREST_EVENT;
 
-#define CPSR_ALLOC_NMI() size_t cpsr
-#define RHINO_CPU_INTRPT_DISABLE_NMI() do {       \
+#define CPSR_ALLOC() size_t cpsr
+#define RHINO_CPU_INTRPT_DISABLE() do {       \
         cpsr = XTOS_SET_INTLEVEL(XCHAL_EXCM_LEVEL);     \
-        __asm__ __volatile__("":::"memory");            \
         if (NMIIrqIsOn == 0) {      \
-            REG_WRITE(INT_ENA_WDEV, 0); \
-            __asm__ __volatile__("rsync":::"memory");       \
-            REG_WRITE(INT_ENA_WDEV, WDEV_TSF0_REACH_INT);   \
-            __asm__ __volatile__("rsync":::"memory");       \
+            if (g_nmilock_cnt == 0) \
+            {                       \
+                __asm__ __volatile__("rsync":::"memory");       \
+                REG_WRITE(INT_ENA_WDEV, 0); \
+                __asm__ __volatile__("rsync":::"memory");       \
+                REG_WRITE(INT_ENA_WDEV, WDEV_TSF0_REACH_INT);   \
+                __asm__ __volatile__("rsync":::"memory");       \
+            }                       \
             g_nmilock_cnt++;            \
-            __asm__ __volatile__("":::"memory");            \
         }   \
     } while(0)
 
-#define RHINO_CPU_INTRPT_ENABLE_NMI()    do {   \
+#define RHINO_CPU_INTRPT_ENABLE()    do {   \
         if (NMIIrqIsOn == 0) {      \
-            __asm__ __volatile__("":::"memory");            \
             if (g_nmilock_cnt > 0) {g_nmilock_cnt--;}       \
             if  ( g_nmilock_cnt == 0 )  \
             {                           \
@@ -61,10 +62,9 @@ extern uint32_t WDEV_INTEREST_EVENT;
                 __asm__ __volatile__("rsync":::"memory");       \
             }                           \
         }   \
-        __asm__ __volatile__("":::"memory");            \
         XTOS_RESTORE_JUST_INTLEVEL(cpsr);               \
     } while(0)
-//#endif
+#endif
 
 RHINO_INLINE uint8_t cpu_cur_get(void)
 {
