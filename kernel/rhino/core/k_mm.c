@@ -8,11 +8,15 @@
 
 #if (RHINO_CONFIG_MM_TLF > 0)
 #if (RHINO_CONFIG_MM_REGION_MUTEX == 0)
+#define MM_CRITICAL_ALLOC()         \
+        CPSR_ALLOC()
 #define MM_CRITICAL_ENTER(pMutex)   \
-    RHINO_CRITICAL_ENTER()
+        RHINO_CRITICAL_ENTER()
 #define MM_CRITICAL_EXIT(pMutex)    \
-    RHINO_CRITICAL_EXIT()
+        RHINO_CRITICAL_EXIT()
 #else
+#define MM_CRITICAL_ALLOC()         \
+        CPSR_ALLOC()
 #define MM_CRITICAL_ENTER(pMutex)   \
     do {                            \
         RHINO_CRITICAL_ENTER();     \
@@ -165,7 +169,7 @@ kstat_t krhino_init_mm_head(k_mm_head **ppmmhead, void *addr, size_t len )
     mblk_pool_t *mmblk_pool;
     kstat_t      stat;
 #endif
-    CPSR_ALLOC();
+    MM_CRITICAL_ALLOC();
 
     NULL_PARA_CHK(ppmmhead);
     NULL_PARA_CHK(addr);
@@ -264,7 +268,7 @@ kstat_t krhino_add_mm_region(k_mm_head *mmhead, void *addr, size_t len)
     void *orig_addr;
     k_mm_region_info_t *region;
     k_mm_list_t        *firstblk, *nextblk;
-    CPSR_ALLOC();
+    MM_CRITICAL_ALLOC();
 
     NULL_PARA_CHK(mmhead);
     NULL_PARA_CHK(addr);
@@ -307,6 +311,7 @@ kstat_t krhino_add_mm_region(k_mm_head *mmhead, void *addr, size_t len)
     return RHINO_SUCCESS;
 }
 
+#if (RHINO_CONFIG_MM_TLF_BLK_SIZE > 0)
 static void *k_mm_smallblk_alloc(k_mm_head *mmhead, size_t size)
 {
     kstat_t sta;
@@ -340,6 +345,7 @@ static void k_mm_smallblk_free(k_mm_head *mmhead, void *ptr)
 
     stats_removesize(mmhead, DEF_FIX_BLK_SIZE);
 }
+#endif
 
 /* insert blk to freelist[level], and set freebitmap */
 static void k_mm_freelist_insert(k_mm_head *mmhead, k_mm_list_t *blk)
@@ -421,8 +427,10 @@ void *k_mm_alloc(k_mm_head *mmhead, size_t size)
     int32_t      level;
     size_t       left_size;
     size_t       req_size = size;
+#if (RHINO_CONFIG_MM_TLF_BLK_SIZE > 0)
     mblk_pool_t *mm_pool;
-    CPSR_ALLOC();
+#endif
+    MM_CRITICAL_ALLOC();
 
     (void)req_size;
 
@@ -435,7 +443,8 @@ void *k_mm_alloc(k_mm_head *mmhead, size_t size)
     }
 
     MM_CRITICAL_ENTER(&(mmhead->mm_mutex));
-
+    
+#if (RHINO_CONFIG_MM_TLF_BLK_SIZE > 0)
     /* little blk, try to get from mm_pool */
     if(mmhead->fixedmblk != NULL) {
         mm_pool = (mblk_pool_t *)mmhead->fixedmblk->mbinfo.buffer;
@@ -447,6 +456,7 @@ void *k_mm_alloc(k_mm_head *mmhead, size_t size)
             }
         }
     }
+#endif
 
     retptr = NULL;
 
@@ -520,7 +530,7 @@ ALLOCEXIT:
 void  k_mm_free(k_mm_head *mmhead, void *ptr)
 {
     k_mm_list_t *free_b, *next_b, *prev_b;
-    CPSR_ALLOC();
+    MM_CRITICAL_ALLOC();
 
     if (!ptr || !mmhead) {
         return;
@@ -528,6 +538,7 @@ void  k_mm_free(k_mm_head *mmhead, void *ptr)
 
     MM_CRITICAL_ENTER(&(mmhead->mm_mutex));
 
+#if (RHINO_CONFIG_MM_TLF_BLK_SIZE > 0)
     /* little blk, free to mm_pool */
     if (MM_IS_FIXEDBLK(mmhead, ptr)) {
         /*it's fixed size memory block*/
@@ -535,7 +546,8 @@ void  k_mm_free(k_mm_head *mmhead, void *ptr)
         MM_CRITICAL_EXIT(&(mmhead->mm_mutex));
         return;
     }
-    
+#endif
+
     free_b = MM_GET_THIS_BLK(ptr);
 
 #if (RHINO_CONFIG_MM_DEBUG > 0u)
@@ -602,7 +614,7 @@ void *k_mm_realloc(k_mm_head *mmhead, void *oldmem, size_t new_size)
     k_mm_list_t *this_b, *split_b, *next_b;
     size_t       old_size, split_size;
     size_t       req_size = 0;
-    CPSR_ALLOC();
+    MM_CRITICAL_ALLOC();
 
     (void)req_size;
 
@@ -622,7 +634,8 @@ void *k_mm_realloc(k_mm_head *mmhead, void *oldmem, size_t new_size)
     req_size =  new_size;
 
     MM_CRITICAL_ENTER(&(mmhead->mm_mutex));
-
+    
+#if (RHINO_CONFIG_MM_BLK > 0)
     /*begin of oldmem in mmblk case*/
     if (MM_IS_FIXEDBLK(mmhead, oldmem)) {
         /*it's fixed size memory block*/
@@ -639,6 +652,7 @@ void *k_mm_realloc(k_mm_head *mmhead, void *oldmem, size_t new_size)
         return ptr_aux;
     }
     /*end of mmblk case*/
+#endif
 
     /*check if there more free block behind oldmem  */
     this_b   = MM_GET_THIS_BLK(oldmem);
@@ -743,7 +757,7 @@ void *k_mm_realloc(k_mm_head *mmhead, void *oldmem, size_t new_size)
 void krhino_owner_attach(k_mm_head *mmhead, void *addr, size_t allocator)
 {
     k_mm_list_t *blk;
-    CPSR_ALLOC();
+    MM_CRITICAL_ALLOC();
 
     if (!mmhead || !addr) {
         return;

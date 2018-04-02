@@ -11,7 +11,6 @@ $(NAME)_SOURCES += awss.c           awss_cmp_mqtt.c  awss_report.c   registrar.c
 $(NAME)_SOURCES += awss_cmp.c       awss_main.c      awss_wifimgr.c  sha256.c             zconfig_utils.c
 $(NAME)_SOURCES += awss_cmp_coap.c  awss_notify.c    enrollee.c      passwd.c             zconfig_ieee80211.c  zconfig_vendor_common.c
 $(NAME)_SOURCES +=  os/os_misc.c utility/log.c
-$(NAME)_SOURCES += CoAPServer.c
 
 ifeq ($(awss_ble),1)
 $(NAME)_SOURCES += awss_blefi.c blefi_config.c
