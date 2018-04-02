@@ -9,7 +9,6 @@
 #include "stm32l4xx_hal.h"
 #include "hal_uart_stm32l4.h"
 
-
 /* Init and deInit function for uart1 */
 static int32_t uart1_init(uart_dev_t *uart);
 static int32_t uart1_DeInit(void);
@@ -27,6 +26,10 @@ static int32_t uart_stop_bits_transform(hal_uart_stop_bits_t stop_bits_hal, uint
 static int32_t uart_flow_control_transform(hal_uart_flow_control_t flow_control_hal, uint32_t *flow_control_stm32l4);
 static int32_t uart_mode_transform(hal_uart_mode_t mode_hal, uint32_t *mode_stm32l4);
 
+/* function used to add buffer queue */
+static void UART_RxISR_8BIT_Buf_Queue(UART_HandleTypeDef *huart);
+static HAL_StatusTypeDef HAL_UART_Receive_IT_Buf_Queue_1byte(UART_HandleTypeDef *huart, uint8_t *pData, uint32_t timeout);
+
 /* handle for uart */
 UART_HandleTypeDef uart1_handle;
 UART_HandleTypeDef uart2_handle;
@@ -36,6 +39,20 @@ kbuf_queue_t g_buf_queue_uart1;
 char g_buf_uart1[MAX_BUF_UART_BYTES];
 kbuf_queue_t g_buf_queue_uart2;
 char g_buf_uart2[MAX_BUF_UART_BYTES];
+
+void USART1_IRQHandler(void)
+{
+   krhino_intrpt_enter();
+   HAL_UART_IRQHandler(&uart1_handle);
+   krhino_intrpt_exit();
+}
+
+void USART2_IRQHandler(void)
+{
+   krhino_intrpt_enter();
+   HAL_UART_IRQHandler(&uart2_handle);
+   krhino_intrpt_exit();
+}
 
 int32_t hal_uart_init(uart_dev_t *uart)
 {
@@ -61,8 +78,6 @@ int32_t hal_uart_init(uart_dev_t *uart)
 
     return ret;
 }
-
-
 
 int32_t hal_uart_send(uart_dev_t *uart, const void *data, uint32_t size, uint32_t timeout)
 {
@@ -94,8 +109,10 @@ int32_t hal_uart_recv_II(uart_dev_t *uart, void *data, uint32_t expect_size,
         }
     }
 
-    if (recv_size)
+    if (recv_size != NULL)
+    {
         *recv_size = rx_count;
+    }
 
     if(rx_count != 0)
     {
@@ -153,7 +170,6 @@ int32_t uart1_init(uart_dev_t *uart)
     uart1_handle.Init.OverSampling           = UART1_OVER_SAMPLING;
     uart1_handle.Init.OneBitSampling         = UART1_ONE_BIT_SAMPLING;
     uart1_handle.AdvancedInit.AdvFeatureInit = UART1_ADV_FEATURE_INIT;
-    uart1_handle.buffer_queue = &g_buf_queue_uart1;
 
     /* init uart */
     uart1_MspInit();
@@ -236,7 +252,6 @@ int32_t uart2_init(uart_dev_t *uart)
     uart2_handle.Init.OverSampling           = UART2_OVER_SAMPLING;
     uart2_handle.Init.OneBitSampling         = UART2_ONE_BIT_SAMPLING;
     uart2_handle.AdvancedInit.AdvFeatureInit = UART2_ADV_FEATURE_INIT;
-    uart2_handle.buffer_queue = &g_buf_queue_uart2;
 
     /* init uart */
     uart2_MspInit();
@@ -407,7 +422,7 @@ int32_t uart_flow_control_transform(hal_uart_flow_control_t flow_control_hal,
     }
     else if(flow_control_hal == FLOW_CONTROL_RTS)
     {
-    	flow_control = UART_HWCONTROL_RTS_CTS;
+        flow_control = UART_HWCONTROL_RTS_CTS;
     }
     else
     {
@@ -452,19 +467,188 @@ int32_t uart_mode_transform(hal_uart_mode_t mode_hal, uint32_t *mode_stm32l4)
     return ret;
 }
 
-void USART1_IRQHandler(void)
+/**
+  * @brief Receive an amount of data in interrupt mode with buffer queue.
+  * @param huart UART handle.
+  * @param pData Pointer to data buffer.
+  * @param Size  Amount of data to be received.
+  * @retval HAL status
+  */
+HAL_StatusTypeDef HAL_UART_Receive_IT_Buf_Queue_1byte(UART_HandleTypeDef *huart, uint8_t *pData, uint32_t timeout)
 {
-    krhino_intrpt_enter();
-    HAL_UART_IRQHandler(&uart1_handle);
-    krhino_intrpt_exit();
+  size_t rev_size = 0;
+  int ret = 0;
+	kbuf_queue_t *pBuffer_queue = NULL;
 
+  /* Check that a Rx process is not already ongoing */
+  if(huart->RxState == HAL_UART_STATE_READY)
+  {
+    if(pData == NULL)
+    {
+      return HAL_ERROR;
+    }
+
+    /* Process Locked */
+    __HAL_LOCK(huart);
+
+    huart->pRxBuffPtr  = pData;
+    huart->RxXferSize  = 1;
+    huart->RxXferCount = 0xFFFF;
+    huart->RxISR       = NULL;
+
+    /* Computation of UART mask to apply to RDR register */
+    UART_MASK_COMPUTATION(huart);
+
+    huart->ErrorCode = HAL_UART_ERROR_NONE;
+    huart->RxState = HAL_UART_STATE_BUSY_RX;
+
+    /* Enable the UART Error Interrupt: (Frame error, noise error, overrun error) */
+    SET_BIT(huart->Instance->CR3, USART_CR3_EIE);
+
+#if defined(USART_CR1_FIFOEN)
+    /* Configure Rx interrupt processing*/
+    if ((huart->FifoMode == UART_FIFOMODE_ENABLE) && (Size >= huart->NbRxDataToProcess))
+    {
+      /* Set the Rx ISR function pointer according to the data word length */
+      if ((huart->Init.WordLength == UART_WORDLENGTH_9B) && (huart->Init.Parity == UART_PARITY_NONE))
+      {
+        huart->RxISR = UART_RxISR_16BIT_FIFOEN;
+      }
+      else
+      {
+        huart->RxISR = UART_RxISR_8BIT_FIFOEN;
+      }
+
+      /* Process Unlocked */
+      __HAL_UNLOCK(huart);
+  
+      /* Enable the UART Parity Error interrupt and RX FIFO Threshold interrupt */
+      SET_BIT(huart->Instance->CR1, USART_CR1_PEIE);
+      SET_BIT(huart->Instance->CR3, USART_CR3_RXFTIE);
+    }
+    else
+#endif
+    {
+      /* Set the Rx ISR function pointer according to the data word length */
+      if ((huart->Init.WordLength != UART_WORDLENGTH_9B) || (huart->Init.Parity != UART_PARITY_NONE))
+      {
+        huart->RxISR = UART_RxISR_8BIT_Buf_Queue;
+      }
+
+       /* Process Unlocked */
+      __HAL_UNLOCK(huart);
+
+     /* Enable the UART Parity Error interrupt and Data Register Not Empty interrupt */
+#if defined(USART_CR1_FIFOEN)
+      SET_BIT(huart->Instance->CR1, USART_CR1_PEIE | USART_CR1_RXNEIE_RXFNEIE);
+#else
+      SET_BIT(huart->Instance->CR1, USART_CR1_PEIE | USART_CR1_RXNEIE);
+#endif
+    }
+  }
+
+    if (huart->Instance == UART1) 
+    {
+        pBuffer_queue = &g_buf_queue_uart1;
+        ret = HAL_OK;
+    }
+    else if (huart->Instance == UART2)
+    {
+        pBuffer_queue = &g_buf_queue_uart2;
+        ret = HAL_OK;
+    }
+    else
+    {
+      ret = HAL_ERROR;
+    }
+
+  if (ret == HAL_OK)
+  {
+    if(timeout != HAL_MAX_DELAY)
+    {
+      ret = krhino_buf_queue_recv(pBuffer_queue, timeout, pData, &rev_size);
+    }
+    else
+    {
+      ret = krhino_buf_queue_recv(pBuffer_queue, RHINO_WAIT_FOREVER, pData, &rev_size);
+    }
+
+    if((ret == 0) && (rev_size == 1))
+    {
+      ret = HAL_OK;
+    }
+    else
+    {
+      ret = HAL_BUSY;
+    }
+  }
+
+  return (HAL_StatusTypeDef)ret;
 }
 
-void USART2_IRQHandler(void)
+/**
+  * @brief RX interrrupt handler for 7 or 8 bits data word length with buffer queue .
+  * @param huart UART handle.
+  * @retval None
+  */
+static void UART_RxISR_8BIT_Buf_Queue(UART_HandleTypeDef *huart)
 {
-   krhino_intrpt_enter();
-   HAL_UART_IRQHandler(&uart2_handle);
-   krhino_intrpt_exit();
+  uint16_t uhMask = huart->Mask;
+  uint16_t  uhdata;
+  uint8_t data;
+  kbuf_queue_t *pBuffer_queue = NULL;
+  int32_t ret = -1;
+
+  /* Check that a Rx process is ongoing */
+  if(huart->RxState == HAL_UART_STATE_BUSY_RX)
+  {
+    uhdata = (uint16_t) READ_REG(huart->Instance->RDR);
+    data = (uint8_t)(uhdata & (uint8_t)uhMask);
+
+    if (huart->Instance == UART1) 
+    {
+        pBuffer_queue = &g_buf_queue_uart1;
+        ret = HAL_OK;
+    }
+    else if (huart->Instance == UART2)
+    {
+        pBuffer_queue = &g_buf_queue_uart2;
+        ret = HAL_OK;
+    }
+    else
+    {
+      ret = HAL_ERROR;
+    }
+
+    if (ret == HAL_OK)
+    {
+        krhino_buf_queue_send(pBuffer_queue, &data, 1);
+    }
+
+    if(--huart->RxXferCount == 0)
+    {
+      /* Disable the UART Parity Error Interrupt and RXNE interrupt*/
+#if defined(USART_CR1_FIFOEN)
+      CLEAR_BIT(huart->Instance->CR1, (USART_CR1_RXNEIE_RXFNEIE | USART_CR1_PEIE));
+#else
+      CLEAR_BIT(huart->Instance->CR1, (USART_CR1_RXNEIE | USART_CR1_PEIE));
+#endif
+
+      /* Disable the UART Error Interrupt: (Frame error, noise error, overrun error) */
+      CLEAR_BIT(huart->Instance->CR3, USART_CR3_EIE);
+
+      /* Rx process is completed, restore huart->RxState to Ready */
+      huart->RxState = HAL_UART_STATE_READY;
+
+      /* Clear RxISR function pointer */
+      huart->RxISR = NULL;
+
+      HAL_UART_RxCpltCallback(huart);
+    }
+  }
+  else
+  {
+    /* Clear RXNE interrupt flag */
+    __HAL_UART_SEND_REQ(huart, UART_RXDATA_FLUSH_REQUEST);
+  }
 }
-
-
