@@ -11,7 +11,7 @@ GLOBAL_DEFINES += CONFIG_AOS_KV_SECOND_PTN=7
 GLOBAL_DEFINES += CONFIG_AOS_KV_PTN_SIZE=4096
 GLOBAL_DEFINES += CONFIG_AOS_KV_BUFFER_SIZE=8192
 
-GLOBAL_INCLUDES += hal/ \
+GLOBAL_INCLUDES += \
                    Drivers/STM32L4xx_HAL_Driver/Inc \
                    Drivers/STM32L4xx_HAL_Driver/Inc/Legacy \
                    Drivers/CMSIS/Include \
@@ -51,7 +51,7 @@ $(NAME)_SOURCES := Drivers/STM32L4xx_HAL_Driver/Src/stm32l4xx_hal.c  \
 $(NAME)_SOURCES += aos/soc_impl.c \
                    aos/trace_impl.c \
                    aos/aos.c \
-				   hal/hal_uart_stm32l4.c \
+                   hal/hal_uart_stm32l4.c \
                    hal/flash_l4.c \
                    hal/flash_port.c \
                    hal/hw.c \
@@ -115,10 +115,4 @@ GLOBAL_LDFLAGS += -mcpu=cortex-m4  \
                   -mfloat-abi=hard \
                   -mfpu=fpv4-sp-d16 \
                   $(CLIB_LDFLAGS_NANO_FLOAT)
-endif
-
-ifeq ($(COMPILER),armcc)
-$(NAME)_LINK_FILES := src/STM32L433RC-Nucleo/startup_stm32l433xx_keil.o
-$(NAME)_LINK_FILES += src/$(HOST_MCU_NAME)/runapp/stm32l4xx_it.o
-$(NAME)_LINK_FILES += src/$(HOST_MCU_NAME)/runapp/stm32l4xx_hal_msp.o
 endif
