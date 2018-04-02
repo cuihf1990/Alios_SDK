@@ -15,8 +15,6 @@
 /* Init and deInit function for qspi1 */
 static int32_t qspi1_init(qspi_dev_t *qspi);
 static int32_t qspi1_DeInit(void);
-static void qspi1_MspInit(void);
-static void qspi1_DeMspInit(void);
 
 /* function used to transform hal para to stm32l4 para */
 static int32_t qspi_freq_transform(uint32_t freq_hal, uint32_t *BaudRatePrescaler_stm32l4);
@@ -212,7 +210,6 @@ int32_t qspi1_init(qspi_dev_t *qspi)
     /* Initialize other parameters in struction SPI_InitTypeDef */
 
     /* init qspi */
-    qspi1_MspInit();
     ret = HAL_QSPI_Init(&qspi1_handle);
 
     return ret;
@@ -224,23 +221,8 @@ int32_t qspi1_DeInit(void)
 
     /* spi1 deinitialization */
     ret = HAL_QSPI_DeInit(&qspi1_handle);
-    qspi1_DeMspInit();
 
     return ret;
-}
-
-void qspi1_MspInit(void)
-{
-    /* Initialize qspi-related pins */
-
-    /* Initialize interrupts if necessary */	
-}
-
-void qspi1_DeMspInit(void)
-{
-    /* Disable qspi-related pins */
-
-    /* Disable interrupts if necessary */	
 }
 
 static int32_t qspi_freq_transform(uint32_t freq_hal, uint32_t *BaudRatePrescaler_stm32l4)
