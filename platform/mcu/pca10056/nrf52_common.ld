@@ -49,7 +49,8 @@ OUTPUT_FORMAT ("elf32-littlearm", "elf32-bigarm", "elf32-littlearm")
  
  MEMORY
 {
-  FLASH (rx) : ORIGIN = 0x00000000, LENGTH = 0x100000
+  FLASH (rx) : ORIGIN = 0x00010000, LENGTH = 0xEF000
+  BOOTLOADER_SETTINGS (rw) : ORIGIN = 0x000FF000, LENGTH = 0x1000
   RAM (rwx) :  ORIGIN = 0x20000000, LENGTH = 0x40000
 }
  
@@ -97,6 +98,11 @@ SECTIONS
     __exidx_end = .;
 
     __etext = .;
+
+    .bootloader_settings_page(NOLOAD) :
+    {
+
+    } > BOOTLOADER_SETTINGS
 
     .data : AT (__etext)
     {
