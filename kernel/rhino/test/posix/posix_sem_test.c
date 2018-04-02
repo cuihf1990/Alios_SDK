@@ -6,7 +6,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <pthread.h>
-#include <pthread_sem.h>
+#include <semaphore.h>
 
 static sem_t           sem;
 

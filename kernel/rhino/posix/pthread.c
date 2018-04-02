@@ -58,4 +58,41 @@ int pthread_equal(pthread_t t1, pthread_t t2)
     return (int)(t1 == t2);
 }
 
+int pthread_setschedparam
+    (
+    pthread_t   thread,                 /* thread               */
+    int         policy,                 /* new policy           */
+    const struct sched_param * param   /* new parameters       */
+    )
+{
+    kstat_t stat = RHINO_SUCCESS;
+    uint8_t old_pri;
+
+    if (policy == SCHED_FIFO)
+        {
+        stat = krhino_sched_policy_set((ktask_t *)thread, KSCHED_FIFO);
+        }
+    else if (policy == SCHED_RR)
+        {
+        stat = krhino_sched_policy_set((ktask_t *)thread, KSCHED_RR);
+        }        
+
+    if (RHINO_SUCCESS != stat)
+        return 1;
+
+    /* change the priority of pthread */
+
+    if (param != NULL)
+        {
+        stat = krhino_task_pri_change ((ktask_t *) thread,
+                PRI_CONVERT_PX_RH (param->sched_priority), &old_pri);
+        if (stat == RHINO_SUCCESS)
+            return 0;
+        else
+            return 1;
+        }
+
+    return 0;
+}
+
 

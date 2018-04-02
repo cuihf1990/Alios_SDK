@@ -1,4 +1,4 @@
-#include <pthread_sem.h>
+#include <semaphore.h>
 
 int sem_init(sem_t *sem, int pshared, unsigned int value)
 {
