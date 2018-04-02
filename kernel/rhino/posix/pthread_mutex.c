@@ -1,62 +1,90 @@
 #include <pthread.h>
-#include <pthread_mutex.h>
 
-int pthread_mutex_init(pthread_mutex_t *mutex, const pthread_mutexattr_t *attr)
+static int mutext_init_complete(pthread_mutex_t *p_mutex)
 {
     kstat_t ret;
 
-    ret = krhino_mutex_dyn_create(mutex, "mutex");
+    if (p_mutex->initted != PTHREAD_INITIALIZED_OBJ)
+        {
+        ret = krhino_mutex_dyn_create(&p_mutex->mutex, "mutex");
 
-    if (ret == RHINO_SUCCESS) {
-        return 0;
-    }
-
-    return 1;
-}
-
-int pthread_mutex_destroy(pthread_mutex_t *mutex)
-{
-    kstat_t ret;
-
-    ret = krhino_mutex_dyn_del(*mutex);
-
-    if (ret == RHINO_SUCCESS) {
-        return 0;
-    }
-
-    return 1;
-}
-
-int pthread_mutex_lock(pthread_mutex_t *mutex)
-{
-    kstat_t ret;
-    ret = krhino_mutex_lock(*mutex, RHINO_WAIT_FOREVER);
-
-    if (ret == RHINO_SUCCESS) {
-        return 0;
-    }
-
-    return 1;
-}
-
-int pthread_mutex_unlock(pthread_mutex_t *mutex)
-{
-    kstat_t ret;
-
-    ret = krhino_mutex_unlock(*mutex);
-
-    if (ret == RHINO_SUCCESS) {
-        return 0;
-    }
-
-    return 1;
-}
-
-int pthread_mutex_trylock(pthread_mutex_t *mutex)
-{
-    kstat_t ret;
+        if (RHINO_SUCCESS == ret)
+            {
+            p_mutex->initted = PTHREAD_INITIALIZED_OBJ;
+            }
+        
+        return ret;
+        }
     
-    ret = krhino_mutex_lock(*mutex, 0);
+    return RHINO_SUCCESS;
+}
+
+int pthread_mutex_init(pthread_mutex_t *p_mutex, const pthread_mutexattr_t *attr)
+{
+    p_mutex->initted = PTHREAD_UNUSED_YET_OBJ;
+    
+    return 0;
+}
+
+int pthread_mutex_destroy(pthread_mutex_t *p_mutex)
+{
+    kstat_t ret;
+
+    ret = krhino_mutex_dyn_del(p_mutex->mutex);
+
+    if (ret == RHINO_SUCCESS) {
+        return 0;
+    }
+
+    return 1;
+}
+
+int pthread_mutex_lock(pthread_mutex_t *p_mutex)
+{
+    kstat_t ret;
+
+    if (RHINO_SUCCESS != mutext_init_complete(p_mutex))
+        {
+        return 1;
+        }
+    
+    ret = krhino_mutex_lock(p_mutex->mutex, RHINO_WAIT_FOREVER);
+
+    if (ret == RHINO_SUCCESS) {
+        return 0;
+    }
+
+    return 1;
+}
+
+int pthread_mutex_unlock(pthread_mutex_t *p_mutex)
+{
+    kstat_t ret;
+
+    if (RHINO_SUCCESS != mutext_init_complete(p_mutex))
+        {
+        return 1;
+        }
+
+    ret = krhino_mutex_unlock(p_mutex->mutex);
+
+    if (ret == RHINO_SUCCESS) {
+        return 0;
+    }
+
+    return 1;
+}
+
+int pthread_mutex_trylock(pthread_mutex_t *p_mutex)
+{
+    kstat_t ret;
+
+    if (RHINO_SUCCESS != mutext_init_complete(p_mutex))
+        {
+        return 1;
+        }
+    
+    ret = krhino_mutex_lock(p_mutex->mutex, 0);
 
     if (ret == RHINO_SUCCESS) {
         return 0;

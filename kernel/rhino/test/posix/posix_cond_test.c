@@ -2,9 +2,6 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <pthread.h>
-#include <pthread_mutex.h>
-#include <pthread_cond.h>
-
 
 static pthread_t thread;
 static pthread_cond_t cond;

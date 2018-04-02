@@ -6,7 +6,6 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <pthread.h>
-#include <pthread_sem.h>
 
 static void *demo_task(void *arg)
 {

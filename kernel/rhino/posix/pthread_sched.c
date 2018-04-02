@@ -1,4 +1,4 @@
-#include <k_api.h>
+
 #include <pthread.h>
 
 int sched_yield(void)

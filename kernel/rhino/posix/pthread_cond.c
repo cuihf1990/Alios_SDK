@@ -1,5 +1,4 @@
 #include <pthread.h>
-#include <pthread_cond.h>
 
 extern int gettimeofday(struct timeval *tv, void *tzp);
 
@@ -104,7 +103,7 @@ int pthread_cond_timedwait(pthread_cond_t        *cond,
     krhino_mutex_unlock(cond->lock);
 
     /* Unlock the mutex, as is required by condition variable semantics */
-    krhino_mutex_unlock(*mutex);
+    krhino_mutex_unlock(mutex->mutex);
 
     /* Wait for a signal */
     retval = krhino_sem_take(cond->wait_sem, ticks);
@@ -131,7 +130,7 @@ int pthread_cond_timedwait(pthread_cond_t        *cond,
     krhino_mutex_unlock(cond->lock);
 
     /* Lock the mutex, as is required by condition variable semantics */
-    krhino_mutex_lock(*mutex, RHINO_WAIT_FOREVER);
+    krhino_mutex_lock(mutex->mutex, RHINO_WAIT_FOREVER);
 
     return 0;
 }
@@ -151,7 +150,7 @@ int pthread_cond_wait(pthread_cond_t *cond, pthread_mutex_t *mutex)
     krhino_mutex_unlock(cond->lock);
 
     /* Unlock the mutex, as is required by condition variable semantics */
-    krhino_mutex_unlock(*mutex);
+    krhino_mutex_unlock(mutex->mutex);
 
     /* Wait for a signal */
     retval = krhino_sem_take(cond->wait_sem, RHINO_WAIT_FOREVER);
@@ -178,7 +177,7 @@ int pthread_cond_wait(pthread_cond_t *cond, pthread_mutex_t *mutex)
     krhino_mutex_unlock(cond->lock);
 
     /* Lock the mutex, as is required by condition variable semantics */
-    krhino_mutex_lock(*mutex, RHINO_WAIT_FOREVER);
+    krhino_mutex_lock(mutex->mutex, RHINO_WAIT_FOREVER);
 
     return 0;
 }

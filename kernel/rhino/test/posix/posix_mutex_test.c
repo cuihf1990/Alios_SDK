@@ -6,13 +6,13 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <pthread.h>
-#include <pthread_mutex.h>
 
 static pthread_mutex_t           mutex;
 
 static void *init_task(void *arg)
 {  
     pthread_mutex_init(&mutex, NULL);
+    
 
     return NULL;
 }
