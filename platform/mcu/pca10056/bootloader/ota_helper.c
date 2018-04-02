@@ -123,7 +123,7 @@ static int flash_erase(uint32_t               page_addr,
         progress++;
     }
 
-		return 0;
+    return 0;
 }
 
 static nrf_dfu_settings_t s_dfu_settings;
@@ -137,11 +137,11 @@ static uint32_t align_to_page(uint32_t val, uint32_t page_size)
 static int flash_compare(uint8_t *dest, uint8_t *src, uint32_t len)
 {
     while (len-- != 0) {
-		    if (*dest != *src) return (*dest - *src);
-			  dest++; src++;
-		}
-		
-		return 0;
+            if (*dest != *src) return (*dest - *src);
+              dest++; src++;
+        }
+        
+        return 0;
 }
 
 static uint32_t crc32_compute(uint8_t const * p_data, uint32_t size, uint32_t const * p_crc)
@@ -185,9 +185,9 @@ int nrf_dfu_settings_write()
     memcpy(&temp_dfu_settings, &s_dfu_settings, sizeof(nrf_dfu_settings_t));
 
     err_code = flash_write((uint32_t)s_dfu_settings_in_flash,
-                                   &temp_dfu_settings,
-                                   sizeof(nrf_dfu_settings_t),
-                                   NULL);
+                           &temp_dfu_settings,
+                           sizeof(nrf_dfu_settings_t),
+                           NULL);
 
     if (err_code != 0)
     {
@@ -247,12 +247,12 @@ static uint32_t nrf_dfu_app_continue(uint32_t src_addr)
     uint32_t length_left = (image_size - s_dfu_settings.write_offset);
     uint32_t cur_len;
     uint32_t crc;
-	  uint32_t i = 0;
+    uint32_t i = 0;
 
     src_addr += s_dfu_settings.write_offset;
 
     printf("In %s line %d, copying bank 1 to bank 0 ...\r\n", __func__, __LINE__);
-	  printf("target_addr: 0x%x, length_left: 0x%x\r\n", target_addr, length_left);
+    printf("target_addr: 0x%x, length_left: 0x%x\r\n", target_addr, length_left);
 
     // Copy the application down safely
     do
@@ -281,51 +281,51 @@ static uint32_t nrf_dfu_app_continue(uint32_t src_addr)
 
         s_dfu_settings.write_offset += cur_len;
         ret_val = nrf_dfu_settings_write();
-				if (ret_val != 0) {
-				    printf("In %s, nrf_dfu_settings_write failed.\r\n", __func__);
-				    return -1;
-				}
+        if (ret_val != 0) {
+            printf("In %s, nrf_dfu_settings_write failed.\r\n", __func__);
+            return -1;
+        }
 
         target_addr += cur_len;
         src_addr += cur_len;
 
         length_left -= cur_len;
-				
-				printf(".");
+                
+        printf(".");
     }
     while (length_left > 0);
     printf("\r\nCongratulations! Copy finished!\r\n");
 
-		printf("In %s line %d, calculating crc ...\r\n", __func__, __LINE__);
-		
+    printf("In %s line %d, calculating crc ...\r\n", __func__, __LINE__);
+        
     // Check the CRC of the copied data. Enable if so.
     crc = crc32_compute((uint8_t*)MAIN_APPLICATION_START_ADDR, image_size, NULL);
 
-		printf("In %s line %d, the crc calculated is 0x%x, the expected crc is 0x%x.\r\n", \
-		       __func__, __LINE__, crc, s_dfu_settings.bank_1.image_crc);
-		
+    printf("In %s line %d, the crc calculated is 0x%x, the expected crc is 0x%x.\r\n", \
+           __func__, __LINE__, crc, s_dfu_settings.bank_1.image_crc);
+        
     if (crc == s_dfu_settings.bank_1.image_crc)
     {
-		    printf("Good, calculated crc and read crc is equal!\r\n");
+        printf("Good, calculated crc and read crc is equal!\r\n");
         s_dfu_settings.bank_0.bank_code = NRF_DFU_BANK_VALID_APP;
         s_dfu_settings.bank_0.image_crc = crc;
         s_dfu_settings.bank_0.image_size = image_size;
     }
     else
     {
-		    printf("Bad, calculated crc and read crc is NOT equal!\r\n");
+        printf("Bad, calculated crc and read crc is NOT equal!\r\n");
         // crc calu failed;
     }
 
-		printf("In %s line %d, invaliding bank 1 ...\r\n", __func__, __LINE__);
-		
+    printf("In %s line %d, invaliding bank 1 ...\r\n", __func__, __LINE__);
+        
     nrf_dfu_invalidate_bank(&s_dfu_settings.bank_1);
-		
-		printf("In %s line %d, writing settings ...\r\n", __func__, __LINE__);
-		s_dfu_settings.init_command[0] = UPDATE_FINISHED;
+        
+    printf("In %s line %d, writing settings ...\r\n", __func__, __LINE__);
+           s_dfu_settings.init_command[0] = UPDATE_FINISHED;
     ret_val = nrf_dfu_settings_write();
 
-		printf("In %s line %d, end, last ret_val is %d.\r\n", __func__, __LINE__, ret_val);
+    printf("In %s line %d, end, last ret_val is %d.\r\n", __func__, __LINE__, ret_val);
 
     return ret_val;
 }
@@ -340,16 +340,16 @@ static uint32_t nrf_dfu_continue_bank(nrf_dfu_bank_t * p_bank, uint32_t src_addr
             if(s_dfu_settings.bank_current == NRF_DFU_CURRENT_BANK_1)
             {
                 // Only continue copying if valid app in Bank 1
-							  printf("In nrf_dfu_continue_bank, will copy bank 1 into bank 0 here.\r\n");
+                printf("In nrf_dfu_continue_bank, will copy bank 1 into bank 0 here.\r\n");
                 ret_val = nrf_dfu_app_continue(src_addr);
             }
-						printf("Valid app in bank_0, no copy required.\r\n");
+                printf("Valid app in bank_0, no copy required.\r\n");
             break;
        case NRF_DFU_BANK_VALID_SD:
        case NRF_DFU_BANK_VALID_BL:
-			 case NRF_DFU_BANK_INVALID:
+             case NRF_DFU_BANK_INVALID:
        default:
-				    printf("In %s %d, not handled bank_code: %d.\r\n", __func__, __LINE__, p_bank->bank_code);
+            printf("In %s %d, not handled bank_code: %d.\r\n", __func__, __LINE__, p_bank->bank_code);
             break;
     }
 
@@ -364,22 +364,22 @@ static uint32_t nrf_dfu_continue()
 
     if (s_dfu_settings.bank_layout == NRF_DFU_BANK_LAYOUT_SINGLE )
     {
-		    printf("In nrf_dfu_continue, SINGLE layout, bank_0 used.\r\n");
+        printf("In nrf_dfu_continue, SINGLE layout, bank_0 used.\r\n");
         p_bank = &(s_dfu_settings.bank_0);
     }
     else if(s_dfu_settings.bank_current == NRF_DFU_CURRENT_BANK_0)
     {
-		    printf("In nrf_dfu_continue, bank_0 (current bank) used.\r\n");
+        printf("In nrf_dfu_continue, bank_0 (current bank) used.\r\n");
         p_bank = &(s_dfu_settings.bank_0);
     }
     else
     {
-			  printf("In nrf_dfu_continue, bank_1 used.\r\n");
+        printf("In nrf_dfu_continue, bank_1 used.\r\n");
         p_bank = &(s_dfu_settings.bank_1);
         src_addr += align_to_page(s_dfu_settings.bank_0.image_size, PAGE_SIZE) + 0x1000;
     }
 
-		printf("In nrf_dfu_continue, src_addr is 0x%x.\r\n", src_addr);
+    printf("In nrf_dfu_continue, src_addr is 0x%x.\r\n", src_addr);
 
     ret_val = nrf_dfu_continue_bank(p_bank, src_addr);
     return ret_val;
@@ -394,7 +394,7 @@ static void nrf_dfu_init()
 void ota_app(void)
 {
     nrf_dfu_init();
-	  printf("After nrf_dfu_init\r\n");
-	  nrf_dfu_continue();
+    printf("After nrf_dfu_init\r\n");
+    nrf_dfu_continue();
     printf("ota_app finished.\r\n");
 }

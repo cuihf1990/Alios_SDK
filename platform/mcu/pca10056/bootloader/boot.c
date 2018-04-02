@@ -25,7 +25,6 @@ extern void user_app_run(void);
 
 kstat_t krhino_intrpt_enter(void)
 {
-
     return RHINO_SUCCESS;
 }
 
@@ -37,10 +36,10 @@ void krhino_intrpt_exit(void)
 extern void ota_app(void);
 int main(void)
 {
-		//hal_uart_init(NULL);
-		//printf("Hello Bootloader!\r\n");
-	  ota_app();
-	  //printf("Bye Bootloader!\r\n");
+    //hal_uart_init(NULL);
+    //printf("Hello Bootloader!\r\n");
+    ota_app();
+    //printf("Bye Bootloader!\r\n");
     //while (1) {printf("test\r\n");};
     user_app_run();
     return 0;
