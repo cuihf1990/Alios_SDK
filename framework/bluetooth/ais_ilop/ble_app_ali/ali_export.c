@@ -40,6 +40,7 @@
 #include <string.h>                 /* String function definitions */
 #include <stdbool.h>
 #include <bluetooth/conn.h>
+#include <aos/aos.h>
 
 extern struct bt_conn *g_conn;
 
@@ -95,7 +96,7 @@ static void ali_event_handler (void * p_context, ali_event_t * p_event)
             if (m_new_firmware)
             {
 #ifdef CONFIG_AIS_OTA
-                NRF_LOG_DEBUG("Firmware download completed, system will reboot now!");
+                LOG("Firmware download completed, system will reboot now!");
                 aos_reboot();
 #endif
             }
@@ -132,7 +133,9 @@ static void ali_event_handler (void * p_context, ali_event_t * p_event)
             NRF_LOG_DEBUG("ALI_EVT_NEW_FIRMWARE\r\n");
             m_new_firmware = true;
             /* still have data feedback to app, so do disconnection after a while */
-            aos_post_delayed_action(5000, disconnect_ble, NULL);
+            aos_msleep(2000);
+            disconnect_ble(NULL);
+            //aos_post_delayed_action(5000, disconnect_ble, NULL);
 #endif
             break;
 

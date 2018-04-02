@@ -104,9 +104,12 @@ static void sys_init(void)
 #endif
 }
 
-
+extern void * __isr_vector;
 int main(void)
-{	
+{
+   /* Reallocate reset vector at the very beginning of the boot. */
+   SCB->VTOR = (unsigned long) &__isr_vector;
+
    aos_init();
    krhino_task_dyn_create(&g_aos_app, "aos-init", 0, AOS_DEFAULT_APP_PRI, 0, AOS_START_STACK, (task_entry_t)sys_init, 1);
 

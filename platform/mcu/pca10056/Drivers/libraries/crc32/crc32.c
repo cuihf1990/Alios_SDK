@@ -38,7 +38,7 @@
  * 
  */
 #include "sdk_common.h"
-#if NRF_MODULE_ENABLED(CRC32)
+//#if NRF_MODULE_ENABLED(CRC32)
 #include "crc32.h"
 
 #include <stdlib.h>
@@ -58,4 +58,4 @@ uint32_t crc32_compute(uint8_t const * p_data, uint32_t size, uint32_t const * p
     }
     return ~crc;
 }
-#endif //NRF_MODULE_ENABLED(CRC32)
+//#endif //NRF_MODULE_ENABLED(CRC32)

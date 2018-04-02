@@ -44,8 +44,13 @@ GLOBAL_INCLUDES += \
 					Drivers/drivers_nrf/uart \
 					Drivers/libraries/uart \
 					Drivers/libraries/fifo \
-					Drivers/drivers_nrf
-                   
+					Drivers/drivers_nrf \
+					Drivers/libraries/bootloader/dfu \
+					Drivers/libraries/fstorage \
+					Drivers/softdevice/s140/headers/nrf52 \
+					Drivers/softdevice/s140/headers \
+					Drivers/libraries/crc32 \
+
 $(NAME)_SOURCES := Drivers/boards/boards.c \
 				   Drivers/toolchain/system_nrf52840.c \
 				   Drivers/libraries/bsp/bsp.c \
@@ -70,11 +75,19 @@ $(NAME)_SOURCES := Drivers/boards/boards.c \
 				   Drivers/drivers_nrf/uart/nrf_drv_uart.c \
 				   src/pca10056/base_pro/soc_init.c \
 				   Drivers/libraries/fifo/app_fifo.c \
+				   Drivers/libraries/bootloader/dfu/nrf_dfu_settings.c \
+				   Drivers/libraries/bootloader/dfu/nrf_dfu_flash.c \
+				   Drivers/libraries/crc32/crc32.c \
+				   Drivers/libraries/fstorage/nrf_fstorage_nvmc.c \
+				   Drivers/libraries/fstorage/nrf_fstorage.c \
+				   Drivers/drivers_nrf/hal/nrf_nvmc.c \
 
 $(NAME)_SOURCES += aos/soc_impl.c \
                    aos/trace_impl.c \
-				   aos/aos.c
-                   
+                   aos/aos.c
+
+$(NAME)_SOURCES  += hal/ais_ota_port.c \
+                    hal/misc.c
 
 GLOBAL_CFLAGS += -DNRF52840_XXAA -DBOARD_PCA10056
                    
@@ -141,6 +154,10 @@ GLOBAL_LDFLAGS += --config platform/mcu/stm32l4xx/src/STM32L433RC-Nucleo/STM32L4
 else
 
 GLOBAL_LDFLAGS += -T platform/mcu/pca10056/nrf52_common.ld
+
+GLOBAL_CFLAGS += -DNRF_DFU_SETTINGS_VERSION=0
+
+GLOBAL_DEFINES += NRF52840_XXAA
 
 endif
 

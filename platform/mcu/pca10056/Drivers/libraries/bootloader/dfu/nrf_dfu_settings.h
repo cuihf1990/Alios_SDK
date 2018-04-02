@@ -160,6 +160,7 @@ bool nrf_dfu_settings_adv_name_is_valid(void);
  */
 ret_code_t nrf_dfu_settings_additional_erase(void);
 
+uint32_t nrf_dfu_settings_crc_get(void);
 
 #ifdef __cplusplus
 }
