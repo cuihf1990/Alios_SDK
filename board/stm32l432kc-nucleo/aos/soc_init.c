@@ -5,6 +5,7 @@
 #include <stdint.h>
 #include "hal/hal.h"
 #include "k_config.h"
+#include "board.h"
 
 #define main st_main
 #include "Src/main.c"
@@ -44,7 +45,7 @@ void stm32_soc_init(void)
 static void stduart_init(void)
 {
     uart_0.port = STDIO_UART;
-    uart_0.config.baud_rate = 115200;
+    uart_0.config.baud_rate = STDIO_UART_BUADRATE;
     uart_0.config.data_width = DATA_WIDTH_8BIT;
     uart_0.config.flow_control = FLOW_CONTROL_DISABLED;
     uart_0.config.mode = MODE_TX_RX;

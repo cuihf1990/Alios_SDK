@@ -9,15 +9,9 @@
 #include "stm32l4xx_hal.h"
 #include "hal_uart_stm32l4.h"
 
-/* Init and deInit function for uart1 */
+/* Init function for uart1 */
 static int32_t uart1_init(uart_dev_t *uart);
-static int32_t uart1_DeInit(void);
-static void uart1_MspInit(void);
-static void uart1_DeMspInit(void);
 static int32_t uart2_init(uart_dev_t *uart);
-static int32_t uart2_DeInit(void);
-static void uart2_MspInit(void);
-static void uart2_DeMspInit(void);
 
 /* function used to transform hal para to stm32l4 para */
 static int32_t uart_dataWidth_transform(hal_uart_data_width_t data_width_hal, uint32_t *data_width_stm32l4);
@@ -81,10 +75,15 @@ int32_t hal_uart_init(uart_dev_t *uart)
 
 int32_t hal_uart_send(uart_dev_t *uart, const void *data, uint32_t size, uint32_t timeout)
 {
+    int32_t ret = -1;
+
     if ((uart == NULL) || (data == NULL)) {
         return -1;
     }
-    return HAL_UART_Transmit((UART_HandleTypeDef *)uart->priv, (uint8_t *)data, size, 30000);
+
+    ret = HAL_UART_Transmit((UART_HandleTypeDef *)uart->priv, (uint8_t *)data, size, 30000);
+
+    return ret;
 }
 
 int32_t hal_uart_recv_II(uart_dev_t *uart, void *data, uint32_t expect_size,
@@ -136,10 +135,10 @@ int32_t hal_uart_finalize(uart_dev_t *uart)
 
     switch (uart->port) {
         case PORT_UART1:
-            ret = uart1_DeInit();
+            ret = HAL_UART_DeInit(&uart1_handle);
             break;
         case PORT_UART2:
-            ret = uart2_DeInit();
+            ret = HAL_UART_DeInit(&uart2_handle);
             break;
         /* if other uart exist add Deinit code here */
         default:
@@ -166,69 +165,17 @@ int32_t uart1_init(uart_dev_t *uart)
         return -1;
     }
 
-    uart1_handle.Init.HwFlowCtl              = UART1_HW_FLOW_CTL;
     uart1_handle.Init.OverSampling           = UART1_OVER_SAMPLING;
     uart1_handle.Init.OneBitSampling         = UART1_ONE_BIT_SAMPLING;
     uart1_handle.AdvancedInit.AdvFeatureInit = UART1_ADV_FEATURE_INIT;
 
     /* init uart */
-    uart1_MspInit();
     HAL_UART_Init(&uart1_handle);
 
     ret = krhino_buf_queue_create(&g_buf_queue_uart1, "buf_queue_uart",
           g_buf_uart1, MAX_BUF_UART_BYTES, 1);
 
     return ret;
-}
-
-int32_t uart1_DeInit(void)
-{
-    int32_t ret = -1;
-
-    /* uart deinitialization */
-    ret = HAL_UART_DeInit(&uart1_handle);
-    uart1_DeMspInit();
-
-    return ret;
-}
-
-void uart1_MspInit(void)
-{
-    GPIO_InitTypeDef gpio_init_structure;
-
-    /* Enable GPIO clock */
-    UART1_TX_GPIO_CLK_ENABLE();
-    UART1_RX_GPIO_CLK_ENABLE();
-
-    /* Enable USART clock */
-    UART1_CLK_ENABLE();
- 
-    /* Configure USART Tx as alternate function */
-    gpio_init_structure.Pin       = UART1_TX_PIN;
-    gpio_init_structure.Mode      = UART1_TX_MODE;
-    gpio_init_structure.Speed     = UART1_TX_SPEED;
-    gpio_init_structure.Pull      = UART1_TX_PULL;
-    gpio_init_structure.Alternate = UART1_TX_ALTERNATE;
-    HAL_GPIO_Init(UART1_TX_GPIO_PORT, &gpio_init_structure);
-
-    /* Configure USART Rx as alternate function */
-    gpio_init_structure.Pin       = UART1_RX_PIN;
-    gpio_init_structure.Mode      = UART1_RX_MODE;
-    gpio_init_structure.Alternate = UART1_RX_ALTERNATE;
-    HAL_GPIO_Init(UART1_RX_GPIO_PORT, &gpio_init_structure);
-
-    HAL_NVIC_SetPriority(UART1_IRQn, 0, 1);
-    HAL_NVIC_EnableIRQ(UART1_IRQn);
-}
-
-void uart1_DeMspInit(void)
-{
-    /* Disable USART clock */
-    UART1_CLK_DISABLE();
-
-    /* USART TX/RX pins deinitializations */
-    UART1_TX_GPIO_CLK_DISABLE();
-    UART1_RX_GPIO_CLK_DISABLE();
 }
 
 int32_t uart2_init(uart_dev_t *uart)
@@ -248,13 +195,11 @@ int32_t uart2_init(uart_dev_t *uart)
         return -1;
     }
 
-    uart2_handle.Init.HwFlowCtl              = UART2_HW_FLOW_CTL;
     uart2_handle.Init.OverSampling           = UART2_OVER_SAMPLING;
     uart2_handle.Init.OneBitSampling         = UART2_ONE_BIT_SAMPLING;
     uart2_handle.AdvancedInit.AdvFeatureInit = UART2_ADV_FEATURE_INIT;
 
     /* init uart */
-    uart2_MspInit();
     HAL_UART_Init(&uart2_handle);
 
     ret = krhino_buf_queue_create(&g_buf_queue_uart2, "buf_queue_uart",
@@ -263,61 +208,11 @@ int32_t uart2_init(uart_dev_t *uart)
     return ret;
 }
 
-int32_t uart2_DeInit(void)
-{
-    int32_t ret = -1;
-
-    /* uart deinitialization */
-    ret = HAL_UART_DeInit(&uart2_handle);
-    uart2_DeMspInit();
-
-    return ret;
-}
-
-void uart2_MspInit(void)
-{
-    GPIO_InitTypeDef gpio_init_structure;
-
-    /* Enable GPIO clock */
-    UART2_TX_GPIO_CLK_ENABLE();
-    UART2_RX_GPIO_CLK_ENABLE();
-
-    /* Enable USART clock */
-    UART2_CLK_ENABLE();
- 
-    /* Configure USART Tx as alternate function */
-    gpio_init_structure.Pin       = UART2_TX_PIN;
-    gpio_init_structure.Mode      = UART2_TX_MODE;
-    gpio_init_structure.Speed     = UART2_TX_SPEED;
-    gpio_init_structure.Pull      = UART2_TX_PULL;
-    gpio_init_structure.Alternate = UART2_TX_ALTERNATE;
-    HAL_GPIO_Init(UART2_TX_GPIO_PORT, &gpio_init_structure);
-
-    /* Configure USART Rx as alternate function */
-    gpio_init_structure.Pin       = UART2_RX_PIN;
-    gpio_init_structure.Mode      = UART2_RX_MODE;
-    gpio_init_structure.Alternate = UART2_RX_ALTERNATE;
-    HAL_GPIO_Init(UART2_RX_GPIO_PORT, &gpio_init_structure);
-
-    HAL_NVIC_SetPriority(UART2_IRQn, 0,1);
-    HAL_NVIC_EnableIRQ(UART2_IRQn);
-}
-
-void uart2_DeMspInit(void)
-{
-    /* Disable USART clock */
-    UART2_CLK_DISABLE();
-
-    /* USART TX/RX pins deinitializations */
-    UART2_TX_GPIO_CLK_DISABLE();
-    UART2_RX_GPIO_CLK_DISABLE();
-}
-
 int32_t uart_dataWidth_transform(hal_uart_data_width_t data_width_hal,
         uint32_t *data_width_stm32l4)
 {
     uint32_t data_width = 0;
-    int32_t	ret = 0;
+    int32_t ret = 0;
 
     if(data_width_hal == DATA_WIDTH_7BIT)
     {
@@ -348,7 +243,7 @@ int32_t uart_parity_transform(hal_uart_parity_t parity_hal,
         uint32_t *parity_stm32l4)
 {
     uint32_t parity = 0;
-    int32_t	ret = 0;
+    int32_t ret = 0;
 
     if(parity_hal == NO_PARITY)
     {
@@ -379,7 +274,7 @@ int32_t uart_stop_bits_transform(hal_uart_stop_bits_t stop_bits_hal,
         uint32_t *stop_bits_stm32l4)
 {
     uint32_t stop_bits = 0;
-    int32_t	ret = 0;
+    int32_t ret = 0;
 
     if(stop_bits_hal == STOP_BITS_1)
     {
@@ -406,7 +301,7 @@ int32_t uart_flow_control_transform(hal_uart_flow_control_t flow_control_hal,
         uint32_t *flow_control_stm32l4)
 {
     uint32_t flow_control = 0;
-    int32_t	ret = 0;
+    int32_t ret = 0;
 
     if(flow_control_hal == FLOW_CONTROL_DISABLED)
     {
@@ -440,7 +335,7 @@ int32_t uart_flow_control_transform(hal_uart_flow_control_t flow_control_hal,
 int32_t uart_mode_transform(hal_uart_mode_t mode_hal, uint32_t *mode_stm32l4)
 {
     uint32_t mode = 0;
-    int32_t	ret = 0;
+    int32_t ret = 0;
 
     if(mode_hal == MODE_TX)
     {
@@ -478,7 +373,7 @@ HAL_StatusTypeDef HAL_UART_Receive_IT_Buf_Queue_1byte(UART_HandleTypeDef *huart,
 {
   size_t rev_size = 0;
   int ret = 0;
-	kbuf_queue_t *pBuffer_queue = NULL;
+    kbuf_queue_t *pBuffer_queue = NULL;
 
   /* Check that a Rx process is not already ongoing */
   if(huart->RxState == HAL_UART_STATE_READY)
