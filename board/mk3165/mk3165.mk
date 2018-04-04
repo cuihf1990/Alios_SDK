@@ -11,7 +11,7 @@ SUPPORT_BINS         := no
 
 BUS := SDIO
 
-$(NAME)_SOURCES := board.c 
+$(NAME)_SOURCES := board.c mico_spi.c
 
 GLOBAL_INCLUDES += ./
 GLOBAL_DEFINES += HSE_VALUE=26000000
