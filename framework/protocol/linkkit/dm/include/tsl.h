@@ -1,11 +1,11 @@
-#ifndef DSL_H
-#define DSL_H
+#ifndef TSL_H
+#define TSL_H
 
 #ifdef __cplusplus
 extern "C" {
 #endif /* __cplusplus */
 
-#include "dm_import.h"
+#include <stdlib.h>
 
 #ifdef LITE_THING_MODEL
 typedef union _data_type_x {
@@ -230,7 +230,7 @@ typedef struct _profile {
     char* device_name; /* deviceName */
 } profile_t;
 
-typedef struct _dsl_template {
+typedef struct _tsl_template {
     char* schema; /* schema */
     char* link; /* link */
     profile_t profile; /* profile */
@@ -243,10 +243,10 @@ typedef struct _dsl_template {
 
     size_t service_number;
     service_t* services; /* services */
-} dsl_template_t;
+} tsl_template_t;
 
 #ifdef __cplusplus
 }
 #endif /* __cplusplus */
 
-#endif /* DSL_H */
+#endif /* TSL_H */
