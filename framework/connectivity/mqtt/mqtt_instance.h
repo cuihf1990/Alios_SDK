@@ -20,6 +20,17 @@ void *mqtt_get_instance();
 
 
 /**
+ * @brief   Remove the mqtt singleton instance.
+ *
+ * @param None
+ *
+ * @retval None
+ * @see None.
+ */
+void mqtt_remove_instance();
+
+
+/**
  * @brief   Set the mqtt singleton instance.
  *
  * @param None
