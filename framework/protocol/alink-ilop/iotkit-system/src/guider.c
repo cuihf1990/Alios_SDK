@@ -560,7 +560,7 @@ int iotx_guider_authenticate(void)
     _fill_conn_string(conn->password, sizeof(conn->password),
                       "%s",
                       guider_sign);
- 
+
 #else   /* MQTT_DIRECT */
 
     conn->port = iotx_conn_port;

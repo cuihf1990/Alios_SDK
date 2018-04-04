@@ -13,10 +13,15 @@
 
 
 #ifdef ON_DAILY
-#define PRODUCT_KEY             "a1DPfXuJJsR"
-#define PRODUCT_SECRET          "M4yY1ggbRnWYXzU3"
-#define DEVICE_NAME             "test_3060_01"
-#define DEVICE_SECRET           "6BhvTPQqCEj48gIHChFQKCWgDjNnQX5f"
+//#define PRODUCT_KEY             "a1DPfXuJJsR"
+//#define PRODUCT_SECRET          "M4yY1ggbRnWYXzU3"
+//#define DEVICE_NAME             "test_3060_01"
+//#define DEVICE_SECRET           "6BhvTPQqCEj48gIHChFQKCWgDjNnQX5f"
+#define PRODUCT_KEY             "a1fG355fLM5"
+#define DEVICE_NAME             "zhengcheng"
+#define DEVICE_SECRET           "gH9mD5TRrgz8V2iPCxmpN0AkqWT6GDmu"
+#define PRODUCT_SECRET          ""
+
 #elif ON_PRE 
 #define PRODUCT_KEY             "a1DQA90NlFe"
 #define PRODUCT_SECRET          "0VDRjoQAbieMcYyZ"

@@ -56,12 +56,12 @@ char *json_get_next_object(int type, char *str, char *str_end, char **key, int *
 
     if (type == JOBJECT) {
         /* Get Key */
-        p_cPos = strchr(p_cPos, '"');
+        p_cPos = strchr(p_cPos, '\"');
         if (!p_cPos) {
             goto do_exit;
         }
         p_cName = ++p_cPos;
-        p_cPos = strchr(p_cPos, '"');
+        p_cPos = strchr(p_cPos, '\"');
         if (!p_cPos) {
             goto do_exit;
         }
@@ -71,7 +71,7 @@ char *json_get_next_object(int type, char *str, char *str_end, char **key, int *
         p_cPos = strchr(p_cPos, ':');
     }
     while (p_cPos && *p_cPos && p_cPos < str_end) {
-        if (*p_cPos == '"') {
+        if (*p_cPos == '\"') {
             iValueType = JSTRING;
             p_cValue = ++p_cPos;
             break;
@@ -83,7 +83,7 @@ char *json_get_next_object(int type, char *str, char *str_end, char **key, int *
             iValueType = JARRAY;
             p_cValue = p_cPos++;
             break;
-        } else if (*p_cPos >= '0' && *p_cPos <= '9') {
+        } else if ((*p_cPos == '-') || (*p_cPos >= '0' && *p_cPos <= '9')) {
             iValueType = JNUMBER;
             p_cValue = p_cPos++;
             break;
@@ -113,31 +113,36 @@ char *json_get_next_object(int type, char *str, char *str_end, char **key, int *
                 break;
             }
         } else if (iValueType == JNUMBER) {
-            if (*p_cPos < '0' || *p_cPos > '9') {
+            if ((*p_cPos < '0' || *p_cPos > '9') && (*p_cPos != '.') && (*p_cPos != '+') \
+                && (*p_cPos != '-') && ((*p_cPos != 'e')) && (*p_cPos != 'E')) {
                 iValueLen = p_cPos - p_cValue;
                 break;
             }
-        } else if(iValueType == JSTRING) {
-            if(*p_cPos == '\"') {
+        } else if (iValueType == JSTRING) {
+            if (*p_cPos == '\"') {
                 iValueLen = p_cPos - p_cValue;
                 break;
             }
         } else if (*p_cPos == JsonMark[iValueType][1]) {
-            if(iStringDepth  == 0) {
+            if (iStringDepth  == 0) {
                 if (iMarkDepth == 0) {
                     iValueLen = p_cPos - p_cValue + 1;
                     p_cPos++;
-                break;
-                } else{
+                    break;
+                } else {
                     iMarkDepth--;
                 }
             }
         } else if (*p_cPos == JsonMark[iValueType][0]) {
-            if(iStringDepth == 0)
+            if (iStringDepth == 0) {
                 iMarkDepth++;
-        } else if(*p_cPos == '\"') {
-            if(iStringDepth) iStringDepth = 0;
-            else iStringDepth = 1;
+            }
+        } else if (*p_cPos == '\"') {
+            if (iStringDepth) {
+                iStringDepth = 0;
+            } else {
+                iStringDepth = 1;
+            }
         }
         p_cPos++;
     }

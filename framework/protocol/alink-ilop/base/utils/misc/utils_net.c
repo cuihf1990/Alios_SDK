@@ -54,12 +54,12 @@ static int write_tcp(utils_network_pt pNetwork, const char *buffer, uint32_t len
 
 static int disconnect_tcp(utils_network_pt pNetwork)
 {
-    if (-1 == pNetwork->handle) {
+    if (0 == pNetwork->handle) {
         return -1;
     }
 
     HAL_TCP_Destroy(pNetwork->handle);
-    pNetwork->handle = -1;
+    pNetwork->handle = 0;
     return 0;
 }
 
@@ -70,12 +70,15 @@ static int connect_tcp(utils_network_pt pNetwork)
         return 1;
     }
 
-    pNetwork->handle = HAL_TCP_Establish(pNetwork->pHostAddress, pNetwork->port);
-    tcp_fd=pNetwork->handle;
-    if (-1 == pNetwork->handle) {
+    intptr_t sockfd = HAL_TCP_Establish(pNetwork->pHostAddress, pNetwork->port);
+    log_debug("sockfd: %d", sockfd);
+    if (sockfd < 0) {
+        log_debug("establish tcp fail, sockfd: %d", sockfd);
+        pNetwork->handle = 0;
         return -1;
     }
 
+    pNetwork->handle = sockfd;
     return 0;
 }
 
@@ -142,7 +145,6 @@ int utils_net_read(utils_network_pt pNetwork, char *buffer, uint32_t len, uint32
     int     ret = 0;
 
     if (NULL == pNetwork->ca_crt) {
-        
         ret = read_tcp(pNetwork, buffer, len, timeout_ms);
 #ifndef IOTX_WITHOUT_TLS
     } else {
