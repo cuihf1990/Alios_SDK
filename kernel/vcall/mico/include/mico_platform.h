@@ -42,6 +42,8 @@ typedef platform_spi_slave_data_buffer_t        mico_spi_slave_data_buffer_t;
 #endif
 
 #define mico_mcu_powersave_config MicoMcuPowerSaveConfig
+typedef platform_spi_message_segment_t mico_spi_message_segment_t;
+typedef platforom_spi_device_t mico_spi_device_t;
 
 #ifdef USE_MICO_SPI_FLASH
 extern const mico_spi_device_t mico_spi_flash;

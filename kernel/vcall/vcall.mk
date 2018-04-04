@@ -42,7 +42,7 @@ $(NAME)_COMPONENTS += vcall.espos
 endif
 endif
 
-ifneq (,$(filter $(PLATFORM), linuxhost mk3060 mk3239 mk3166))
+ifneq (,$(filter $(PLATFORM), linuxhost mk3060 mk3239 mk3166 mk3165))
 $(NAME)_SOURCES += mico/mico_rhino.c
 endif
 
