@@ -37,8 +37,8 @@ static ih_blk_head_t s_freelist_head;
 static ih_blk_head_t *s_freelist_tail;
 
 /* For statistic. */
-static size_t s_heap_free_size;
-static size_t s_heap_free_size_min;
+static size_t s_heap_free_size      = IRAM_HEAP_SIZE;
+static size_t s_heap_free_size_min  = IRAM_HEAP_SIZE;
 
 /* Init heap, with one free block */
 static void iram_heap_init(void)
