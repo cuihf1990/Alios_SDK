@@ -55,7 +55,7 @@ static void wifi_service_event(input_event_t *event, void *priv_data) {
         //clear_wifi_ssid();
         return;
     }
-    //LOG("gotip system heap_size %d, iram mimi free heap size:%d,iram free heap size :%d", system_get_free_heap_size(), xPortGetMinimumEverFreeHeapSize(), xPortGetFreeHeapSize());
+   
     if(awss_running) {
         aos_post_delayed_action(200,reboot_system,NULL);
         return;
@@ -97,6 +97,24 @@ static void start_netmgr(void *p)
 
 extern int awss_report_reset();
 
+static void do_awss_active()
+{
+    LOG("do_awss_active %d\n", awss_running);
+    awss_running = 1;
+    netmgr_clear_ap_config();
+    awss_config_press();
+}
+
+static void do_awss_reset()
+{
+    if(linkkit_started) {
+	aos_task_new("reset", awss_report_reset, NULL, 2048);
+    }
+    netmgr_clear_ap_config();
+    LOG("SSID cleared. Please reboot the system.\n");
+    aos_post_delayed_action(1000,reboot_system,NULL);
+}
+
 void linkkit_key_process(input_event_t *eventinfo, void *priv_data)
 {
     if (eventinfo->type != EV_KEY) {
@@ -106,19 +124,36 @@ void linkkit_key_process(input_event_t *eventinfo, void *priv_data)
 
     if (eventinfo->code == CODE_BOOT) {
         if (eventinfo->value == VALUE_KEY_CLICK) {
-            awss_running = 1;
-            netmgr_clear_ap_config();
-            awss_config_press();
+            do_awss_active();
         } else if(eventinfo->value == VALUE_KEY_LTCLICK) {
-            if(linkkit_started) {
-               aos_task_new("reset", awss_report_reset, NULL, 2048);
-            }
-            netmgr_clear_ap_config();
-            printf("SSID cleared. Please reboot the system.\n");
-            aos_post_delayed_action(1000,reboot_system,NULL);
+            do_awss_reset();
         }
     }
 }
+
+#ifdef CONFIG_AOS_CLI
+static void handle_reset_cmd(char *pwbuf, int blen, int argc, char **argv)
+{
+    aos_schedule_call(do_awss_reset, NULL);
+}
+
+static void handle_active_cmd(char *pwbuf, int blen, int argc, char **argv)
+{
+    aos_schedule_call(do_awss_active, NULL);
+}
+
+static struct cli_command resetcmd = {
+    .name = "reset",
+    .help = "factory reset",
+    .function = handle_reset_cmd
+};
+
+static struct cli_command ncmd = {
+    .name = "active_awss",
+    .help = "active_awss [start]",
+    .function = handle_active_cmd
+};
+#endif
 
 int application_start(int argc, char **argv)
 {
@@ -133,6 +168,10 @@ int application_start(int argc, char **argv)
     aos_register_event_filter(EV_WIFI, wifi_service_event, NULL);
     aos_register_event_filter(EV_YUNIO, cloud_service_event, NULL);
 
+#ifdef CONFIG_AOS_CLI
+    aos_cli_register_command(&resetcmd);
+    aos_cli_register_command(&ncmd);
+#endif
     aos_task_new("netmgr", start_netmgr, NULL, 4096);
 
     aos_loop_run();
