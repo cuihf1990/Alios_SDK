@@ -3,7 +3,7 @@
 import os, sys, time, socket, ssl, traceback, Queue
 import subprocess, thread, threading, random, re
 from operator import itemgetter
-import TBframe
+import TBframe as pkt
 
 MAX_MSG_LENGTH = 8192
 ENCRYPT = True
@@ -21,6 +21,7 @@ class Autotest:
         self.cmd_excute_state = 'idle'
         self.cmd_excute_return = ''
         self.cmd_excute_event = threading.Event()
+        self.output_queue = Queue.Queue(256)
         self.subscribed = {}
         self.subscribed_reverse = {}
         self.filter = {}
@@ -121,12 +122,12 @@ class Autotest:
 
                 msg += new_msg
                 while msg != '':
-                    type, length, value, msg = TBframe.parse(msg)
-                    if type == TBframe.TYPE_NONE:
+                    type, length, value, msg = pkt.parse(msg)
+                    if type == pkt.TYPE_NONE:
                         break
 
                     #print type, length
-                    if type == TBframe.ALL_DEV:
+                    if type == pkt.ALL_DEV:
                         new_list = {}
                         clients = value.split(':')
                         for c in clients:
@@ -143,7 +144,7 @@ class Autotest:
 
                         for dev in list(new_list):
                             self.device_list[dev] = new_list[dev]
-                    if type == TBframe.DEVICE_LOG:
+                    if type == pkt.DEVICE_LOG:
                         dev = value.split(':')[0]
                         logtime = value.split(':')[1]
                         log = value[len(dev) + 1 + len(logtime) + 1:]
@@ -161,15 +162,15 @@ class Autotest:
                             if self.logfile != None:
                                 log =  devname + ":" + logtimestr + ":" + log
                                 self.logfile.write(log)
-                    if type == TBframe.CMD_DONE:
+                    if type == pkt.CMD_DONE:
                         self.cmd_excute_return = value
                         self.cmd_excute_state = 'done'
                         self.cmd_excute_event.set()
-                    if type == TBframe.CMD_ERROR:
+                    if type == pkt.CMD_ERROR:
                         self.cmd_excute_return = value
                         self.cmd_excute_state = 'error'
                         self.cmd_excute_event.set()
-                    if type == TBframe.DEVICE_ALLOC:
+                    if type == pkt.DEVICE_ALLOC:
                         values = value.split(',')
                         if len(values) != 2:
                             continue
@@ -194,8 +195,8 @@ class Autotest:
                 random.seed()
                 time.sleep(1.2 + random.random())
                 for devname in self.subscribed:
-                    self.send_packet(TBframe.LOG_SUB, self.subscribed[devname])
-                    self.send_packet(TBframe.DEVICE_CMD, self.subscribed[devname] + ':help')
+                    self.send_packet(pkt.LOG_SUB, self.subscribed[devname])
+                    self.send_packet(pkt.DEVICE_CMD, self.subscribed[devname] + ':help')
             except:
                 if DEBUG:
                     traceback.print_exc()
@@ -233,14 +234,14 @@ class Autotest:
             return False
         filename = expandfilename
 
-        filehash = TBframe.hash_of_file(filename)
+        filehash = pkt.hash_of_file(filename)
         devstr = self.subscribed[devname]
 
         #send file begin
         content = devstr  + ':' + filehash + ':' + filename.split('/')[-1]
         retry = 4
         while retry > 0:
-            self.send_packet(TBframe.FILE_BEGIN, content)
+            self.send_packet(pkt.FILE_BEGIN, content)
             self.wait_cmd_excute_done(0.3)
             if self.cmd_excute_state == 'timeout':
                 retry -= 1;
@@ -268,7 +269,7 @@ class Autotest:
         while(content):
             retry = 4
             while retry > 0:
-                self.send_packet(TBframe.FILE_DATA, header + content)
+                self.send_packet(pkt.FILE_DATA, header + content)
                 self.wait_cmd_excute_done(0.3)
                 if self.cmd_excute_return == None:
                     retry -= 1;
@@ -291,7 +292,7 @@ class Autotest:
         content = devstr  + ':' + filehash + ':' + filename.split('/')[-1]
         retry = 4
         while retry > 0:
-            self.send_packet(TBframe.FILE_END, content)
+            self.send_packet(pkt.FILE_END, content)
             self.wait_cmd_excute_done(0.3)
             if self.cmd_excute_return == None:
                 retry -= 1;
@@ -309,7 +310,7 @@ class Autotest:
         content = ','.join([type, str(number), purpose])
         timeout += time.time()
         while time.time() < timeout:
-            self.send_packet(TBframe.DEVICE_ALLOC, content)
+            self.send_packet(pkt.DEVICE_ALLOC, content)
             self.wait_cmd_excute_done(0.8)
             if self.cmd_excute_return == None or self.cmd_excute_return == []:
                 time.sleep(8)
@@ -334,14 +335,14 @@ class Autotest:
                 self.subscribed[devname] = devstr;
                 self.subscribed_reverse[devstr] = devname
         for devname in devices:
-            self.send_packet(TBframe.LOG_SUB, self.subscribed[devname])
+            self.send_packet(pkt.LOG_SUB, self.subscribed[devname])
         return True
 
     def device_unsubscribe(self, devices):
         for devname in list(devices):
             if devname not in self.subscribed:
                 continue
-            self.send_packet(TBframe.LOG_UNSUB, self.subscribed[devname])
+            self.send_packet(pkt.LOG_UNSUB, self.subscribed[devname])
             self.subscribed_reverse.pop(self.subscribed[devname])
             self.subscribed.pop(devname)
 
@@ -352,7 +353,7 @@ class Autotest:
             print "error: device {0} not subscribed".format(devname)
             return False
         content = self.subscribed[devname]
-        self.send_packet(TBframe.DEVICE_ERASE, content);
+        self.send_packet(pkt.DEVICE_ERASE, content);
         self.wait_cmd_excute_done(10)
         if self.cmd_excute_state == "done":
             ret = True
@@ -381,9 +382,9 @@ class Autotest:
         if self.send_file_to_client(devname, expandname) == False:
             return False
 
-        filehash = TBframe.hash_of_file(expandname)
+        filehash = pkt.hash_of_file(expandname)
         content = self.subscribed[devname] + ',' + address + ',' + filehash
-        self.send_packet(TBframe.DEVICE_PROGRAM, content);
+        self.send_packet(pkt.DEVICE_PROGRAM, content);
         self.wait_cmd_excute_done(270)
         if self.cmd_excute_state == "done":
             ret = True
@@ -393,7 +394,7 @@ class Autotest:
         return ret
 
     def device_control(self, devname, operation):
-        operations = {"start":TBframe.DEVICE_START, "stop":TBframe.DEVICE_STOP, "reset":TBframe.DEVICE_RESET}
+        operations = {"start":pkt.DEVICE_START, "stop":pkt.DEVICE_STOP, "reset":pkt.DEVICE_RESET}
 
         if self.connected == False:
             return False
@@ -425,7 +426,7 @@ class Autotest:
 
         retry = 3
         while retry > 0:
-            self.send_packet(TBframe.DEVICE_CMD, content)
+            self.send_packet(pkt.DEVICE_CMD, content)
             self.filter_event.clear()
             self.filter_event.wait(timeout)
             if self.filter['lines_num'] > 0:
@@ -442,7 +443,7 @@ class Autotest:
     def connect_to_server(self, server_ip, server_port):
         sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         if ENCRYPT:
-            sock = ssl.wrap_socket(sock, cert_reqs=ssl.CERT_REQUIRED, ca_certs='server_cert.pem')
+            sock = ssl.wrap_socket(sock, cert_reqs=ssl.CERT_REQUIRED, ca_certs='certificate.pem')
         try:
             sock.connect((server_ip, server_port))
             self.service_socket = sock
