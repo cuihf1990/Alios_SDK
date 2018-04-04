@@ -18,8 +18,9 @@
 
 #ifndef __COAP_EXPORT_H__
 #define __COAP_EXPORT_H__
-#include "CoAPNetwork.h"
-#include "lite-list.h"
+
+#include "iot_import.h"
+
 
 #ifdef __cplusplus
 extern "C" {
@@ -28,10 +29,8 @@ extern "C" {
 
 #define COAP_MSG_MAX_TOKEN_LEN    8
 #define COAP_MSG_MAX_OPTION_NUM   12
-#define COAP_MSG_MAX_PATH_LEN     32
+#define COAP_MSG_MAX_PATH_LEN     128
 #define COAP_MSG_MAX_PDU_LEN      1280
-#define COAP_RESOURCE_MAX_DEPTH   8
-#define COAP_MAX_PATH_LEN ((COAP_MSG_MAX_PATH_LEN + 1) * COAP_RESOURCE_MAX_DEPTH + 6)
 
 
 /*CoAP Content Type*/
@@ -97,6 +96,7 @@ extern "C" {
 #define COAP_ERROR_READ_FAILED                 (COAP_ERROR_BASE | 11)
 #define COAP_ERROR_ENCRYPT_FAILED              (COAP_ERROR_BASE | 12)
 #define COAP_ERROR_UNSUPPORTED                 (COAP_ERROR_BASE | 13)
+#define COAP_ERROR_OBJ_ALREADY_EXIST           (COAP_ERROR_BASE | 14)
 
 #define COAP_MSG_CODE_DEF(N) (((N)/100 << 5) | (N)%100)
 
@@ -181,7 +181,7 @@ typedef void (*CoAPEventNotifier)(unsigned int event, NetworkAddr *remote, void 
 
 typedef void (*CoAPRecvMsgHandler) (CoAPContext *context, const char *paths, NetworkAddr *remote, CoAPMessage *message);
 
-typedef int (*CoAPDataEncrypt)(NetworkAddr* addr, CoAPLenString *src, CoAPLenString *dest);
+typedef int (*CoAPDataEncrypt)(CoAPContext *context, NetworkAddr* addr, CoAPMessage* message, CoAPLenString *src, CoAPLenString *dest);
 
 struct CoAPMessage
 {
@@ -239,6 +239,8 @@ extern int CoAPMessageId_set(CoAPMessage *message, unsigned short msgid);
 extern int CoAPMessageType_set(CoAPMessage *message, unsigned char type);
 
 extern int CoAPMessageCode_set(CoAPMessage *message, CoAPMessageCode code);
+
+extern int CoAPMessageCode_get(CoAPMessage *message, CoAPMessageCode *code);
 
 extern int CoAPMessageToken_set(CoAPMessage *message, unsigned char *token,
         unsigned char tokenlen);

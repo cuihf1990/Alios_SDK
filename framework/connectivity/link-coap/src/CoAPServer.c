@@ -15,16 +15,19 @@
  * limitations under the License.
  *
  */
-
+#include <string.h>
 #include "CoAPPlatform.h"
 #include "CoAPExport.h"
 #include "CoAPServer.h"
 
 #define COAP_INIT_TOKEN     (0x01020304)
-#define COAP_SERV_MAX_PATH_LEN ((COAP_MSG_MAX_PATH_LEN + 1) * COAP_RESOURCE_MAX_DEPTH + 6)
 
 static unsigned int g_coap_running = 0;
+#ifdef COAP_SERV_MULTITHREAD
 static void *g_coap_thread = NULL;
+static void *g_semphore    = NULL;
+#endif
+static CoAPContext *g_context = NULL;
 
 static unsigned int CoAPServerToken_get(unsigned char *p_encoded_data)
 {
@@ -47,7 +50,7 @@ static int CoAPServerPath_2_option(char *uri, CoAPMessage *message)
         COAP_ERR("Invalid paramter p_path %p, p_message %p", uri, message);
         return COAP_ERROR_INVALID_PARAM;
     }
-    if (COAP_SERV_MAX_PATH_LEN < strlen(uri)) {
+    if (COAP_MSG_MAX_PATH_LEN <= strlen(uri)) {
         COAP_ERR("The uri length is too loog,len = %d", (int)strlen(uri));
         return COAP_ERROR_INVALID_LENGTH;
     }
@@ -81,25 +84,44 @@ static int CoAPServerPath_2_option(char *uri, CoAPMessage *message)
 CoAPContext *CoAPServer_init()
 {
     CoAPInitParam param;
-    CoAPContext * context = NULL;
 
-    param.appdata = NULL;
-    param.group = "224.0.1.187";
-    param.notifier = NULL;
-    param.obs_maxcount = 16;
-    param.res_maxcount = 32;
-    param.port = 5683;
-    param.send_maxcount = 16;
-    param.waittime = 2000;
+    if(NULL == g_context){
+        param.appdata = NULL;
+        param.group = "224.0.1.187";
+        param.notifier = NULL;
+        param.obs_maxcount = 16;
+        param.res_maxcount = 32;
+        param.port = 5683;
+        param.send_maxcount = 16;
+        param.waittime = 2000;
 
 #ifdef COAP_USE_PLATFORM_LOG
-    LITE_openlog("CoAP");
-    LITE_set_loglevel(5);
+        LITE_openlog("CoAP");
+        LITE_set_loglevel(5);
 #endif
 
-    context = CoAPContext_create(&param);
+#ifdef COAP_SERV_MULTITHREAD
+        g_semphore  = HAL_SemaphoreCreate();
+        if(NULL == g_semphore){
+            COAP_ERR("Semaphore Create failed");
+            return NULL;
+        }
+#endif
 
-    return (CoAPContext *)context;
+        g_context = CoAPContext_create(&param);
+    }
+    else{
+        COAP_INFO("The CoAP Server already init");
+    }
+
+    return (CoAPContext *)g_context;
+}
+
+typedef void (*func_v_v)(void*);
+static func_v_v coapserver_timer = NULL;
+void CoAPServer_add_timer (void (*on_timer)(void*))
+{
+    coapserver_timer = on_timer;
 }
 #ifndef COAP_WITH_YLOOP
 void *CoAPServer_yield(void *param)
@@ -107,26 +129,54 @@ void *CoAPServer_yield(void *param)
     CoAPContext *context = (CoAPContext *)param;
     COAP_DEBUG("Enter to CoAP daemon task");
     while(g_coap_running){
-        CoAPMessage_cycle(context);
+        CoAPMessage_cycle(g_context);
+        if (coapserver_timer) {
+            coapserver_timer(g_context);
+        }        
     }
-
-    if(NULL != context){
-        CoAPContext_free(context);
-        context = NULL;
-    }
+#ifdef COAP_SERV_MULTITHREAD
+    HAL_SemaphorePost(g_semphore);
+    COAP_INFO("Exit the CoAP daemon task, Post semphore");
 
     HAL_ThreadDelete(NULL);
     g_coap_thread = NULL;
-    COAP_INFO("Exit the CoAP daemon task");
+#endif
     return NULL;
 }
 #endif
 void CoAPServer_deinit0(CoAPContext *context)
 {
+    if(context != g_context){
+        COAP_INFO("Invalid CoAP Server context");
+        return;
+    }
+
     COAP_INFO("CoAP Server deinit");
     g_coap_running = 0;
-    HAL_SleepMs(1000);
+
+#ifdef COAP_SERV_MULTITHREAD
+    if(NULL != g_semphore){
+        HAL_SemaphoreWait(g_semphore, PLATFORM_WAIT_INFINITE);
+        COAP_INFO("Wait Semaphore, will exit task");
+        HAL_SemaphoreDestroy(g_semphore);
+        g_semphore = NULL;
+    }
+#endif
+    if(NULL != context){
+        CoAPContext_free(context);
+        g_context = NULL;
+    }
 }
+
+void CoAPServer_deinit(CoAPContext *context)
+{
+#ifdef COAP_WITH_YLOOP   
+        aos_schedule_call(CoAPServer_deinit0, context);  
+#else                                       
+        CoAPServer_deinit0(context);
+        HAL_SleepMs(1000);
+#endif        
+} 
 
 int CoAPServer_register(CoAPContext *context, const char *uri, CoAPRecvMsgHandler callback)
 {
@@ -191,11 +241,23 @@ int CoAPServerResp_send(CoAPContext *context, NetworkAddr *remote, unsigned char
 #ifndef COAP_WITH_YLOOP
 void CoAPServer_loop(CoAPContext *context)
 {
+#ifdef COAP_SERV_MULTITHREAD
     int stack_used;
+#endif
+   
+    if(g_context != context  || 1 == g_coap_running){
+        COAP_INFO("The CoAP Server is already running");
+        return;
+    }
     hal_os_thread_param_t p = {0};
     p.name = "CoAPServer_loop";
-    p.stack_size = 4096;
+    p.stack_size = 2048;
     g_coap_running = 1;
+#ifdef COAP_SERV_MULTITHREAD
     HAL_ThreadCreate(&g_coap_thread, CoAPServer_yield, (void *)context, &p, &stack_used);
+#else
+    CoAPServer_yield((void *)context);
+#endif
+
 }
 #endif

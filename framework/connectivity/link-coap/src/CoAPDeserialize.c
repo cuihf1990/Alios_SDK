@@ -18,6 +18,7 @@
 
 
 #include <stdio.h>
+#include <string.h>
 #include "CoAPExport.h"
 
 int CoAPDeserialize_Header(CoAPMessage *msg, unsigned char *buf)
