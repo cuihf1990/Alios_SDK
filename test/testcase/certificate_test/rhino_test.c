@@ -368,9 +368,6 @@ CASE(test_task_comm, aos_1_013)
     ret = krhino_mutex_create(&g_mutex, "g_mutext");
     ASSERT_EQ(ret, RHINO_SUCCESS);
 
-    ret = krhino_mutex_is_valid(&g_mutex);
-    ASSERT_EQ(ret, RHINO_SUCCESS);
-
     ret = krhino_mutex_lock(&g_mutex, RHINO_CONFIG_TICKS_PER_SECOND);
     ASSERT_EQ(ret, RHINO_SUCCESS);
 
@@ -453,9 +450,6 @@ CASE(test_task_comm, aos_1_015)
     kstat_t ret = RHINO_SUCCESS;
 
     ret = krhino_sem_create(&g_sem, "g_sem", 0);
-    ASSERT_EQ(ret, RHINO_SUCCESS);
-
-    ret = krhino_sem_is_valid(&g_sem);
     ASSERT_EQ(ret, RHINO_SUCCESS);
 
     ret = krhino_sem_take(&g_sem, RHINO_CONFIG_TICKS_PER_SECOND);
