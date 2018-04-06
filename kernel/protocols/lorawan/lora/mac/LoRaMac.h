@@ -50,6 +50,10 @@
 #ifndef __LORAMAC_H__
 #define __LORAMAC_H__
 
+#ifdef CONFIG_LINKLORA
+#include "linklora.h"
+#endif
+
 /*!
  * Check the Mac layer state every MAC_STATE_CHECK_TIMEOUT in ms
  */
@@ -999,6 +1003,11 @@ typedef struct sMlmeReqJoin
      * Number of trials for the join request.
      */
     uint8_t NbTrials;
+
+#ifdef CONFIG_LINKLORA
+    int8_t datarate;
+    join_method_t method;
+#endif
 }MlmeReqJoin_t;
 
 /*!
