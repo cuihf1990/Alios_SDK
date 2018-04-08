@@ -170,7 +170,8 @@ void pthread_exit(void *value)
     RHINO_CRITICAL_EXIT();
 
     if (ptd->attr.detachstate == PTHREAD_CREATE_JOINABLE) {
-        krhino_sem_give(ptd->joinable_sem);
+        /* semaphore should be released by krhino_task_del_hook */
+        krhino_task_del(krhino_cur_task_get());
     }
 
 }
@@ -195,7 +196,7 @@ int pthread_join(pthread_t thread, void **retval)
         if (retval != 0) {
             *retval = ptd->return_value;
         }
-        krhino_task_del(thread);
+
         krhino_sem_dyn_del(ptd->join_sem);
 
         if (ptd->attr.stack_base == 0) {
