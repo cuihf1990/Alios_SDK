@@ -77,7 +77,7 @@ ifneq ($(GLOBAL_DEFINES),)
 	$(foreach macro, $(GLOBAL_DEFINES), $(call WRITE_FILE_APPEND, $(py_path),$(tab_space)$(macro)) )
 	$(call WRITE_FILE_APPEND, $(py_path),$(split_end))
 	$(call WRITE_FILE_APPEND, $(py_path),for i in global_macros$(colon))
-	$(call WRITE_FILE_APPEND, $(py_path),$(tab_space)component.add_global_macro(i))
+	$(call WRITE_FILE_APPEND, $(py_path),$(tab_space)component.add_global_macros(i))
 endif
 	
 #$(NAME)_INCLUDES
@@ -97,7 +97,7 @@ ifneq ($($(NAME)_DEFINES),)
 	$(foreach macro, $($(NAME)_DEFINES), $(call WRITE_FILE_APPEND, $(py_path),$(tab_space)$(macro)) )
 	$(call WRITE_FILE_APPEND, $(py_path),$(split_end))
 	$(call WRITE_FILE_APPEND, $(py_path),for i in macros$(colon))
-	$(call WRITE_FILE_APPEND, $(py_path),$(tab_space)component.add_macro(i))
+	$(call WRITE_FILE_APPEND, $(py_path),$(tab_space)component.add_macros(i))
 endif	
 	
 #$(NAME)_CFLAGS

@@ -124,7 +124,7 @@ for lib in prebuild_libs:
     component.add_prebuilt_libs(lib)
 
 for macro in global_macro:
-    component.add_global_macro(macro)
+    component.add_global_macros(macro)
 
 for ld in ld_files:
     component.add_global_ld_file(ld)

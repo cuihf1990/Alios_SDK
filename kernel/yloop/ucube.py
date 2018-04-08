@@ -4,4 +4,4 @@ src     = Split('''
 ''')
 component = aos_component('yloop', src)
 component.add_component_dependencis('utility/log', 'kernel/vfs')
-component.add_global_macro('AOS_LOOP')
+component.add_global_macros('AOS_LOOP')

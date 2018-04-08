@@ -58,13 +58,13 @@ component.add_component_dependencis('utility/log', 'platform/arch/linux')
 component.add_global_includes('include', 'csp/lwip/include')
 
 
-component.add_global_macro('CONFIG_AOS_RHINO_MMREGION')
-component.add_global_macro('CONFIG_YSH_CMD_DUMPSYS')
-component.add_global_macro('CSP_LINUXHOST')
-component.add_global_macro('CONFIG_LOGMACRO_DETAILS')
-component.add_global_macro('CONFIG_AOS_FATFS_SUPPORT')
-component.add_global_macro('CONFIG_AOS_FATFS_SUPPORT_MMC')
-component.add_global_macro('CONFIG_AOS_FOTA_BREAKPOINT')
+component.add_global_macros('CONFIG_AOS_RHINO_MMREGION')
+component.add_global_macros('CONFIG_YSH_CMD_DUMPSYS')
+component.add_global_macros('CSP_LINUXHOST')
+component.add_global_macros('CONFIG_LOGMACRO_DETAILS')
+component.add_global_macros('CONFIG_AOS_FATFS_SUPPORT')
+component.add_global_macros('CONFIG_AOS_FATFS_SUPPORT_MMC')
+component.add_global_macros('CONFIG_AOS_FOTA_BREAKPOINT')
 
 #move from yts component
 component.add_global_ldflags('-lreadline')

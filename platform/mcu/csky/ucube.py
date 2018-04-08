@@ -169,7 +169,7 @@ for ldflag in global_ldflags:
     component.add_global_ldflags(ldflag)
 
 for macro in global_macro:
-    component.add_global_macro(macro)
+    component.add_global_macros(macro)
 
 tool_chain = aos_global_config.create_tool_chain()
 tool_chain.set_prefix('csky-abiv2-elf-')

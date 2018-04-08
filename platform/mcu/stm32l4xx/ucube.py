@@ -75,14 +75,14 @@ global_macros =Split('''
     CONFIG_AOS_KV_BUFFER_SIZE=8192
 ''')
 for i in global_macros:
-    component.add_global_macro(i)
+    component.add_global_macros(i)
 
 if HOST_MCU_NAME == 'STM32L433RC-Nucleo':
-    component.add_global_macro('STM32L433xx')
+    component.add_global_macros('STM32L433xx')
     component.add_sources('src/'+HOST_MCU_NAME+'/hal/hal_gpio_stm32l4.c')
     component.add_sources('src/'+HOST_MCU_NAME+'/hal/hal_i2c_stm32l4.c')
 elif HOST_MCU_NAME == 'STM32L432KC-Nucleo':
-    component.add_global_macro('STM32L432xx')
+    component.add_global_macros('STM32L432xx')
     
     
 if aos_global_config.compiler == 'armcc':    

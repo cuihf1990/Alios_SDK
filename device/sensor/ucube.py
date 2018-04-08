@@ -23,7 +23,7 @@ global_macros =Split('''
     AOS_SENSOR
 ''')
 for i in global_macros:
-    component.add_global_macro(i)
+    component.add_global_macros(i)
 
 
 

@@ -123,7 +123,7 @@ macro_tmp = Split('''
 ''') 
 
 for i in macro_tmp:
-    component.add_global_macro(i)
+    component.add_global_macros(i)
 
 if aos_global_config.compiler == 'armcc':
     cflags_tmp = Split('''

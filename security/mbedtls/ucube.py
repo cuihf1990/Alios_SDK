@@ -74,7 +74,7 @@ component = aos_component('mbedtls', src)
 component.add_global_includes('include')
 
 if aos_global_config.board != 'linuxhost':
-    component.add_macro('LWIP_ENABLED')
+    component.add_macros('LWIP_ENABLED')
 
 component.add_component_dependencis('security/alicrypto')
 

@@ -39,31 +39,31 @@ if aos_global_config.get('MESHDEBUG') == None:
     aos_global_config.set('MESHDEBUG','1')
 if aos_global_config.get('MESHDEBUG') == '1':
     component.add_sources('src/tools/diags.c', 'src/utilities/logging.c')
-    component.add_global_macro('CONFIG_AOS_MESH_DEBUG')
+    component.add_global_macros('CONFIG_AOS_MESH_DEBUG')
 
 if aos_global_config.get('MESHSUPER') == None:
     aos_global_config.set('MESHSUPER','1')
 if aos_global_config.get('MESHSUPER') == '1':
     component.add_sources('src/core/routing/vector_router.c', 'src/core/routing/rsid_allocator.c')
-    component.add_global_macro('CONFIG_AOS_MESH_SUPER')
+    component.add_global_macros('CONFIG_AOS_MESH_SUPER')
 
 if aos_global_config.get('MESHLOWPOWER') == None:
     aos_global_config.set('MESHLOWPOWER','0')
 if aos_global_config.get('MESHLOWPOWER') == '1':
     component.add_sources('src/core/mesh/lowpower_mgmt.c')
-    component.add_global_macro('CONFIG_AOS_MESH_LOWPOWER')
+    component.add_global_macros('CONFIG_AOS_MESH_LOWPOWER')
 
 
 if aos_global_config.get('MESHAUTH') == None:
     aos_global_config.set('MESHAUTH','0')
 if aos_global_config.get('MESHAUTH') == '1':
     component.add_sources('src/core/security/auth_dot1x.c','src/core/security/auth_eap.c','src/core/security/auth_mgmt.c','src/core/security/auth_relay.c')
-    component.add_macro('CONFIG_AOS_MESH_AUTH')
+    component.add_macros('CONFIG_AOS_MESH_AUTH')
 
 
 if aos_global_config.get('CONFIG_AOS_MESH_TAPIF') == '1':
     component.add_sources('src/ip/tapif_adapter.c')
-    component.add_macro('CONFIG_AOS_MESH_TAPIF')
+    component.add_macros('CONFIG_AOS_MESH_TAPIF')
 
 if aos_global_config.get('LWIP') == None:
     aos_global_config.set('LWIP','1')
@@ -76,4 +76,4 @@ if aos_global_config.compiler == 'gcc':
     component.add_cflags('-Wall')
     component.add_cflags('-Werror')
    
-component.add_global_macro('CONFIG_AOS_MESH')    
+component.add_global_macros('CONFIG_AOS_MESH')    

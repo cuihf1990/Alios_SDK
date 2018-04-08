@@ -314,7 +314,7 @@ global_macro = Split('''
         STDIO_UART=0
 ''')
 for macro in global_macro:
-    component.add_global_macro(macro)
+    component.add_global_macros(macro)
 
 global_cflags = Split('''
         -mcpu=arm968e-s

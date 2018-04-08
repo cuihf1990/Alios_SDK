@@ -157,7 +157,7 @@ struct GTY(()) line_map_macro {
      location of the token.
 
      Note that a virtual location is a location returned by
-     linemap_add_macro_token.  It encodes the relevant locations (x,y
+     linemap_add_macros_token.  It encodes the relevant locations (x,y
      pairs) of that token across the macro expansions from which it
      (the token) might come from.
 

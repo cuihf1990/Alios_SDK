@@ -8,7 +8,7 @@ src = Split('''
 
 component = aos_component('libmisc', src)
 
-component.add_macro('DEBUG')
+component.add_macros('DEBUG')
 component.add_includes('.', '../sdk-impl', '../LITE-log', '../LITE-utils')
 
 component.add_component_dependencis('utility/iotx-utils/LITE-log')

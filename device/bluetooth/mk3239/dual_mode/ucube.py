@@ -114,7 +114,7 @@ global_macros =Split('''
     GATT_ENABLE
 ''')
 for i in global_macros:
-    component.add_global_macro(i)
+    component.add_global_macros(i)
 
 includes =Split(''' 
     ../BTE/Components/hcis
@@ -150,7 +150,7 @@ macros =Split('''
     MICO_BTE_LIB
 ''')
 for i in macros:
-    component.add_macro(i)
+    component.add_macros(i)
 
 cflags =Split(''' 
     -Wno-unused-function

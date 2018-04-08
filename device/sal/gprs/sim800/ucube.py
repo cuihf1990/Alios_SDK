@@ -18,7 +18,7 @@ global_macros =Split('''
     DEV_SAL_SIM800
 ''')
 for i in global_macros:
-    component.add_global_macro(i)
+    component.add_global_macros(i)
 
 at_adapter = aos_global_config.get('at_adapter')
 if at_adapter == 1:

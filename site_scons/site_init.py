@@ -115,14 +115,17 @@ class aos_component:
                 directory = os.path.join('#' + self.dir, directory)
             aos_global_config.component_includes.append(directory)
 
-    def add_macro(self, value):
-        self.macros.append(value)
+    def add_macros(self, *macros):
+        for macro in macros:
+            self.macros.append(macro)
 
-    def add_cflags(self, value):
-        self.cflags.append(value)    
+    def add_cflags(self, *cflags):
+        for cflag in cflags:
+            self.cflags.append(cflag)
 
-    def add_asflags(self, value):
-        self.asflags.append(value)  
+    def add_asflags(self, *asflags):
+        for asflag in asflags:
+            self.asflags.append(asflag)
 
     def add_prebuilt_libs(self, *libs):
         for lib in libs:
@@ -152,8 +155,9 @@ class aos_component:
         AlwaysBuild(cmd)
 
     @staticmethod
-    def add_global_macro(value):
-        aos_global_config.aos_env.Append(CPPDEFINES=value)
+    def add_global_macros(*macros):
+        for macro in macros:
+            aos_global_config.aos_env.Append(CPPDEFINES=macro)
 
     @staticmethod
     def get_global_arch():
@@ -174,16 +178,19 @@ class aos_arch_component(aos_component):
         aos_global_config.ld_files.append(file)
 
     @staticmethod
-    def add_global_cflags(cflags):
-        aos_global_config.cflags.append(cflags)
+    def add_global_cflags(*cflags):
+        for cflag in cflags:
+            aos_global_config.cflags.append(cflag)
 
     @staticmethod
-    def add_global_asflags(asflags):
-        aos_global_config.asflags.append(asflags)
+    def add_global_asflags(*asflags):
+        for asflag in asflags:
+            aos_global_config.asflags.append(asflag)
 
     @staticmethod
-    def add_global_ldflags(ldflags):
-        aos_global_config.ldflags.append(ldflags)
+    def add_global_ldflags(*ldflags):
+        for ldflag in ldflags:
+            aos_global_config.ldflags.append(ldflag)
 
     @staticmethod
     def set_global_arch(arch):

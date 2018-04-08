@@ -21,7 +21,7 @@ global_macros =Split('''
     AOS_GPS
 ''')
 for i in global_macros:
-    component.add_global_macro(i)
+    component.add_global_macros(i)
 
 includes =Split(''' 
     ../../utility/iotx-utils/sdk-impl
@@ -43,7 +43,7 @@ for i in cflags:
 module =  aos_global_config.get('module')
 if module == 'gps.sim868':
     component.add_component_dependencis('device/sal/gprs/sim800')
-    component.add_global_macro('AOS_GPS_SIM868')
+    component.add_global_macros('AOS_GPS_SIM868')
     src.add_sources('drv/drv_sim868/gps_drv_simcom_sim868.c')
     src.add_sources('drv/drv_sim868/gps_parse_simcom_sim868.c')
 

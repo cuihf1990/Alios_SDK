@@ -58,4 +58,4 @@ if aos_global_config.get('DDA') == 1:
     component.add_component_dependencis('tools/dda')
 
 if aos_global_config.get('sds') == 1:
-    component.add_macro('CONFIG_SDS')
+    component.add_macros('CONFIG_SDS')

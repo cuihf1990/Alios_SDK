@@ -25,7 +25,7 @@ else:
 component = aos_component('vcall', src)
 component.add_global_includes('mico/include')
 
-component.add_global_macro(vcall_macro)
+component.add_global_macros(vcall_macro)
 component.add_component_dependencis(*component_dependencis)
 
 if aos_global_config.arch == 'ARM968E-S':
