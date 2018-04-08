@@ -101,18 +101,18 @@ def restore_extnetid(at, device_list):
     #restore extnetid to default
     extnetid = '010203040506'
     for device in device_list:
-        at.device_run_cmd(device, ['umesh', 'extnetid', extnetid])
-        at.device_run_cmd(device, ['umesh', 'whitelist', 'disable'])
+        at.device_run_cmd(device, 'umesh extnetid {0}'.format(extnetid))
+        at.device_run_cmd(device, 'umesh whitelist disable')
 
 #main function
 def main(firmware='~/lb-all.bin', model='mk3060', testname='5pps'):
     global DEBUG
     userid = '500001169232518525'
-    server = 'pre-iotx-qs.alibaba.com'
-    port = '80'
+    alink_test_server = 'pre-iotx-qs.alibaba.com'
+    server = '10.125.52.132'
+    port   = 34568
     wifissid = 'aos_test_01'
     wifipass = 'Alios@Embedded'
-    testbed_server = '10.125.52.132'
 
     #parse input
     i = 1
@@ -141,12 +141,12 @@ def main(firmware='~/lb-all.bin', model='mk3060', testname='5pps'):
         elif arg.startswith('--server='):
             args = arg.split('=')
             if len(args) != 2:
-                print 'wrong argument {0} input, example: --server=10.1.2.3'.format(arg)
+                print 'wrong argument {0} input, example: --server=192.168.10.16'.format(arg)
             server = args[1]
         elif arg.startswith('--port='):
             args = arg.split('=')
             if len(args) != 2 or args[1].isdigit() == False:
-                print 'wrong argument {0} input, example: --port=80'.format(arg)
+                print 'wrong argument {0} input, example: --port=34568'.format(arg)
             port = int(args[1])
         elif arg.startswith('--wifissid='):
             args = arg.split('=')
@@ -190,7 +190,7 @@ def main(firmware='~/lb-all.bin', model='mk3060', testname='5pps'):
     logname=time.strftime('-%Y-%m-%d@%H-%M')
     logname = testname + logname +'.log'
     at=Autotest()
-    if at.start(testbed_server, 34568, logname) == False:
+    if at.start(server, port, logname) == False:
         print 'error: start failed'
         return [1, 'connect testbed failed']
 
@@ -233,8 +233,8 @@ def main(firmware='~/lb-all.bin', model='mk3060', testname='5pps'):
     uuid = None
     while retry > 0:
         #clear previous setting and reboot
-        at.device_run_cmd(device, ['kv', 'del', 'wifi'])
-        at.device_run_cmd(device, ['kv', 'del', 'alink'])
+        at.device_run_cmd(device, 'kv del wifi')
+        at.device_run_cmd(device, 'kv del alink')
         at.device_control(device, 'reset')
         time.sleep(5)
 
@@ -243,14 +243,14 @@ def main(firmware='~/lb-all.bin', model='mk3060', testname='5pps'):
         extnetid = ''
         for byte in bytes:
             extnetid = extnetid + '{0:02x}'.format(ord(byte))
-        at.device_run_cmd(device, ['umesh', 'extnetid', extnetid])
+        at.device_run_cmd(device, 'umesh extnetid {0}'.format(extnetid))
 
         #connect device to alink
-        at.device_run_cmd(device, ['netmgr', 'connect', wifissid, wifipass], timeout=1.5)
+        at.device_run_cmd(device, 'netmgr connect {0} {1}'.format(wifissid, wifipass), timeout=1.5)
         time.sleep(30)
         filter = ['uuid:', 'alink is not connected']
-        role = at.device_run_cmd(device, ['umesh', 'status'], 1, 1.5, ['state\t'])
-        response = at.device_run_cmd(device, ['uuid'], 1, 1.5, filter)
+        role = at.device_run_cmd(device, 'umesh status', 1, 1.5, ['state\t'])
+        response = at.device_run_cmd(device, 'uuid', 1, 1.5, filter)
         if role == False or len(role) != 1 or 'leader' not in role[0]:
             retry -= 1
             continue
@@ -278,7 +278,7 @@ def main(firmware='~/lb-all.bin', model='mk3060', testname='5pps'):
 
     #check test case status
     already_running = False
-    conn = httplib.HTTPConnection(server, port)
+    conn = httplib.HTTPConnection(alink_test_server, '80')
     result = alink_test(conn, 'status', caseid, userid)
     if DEBUG:
         print 'status:', result
@@ -293,7 +293,7 @@ def main(firmware='~/lb-all.bin', model='mk3060', testname='5pps'):
 
     if already_running:
         #already running, stop test case
-        conn = httplib.HTTPConnection(server, port)
+        conn = httplib.HTTPConnection(alink_test_server, '80')
         result = alink_test(conn, 'stop', caseid, userid)
         if DEBUG:
             print 'status:', result
@@ -305,7 +305,7 @@ def main(firmware='~/lb-all.bin', model='mk3060', testname='5pps'):
         print 'stop case {0} succeed'.format(caseid)
 
     #start run test case
-    conn = httplib.HTTPConnection(server, port)
+    conn = httplib.HTTPConnection(alink_test_server, '80')
     result = alink_test(conn, 'start', caseid, userid)
     if DEBUG:
         print 'start:', result
@@ -324,7 +324,7 @@ def main(firmware='~/lb-all.bin', model='mk3060', testname='5pps'):
     retry = 5
     while retry > 0:
         try:
-            conn = httplib.HTTPConnection(server, port)
+            conn = httplib.HTTPConnection(alink_test_server, '80')
             result = alink_test(conn, 'status', caseid, userid)
             if DEBUG:
                 print 'status:', result

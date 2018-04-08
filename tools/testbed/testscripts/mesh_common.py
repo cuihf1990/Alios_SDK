@@ -60,9 +60,9 @@ def reboot_and_get_mac(at, device_list, device_attr):
     for device in device_list:
         succeed = False
         for i in range(retry):
-            at.device_run_cmd(device, ['netmgr', 'clear'])
-            at.device_run_cmd(device, ['kv', 'del', 'alink'])
-            mac = at.device_run_cmd(device, ['mac'], 1, 0.8, ['MAC address:'])
+            at.device_run_cmd(device, 'netmgr clear')
+            at.device_run_cmd(device, 'kv del alink')
+            mac = at.device_run_cmd(device, 'mac', 1, 0.8, ['MAC address:'])
             at.device_control(device, 'reset')
             if mac and len(mac) == 1:
                 mac = mac[0].split()[-1]
@@ -84,7 +84,7 @@ def set_random_extnetid(at, device_list):
     for byte in bytes:
         extnetid = extnetid + '{0:02x}'.format(ord(byte))
     for device in device_list:
-        at.device_run_cmd(device, ['umesh', 'extnetid', extnetid])
+        at.device_run_cmd(device, 'umesh extnetid {0}'.format(extnetid))
 
 #start devices
 def start_devices(at, device_list, device_attr, ap_ssid, ap_pass):
@@ -99,34 +99,34 @@ def start_devices(at, device_list, device_attr, ap_ssid, ap_pass):
         'state\tunknown'
         ]
     for device in device_list:
-        at.device_run_cmd(device, ['umesh', 'stop'])
+        at.device_run_cmd(device, 'umesh stop')
     for device in device_list:
         succeed = False; retry = 5
         role = device_attr[device]['role']
         state = []
         while retry > 0:
-            at.device_run_cmd(device, ['umesh', 'stop'])
+            at.device_run_cmd(device, 'umesh stop')
             for nbr in device_attr[device]['nbrs']:
-                at.device_run_cmd(device, ['umesh', 'whitelist', 'add', nbr])
-            at.device_run_cmd(device, ['umesh', 'whitelist', 'enable'])
-            at.device_run_cmd(device, ['umesh', 'whitelist'])
+                at.device_run_cmd(device, 'umesh whitelist add {0}'.format(nbr))
+            at.device_run_cmd(device, 'umesh whitelist enable')
+            at.device_run_cmd(device, 'umesh whitelist')
             if role == 'leader':
-                at.device_run_cmd(device, ['netmgr', 'connect', ap_ssid, ap_pass])
+                at.device_run_cmd(device, 'netmgr connect {0} {1}'.format(ap_ssid, ap_pass))
                 time.sleep(30)
-                uuid = at.device_run_cmd(device, ['uuid'], 1, 1.5, ['uuid:', 'not connected'])
-                state = at.device_run_cmd(device, ['umesh', 'status'], 1, 1, filter)
+                uuid = at.device_run_cmd(device, 'uuid', 1, 1.5, ['uuid:', 'not connected'])
+                state = at.device_run_cmd(device, 'umesh status', 1, 1, filter)
                 if uuid and 'uuid:' in uuid[0] and state == ['state\t' + role]:
                     succeed = True
                     break
             else:
-                at.device_run_cmd(device, ['umesh', 'start'])
+                at.device_run_cmd(device, 'umesh start')
                 time.sleep(30)
-                state = at.device_run_cmd(device, ['umesh', 'status'], 1, 1, filter)
+                state = at.device_run_cmd(device, 'umesh status', 1, 1, filter)
                 if state == ['state\t' + role]:
                     succeed = True
                     break
-            at.device_run_cmd(device, ['netmgr', 'clear'])
-            at.device_run_cmd(device, ['kv', 'del', 'alink'])
+            at.device_run_cmd(device, 'netmgr clear')
+            at.device_run_cmd(device, 'kv del alink')
             at.device_control(device, 'reset')
             time.sleep(5)
             retry -= 1
@@ -142,7 +142,7 @@ def get_device_ips(at, device_list, device_attr):
     for device in device_list:
         succeed = False; retry = 3
         while retry > 0:
-            ipaddr = at.device_run_cmd(device, ['umesh', 'ipaddr'], 2, 1.5, ['.'])
+            ipaddr = at.device_run_cmd(device, 'umesh ipaddr', 2, 1.5, ['.'])
             if ipaddr == False or ipaddr == [] or len(ipaddr) != 2:
                 retry -= 1
                 continue
@@ -181,7 +181,7 @@ def ping_test(at, device_list, device_attr):
                 filter = ['bytes from']
                 dst_ip = device_attr[other]['ipaddr'][0]
                 for i in range(retry):
-                    response = at.device_run_cmd(device, ['umesh', 'ping', dst_ip, pkt_len], 1, 0.5, filter)
+                    response = at.device_run_cmd(device, 'umesh ping {0} {1}'.format(dst_ip, pkt_len), 1, 0.5, filter)
                     expected_response = '{0} bytes from {1}'.format(pkt_len, dst_ip)
                     if response == False or response == [] or expected_response not in response[0]:
                         if i < retry - 1:
@@ -206,7 +206,7 @@ def ping_ext_test(at, device_list, dst_ip):
         for pkt_len in ['20', '500', '1000']:
             filter = ['bytes from']
             for i in range(retry):
-                response = at.device_run_cmd(device, ['umesh', 'ping', dst_ip, pkt_len], 1, 0.5, filter)
+                response = at.device_run_cmd(device, 'umesh ping {0} {1}'.format(dst_ip, pkt_len), 1, 0.5, filter)
                 expected_response = '{0} bytes from {1}'.format(pkt_len, dst_ip)
                 if response is False or response == [] or expected_response not in response[0]:
                     if i < retry - 1:
@@ -224,7 +224,7 @@ def ping_ext_test(at, device_list, dst_ip):
 #udp test
 def udp_test(at, device_list, device_attr):
     for device in device_list:
-        ret = at.device_run_cmd(device, ['umesh', 'help'], 1, 1, ['autotest'])
+        ret = at.device_run_cmd(device, 'umesh help', 1, 1, ['autotest'])
         if ret != ['autotest']:
             print "udp test aborted: 'umesh autotest' operation not supported\n"
             return [0, 0]
@@ -239,7 +239,7 @@ def udp_test(at, device_list, device_attr):
                 dst_ip = device_attr[other]['ipaddr'][0]
                 filter = ['bytes autotest echo reply from']
                 for i in range(retry):
-                    response = at.device_run_cmd(device, ['umesh', 'autotest', dst_ip, '1', pkt_len], 1, 0.5, filter)
+                    response = at.device_run_cmd(device, 'umesh autotest {0} 1 {1}'.format(dst_ip, pkt_len), 1, 0.5, filter)
                     expected_response = '{0} bytes autotest echo reply from {1}'.format(pkt_len, dst_ip)
                     if response == False or response == [] or expected_response not in response[0]:
                         if i < retry - 1:
@@ -256,7 +256,7 @@ def udp_test(at, device_list, device_attr):
 
 def multicast_test(at, device_list, device_attr):
     for device in device_list:
-        ret = at.device_run_cmd(device, ['umesh', 'help'], 1, 1, ['autotest'])
+        ret = at.device_run_cmd(device, 'umesh help', 1, 1, ['autotest'])
         if ret != ['autotest']:
             print "multicast test aborted: 'umesh autotest' operation not supported\n"
             return [0, 0]
@@ -268,9 +268,9 @@ def multicast_test(at, device_list, device_attr):
         for device in device_list:
             dst_ip = device_attr[device]['ipaddr'][1]
             for index in range(retry):
-                at.device_run_cmd(device, ['umesh', 'autotest', dst_ip, '1', pkt_len])
+                at.device_run_cmd(device, 'umesh autotest {0} 1 {1}'.format(dst_ip, pkt_len))
                 time.sleep(4)
-                response = at.device_run_cmd(device, ['umesh', 'testcmd', 'autotest_acked'], 1, 1, [response_num])
+                response = at.device_run_cmd(device, 'umesh testcmd autotest_acked', 1, 1, [response_num])
                 if response == [] or len(response) != 1 or response_num not in response[0]:
                     if index < retry - 1:
                         continue
@@ -288,5 +288,5 @@ def multicast_test(at, device_list, device_attr):
 def restore_device_status(at, device_list):
     extnetid = '010203040506'
     for device in device_list:
-        at.device_run_cmd(device, ['umesh', 'extnetid', extnetid])
-        at.device_run_cmd(device, ['umesh', 'whitelist', 'disable'])
+        at.device_run_cmd(device, 'umesh extnetid {0}'.format(extnetid))
+        at.device_run_cmd(device, 'umesh whitelist disable')

@@ -53,6 +53,18 @@ def main(firmware='~/lb-all.bin', model='mk3060', duration = 12 * 3600, withalin
                 print 'wrong argument {0} input, example: --wifipass=test_password'.format(arg)
                 return [1, 'argument {0} error'.format(arg)]
             ap_pass = args[1]
+        elif arg.startswith('--server='):
+            args = arg.split('=')
+            if len(args) != 2:
+                print 'wrong argument {0} input, example: --server=192.168.10.16'.format(arg)
+                return [1, 'argument {0} error'.format(arg)]
+            server = args[1]
+        elif arg.startswith('--port='):
+            args = arg.split('=')
+            if len(args) != 2 or args[1].isdigit() == False:
+                print 'wrong argument {0} input, example: --port=34568'.format(arg)
+                return [1, 'argument {0} error'.format(arg)]
+            port = int(args[1])
         elif arg=='--help':
             print 'Usage: python {0} [--firmware=xxx.bin] [--model=xxx] [--duration=xx] [--withalink=1/0] [--wifissid=wifi_ssid] [--wifipass=password]'.format(sys.argv[0])
             return [0, 'help']
@@ -88,14 +100,14 @@ def main(firmware='~/lb-all.bin', model='mk3060', duration = 12 * 3600, withalin
 
     #restore state to default
     restore_device_status(at, devices)
-    at.device_run_cmd(device, ['netmgr', 'clear'])
-    at.device_run_cmd(device, ['kv', 'del', 'wifi'])
+    at.device_run_cmd(device, 'netmgr clear')
+    at.device_run_cmd(device, 'kv del wifi')
     at.device_control(device, 'reset')
     time.sleep(3)
 
     #connect alink
     if withalink:
-        at.device_run_cmd(device, ['netmgr', 'connect', ap_ssid, ap_pass])
+        at.device_run_cmd(device, 'netmgr connect {0} {1}'.format(ap_ssid, ap_pass))
 
     #start stability test
     start_time = time.time()
@@ -110,7 +122,7 @@ def main(firmware='~/lb-all.bin', model='mk3060', duration = 12 * 3600, withalin
         if fail_num >= 6:
             succeed = False
             break
-        response = at.device_run_cmd(device, ['devname'], 1, 0.8, ['device name:'])
+        response = at.device_run_cmd(device, 'devname', 1, 0.8, ['device name:'])
         if response == False or len(response) != 1 or 'device name:' not in response[0]:
             if fail_num == 0:
                 end_time = time.time()
