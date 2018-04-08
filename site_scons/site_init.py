@@ -259,21 +259,43 @@ class dependency_process_impl(process):
         self.__generate_all_components()
         return
 
+    def __normalize(self, p):
+        p = p.replace('/', os.sep)
+        p = p.replace('\\', os.sep)
+        return p.replace('.', os.sep)
+
+    def __search_dfl(self, mod_dir):
+        dfl_paths = [ 'device', 'framework', 'kernel', 'platform', 'experimental', '3rdparty.experimental' ]
+
+        mod_dir = mod_dir.replace('.', os.sep)
+        if os.path.exists(mod_dir):
+            return mod_dir
+
+        for p in dfl_paths:
+            n = self.__normalize(p + '.' + mod_dir)
+            if not os.path.exists(n):
+                continue
+            return n
+        return None
+
     def __load_one_component(self, mod_dir):
-        self.config.component_directories.append(mod_dir)
-        self.config.aos_env.SConscript(os.path.join(mod_dir, 'ucube.py'))
+        m = self.__search_dfl(mod_dir)
+        if not m:
+            print('module %s not found'%mod_dir)
+            return
+
+        self.config.component_directories.append(m)
+        self.config.aos_env.SConscript(os.path.join(m, 'ucube.py'))
 
     def __add_components_dependency(self, dependency):
         if dependency not in aos_global_config.component_directories:
             component_number = len(aos_global_config.components)
             self.__load_one_component(dependency)
-            if (component_number+1) != len(aos_global_config.components):
-                print('Can\'t find %s, make sure component is exist!!!' % dependency)
-                exit(-1)
 
-            component_dependencis = aos_global_config.components[-1].component_dependencis
-            for dependency in component_dependencis:
-                self.__add_components_dependency(dependency)
+            for c in aos_global_config.components[component_number:]:
+                component_dependencis = c.component_dependencis
+                for dependency in component_dependencis:
+                    self.__add_components_dependency(dependency)
     
     def  __generate_testcase_register_c(self, auto_component_dir):
         test_function = []
