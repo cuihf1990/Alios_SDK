@@ -169,8 +169,18 @@ int32_t uart1_init(uart_dev_t *uart)
     uart1_handle.Init.OneBitSampling         = UART1_ONE_BIT_SAMPLING;
     uart1_handle.AdvancedInit.AdvFeatureInit = UART1_ADV_FEATURE_INIT;
 
+    /* Enable GPIO clock */
+    UART1_TX_GPIO_CLK_ENABLE();
+    UART1_RX_GPIO_CLK_ENABLE();
+
+    /* Enable USART clock */
+    UART1_CLK_ENABLE();
+
     /* init uart */
     HAL_UART_Init(&uart1_handle);
+    
+    HAL_NVIC_SetPriority(UART1_IRQn, 0, 1);
+    HAL_NVIC_EnableIRQ(UART1_IRQn);
 
     ret = krhino_buf_queue_create(&g_buf_queue_uart1, "buf_queue_uart",
           g_buf_uart1, MAX_BUF_UART_BYTES, 1);
@@ -199,8 +209,17 @@ int32_t uart2_init(uart_dev_t *uart)
     uart2_handle.Init.OneBitSampling         = UART2_ONE_BIT_SAMPLING;
     uart2_handle.AdvancedInit.AdvFeatureInit = UART2_ADV_FEATURE_INIT;
 
+    /* Enable GPIO clock */
+    UART2_TX_GPIO_CLK_ENABLE();
+    UART2_RX_GPIO_CLK_ENABLE();
+
+    /* Enable USART clock */
+    UART2_CLK_ENABLE();
     /* init uart */
     HAL_UART_Init(&uart2_handle);
+
+    HAL_NVIC_SetPriority(UART2_IRQn, 0,1);
+    HAL_NVIC_EnableIRQ(UART2_IRQn);
 
     ret = krhino_buf_queue_create(&g_buf_queue_uart2, "buf_queue_uart",
           g_buf_uart2, MAX_BUF_UART_BYTES, 1);
