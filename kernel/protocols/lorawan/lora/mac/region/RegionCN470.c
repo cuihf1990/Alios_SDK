@@ -507,7 +507,6 @@ bool RegionCN470RxConfig( RxConfigParams_t* rxConfig, int8_t* datarate )
         maxPayload = MaxPayloadOfDatarateCN470[dr];
     }
     Radio.SetMaxPayloadLength( MODEM_LORA, maxPayload + LORA_MAC_FRMPAYLOAD_OVERHEAD );
-    DBG_PRINTF("RX on freq %d Hz at DR %d\n\r", frequency, dr);
 
     *datarate = (uint8_t) dr;
     return true;
@@ -528,12 +527,10 @@ bool RegionCN470TxConfig( TxConfigParams_t* txConfig, int8_t* txPower, TimerTime
     Radio.SetTxConfig( MODEM_LORA, phyTxPower, 0, 0, phyDr, 1, 8, false, true, 0, 0, false, 3000 );
     // Setup maximum payload lenght of the radio driver
     Radio.SetMaxPayloadLength( MODEM_LORA, txConfig->PktLen );
-
-    DBG_PRINTF("TX on freq %d Hz at DR %d tx power %d dBm\n\r", Channels[txConfig->Channel].Frequency, txConfig->Datarate, phyTxPower);
     // Get the time-on-air of the next tx frame
     *txTimeOnAir = Radio.TimeOnAir( MODEM_LORA,  txConfig->PktLen );
-
     *txPower = txConfig->TxPower;
+
     return true;
 }
 

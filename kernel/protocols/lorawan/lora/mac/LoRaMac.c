@@ -1720,7 +1720,6 @@ static void ProcessMacCommands( uint8_t *payload, uint8_t macIndex, uint8_t comm
                 MlmeConfirm.Status = LORAMAC_EVENT_INFO_STATUS_OK;
                 MlmeConfirm.DemodMargin = payload[macIndex++];
                 MlmeConfirm.NbGateways = payload[macIndex++];
-                DBG_PRINTF("Link check ans, DemodMargin = %d, NbGateways = %d\r\n", MlmeConfirm.DemodMargin, MlmeConfirm.NbGateways);
                 break;
             case SRV_MAC_LINK_ADR_REQ:
                 {
@@ -1742,13 +1741,12 @@ static void ProcessMacCommands( uint8_t *payload, uint8_t macIndex, uint8_t comm
                     // Process the ADR requests
                     status = RegionLinkAdrReq( LoRaMacRegion, &linkAdrReq, &linkAdrDatarate,
                                                &linkAdrTxPower, &linkAdrNbRep, &linkAdrNbBytesParsed );
-					DBG_PRINTF("ADR: control = %d, status = %d, data rate = %d, tx power = %d\r\n", AdrCtrlOn, status, linkAdrDatarate, linkAdrTxPower);
                     if( ( status & 0x07 ) == 0x07 )
                     {
-                            LoRaMacParams.ChannelsDatarate = linkAdrDatarate;
-                            LoRaMacParams.ChannelsTxPower = linkAdrTxPower;
-                            LoRaMacParams.ChannelsNbRep = linkAdrNbRep;
-                        }
+                        LoRaMacParams.ChannelsDatarate = linkAdrDatarate;
+                        LoRaMacParams.ChannelsTxPower = linkAdrTxPower;
+                        LoRaMacParams.ChannelsNbRep = linkAdrNbRep;
+                    }
 
                     // Add the answers to the buffer
                     for( uint8_t i = 0; i < ( linkAdrNbBytesParsed / 5 ); i++ )
@@ -2127,7 +2125,7 @@ LoRaMacStatus_t PrepareFrame( LoRaMacHeader_t *macHdr, LoRaMacFrameCtrl_t *fCtrl
 
             fCtrl->Bits.AdrAckReq = RegionAdrNext( LoRaMacRegion, &adrNext,
                                                    &LoRaMacParams.ChannelsDatarate, &LoRaMacParams.ChannelsTxPower, &AdrAckCounter );
-			DBG_PRINTF("AdrAckCounter = %d\r\n", AdrAckCounter);
+
             if( SrvAckRequested == true )
             {
                 SrvAckRequested = false;
@@ -2153,16 +2151,16 @@ LoRaMacStatus_t PrepareFrame( LoRaMacHeader_t *macHdr, LoRaMacFrameCtrl_t *fCtrl
                 if( MacCommandsInNextTx == true )
                 {
                     if( MacCommandsBufferIndex <= LORA_MAC_COMMAND_MAX_FOPTS_LENGTH )
-                {
-                    fCtrl->Bits.FOptsLen += MacCommandsBufferIndex;
-
-                    // Update FCtrl field with new value of OptionsLength
-                    LoRaMacBuffer[0x05] = fCtrl->Value;
-                    for( i = 0; i < MacCommandsBufferIndex; i++ )
                     {
-                        LoRaMacBuffer[pktHeaderLen++] = MacCommandsBuffer[i];
+                        fCtrl->Bits.FOptsLen += MacCommandsBufferIndex;
+
+                        // Update FCtrl field with new value of OptionsLength
+                        LoRaMacBuffer[0x05] = fCtrl->Value;
+                        for( i = 0; i < MacCommandsBufferIndex; i++ )
+                        {
+                            LoRaMacBuffer[pktHeaderLen++] = MacCommandsBuffer[i];
+                        }
                     }
-                }
                     else
                     {
                         LoRaMacTxPayloadLen = MacCommandsBufferIndex;
@@ -2240,12 +2238,8 @@ LoRaMacStatus_t SendFrameOnChannel( uint8_t channel )
     txConfig.MaxEirp = LoRaMacParams.MaxEirp;
     txConfig.AntennaGain = LoRaMacParams.AntennaGain;
     txConfig.PktLen = LoRaMacBufferPktLen;
-  
-    DBG_PRINTF("\n\r*** seqTx= %d *****\r\n",UpLinkCounter);
-  
-    RegionTxConfig( LoRaMacRegion, &txConfig, &txPower, &TxTimeOnAir );
 
-	DBG_PRINTF("Tx time on air of last packet %d\r\n", TxTimeOnAir);
+    RegionTxConfig( LoRaMacRegion, &txConfig, &txPower, &TxTimeOnAir );
 
     MlmeConfirm.Status = LORAMAC_EVENT_INFO_STATUS_ERROR;
     McpsConfirm.Status = LORAMAC_EVENT_INFO_STATUS_ERROR;
@@ -3381,4 +3375,3 @@ static void SetPublicNetwork( bool enable )
         Radio.SetSyncWord( LORA_MAC_PRIVATE_SYNCWORD );
     }
 }
-
