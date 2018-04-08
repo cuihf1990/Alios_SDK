@@ -121,7 +121,7 @@ for ldflag in global_ldflags:
     component.add_global_ldflags(ldflag)
 
 for lib in prebuild_libs:
-    component.add_prebuilt_lib(lib)
+    component.add_prebuilt_libs(lib)
 
 for macro in global_macro:
     component.add_global_macro(macro)

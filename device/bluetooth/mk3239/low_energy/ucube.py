@@ -24,7 +24,7 @@ aos_global_config.set('BLUETOOTH_LIB_TYPE','low_energy')
 BLUETOOTH_LIB_TYPE = aos_global_config.get('BLUETOOTH_LIB_TYPE')
 HOST_ARCH = aos_global_config.get('HOST_ARCH')
 TOOLCHAIN_NAME = aos_global_config.get('TOOLCHAIN_NAME')
-component.add_prebuilt_lib('BTE_'+BLUETOOTH_LIB_TYPE+'.'+HOST_ARCH+'.'+TOOLCHAIN_NAME+'.release.a')
+component.add_prebuilt_libs('BTE_'+BLUETOOTH_LIB_TYPE+'.'+HOST_ARCH+'.'+TOOLCHAIN_NAME+'.release.a')
 
 aos_global_config.set('VALID_PLATFORMS',['MK3238','MK3239'])
 

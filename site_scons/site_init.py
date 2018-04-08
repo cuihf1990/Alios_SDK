@@ -124,16 +124,18 @@ class aos_component:
     def add_asflags(self, value):
         self.asflags.append(value)  
 
-    def add_prebuilt_lib(self, path):
-        if not os.path.isabs(path) and not path.startswith('#'):
-            path = os.path.join(self.dir, path)
-        aos_global_config.prebuilt_libs.append(path)
+    def add_prebuilt_libs(self, *libs):
+        for lib in libs:
+            if not os.path.isabs(lib) and not lib.startswith('#'):
+                lib = os.path.join(self.dir, lib)
+            aos_global_config.prebuilt_libs.append(lib)
 
-    def add_external_obj(self, path):
-        if not os.path.isabs(path) and not path.startswith('#'):
-            bdir = os.path.join(aos_global_config.out_dir, 'modules', self.dir)
-            path = os.path.join(bdir, path)
-        aos_global_config.external_obj.append(path)
+    def add_prebuilt_objs(self, *objs):
+        for obj in objs:
+            if not os.path.isabs(obj) and not obj.startswith('#'):
+                bdir = os.path.join(aos_global_config.out_dir, 'modules', self.dir)
+                lib = os.path.join(bdir, obj)
+            aos_global_config.external_obj.append(lib)
 
     def get_self_env(self):
         env = aos_global_config.aos_env.Clone()

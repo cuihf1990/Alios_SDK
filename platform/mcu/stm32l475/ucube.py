@@ -74,8 +74,8 @@ if aos_global_config.ide != 'keil':
 
 component = aos_arch_component('stm32l475', src)
 if aos_global_config.compiler == 'armcc':
-    component.add_external_obj('src/B-L475E-IOT01/runapp/startup_stm32l475xx_armcc.o')
-    component.add_external_obj('src/B-L475E-IOT01/runapp/stm32l4xx_it.o')
+    component.add_prebuilt_objs('src/B-L475E-IOT01/runapp/startup_stm32l475xx_armcc.o')
+    component.add_prebuilt_objs('src/B-L475E-IOT01/runapp/stm32l4xx_it.o')
 
 component.add_component_dependencis('platform/arch/arm/armv7m')
 component.add_component_dependencis('utility/libc')

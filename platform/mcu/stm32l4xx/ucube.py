@@ -206,9 +206,9 @@ for i in global_ldflags:
     component.add_global_ldflags(i)     
 
 if aos_global_config.compiler == 'armcc':     
-    component.add_external_obj('src/STM32L433RC-Nucleo/startup_stm32l433xx_keil.o')
-    component.add_external_obj('src/'+HOST_MCU_NAME+'/runapp/stm32l4xx_it.o')
-    component.add_external_obj('src/'+HOST_MCU_NAME+'/runapp/stm32l4xx_hal_msp.o')
+    component.add_prebuilt_objs('src/STM32L433RC-Nucleo/startup_stm32l433xx_keil.o')
+    component.add_prebuilt_objs('src/'+HOST_MCU_NAME+'/runapp/stm32l4xx_it.o')
+    component.add_prebuilt_objs('src/'+HOST_MCU_NAME+'/runapp/stm32l4xx_hal_msp.o')
 
 component.add_component_dependencis('kernel/vcall')
 component.add_component_dependencis('kernel/init')
