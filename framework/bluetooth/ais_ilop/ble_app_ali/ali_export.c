@@ -70,6 +70,11 @@ static void notify_status (alink_event_t event)
     }
 }
 
+uint32_t *fetch_ali_context()
+{
+    return m_ali_context;
+}
+
 static void disconnect_ble(void *arg)
 {
     (void *)arg;
@@ -215,7 +220,4 @@ void alink_post_fast (uint8_t * buffer, uint32_t length)
     VERIFY_SUCCESS_VOID(err_code);
 }
 
-uint32_t *fetch_ali_context()
-{
-    return m_ali_context;
-}
+

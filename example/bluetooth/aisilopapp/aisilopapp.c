@@ -11,9 +11,18 @@
 #include <dis.h>
 #include <ali_core.h>
 
+#ifdef AOS_BINS
+#include "hal/soc/uart.h"
+uart_dev_t uart_0;
+#endif
+
+
 #define MODEL_ID 0x3126 /* Model ID, obtained from Ali-Cloud. */
 #define SOFTWARE_VERSION "0.2.0" /* Version number defined by user. Must be in format "%d.%d.%d". */
 #define SOFTWARE_VERSION_LEN 5
+
+extern uint32_t *fetch_ali_context();
+
 
 uint8_t const m_secret[40] = "sFqTYrjneyyEUlhbZpdOwsDPmShLwMNH8ZHdqLWL";
 static uint8_t m_addr[BD_ADDR_LEN] = {0x01, 0x02, 0x03, 0x04, 0x05, 0x06};
@@ -34,7 +43,6 @@ static const struct bt_data sd[] = {
             sizeof(CONFIG_BT_DEVICE_NAME) - 1),
 };
 
-uint32_t fetch_ali_context();
 static void advertising_start(void)
 {
     int err;

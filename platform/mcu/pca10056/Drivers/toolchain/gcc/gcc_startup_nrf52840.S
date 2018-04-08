@@ -33,7 +33,7 @@ NOTICE: This file has been modified by Nordic Semiconductor ASA.
 	.extern heap_len
 	.extern __StackTop
 
-    .section .isr_vector
+    .section ".isr_vector", "ax"
     .align 2
     .globl __isr_vector
 __isr_vector:

@@ -46,22 +46,22 @@ OUTPUT_FORMAT ("elf32-littlearm", "elf32-bigarm", "elf32-littlearm")
  *   __stack
  */
 
- 
- MEMORY
-{
-  FLASH (rx) : ORIGIN = 0x00010000, LENGTH = 0xEF000
-  BOOTLOADER_SETTINGS (rw) : ORIGIN = 0x000FF000, LENGTH = 0x1000
-  RAM (rwx) :  ORIGIN = 0x20000000, LENGTH = 0x40000
-}
- 
-ENTRY(Reset_Handler)
+  MEMORY
+ {
+   FLASH (rx) : ORIGIN = 0x00090000, LENGTH = 0x6F000
+   RAM (rwx) :  ORIGIN = 0x20020000, LENGTH = 0x20000
+ }
+
+ENTRY(application_start);
+
 
 SECTIONS
 {
-	. = 0x00010000;
-    .vectors :
+    . = 0x00090000;
+
+    .appinfo :
     {
-        KEEP(*(.isr_vector))
+        KEEP(*(*.app_info))
     } > FLASH
 
     . = ALIGN(8);
@@ -105,12 +105,6 @@ SECTIONS
 
     . = ALIGN(0x8);
     __etext = .;
-
-    .bootloader_settings_page(NOLOAD) :
-    {
-
-    } > BOOTLOADER_SETTINGS
-
     .data : AT (__etext)
     {
         __data_start__ = .;
@@ -169,6 +163,10 @@ SECTIONS
 
     } > RAM
 
+    PROVIDE(_app_data_flash_begin = LOADADDR(.data));
+    PROVIDE(_app_data_ram_begin = ADDR(.data));
+    PROVIDE(_app_data_ram_end = .);
+
     .bss ALIGN(8):
     {
         . = ALIGN(4);
@@ -178,6 +176,9 @@ SECTIONS
         . = ALIGN(4);
         __bss_end__ = .;
     } > RAM
+
+    PROVIDE(_app_bss_start = __bss_start__);
+    PROVIDE(_app_bss_end = __bss_end__);
 
     /* .stack_dummy section doesn't contains any symbols. It is only
      * used for linker to calculate size of stack sections, and assign
@@ -209,5 +210,22 @@ SECTIONS
     CodeFlashUsed = __etext - ORIGIN(FLASH);
     TotalFlashUsed = CodeFlashUsed + DataInitFlashUsed;
     ASSERT(TotalFlashUsed <= LENGTH(FLASH), "region FLASH overflowed with .data and user data")
+
+    PROVIDE(_app_heap_start = heap_start);
+    PROVIDE(_app_heap_end = heap_end);
+
+    PROVIDE(app_info_addr = 0x00090000);
+    PROVIDE(kernel_download_addr = 0x10000);
+    PROVIDE(app_download_addr = 0x00090000);
+    PROVIDE(ota_download_addr = 0x0);
     
 }
+
+GROUP(
+  libgcc.a
+  libg.a
+  libc.a
+  libm.a
+  libnosys.a
+)
+

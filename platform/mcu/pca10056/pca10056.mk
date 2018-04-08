@@ -1,6 +1,7 @@
 NAME := pca10056
 HOST_OPENOCD := pca10056
 $(NAME)_TYPE := kernel
+$(NAME)_MBINS_TYPE := kernel
 
 $(NAME)_COMPONENTS += platform/arch/arm/armv7m
 $(NAME)_COMPONENTS += libc rhino hal vfs digest_algorithm protocols.bluetooth
@@ -153,7 +154,13 @@ else ifeq ($(COMPILER),iar)
 GLOBAL_LDFLAGS += --config platform/mcu/stm32l4xx/src/STM32L433RC-Nucleo/STM32L433.icf
 else
 
+ifeq ($(MBINS),)
 GLOBAL_LDFLAGS += -T platform/mcu/pca10056/nrf52_common.ld
+else ifeq ($(MBINS),app)
+GLOBAL_LDFLAGS += -T platform/mcu/pca10056/nrf52_common_app.ld
+else ifeq ($(MBINS),kernel)
+GLOBAL_LDFLAGS += -T platform/mcu/pca10056/nrf52_common_kernel.ld
+endif
 
 GLOBAL_CFLAGS += -DNRF_DFU_SETTINGS_VERSION=0
 

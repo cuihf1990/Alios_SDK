@@ -46,25 +46,32 @@ OUTPUT_FORMAT ("elf32-littlearm", "elf32-bigarm", "elf32-littlearm")
  *   __stack
  */
 
- 
+
  MEMORY
 {
-  FLASH (rx) : ORIGIN = 0x00010000, LENGTH = 0xEF000
+  FLASH (rx) : ORIGIN = 0x00010000, LENGTH = 0x80000
   BOOTLOADER_SETTINGS (rw) : ORIGIN = 0x000FF000, LENGTH = 0x1000
-  RAM (rwx) :  ORIGIN = 0x20000000, LENGTH = 0x40000
+  RAM (rwx) :  ORIGIN = 0x20000000, LENGTH = 0x20000
 }
- 
-ENTRY(Reset_Handler)
+
+ENTRY(Reset_Handler);
 
 SECTIONS
 {
-	. = 0x00010000;
+    /* vectors go to vectors region */
+    . = 0x00010000;
     .vectors :
     {
         KEEP(*(.isr_vector))
     } > FLASH
 
-    . = ALIGN(8);
+    . = ALIGN(0x8);
+    .syscall_ktbl :
+    {
+        KEEP(*(.syscall_ktbl))
+    } > FLASH
+    
+    . = ALIGN(0x8);
     .text :
     {
         *(.text*)
@@ -91,6 +98,11 @@ SECTIONS
         KEEP(*(.eh_frame*))
     } > FLASH
 
+    .bootloader_settings_page(NOLOAD) :
+    {
+
+    } > BOOTLOADER_SETTINGS
+
     .ARM.extab :
     {
         *(.ARM.extab* .gnu.linkonce.armextab.*)
@@ -103,13 +115,8 @@ SECTIONS
     } > FLASH
     __exidx_end = .;
 
-    . = ALIGN(0x8);
+      . = ALIGN(0x8);
     __etext = .;
-
-    .bootloader_settings_page(NOLOAD) :
-    {
-
-    } > BOOTLOADER_SETTINGS
 
     .data : AT (__etext)
     {
@@ -209,5 +216,19 @@ SECTIONS
     CodeFlashUsed = __etext - ORIGIN(FLASH);
     TotalFlashUsed = CodeFlashUsed + DataInitFlashUsed;
     ASSERT(TotalFlashUsed <= LENGTH(FLASH), "region FLASH overflowed with .data and user data")
+
+    PROVIDE(app_info_addr = 0x00090000);
+    PROVIDE(kernel_download_addr = 0x10000);
+    PROVIDE(app_download_addr = 0x00090000);
+    PROVIDE(ota_download_addr = 0x0);
     
 }
+
+GROUP(
+  libgcc.a
+  libg.a
+  libc.a
+  libm.a
+  libnosys.a
+)
+
