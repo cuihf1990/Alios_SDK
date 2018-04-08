@@ -1,4 +1,4 @@
-aos_global_config.set_aos_global_config('no_with_lwip','1')
+aos_global_config.set('no_with_lwip','1')
 
 src = Split('''
         soc/soc_impl.c
@@ -21,9 +21,9 @@ if 'fatfs' in comp_names:
     component.add_sources('main/sdmmc.c')
 
 if 'net' in comp_names:
-    aos_global_config.set_aos_global_config('LWIP', '1')
+    aos_global_config.set('LWIP', '1')
 
-LWIP = aos_global_config.get_aos_global_config('LWIP')
+LWIP = aos_global_config.get('LWIP')
 if LWIP == '1':
     lwip_src = Split('''
         csp/lwip/netif/delif.c 

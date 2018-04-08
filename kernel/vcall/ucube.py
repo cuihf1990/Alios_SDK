@@ -2,7 +2,7 @@ src = []
 
 vcall_macro = ''
 component_dependencis = []
-vcall = aos_global_config.get_aos_global_config('vcall', 'rhino')
+vcall = aos_global_config.get('vcall', 'rhino')
 
 if vcall == 'freertos':
     vcall_macro = 'VCALL_FREERTOS'

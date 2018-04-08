@@ -40,7 +40,7 @@ cflags =Split('''
 for i in cflags:
     component.add_cflags(i)
 
-module =  aos_global_config.get_aos_global_config('module')
+module =  aos_global_config.get('module')
 if module == 'gps.sim868':
     component.add_component_dependencis('device/sal/gprs/sim800')
     component.add_global_macro('AOS_GPS_SIM868')

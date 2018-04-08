@@ -78,13 +78,13 @@ dependencis = Split('''
 ''')
 
 
-if aos_global_config.get_aos_global_config('CONFIG_HARD_FLOAT') == 1:
+if aos_global_config.get('CONFIG_HARD_FLOAT') == 1:
     global_cflags.append('-mhard-float')
 
-if aos_global_config.get_aos_global_config('CONFIG_HAVE_VIC') == 'y':
+if aos_global_config.get('CONFIG_HAVE_VIC') == 'y':
     global_cflags.append('-mistack')
 
-if aos_global_config.get_aos_global_config('HOST_CHIP') == 'zx297100':
+if aos_global_config.get('HOST_CHIP') == 'zx297100':
     global_macro.append('CONFIG_HAVE_ICU')
     global_includes.append('csi/csi_driver/sanechips/zx297100/include')
     global_includes.append('csi/csi_driver/sanechips/common/include')

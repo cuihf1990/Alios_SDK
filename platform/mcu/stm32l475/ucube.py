@@ -203,7 +203,7 @@ else:
         -nostartfiles    
         --specs=nosys.specs 
     ''') 
-    CLIB_LDFLAGS_NANO_FLOAT = aos_global_config.get_aos_global_config('CLIB_LDFLAGS_NANO_FLOAT')
+    CLIB_LDFLAGS_NANO_FLOAT = aos_global_config.get('CLIB_LDFLAGS_NANO_FLOAT')
     ldflags_tmp.append( CLIB_LDFLAGS_NANO_FLOAT )
     ldflags_tmp.append('-T')
     ldflags_tmp.append('platform/mcu/stm32l475/STM32L475VGTx_FLASH.ld')

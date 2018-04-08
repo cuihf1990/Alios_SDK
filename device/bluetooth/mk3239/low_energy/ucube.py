@@ -20,11 +20,11 @@ global_includes =Split('''
 for i in global_includes:
     component.add_global_includes(i)
 
-aos_global_config.set_aos_global_config('BLUETOOTH_LIB_TYPE','low_energy')
-BLUETOOTH_LIB_TYPE = aos_global_config.get_aos_global_config('BLUETOOTH_LIB_TYPE')
-HOST_ARCH = aos_global_config.get_aos_global_config('HOST_ARCH')
-TOOLCHAIN_NAME = aos_global_config.get_aos_global_config('TOOLCHAIN_NAME')
+aos_global_config.set('BLUETOOTH_LIB_TYPE','low_energy')
+BLUETOOTH_LIB_TYPE = aos_global_config.get('BLUETOOTH_LIB_TYPE')
+HOST_ARCH = aos_global_config.get('HOST_ARCH')
+TOOLCHAIN_NAME = aos_global_config.get('TOOLCHAIN_NAME')
 component.add_prebuilt_lib('BTE_'+BLUETOOTH_LIB_TYPE+'.'+HOST_ARCH+'.'+TOOLCHAIN_NAME+'.release.a')
 
-aos_global_config.set_aos_global_config('VALID_PLATFORMS',['MK3238','MK3239'])
+aos_global_config.set('VALID_PLATFORMS',['MK3238','MK3239'])
 

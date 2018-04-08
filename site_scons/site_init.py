@@ -34,18 +34,18 @@ class aos_global_config:
     mcu_family = ''
 
     @staticmethod
-    def set_global_config_append(key, value):
+    def set_append(key, value):
         if key in aos_global_config.global_config_dict:
             aos_global_config.global_config_dict[key] += ' ' + value
 
         aos_global_config.global_config_override(key, value)
 
     @staticmethod
-    def set_global_config_override(key, value):
+    def set_override(key, value):
         aos_global_config.global_config_dict[key] = value
 
     @staticmethod
-    def get_aos_global_config(key, default=None):
+    def get(key, default=None):
         ret_value = default
         if key in aos_global_config.global_config_dict:
             ret_value = aos_global_config.global_config_dict[key]
@@ -53,11 +53,11 @@ class aos_global_config:
         return ret_value
 
     @staticmethod
-    def set_aos_global_config(key, value, append=False):
+    def set(key, value, append=False):
         if append:
-            aos_global_config.set_global_config_append(key, value)
+            aos_global_config.set_append(key, value)
         else:
-            aos_global_config.set_global_config_override(key, value)
+            aos_global_config.set_override(key, value)
 
     @staticmethod
     def set_build_type(build_type):

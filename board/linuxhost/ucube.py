@@ -29,4 +29,4 @@ testcases = Split('''
 ''')
 
 component.set_global_testcases(testcases)
-aos_global_config.set_aos_global_config('MESHLOWPOWER','1')
+aos_global_config.set('MESHLOWPOWER','1')

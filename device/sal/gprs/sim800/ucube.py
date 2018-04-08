@@ -20,7 +20,7 @@ global_macros =Split('''
 for i in global_macros:
     component.add_global_macro(i)
 
-at_adapter = aos_global_config.get_aos_global_config('at_adapter')
+at_adapter = aos_global_config.get('at_adapter')
 if at_adapter == 1:
     component.add_component_dependencis('device/sal')
     component.add_component_dependencis('framework/atparser')

@@ -33,7 +33,7 @@ src =Split('''
 ''')
 component =aos_arch_component('stm32l4xx', src)
 
-HOST_MCU_NAME = aos_global_config.get_aos_global_config('HOST_MCU_NAME')
+HOST_MCU_NAME = aos_global_config.get('HOST_MCU_NAME')
 dependencis =Split(''' 
     platform/arch/arm/armv7m
     utility/libc

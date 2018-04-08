@@ -181,7 +181,7 @@ src =Split('''
 for i in src:
     component.add_sources(i)
     
-aos_global_config.set_aos_global_config('VALID_PLATFORMS',['MK3238','MK3239'])    
+aos_global_config.set('VALID_PLATFORMS',['MK3238','MK3239'])    
     
     
     
