@@ -51,7 +51,12 @@ void pthread_cleanup_push(void (*routine)(void *), void *arg)
 
 int pthread_detach(pthread_t thread)
 {
-    /* not supported yet */
+    kstat_t ret = 0;
+    _pthread_data_t *ptd;
+
+    ptd = thread->user_info[0];
+    ptd->attr.detachstate == PTHREAD_CREATE_DETACHED
+
     return 0;
 }
 
@@ -169,11 +174,11 @@ void pthread_exit(void *value)
     ptd->return_value = value;
     RHINO_CRITICAL_EXIT();
 
-    if (ptd->attr.detachstate == PTHREAD_CREATE_JOINABLE) {
-        /* semaphore should be released by krhino_task_del_hook */
-        krhino_task_del(krhino_cur_task_get());
-    }
-
+    /* ptd->join_sem semaphore should be released by krhino_task_del_hook
+     * if ptd->attr.detachstate is PTHREAD_CREATE_DETACHED, task stack and task structure
+     * should be release by krhino_task_del_hook
+     */
+    krhino_task_del(krhino_cur_task_get());
 }
 
 int pthread_join(pthread_t thread, void **retval)
@@ -192,7 +197,6 @@ int pthread_join(pthread_t thread, void **retval)
 
     ret = krhino_sem_take(ptd->join_sem, RHINO_WAIT_FOREVER);
     if (ret == RHINO_SUCCESS) {
-        /* get return value */
         if (retval != 0) {
             *retval = ptd->return_value;
         }
@@ -200,7 +204,6 @@ int pthread_join(pthread_t thread, void **retval)
         krhino_sem_dyn_del(ptd->join_sem);
 
         if (ptd->attr.stack_base == 0) {
-            /* release thread allocated stack */
             krhino_mm_free(ptd->tid->task_stack_base);
         }
 
@@ -236,7 +239,7 @@ int pthread_setcanceltype(int type, int *oldtype)
 
 int pthread_kill(pthread_t thread, int sig)
 {
-    krhino_task_dyn_del(thread);
+    /* This api should not be used, and will not be supported */
     return 0;
 }
 
