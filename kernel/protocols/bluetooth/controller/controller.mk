@@ -1,6 +1,8 @@
 NAME := controller
 
 $(NAME)_TYPE := kernel
+$(NAME)_MBINS_TYPE := kernel
+
 GLOBAL_INCLUDES += .
 
 $(NAME)_INCLUDES += ../common \

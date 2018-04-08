@@ -34,6 +34,32 @@ extern int aos_framework_init(void);
 extern int32_t hal_uart_init(uart_dev_t* uart );
 extern void hw_start_hal(void);
 
+
+#ifdef AOS_BINS
+
+extern void *syscall_ktbl[];
+extern char  app_info_addr;
+extern k_mm_head  *g_kmm_head;
+struct m_app_info_t *app_info = (struct m_app_info_t *)&app_info_addr;
+
+static void app_pre_init(void)
+{
+    memcpy((void *)(app_info->data_ram_start), (void *)(app_info->data_flash_begin),
+           app_info->data_ram_end - app_info->data_ram_start);
+
+    memset((void *)(app_info->bss_start), 0, app_info->bss_end - app_info->bss_start);
+
+    krhino_add_mm_region(g_kmm_head, (void *)(app_info->heap_start),
+                        app_info->heap_end - app_info->heap_start);
+
+#if (RHINO_CONFIG_MM_LEAKCHECK > 0)
+    krhino_mm_leak_region_init((void *)(app_info->data_ram_start), (void *)(app_info->data_ram_end));
+    krhino_mm_leak_region_init((void *)(app_info->bss_start), (void *)(app_info->bss_end));
+#endif
+
+}
+#endif
+
 void SysTick_Handler(void)
 {
 	krhino_intrpt_enter();
@@ -99,8 +125,17 @@ static void sys_init(void)
     ota_service_init();
 #endif
 
+#ifdef AOS_BINS
+    app_pre_init();
+
+    if (app_info->app_entry) {
+        app_info->app_entry((void *)syscall_ktbl, 0, NULL);
+    }
+#else
     /*aos_framework_init();*/
     application_start(0, NULL);	
+#endif
+
 #endif
 }
 

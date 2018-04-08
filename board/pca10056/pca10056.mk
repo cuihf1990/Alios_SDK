@@ -2,6 +2,9 @@ NAME := board_pca10056
 
 
 $(NAME)_TYPE := kernel
+$(NAME)_MBINS_TYPE := kernel
+SUPPORT_MBINS      := yes
+
 MODULE               := 1062
 HOST_ARCH            := Cortex-M4
 HOST_MCU_FAMILY      := pca10056
