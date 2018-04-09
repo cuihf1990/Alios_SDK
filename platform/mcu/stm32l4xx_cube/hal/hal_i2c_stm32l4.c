@@ -6,6 +6,7 @@
 #include "k_types.h"
 #include "errno.h"
 #include "hal_i2c_stm32l4.h"
+#ifdef HAL_I2C_MODULE_ENABLED
 
 /* Init and deInit function for i2c1 */
 static void I2C1_Init(void);
@@ -197,4 +198,4 @@ void I2C2_DeInit(void)
         HAL_I2C_DeInit(&I2c2Handle);
     }
 }
-
+#endif

@@ -10,6 +10,8 @@
 #include "hal_rtc_stm32l4.h"
 #include "stm32l4xx_hal_rtc.h"
 
+#ifdef HAL_RTC_MODULE_ENABLED
+
 /* Init and deInit function for rtc */
 static int32_t rtc_Init(rtc_dev_t *rtc);
 static int32_t rtc_DeInit(void);
@@ -178,3 +180,4 @@ static int32_t rtc_format_transform(uint16_t format_hal, uint16_t *format_stm32l
 
     return ret;
 }
+#endif
