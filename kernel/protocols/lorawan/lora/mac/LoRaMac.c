@@ -36,7 +36,6 @@ Maintainer: Miguel Luis ( Semtech ), Gregory Cristian ( Semtech ) and Daniel Jae
 #include "LoRaMacTest.h"
 
 
-
 /*!
  * Maximum PHY layer payload size
  */
@@ -3179,6 +3178,10 @@ LoRaMacStatus_t LoRaMacMlmeRequest( MlmeReq_t *mlmeRequest )
             ResetMacParameters( );
 
             altDr.NbTrials = JoinRequestTrials + 1;
+#ifdef CONFIG_LINKLORA
+            altDr.joinmethod = mlmeRequest->Req.Join.method;
+            altDr.datarate = mlmeRequest->Req.Join.datarate;
+#endif
 
             LoRaMacParams.ChannelsDatarate = RegionAlternateDr( LoRaMacRegion, &altDr );
 

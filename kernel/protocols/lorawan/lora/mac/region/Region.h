@@ -56,8 +56,9 @@
 #ifndef __REGION_H__
 #define __REGION_H__
 
-
-
+#ifdef CONFIG_LINKLORA
+#include "linklora.h"
+#endif
 
 /*!
  * Macro to compute bit of a channel index.
@@ -1054,6 +1055,10 @@ typedef struct sAlternateDrParams
      * Number of trials.
      */
     uint16_t NbTrials;
+#ifdef CONFIG_LINKLORA
+    int8_t datarate;
+    uint8_t joinmethod;
+#endif
 }AlternateDrParams_t;
 
 /*!
