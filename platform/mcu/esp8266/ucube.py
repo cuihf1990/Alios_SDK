@@ -128,8 +128,7 @@ for macro in global_macro:
 
 aos_global_config.add_ld_files(*ld_files)
 
-# component.set_global_arch('Xtensa')
-component.set_global_mcu_family('esp8266')
+component.set_global_arch('xtensa')
 
 aos_global_config.set('use_private_lwip', 1)
 

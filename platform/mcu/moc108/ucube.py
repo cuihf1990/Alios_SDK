@@ -398,7 +398,6 @@ aos_global_config.add_ld_files('mx108/mx378/build/mx108.ld.S')
 
 component.add_prebuilt_libs('librwnx/librwnx.a')
 component.set_global_arch('ARM968E-S')
-component.set_global_mcu_family('moc108')
 
 tool_chain = aos_global_config.create_tool_chain()
 tool_chain.set_prefix('arm-none-eabi-')

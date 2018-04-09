@@ -2,7 +2,7 @@ src =Split('''
     board.c
     board_cli.c  
 ''')
-component =aos_mcu_component('starterkit', src)
+component =aos_board_component('starterkit', 'stm32l4xx', src)
 
 aos_global_config.set('MODULE', '1062')
 aos_global_config.set('HOST_ARCH', 'Cortex-M4')
