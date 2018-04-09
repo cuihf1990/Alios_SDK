@@ -30,7 +30,7 @@ extern "C" {
 #endif /* __cplusplus */
 
 
-//#define inline __inline
+#define inline __inline
 
 typedef struct list_head list_head_t;
 

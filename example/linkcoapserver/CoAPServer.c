@@ -19,9 +19,10 @@
 #include "CoAPPlatform.h"
 #include "CoAPExport.h"
 #include "CoAPServer.h"
+#include <aos/aos.h>
 
 #define COAP_INIT_TOKEN     (0x01020304)
-#define COAP_SERV_MAX_PATH_LEN ((COAP_MSG_MAX_PATH_LEN + 1) * COAP_RESOURCE_MAX_DEPTH + 6)
+#define COAP_SERV_MAX_PATH_LEN COAP_MSG_MAX_PATH_LEN
 
 static unsigned int g_coap_running = 0;
 static void *g_coap_thread = NULL;
@@ -88,7 +89,7 @@ CoAPContext *CoAPServer_init()
     param.notifier = NULL;
     param.obs_maxcount = 16;
     param.res_maxcount = 32;
-    param.port = 5683;
+    param.port = 5684;
     param.send_maxcount = 16;
     param.waittime = 2000;
 
@@ -102,7 +103,8 @@ CoAPContext *CoAPServer_init()
     return (CoAPContext *)context;
 }
 
-void *CoAPServer_yield(void *param)
+#ifndef COAP_WITH_YLOOP
+static void *CoAPServer_yield(void *param)
 {
     CoAPContext *context = (CoAPContext *)param;
     COAP_DEBUG("Enter to CoAP daemon task");
@@ -121,7 +123,15 @@ void *CoAPServer_yield(void *param)
     return NULL;
 }
 
-void CoAPServer_deinit0(CoAPContext *context)
+void CoAPServer_loop(CoAPContext *context)
+{
+    int stack_used;
+    g_coap_running = 1;
+    HAL_ThreadCreate(&g_coap_thread, CoAPServer_yield, (void *)context, NULL, &stack_used);
+}
+#endif
+
+void CoAPServer_deinit(CoAPContext *context)
 {
     COAP_INFO("CoAP Server deinit");
     g_coap_running = 0;
@@ -140,7 +150,7 @@ int CoAPServerMultiCast_send(CoAPContext *context, NetworkAddr *remote, const ch
     CoAPMessage message;
     unsigned char tokenlen;
     unsigned char token[COAP_MSG_MAX_TOKEN_LEN] = {0};
-
+    COAP_INFO("CoAPServerMultiCast_send");
     CoAPMessage_init(&message);
     CoAPMessageType_set(&message, COAP_MESSAGE_TYPE_NON);
     CoAPMessageCode_set(&message, COAP_MSG_CODE_POST);
@@ -189,13 +199,4 @@ int CoAPServerResp_send(CoAPContext *context, NetworkAddr *remote, unsigned char
     return ret;
 }
 
-void CoAPServer_loop(CoAPContext *context)
-{
-    int stack_used;
-    hal_os_thread_param_t p = {0};
-    p.name = "CoAPServer_loop";
-    p.stack_size = 8192;
-    ---------
-    g_coap_running = 1;
-    HAL_ThreadCreate(&g_coap_thread, CoAPServer_yield, (void *)context, &p, &stack_used);
-}
+

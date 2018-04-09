@@ -27,6 +27,7 @@
 #include "iot_import.h"
 #include "CoAPPlatform.h"
 #include "CoAPInternal.h"
+#include "lite-list.h"
 #include <aos/aos.h>
 
 #define COAPAckMsg(header) \
@@ -60,7 +61,7 @@
 #define COAP_MAX_TRANSMISSION_SPAN   10
 
 #ifdef COAP_WITH_YLOOP
-static void  CoAPMessage_write_with_timeout(void *context);
+void  CoAPMessage_write_with_timeout(void *context);
 #endif
 
 int CoAPStrOption_add(CoAPMessage *message, unsigned short optnum, unsigned char *data, unsigned short datalen)
@@ -117,7 +118,7 @@ int CoAPUintOption_add(CoAPMessage *message, unsigned short  optnum, unsigned in
 
     if (0 == data) {
         message->options[message->optcount].len = 0;
-    } else if (256 >= data) {
+    } else if (255 >= data) {
         message->options[message->optcount].len = 1;
         ptr = (unsigned char *)coap_malloc(1);
         if (NULL != ptr) {
@@ -206,7 +207,7 @@ unsigned short CoAPMessageId_gen(CoAPContext *context)
     CoAPIntContext *ctx = (CoAPIntContext *)context;
     unsigned short msg_id = 0;
     HAL_MutexLock(ctx->mutex);
-    msg_id = ((COAP_MAX_MESSAGE_ID == ctx->message_id)  ? 1 : ctx->message_id++);
+    msg_id = ((COAP_MAX_MESSAGE_ID == ctx->message_id)  ? (ctx->message_id = 1) : ctx->message_id++);
     HAL_MutexUnlock(ctx->mutex);
     return msg_id;
 }
@@ -241,6 +242,15 @@ int CoAPMessageCode_set(CoAPMessage *message, CoAPMessageCode code)
         return COAP_ERROR_NULL;
     }
     message->header.code  = code;
+    return COAP_SUCCESS;
+}
+
+int CoAPMessageCode_get(CoAPMessage *message, CoAPMessageCode *code)
+{
+    if (NULL == message || NULL == code) {
+        return COAP_ERROR_NULL;
+    }
+    *code = message->header.code;
     return COAP_SUCCESS;
 }
 
@@ -291,6 +301,8 @@ int CoAPMessageHandler_set(CoAPMessage *message, CoAPSendMsgHandler handler)
 
 int CoAPMessage_init(CoAPMessage *message)
 {
+    int count = 0;
+
     if (NULL == message) {
         return COAP_ERROR_NULL;
     }
@@ -302,10 +314,15 @@ int CoAPMessage_init(CoAPMessage *message)
     message->header.msgid      = 0;
     message->payload           = NULL;
     message->payloadlen        = 0;
-    message->optcount            = 0;
+    message->optcount          = 0;
     message->optdelta          = 0;
     message->handler           = NULL;
     message->keep              = 0;
+    for (count = 0; count < COAP_MSG_MAX_OPTION_NUM; count++) {
+        message->options[count].len = 0;
+        message->options[count].num = 0;
+        message->options[count].val = NULL;
+    }
 
     return COAP_SUCCESS;
 }
@@ -317,7 +334,7 @@ int CoAPMessage_destory(CoAPMessage *message)
         return COAP_ERROR_NULL;
     }
 
-    for (count = 0; count < COAP_MSG_MAX_TOKEN_LEN; count++) {
+    for (count = 0; count < COAP_MSG_MAX_OPTION_NUM; count++) {
         if (NULL != message->options[count].val) {
             coap_free(message->options[count].val);
             message->options[count].val = NULL;
@@ -344,7 +361,7 @@ static int CoAPMessageList_add(CoAPContext *context, NetworkAddr *remote,
         node->message      = buffer;
         node->timeout_val   = COAP_ACK_TIMEOUT * COAP_ACK_RANDOM_FACTOR;
         memcpy(&node->remote, remote, sizeof(NetworkAddr));
-        if(platform_is_multicast(remote->addr) || 1 == message->keep){
+        if(platform_is_multicast((const char *)remote->addr) || 1 == message->keep){
             COAP_DEBUG("The message %d need keep", message->header.msgid);
             node->keep = 1;
         }
@@ -378,31 +395,46 @@ static int CoAPMessageList_add(CoAPContext *context, NetworkAddr *remote,
     }
 }
 
-void CoAPMessage_dump(NetworkAddr *remote, CoAPMessage *message)
+void CoAPMessageToken_dump(unsigned char *token, unsigned char tokenlen)
 {
     int index = 0, count = 0;
     int total = 2*COAP_MSG_MAX_TOKEN_LEN;
-    char   token[2*COAP_MSG_MAX_TOKEN_LEN+1] = {0}, *ptr = NULL;
+    char   buff[2*COAP_MSG_MAX_TOKEN_LEN+1] = {0}, *ptr = NULL;
 
-    ptr = token;
+    ptr = buff;
+    for(index=0; index<tokenlen; index++){
+        count = HAL_Snprintf(ptr, total, "%02X", token[index]);
+        ptr += count;
+        total -= count;
+    }
+
+    COAP_DEBUG("Token Len   : %d", tokenlen);
+    COAP_DEBUG("Token       : %s", buff);
+}
+
+void CoAPMessage_dump(NetworkAddr *remote, CoAPMessage *message)
+{
+    int ret = COAP_SUCCESS;
+    unsigned int ctype;
+
+    if(NULL == remote || NULL == message){
+        return;
+    }
+
     COAP_DEBUG("*********Message Info**********");
     COAP_DEBUG("Version     : %d", message->header.version);
     COAP_DEBUG("Code        : 0x%x", message->header.code);
     COAP_DEBUG("Type        : 0x%x", message->header.type);
     COAP_DEBUG("Msgid       : %d", message->header.msgid);
     COAP_DEBUG("Option      : %d", message->optcount);
-    COAP_DEBUG("Token Len   : %d", message->header.tokenlen);
     COAP_DEBUG("Payload Len : %d", message->payloadlen);
-    for(index=0; index<message->header.tokenlen; index++){
-        count = HAL_Snprintf(ptr, total, "%02X", message->token[index]);
-        ptr += count;
-        total -= count;
-    }
 
-    COAP_DEBUG("Token       : %s", token);
+    CoAPMessageToken_dump(message->token, message->header.tokenlen);
     COAP_DEBUG("Remote      : %s:%d", remote->addr, remote->port);
-    if (NULL != message->payload) {
-        COAP_DEBUG("Payload     : %s", message->payload);
+    ret = CoAPUintOption_get(message, COAP_OPTION_CONTENT_FORMAT, &ctype);
+    if (COAP_SUCCESS == ret && NULL != message->payload
+        && (COAP_CT_APP_OCTET_STREAM != ctype && COAP_CT_APP_CBOR != ctype)) {
+   //     COAP_DEBUG("Payload     : %s", message->payload);
     }
 
     COAP_DEBUG("********************************");
@@ -453,8 +485,8 @@ int CoAPMessage_send(CoAPContext *context, NetworkAddr *remote, CoAPMessage *mes
             }
         } else {
             coap_free(buff);
-            COAP_DEBUG("DEBUG %s %d", __func__, __LINE__);
-            COAP_DEBUG("The message doesn't need to be retransmitted");
+            COAP_DEBUG("The message %d needless to be retransmitted",
+                       message->header.msgid);
         }
     } else {
         coap_free(buff);
@@ -529,8 +561,8 @@ static int CoAPAckMessage_handle(CoAPContext *context, CoAPMessage *message)
                 list_del_init(&node->sendlist);
                 coap_free(node->message);
                 coap_free(node);
-                // TODO: if need notify app?
-                COAP_DEBUG("The CON response message receive ACK, remove it");
+                ctx->sendlist.count --;
+                COAP_DEBUG("The CON response message %d receive ACK, remove it", message->header.msgid);
             }
             HAL_MutexUnlock(ctx->sendlist.list_mutex);
             return COAP_SUCCESS;
@@ -603,9 +635,8 @@ static int CoAPRespMessage_handle(CoAPContext *context, NetworkAddr *remote, CoA
 
     HAL_MutexLock(ctx->sendlist.list_mutex);
     list_for_each_entry_safe(node, next, &ctx->sendlist.list, sendlist, CoAPSendNode) {
-        if ((node->header.msgid == message->header.msgid
-            || (0 != node->header.tokenlen && node->header.tokenlen == message->header.tokenlen
-            && 0 == memcmp(node->token, message->token, message->header.tokenlen)))){
+        if (0 != node->header.tokenlen && node->header.tokenlen == message->header.tokenlen
+                && 0 == memcmp(node->token, message->token, message->header.tokenlen)){
             if(!node->keep){
 		        list_del_init(&node->sendlist);
                 ctx->sendlist.count--;
@@ -661,14 +692,15 @@ static int CoAPRequestMessage_handle(CoAPContext *context, NetworkAddr *remote, 
     int             index = 0;
     int             ret   = COAP_SUCCESS;
     CoAPResource   *resource = NULL;
-    unsigned char   path[COAP_MAX_PATH_LEN] = {0};
+    unsigned char   path[COAP_MSG_MAX_PATH_LEN] = {0};
     unsigned char  *tmp = path;
     CoAPIntContext *ctx =  (CoAPIntContext *)context;
+    COAP_INFO("CoAPRequestMessage_handle:%p", ctx);
 
     // TODO: if need only one callback
     for (index = 0; index < message->optcount; index++){
         if (COAP_OPTION_URI_PATH == message->options[index].num){
-            if((COAP_MAX_PATH_LEN-1) >= (tmp-path+message->options[index].len)){
+            if((COAP_MSG_MAX_PATH_LEN-1) >= (tmp-path+message->options[index].len)){
                 *tmp = '/';
                 tmp += 1;
                 strncpy((char *)tmp, (const char *)message->options[index].val, message->options[index].len);
@@ -676,7 +708,7 @@ static int CoAPRequestMessage_handle(CoAPContext *context, NetworkAddr *remote, 
             }
         }
     }
-    log_debug("Request path is %s", path);
+    COAP_DEBUG("Request path is %s", path);
 
     resource = CoAPResourceByPath_get(ctx, (char *)path);
     if(NULL != resource){
@@ -708,7 +740,7 @@ static void CoAPMessage_handle(CoAPContext *context,
     int    ret  = COAP_SUCCESS;
     CoAPMessage     message;
     CoAPIntContext *ctx =  (CoAPIntContext *)context;
-
+    COAP_INFO("CoAPMessage_handle:%p", ctx);
     memset(&message, 0x00, sizeof(CoAPMessage));
 
     ret = CoAPDeserialize_Message(&message, buf, datalen);
@@ -755,8 +787,9 @@ int CoAPMessage_process(CoAPContext *context, unsigned int timeout)
         len = CoAPNetwork_read(ctx->p_network,
                                &remote,
                                ctx->recvbuf,
-                               COAP_MSG_MAX_PDU_LEN, timeout);                  
+                               COAP_MSG_MAX_PDU_LEN, timeout);
         if (len > 0) {
+        COAP_INFO("CoAPMessage_process:%p", ctx);
             CoAPMessage_handle(ctx, &remote, ctx->recvbuf, len);
         } else {
             return 0;
@@ -767,22 +800,29 @@ int CoAPMessage_process(CoAPContext *context, unsigned int timeout)
 int CoAPMessage_write(CoAPContext *context)
 {
     unsigned int ret = 0;
+    if(context == NULL) {
+        return COAP_ERROR_INVALID_PARAM;
+    }
     CoAPIntContext *ctx =  (CoAPIntContext *)context;
     CoAPSendNode *node = NULL, *next = NULL;
     HAL_MutexLock(ctx->sendlist.list_mutex);
     list_for_each_entry_safe(node, next, &ctx->sendlist.list, sendlist, CoAPSendNode) {
         if (NULL != node) {
             if (node->timeout == 0) {
-                if (node->retrans_count < COAP_MAX_RETRY_COUNT && (0 == node->acked)) {
+                if (node->retrans_count < COAP_MAX_RETRY_COUNT) {
                     node->timeout     = node->timeout_val * 2;
                     node->timeout_val = node->timeout;
                     node->retrans_count++;
-                    COAP_DEBUG("Retansmit the message id %d len %d", node->header.msgid, node->msglen);
-                    ret = CoAPNetwork_write(ctx->p_network, &node->remote, node->message, node->msglen, ctx->waittime);
-                    if (ret != COAP_SUCCESS) {
-                        if (NULL != ctx->notifier) {
-                            /* TODO: */
-                            /* context->notifier(context, event); */
+
+                    /*If has received ack message, don't resend the message*/
+                    if(0 == node->acked){
+                        COAP_DEBUG("Retansmit the message id %d len %d", node->header.msgid, node->msglen);
+                        ret = CoAPNetwork_write(ctx->p_network, &node->remote, node->message, node->msglen, ctx->waittime);
+                        if (ret != COAP_SUCCESS) {
+                            if (NULL != ctx->notifier) {
+                                /* TODO: */
+                                /* context->notifier(context, event); */
+                            }
                         }
                     }
                 }
@@ -794,7 +834,6 @@ int CoAPMessage_write(CoAPContext *context)
                         /* TODO: */
                         /* context->notifier(context, event); */
                     }
-
                     /*Remove the node from the list*/
                     list_del_init(&node->sendlist);
                     ctx->sendlist.count--;
@@ -805,13 +844,7 @@ int CoAPMessage_write(CoAPContext *context)
                 #endif
                     HAL_MutexUnlock(ctx->sendlist.list_mutex);
                     if(NULL != node->handler){
-                        CoAPMessage message;
-                        CoAPMessage_init(&message);
-                        CoAPMessageCode_set(&message, node->header.code);
-                        CoAPMessageId_set(&message, node->header.msgid);
-                        CoAPMessageToken_set(&message, node->token, node->header.tokenlen);
-                        CoAPMessageType_set(&message, node->header.type);
-                        node->handler(ctx, COAP_RECV_RESP_TIMEOUT, node->user, &node->remote, &message);
+                        node->handler(ctx, COAP_RECV_RESP_TIMEOUT, node->user, &node->remote, NULL);
                     }
                     coap_free(node->message);
                     coap_free(node);
@@ -824,12 +857,13 @@ int CoAPMessage_write(CoAPContext *context)
             }
         }
     }
+
     HAL_MutexUnlock(ctx->sendlist.list_mutex);
     return COAP_SUCCESS;
 }
 
 #ifdef COAP_WITH_YLOOP
-static void  CoAPMessage_write_with_timeout(void *context)
+void  CoAPMessage_write_with_timeout(void *context)
 {
      CoAPIntContext *p_ctx = (CoAPIntContext *)context;
     CoAPMessage_write(p_ctx);
