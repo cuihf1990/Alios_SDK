@@ -910,6 +910,16 @@ typedef struct sRxConfigParams
      * Sets the RX window. 0: RX window 1, 1: RX window 2.
      */
     bool Window;
+#ifdef CONFIG_LINKLORA
+    /*!
+     * Node current Work Mode
+     */
+    node_mode_t NodeWorkMode;
+    /*!
+     * Repeater RX and Tx frequency
+     */
+    uint32_t RepeaterFrequency;
+#endif
 }RxConfigParams_t;
 
 /*!
@@ -941,6 +951,16 @@ typedef struct sTxConfigParams
      * Frame length to setup.
      */
     uint16_t PktLen;
+#ifdef CONFIG_LINKLORA
+    /*!
+     * Node current Work Mode
+     */
+    node_mode_t NodeWorkMode;
+    /*!
+     * Repeater RX and Tx frequency
+     */
+    uint32_t RepeaterFrequency;
+#endif
 }TxConfigParams_t;
 
 /*!
@@ -1117,6 +1137,11 @@ typedef struct sNextChanParams
      * Set to true, if the duty cycle is enabled, otherwise false.
      */
     bool DutyCycleEnabled;
+
+#ifdef CONFIG_LINKLORA
+    uint8_t  NextAvailableTxFreqBandNum;
+    uint8_t  NextAvailableRxFreqBandNum;
+#endif
 }NextChanParams_t;
 
 /*!

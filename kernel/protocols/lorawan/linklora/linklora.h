@@ -21,7 +21,7 @@ typedef enum node_freq_type_s {
 
 typedef enum {
     VALID_LORA_CONFIG = 0xbeef,
-    INVALID_LORA_CONNFIG = 0xffff,
+    INVALID_LORA_CONFIG = 0xffff,
 };
 
 typedef struct lora_config_s {
@@ -69,8 +69,7 @@ typedef struct sLoRaMainCallback {
     void ( *LoraRxData ) ( lora_AppData_t *AppData);
 } LoRaMainCallback_t;
 
-typedef struct sLoRaParam
-{
+typedef struct sLoRaParam {
     TxEventType_t TxEvent;
     uint32_t TxDutyCycleTime;
     int8_t Class;
@@ -79,5 +78,14 @@ typedef struct sLoRaParam
     bool EnablePublicNetwork;
     uint8_t NbTrials;
 } LoRaParam_t;
+
+typedef enum eDevicState {
+    DEVICE_STATE_INIT,
+    DEVICE_STATE_JOIN,
+    DEVICE_STATE_JOINED,
+    DEVICE_STATE_SEND,
+    DEVICE_STATE_CYCLE,
+    DEVICE_STATE_SLEEP
+} DeviceState_t;
 
 #endif /* LINK_LORA_H */
