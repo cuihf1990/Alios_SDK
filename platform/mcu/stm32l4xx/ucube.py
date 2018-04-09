@@ -31,7 +31,7 @@ src =Split('''
     aos/soc_impl.c
     aos/trace_impl.c
 ''')
-component =aos_arch_component('stm32l4xx', src)
+component =aos_mcu_component('stm32l4xx', src)
 
 HOST_MCU_NAME = aos_global_config.get('HOST_MCU_NAME')
 dependencis =Split(''' 

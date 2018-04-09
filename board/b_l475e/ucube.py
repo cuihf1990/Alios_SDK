@@ -4,14 +4,9 @@ src     = Split('''
 ''')
 
 
-component = aos_arch_component('board_b_l475e', src)
-component.add_component_dependencis('platform/mcu/stm32l475')
-
-component.set_global_arch('Cortex-M4')
-component.set_global_mcu_family('stm32l475')
+component = aos_board_component('board_b_l475e', 'stm32l475', src)
 
 if aos_global_config.get('sal') == None:
-    print( 'set sal' )
     aos_global_config.set('sal',1)
 if aos_global_config.get('sal') == 1:
     component.add_component_dependencis('device/sal')

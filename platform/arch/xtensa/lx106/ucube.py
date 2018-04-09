@@ -5,5 +5,5 @@ src = Split('''
 ''')
 
 
-component = aos_arch_component('xtensa', src)
+component = aos_mcu_component('xtensa', src)
 component.add_global_includes('./include', './include/frxt')

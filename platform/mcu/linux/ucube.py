@@ -13,7 +13,7 @@ src = Split('''
         main/nand.c
         main/vfs_trap.c
 ''')
-component = aos_arch_component('linuximpl', src)
+component = aos_mcu_component('linuximpl', src)
 
 ### can't work start ###
 comp_names = [comp.name for comp in aos_global_config.components]

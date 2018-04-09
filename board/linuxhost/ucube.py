@@ -1,7 +1,6 @@
 src     = []
 
-component = aos_board_component('board_linuxhost', src)
-component.add_component_dependencis('platform/mcu/linux')
+component = aos_board_component('board_linuxhost', 'linux', src)
 
 # Define the default component testcase set for this board
 testcases = Split('''
