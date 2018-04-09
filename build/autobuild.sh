@@ -13,8 +13,8 @@ lpcxpresso54102_targets="helloworld alinkapp mqttapp tls networkapp"
 lpcxpresso54102_platforms="lpcxpresso54102"
 esp32_targets="alinkapp helloworld bluetooth.bleadv bluetooth.bleperipheral networkapp bluetooth.aisapp bluetooth.aisilopapp"
 esp32_platforms="esp32devkitc"
-esp8266_targets="helloworld"
-esp8266_platforms="esp8266 linkkitapp"
+esp8266_targets="helloworld linkkitapp"
+esp8266_platforms="esp8266"
 mk3239_targets="bluetooth.ble_advertisements bluetooth.ble_show_system_time"
 mk3239_platforms="mk3239"
 pca10056_targets="bluetooth.bleperipheral bluetooth.aisilopapp bluetooth.aisapp"
@@ -196,17 +196,8 @@ done
 aos make clean > /dev/null 2>&1
 for target in ${starterkit_targets}; do
     for platform in ${starterkit_platforms}; do
-        if [ "${DEBUG}" != "no" ]; then
-            echo "before make ${target}@${platform}@${branch}"
-            pwd && ls
-        fi
         aos make ${target}@${platform} JOBS=${JNUM} > ${target}@${platform}@${branch}.log 2>&1
-        ret=$?
-        if [ "${DEBUG}" != "no" ]; then
-            echo "after make ${target}@${platform}@${branch}"
-            pwd && ls
-        fi
-        if [ ${ret} -eq 0 ]; then
+        if [ $? -eq 0 ]; then
             rm -f ${target}@${platform}@${branch}.log
             echo "build ${target}@${platform} at ${branch} branch succeed"
         else
