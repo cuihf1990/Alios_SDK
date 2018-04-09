@@ -76,6 +76,14 @@ class aos_global_config:
     def tool_chain_config(tool_chain):
         tool_chain.tools_config()
 
+    @staticmethod
+    def add_ld_files(*lds):
+        for ld in lds:
+            path = ld
+            if not os.path.isabs(path) and not path.startswith('#'):
+                path = os.path.join(os.getcwd(), path)
+            aos_global_config.ld_files.append(path)
+
 
 class aos_component:
     def __init__(self, name, src):
@@ -171,11 +179,6 @@ class aos_component:
 class aos_arch_component(aos_component):
     def __init__(self, name, src):
         aos_component.__init__(self, name, src)
-
-    def add_global_ld_file(self, file):
-        if not os.path.isabs(file) and not file.startswith('#'):
-            file = os.path.join(self.dir, file)
-        aos_global_config.ld_files.append(file)
 
     @staticmethod
     def add_global_cflags(*cflags):

@@ -394,7 +394,7 @@ global_ldflags = Split('''
 for ldflag in global_ldflags:
     component.add_global_ldflags(ldflag)
 
-component.add_global_ld_file('mx108/mx378/build/mx108.ld.S')
+aos_global_config.add_ld_files('mx108/mx378/build/mx108.ld.S')
 
 component.add_prebuilt_libs('librwnx/librwnx.a')
 component.set_global_arch('ARM968E-S')

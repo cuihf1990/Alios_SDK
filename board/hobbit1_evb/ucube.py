@@ -13,7 +13,4 @@ component.set_global_arch('ck802')
 component.set_global_mcu_family('csky')
 component.add_global_cflags('-std=gnu99')
 
-ld_files = []
-ld_files.append('gcc_csky.ld')
-for ld in ld_files:
-    component.add_global_ld_file(ld)
+aos_global_config.add_ld_files('gcc_csky.ld')

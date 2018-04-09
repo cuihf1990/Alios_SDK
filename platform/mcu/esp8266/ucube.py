@@ -126,8 +126,7 @@ for lib in prebuild_libs:
 for macro in global_macro:
     component.add_global_macros(macro)
 
-for ld in ld_files:
-    component.add_global_ld_file(ld)
+aos_global_config.add_ld_files(*ld_files)
 
 # component.set_global_arch('Xtensa')
 component.set_global_mcu_family('esp8266')

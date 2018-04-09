@@ -170,7 +170,7 @@ for macro in global_macro:
     component.add_global_macros(macro)
 
 for ld in ld_files:
-    component.add_global_ld_file(ld)
+    aos_global_config.add_ld_files(ld)
 
 # component.set_global_arch('Xtensa')
 component.set_global_mcu_family('esp32')
