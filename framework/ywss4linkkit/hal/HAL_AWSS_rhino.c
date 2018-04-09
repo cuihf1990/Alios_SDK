@@ -608,7 +608,10 @@ static int platform_aes128_encrypt_decrypt(
     size_t dlen = PLATFORM_MAX_PASSWD_LEN, in_len = siz, ctx_siz;
     uint8_t *p, *key, *iv;
     bool is_en;
-
+    if(aes_ctx == NULL) {
+        LOGE("aos_awss", "platform_aes128_encrypt_decrypt aes_ctx is NULL");
+        return -1;
+    }
     result = ali_aes_get_ctx_size(AES_CBC, &ctx_siz);
     if (result != ALI_CRYPTO_SUCCESS) {
         LOGE("aos_awss", "get ctx size fail(%08x)", result);
