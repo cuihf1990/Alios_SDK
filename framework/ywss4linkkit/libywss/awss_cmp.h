@@ -32,8 +32,6 @@
 extern "C" {
 #endif
 
-#include "platform.h"
-
 #define MSG_REQ_ID_LEN                 (16)
 #define TOPIC_LEN_MAX                  (128)
 #define ILOP_VER                       "1.0"
@@ -46,6 +44,8 @@ extern "C" {
 #define TOPIC_GETDEVICEINFO_UCAST       "/sys/%s/%s/device/info/get"
 #define TOPIC_AWSS_NOTIFY               "/sys/awss/device/info/notify"
 #define TOPIC_NOTIFY                    "/sys/device/info/notify"
+#define TOPIC_SWITCHAP                  "/sys/%s/%s/thing/awss/device/switchap"
+#define TOPIC_SWITCHAP_REPLY            "/sys/%s/%s/thing/awss/device/switchap_reply"
 #define TOPIC_ZC_ENROLLEE               "/sys/%s/%s/thing/awss/enrollee/found"
 #define TOPIC_ZC_ENROLLEE_REPLY         "/sys/%s/%s/thing/awss/enrollee/found_reply"
 #define TOPIC_ZC_CHECKIN                "/sys/%s/%s/thing/awss/enrollee/checkin"
@@ -59,6 +59,7 @@ extern "C" {
 
 #define METHOD_DEV_INFO_NOTIFY          "device.info.notify"
 #define METHOD_AWSS_DEV_INFO_NOTIFY     "awss.device.info.notify"
+#define METHOD_EVENT_ZC_SWITCHAP        "thing.awss.device.switchap"
 #define METHOD_EVENT_ZC_ENROLLEE        "thing.awss.enrollee.found"
 #define METHOD_EVENT_ZC_CHECKIN         "thing.awss.enrollee.checkin"
 #define METHOD_EVENT_ZC_CIPHER          "thing.cipher.get"
@@ -67,6 +68,8 @@ extern "C" {
 
 #define AWSS_ACK_FMT                    "{\"id\":%s, \"code\":%d, \"data\":%s}"
 #define AWSS_REQ_FMT                    "{\"id\":%s, \"version\":\"%s\", \"method\":\"%s\", \"params\":%s}"
+#define AWSS_JSON_PARAM                 "params"
+#define AWSS_JSON_ID                    "id"
 
 #if(AWSS_CMP_DEBUG==1)
     #define awss_cmp_debug(fmt, args...) log_debug(fmt, ##args)
@@ -74,29 +77,37 @@ extern "C" {
     #define awss_cmp_debug(fmt, args...)
 #endif
 
+/**
+ * @brief this is a network address structure, including host(ip or host name) and port.
+ */
+typedef struct
+{
+	char host[16]; /**< host ip(dotted-decimal notation) or host name(string) */
+	unsigned short port; /**< udp port or tcp port */
+} platform_netaddr_t;
+
+struct awss_cmp_couple {
+    char *topic;
+    void *cb;
+};
+
 enum {
     AWSS_CMP_PKT_TYPE_REQ = 1,
     AWSS_CMP_PKT_TYPE_RSP,
 };
 
-enum {
-    AWSS_CMP_TYPE_COAP = 0x00,
-    AWSS_CMP_TYPE_COAP_RESP,
-    AWSS_CMP_TYPE_COAP_OB_NOTIFY,
-};
-
-
 int awss_cmp_local_init();
+int awss_cmp_local_deinit();
 int awss_cmp_online_init();
-int awss_cmp_deinit();
+int awss_cmp_online_deinit();
 int awss_report_token();
 int awss_report_reset();
 
 int awss_cmp_coap_loop(void *param);
 int awss_cmp_coap_register_cb(char *topic, void *cb);
-int awss_cmp_coap_send(void *buf, unsigned int len, pplatform_netaddr_t sa, const char *uri, void *cb, unsigned short *msgid);
-int awss_cmp_coap_send_resp(void *buf, unsigned int len, pplatform_netaddr_t sa, const char *uri, void *cb);
-int awss_cmp_coap_ob_send(void *buf, unsigned int len, pplatform_netaddr_t sa, const char *uri, void *cb);
+int awss_cmp_coap_send(void *buf, unsigned int len, void *sa, const char *uri, void *cb, unsigned short *msgid);
+int awss_cmp_coap_send_resp(void *buf, unsigned int len, void *sa, const char *uri, void *cb);
+int awss_cmp_coap_ob_send(void *buf, unsigned int len, void *sa, const char *uri, void *cb);
 int awss_cmp_coap_deinit();
 
 int awss_cmp_mqtt_register_cb(char *topic, void *cb);
@@ -110,7 +121,9 @@ unsigned char awss_cmp_get_coap_code(void *request);
 
 int awss_build_packet(int type, void *id, void *ver, void *method,void *data, int code, void *pkt, int *pkt_len);
 
+int online_connectap_monitor(void *ctx, void *resource, void *remote, void *request);
 int awss_enrollee_checkin(char *topic, int topic_len, void *payload, int payload_len, void *ctx);
+int awss_online_switchap(char *topic, int topic_len, void *payload, int payload_len, void *ctx);
 int awss_report_enrollee_reply(char *topic, int topic_len, void *payload, int payload_len, void *ctx);
 int awss_get_cipher_reply(char *topic, int topic_len, void *payload, int payload_len, void *ctx);
 int awss_report_token_reply(char *topic, int topic_len, void *payload, int payload_len, void *ctx);

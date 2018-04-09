@@ -27,8 +27,6 @@
 #ifndef WIFIMGR_H
 #define WIFIMGR_H
 
-#include "os/platform/platform.h"
-
 #if defined(__cplusplus)  /* If this is a C++ compiler, use C linkage */
 extern "C"
 {
@@ -48,13 +46,12 @@ enum {
     SEC_LVL_AES128_MANU,    // AES128 with key from manufacturer_sec
 };
 
-int wifimgr_process_get_wifilist_request(void *ctx, void *resource, pplatform_netaddr_t remote, void *request);
-int wifimgr_process_mcast_get_device_info(void *ctx, void *resource, pplatform_netaddr_t remote, void *request);
-int wifimgr_process_ucast_get_device_info(void *ctx, void *resource, pplatform_netaddr_t remote, void *request);
-int wifimgr_process_switch_ap_request(void *ctx, void *resource, pplatform_netaddr_t remote, void *request);
+int wifimgr_process_get_wifilist_request(void *ctx, void *resource, void *remote, void *request);
+int wifimgr_process_mcast_get_device_info(void *ctx, void *resource, void *remote, void *request);
+int wifimgr_process_ucast_get_device_info(void *ctx, void *resource, void *remote, void *request);
+int wifimgr_process_switch_ap_request(void *ctx, void *resource, void *remote, void *request);
 
 void *awss_build_dev_info(int type, void *dev_info, int info_len);
-int get_shub_security_level(void);
 
 #if defined(__cplusplus)  /* If this is a C++ compiler, use C linkage */
 }

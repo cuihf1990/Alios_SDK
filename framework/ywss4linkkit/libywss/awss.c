@@ -26,7 +26,7 @@
  */
 #include "awss.h"
 #include "awss_main.h"
-#include "log.h"
+#include "zconfig_utils.h"
 #include "work_queue.h"
 #include "enrollee.h"
 #include "awss_cmp.h"
@@ -49,7 +49,7 @@ void adha_monitor(void)
 static struct work_struct adha_work = {
     .func = (work_func_t)&adha_monitor,
     .prio = DEFAULT_WORK_PRIO,
-    .name = "adha monitor",
+    .name = "adha",
 };
 
 static void aha_monitor(void);
@@ -57,23 +57,9 @@ static void aha_monitor(void);
 static struct work_struct aha_work = {
     .func = (work_func_t)&aha_monitor,
     .prio = 1, /* smaller digit means higher priority */
-    .name = "aha monitor",
+    .name = "aha",
 };
 static volatile char aha_timeout;
-
-static void awss_moniter(void)
-{
-    awss_connectap_notify_stop();
-    awss_devinfo_notify_stop();
-    awss_cmp_unrgist_topic();
-}
-
-#define AWSS_MONITOR_TIMEOUT_MS  (8*1000)
-static struct work_struct awss_moniter_work = {
-    .func = (work_func_t)&awss_moniter,
-    .prio = DEFAULT_WORK_PRIO,
-    .name = "awss monitor",
-};
 
 static void aha_monitor(void)
 {
@@ -103,16 +89,14 @@ static void awss_open_aha_monitor()
     queue_delayed_work(&aha_work, AHA_MONITOR_TIMEOUT_MS);
 }
 
-
 int awss_report_cloud()
 {
     awss_cmp_online_init();
     awss_report_token();
     awss_cmp_local_init();
     awss_connectap_notify();
-    queue_delayed_work(&awss_moniter_work, AWSS_MONITOR_TIMEOUT_MS);
 #ifndef AWSS_DISABLE_REGISTRAR
-    //awss_registrar_init();
+    awss_registrar_init();
 #endif
     return 0;
 }
@@ -143,7 +127,7 @@ int awss_start()
                     os_msleep(200);
                 adha_switch = 0;
 
-                awss_cmp_deinit();
+                awss_cmp_local_deinit();
             }
 
             if (switch_ap_done || awss_stopped)
@@ -171,7 +155,7 @@ int awss_start()
             os_msleep(200);
         }
 
-        awss_cmp_deinit();
+        awss_cmp_local_deinit();
         if (switch_ap_done || awss_stopped)
             break;
 
@@ -192,7 +176,7 @@ int awss_stop()
     cancel_work(&adha_work);
     cancel_work(&aha_work);
     __awss_stop();
-    awss_cmp_deinit();
+    awss_cmp_local_deinit();
     awss_stopped = 1;
     return 0;
 }

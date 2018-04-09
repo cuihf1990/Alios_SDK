@@ -25,8 +25,8 @@
  * PURPOSE, TITLE, AND NONINFRINGEMENT.
  */
 
-#ifndef __IEEE80211_123_H
-#define __IEEE80211_123_H
+#ifndef ZCONFIG_PROTOCOL_H
+#define ZCONFIG_PROTOCOL_H
 
 #include "zconfig_utils.h"
 #include "zconfig_ieee80211.h"
@@ -62,14 +62,11 @@ enum passwd_encpyt_type {
 
 struct ap_info {
 	u8 auth;
-	u8 encry[2];
 	u8 channel;
-	u8 rssi;
-	char ssid[ZC_MAX_SSID_LEN];
-	char passwd[ZC_MAX_PASSWD_LEN];
+	u8 encry[2];
 	u8 mac[ETH_ALEN];
-	int rssi_dbm;
-	int sco;
+	char ssid[ZC_MAX_SSID_LEN];
+	char rssi;
 };
 
 struct adha_info {
@@ -82,7 +79,7 @@ struct adha_info {
 
 extern const u8 br_mac[ETH_ALEN];
 
-#define ZC_MAX_CHANNEL            (13)
+#define ZC_MAX_CHANNEL            (14)
 #define ZC_MIN_CHANNEL            (1)
 static inline int zconfig_is_valid_channel(int channel)
 {
@@ -100,9 +97,8 @@ enum p2p_encode_type {
 #define zconfig_get_time          os_get_time_ms
 
 /* global data */
-/* max: ssid=32, passwd=32, crc=2, len=1 */
-#define MAX_PKG_NUMS              (128)
-#define DUMP_PKG_LEN              (2+2+4*6) /* fc + durationID + mac */
+/* max: 48(ssid gbk encode) + 64 (passwd) + 6 (1(tlen) + 1(flag) + 1(ssid_len) + 1(passwd_len) + 2(crc)) */
+#define MAX_PKG_NUMS              (120)
 
 /* zconfig protocol */
 #define START_FRAME               (0x4E0) /* 0x4E0 is group 0 */
@@ -113,10 +109,8 @@ enum p2p_encode_type {
 #define ZC_GRP_PKT_IDX_END        (ZC_GRP_PKT_IDX_START + GROUP_NUMBER - 1)
 
 struct package {
-	u8 src[ETH_ALEN];
-	u8 dst[ETH_ALEN];
 	u16 len;
-	u8 score;
+    char score;
 };
 
 struct zconfig_data {
@@ -124,12 +118,9 @@ struct zconfig_data {
 		u8 state_machine;	/* state for tods/fromds */
 		u8 frame_offset;	/* frame fixed offset */
 		u8 group_pos;		/* latest group pkg pos */
-		u16 group_sn;		/* latest group pkg sn */
-		u16 prev_sn;		/* last sn */
 		u8 cur_pos;			/* data abs. position */
 		u8 max_pos;			/* data max len */
 		u8 last_index;
-		u16 last_len;		/* len pkg len */
 		u8 replace;			/* whether pkg has been replaced recently */
 		u8 score_uplimit;
 #define score_max                 (100)
@@ -139,6 +130,9 @@ struct zconfig_data {
 #define score_min                 (0)
 
 		u8 pos_unsync;
+		u16 group_sn;		/* latest group pkg sn */
+		u16 prev_sn;		/* last sn */
+		u16 last_len;		/* len pkg len */
 		u32 timestamp;		/* last timestamp */
 #define time_interval             (300)	//ms
 	} data[2];
@@ -155,14 +149,8 @@ struct zconfig_data {
 	u8 ssid[ZC_MAX_SSID_LEN];
 	u8 passwd[ZC_MAX_PASSWD_LEN];
 	u8 bssid[ETH_ALEN];
-	u8 tpsk[ZC_TPSK_LEN + 1];
 	u8 ssid_is_gbk;
 	u8 ssid_auto_complete_disable;
-
-	/* tmp result, use to store tempory data */
-	u8 tmp_ssid[ZC_MAX_SSID_LEN];
-	u8 tmp_passwd[ZC_MAX_PASSWD_LEN];
-	u8 tmp_bssid[ETH_ALEN];
 
 	/* used by v2 android p2p protocol, for gbk ssid correctness */
 	u8 android_pre_ssid[ZC_MAX_SSID_LEN];
@@ -194,25 +182,16 @@ extern struct zconfig_data *zconfig_data;
 #define zc_ssid                   (&zconfig_data->ssid[0])
 #define zc_passwd                 (&zconfig_data->passwd[0])
 #define zc_bssid                  (&zconfig_data->bssid[0])
-#define zc_tpsk                   (&zconfig_data->tpsk[0])
 #define zc_ssid_is_gbk            (zconfig_data->ssid_is_gbk)
 #define zc_ssid_auto_complete_disable    (zconfig_data->ssid_auto_complete_disable)
 
 #define pkg_score(n)              zconfig_data->pkg[tods][n].score
 #define pkg_len(n)                zconfig_data->pkg[tods][n].len
-#define pkg_src(n)                &zconfig_data->pkg[tods][n].src[0]
-#define pkg_dst(n)                &zconfig_data->pkg[tods][n].dst[0]
 #define pkg(n)                    &zconfig_data->pkg[tods][n]
 
 #define tmp_score(n)              zconfig_data->tmp_pkg[tods][n].score
 #define tmp_len(n)                zconfig_data->tmp_pkg[tods][n].len
-#define tmp_src(n)                &zconfig_data->tmp_pkg[tods][n].src[0]
-#define tmp_dst(n)                &zconfig_data->tmp_pkg[tods][n].dst[0]
 #define tmp(n)                    &zconfig_data->tmp_pkg[tods][n]
-
-#define tmp_ssid                  (&zconfig_data->tmp_ssid[0])
-#define tmp_passwd                (&zconfig_data->tmp_passwd[0])
-#define tmp_bssid                 (&zconfig_data->tmp_bssid[0])
 
 #define zc_pre_ssid               (&zconfig_data->android_pre_ssid[0])
 #define zc_android_ssid           (&zconfig_data->android_ssid[0])

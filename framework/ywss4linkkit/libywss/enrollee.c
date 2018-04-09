@@ -45,30 +45,23 @@ extern "C"
 {
 #endif
 
-const uint8_t probe_req_frame[64] = {
+const uint8_t probe_req_frame[ZC_PROBE_LEN] = {
     0x40, 0x00,  // mgnt type, frame control
     0x00, 0x00,  // duration
     0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF,  // DA
     0x28, 0xC2, 0xDD, 0x61, 0x68, 0x83,  // SA, to be replaced with wifi mac
     0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF,  // BSSID
     0xC0, 0x79,  // seq
-    0x00, 0x12, 0x61, 0x6C, 0x69, 0x62, 0x61, 0x62, 0x61, 0x2D, 0x74, 0x65, 0x73, 0x74, 0x2D, 0x37, 0x32, 0x36, 0x30, 0x36,  // ssid
+    0x00, 0x12, 0x61, 0x6C, 0x69, 0x62, 0x61, 0x62, 0x61, 0x2D, 0x74, 0x65, 0x73, 0x74, 0x2D, 0x37, 0x32, 0x36, 0x30, 0x36,
     0x01, 0x08, 0x82, 0x84, 0x8B, 0x96, 0x8C, 0x92, 0x98, 0xA4,  // supported rates
     0x32, 0x04, 0xB0, 0x48, 0x60, 0x6C,  // extended supported rates
     0x3F, 0x84, 0x10, 0x9E  // FCS
 };
 
-const uint8_t iv[32] = {
-    0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
-    0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
-    0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
-    0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00
-};
-
 static uint8_t *g_dev_sign; /* pointer to dev_name_len start pos */
 static uint8_t *g_product_key; /* pointer to model_len start pos */
 static uint8_t *enrollee_frame;
-int enrollee_frame_len;
+static uint16_t enrollee_frame_len;
 
 static int decrypt_ssid_passwd(uint8_t *ie, uint8_t ie_len,
                                uint8_t out_ssid[OS_MAX_SSID_LEN],
@@ -79,6 +72,7 @@ void awss_init_enrollee_info(void)// void enrollee_raw_frame_init(void)
 {
     char *pk = NULL, *dev_name = NULL, *text = NULL;
     uint8_t sign[ENROLLEE_SIGN_SIZE + 1] = {0};
+    char key[OS_DEVICE_SECRET_LEN + 1] = {0};
     int dev_name_len, pk_len;
     int len, ie_len;
 
@@ -100,7 +94,11 @@ void awss_init_enrollee_info(void)// void enrollee_raw_frame_init(void)
     OS_CHECK_MALLOC(text);
 
     awss_build_sign_src(text, &len);
-    produce_signature(sign, (uint8_t *)text, len);
+    if(os_get_conn_encrypt_type() == 3) // aes-key per product
+        os_product_get_secret(key);
+    else  // aes-key per device
+        os_get_device_secret(key);
+    produce_signature(sign, (uint8_t *)text, len, key);
 
     os_free(text);
 
@@ -122,7 +120,7 @@ void awss_init_enrollee_info(void)// void enrollee_raw_frame_init(void)
     enrollee_frame[len ++] = 0xAA;/* OUI type */
     enrollee_frame[len ++] = DEVICE_TYPE_VERSION;/* version & dev type */
 
-    enrollee_frame[len ++] = dev_name_len;/* dev id len*/
+    enrollee_frame[len ++] = dev_name_len;/* dev name len*/
     memcpy(&enrollee_frame[len], dev_name, dev_name_len);
     len += dev_name_len;
 
@@ -133,13 +131,16 @@ void awss_init_enrollee_info(void)// void enrollee_raw_frame_init(void)
     memcpy(&enrollee_frame[len], pk, pk_len);
     len += pk_len;
 
+    enrollee_frame[len ++] = RANDOM_MAX_LEN;
     memcpy(&enrollee_frame[len], aes_random, RANDOM_MAX_LEN);
     len += RANDOM_MAX_LEN;
 
+    enrollee_frame[len ++] = os_get_conn_encrypt_type();  // encrypt type
+    enrollee_frame[len ++] = 0;  // signature method, 0: hmacsha1, 1: hmacsha256
+    enrollee_frame[len ++] = ENROLLEE_SIGN_SIZE;  // signature length
     g_dev_sign = &enrollee_frame[len];
     memcpy(&enrollee_frame[len], sign, ENROLLEE_SIGN_SIZE);
     len += ENROLLEE_SIGN_SIZE;
-    enrollee_frame[len ++] = get_shub_security_level();
 
     memcpy(&enrollee_frame[len],
            &probe_req_frame[sizeof(probe_req_frame) - FCS_SIZE], FCS_SIZE);
@@ -231,7 +232,11 @@ static int decrypt_ssid_passwd(
     p_bssid = ie;
     ie += ETH_ALEN; /* eating bssid len */
 
-    aes_decrypt_string((char *)p_passwd + 1, (char *)tmp_passwd, p_passwd[0], get_shub_security_level(), 2); //aes128 cfb
+    aes_decrypt_string((char *)p_passwd + 1, (char *)tmp_passwd, p_passwd[0], os_get_conn_encrypt_type(), 2); //aes128 cfb
+    if (is_utf8((const char *)tmp_passwd, p_passwd[0]) != 1) {
+        log_warn("registrar(passwd invalid!");
+        return -1;
+    }
     awss_debug("ssid:%s, passwd:%s\n", tmp_ssid, tmp_passwd);
 
     strncpy((char *)out_passwd, (char *)tmp_passwd, OS_MAX_PASSWD_LEN);

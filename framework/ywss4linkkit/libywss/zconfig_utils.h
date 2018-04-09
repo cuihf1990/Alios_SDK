@@ -30,8 +30,6 @@
 
 #include "os.h"
 
-#include "zconfig_config.h"
-
 #if defined(__cplusplus)  /* If this is a C++ compiler, use C linkage */
 extern "C"
 {
@@ -91,11 +89,13 @@ do {											\
 		}									\
 } while (0)
 
-void dump_hex(unsigned char *data, int len, int tab_num);
-void dump_ascii(unsigned char *data, int len, int tab_num);
-void dump_mac(u8 *src, u8 *dst);
+void dump_mac(uint8_t *src, uint8_t *dst);
+void dump_hex(uint8_t *data, int len, int tab_num);
+void dump_ascii(uint8_t *data, int len, int tab_num);
 
-u16 zconfig_checksum_v3(u8 *data, u8 len);
+uint16_t zconfig_checksum_v3(uint8_t *data, uint8_t len);
+char is_utf8(const char *ansi_str, int length);
+void produce_random(uint8_t *random, unsigned int len);
 
 #if defined(__cplusplus)  /* If this is a C++ compiler, use C linkage */
 }

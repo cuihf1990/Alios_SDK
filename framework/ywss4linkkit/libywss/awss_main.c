@@ -26,12 +26,11 @@
  */
 
 #include <stdlib.h>
-#include "work_queue.h"
+#include "log.h"
 #include "aws_lib.h"
+#include "zconfig_utils.h"
 #include "zconfig_lib.h"
 #include "awss_main.h"
-#include "list.h"
-#include "log.h"
 #include "os.h"
 #include "passwd.h"
 #include "utils.h"
@@ -42,8 +41,6 @@ extern "C"
 {
 #endif
 
-static int delay_ms = 0;  /* start from 200ms */
-
 char awss_finished = 0;
 char awss_stop_connecting = 0;
 
@@ -52,7 +49,7 @@ int __awss_start(void)
     char ssid[OS_MAX_SSID_LEN + 1] = {0}, passwd[OS_MAX_PASSWD_LEN + 1] = {0};
     enum AWSS_AUTH_TYPE auth = AWSS_AUTH_TYPE_INVALID;
     enum AWSS_ENC_TYPE encry = AWSS_ENC_TYPE_INVALID;
-    uint8_t bssid[OS_ETH_ALEN] = { 0 };
+    uint8_t bssid[OS_ETH_ALEN] = {0};
     uint8_t channel = 0;
     int ret;
 
@@ -99,7 +96,6 @@ int __awss_start(void)
         if (!ret) {
             awss_debug("awss connect ssid:%s success", ssid);
 
-            delay_ms = 0;
             if (awss_notify_needed == 0) {
                 awss_connectap_notify_stop();
                 awss_devinfo_notify();
@@ -110,7 +106,7 @@ int __awss_start(void)
             }
             goto end;
         } else {
-            awss_debug("awss connect ssid:%s passwd:%s fail", ssid, passwd);
+            log_warn("awss connect ssid:%s passwd:%s fail", ssid, passwd);
             if (strcmp(ssid, ADHA_SSID) == 0)
                 break;
         }
