@@ -9,7 +9,7 @@ global_macros =Split('''
     HCI_H4_NRF51822
 ''')
 for i in global_macros:
-    component.add_global_macro(i)
+    component.add_global_macros(i)
 
 
 

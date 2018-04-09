@@ -8,7 +8,7 @@ macro_tmp = Split('''
     IOTX_DEBUG
 ''')
 for i in macro_tmp:
-    component.add_global_macro(i)
+    component.add_global_macros(i)
 
 dependencis = Split('''
     tools/cli

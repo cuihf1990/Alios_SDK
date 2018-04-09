@@ -16,6 +16,6 @@ for i in dependencis:
     component.add_component_dependencis(i)
     
 component.add_global_includes('.')
-component.add_global_macro('AOS_FOTA')
+component.add_global_macros('AOS_FOTA')
 
     

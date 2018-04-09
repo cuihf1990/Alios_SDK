@@ -314,7 +314,7 @@ global_macro = Split('''
         STDIO_UART=0
 ''')
 for macro in global_macro:
-    component.add_global_macro(macro)
+    component.add_global_macros(macro)
 
 global_cflags = Split('''
         -mcpu=arm968e-s
@@ -396,7 +396,7 @@ for ldflag in global_ldflags:
 
 component.add_global_ld_file('mx108/mx378/build/mx108.ld.S')
 
-component.add_prebuilt_lib('librwnx/librwnx.a')
+component.add_prebuilt_libs('librwnx/librwnx.a')
 component.set_global_arch('ARM968E-S')
 component.set_global_mcu_family('moc108')
 

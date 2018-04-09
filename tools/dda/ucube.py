@@ -15,5 +15,5 @@ component.add_includes('kernel/protocols/mesh/include')
 component.add_cflags('-Wall')
 component.add_cflags('-Werror')
 
-component.add_global_macro('CONFIG_AOS_DDA')
-component.add_global_macro('CONFIG_AOS_DDM')
+component.add_global_macros('CONFIG_AOS_DDA')
+component.add_global_macros('CONFIG_AOS_DDM')

@@ -17,7 +17,7 @@ global_macros =Split('''
     WITH_LORA
 ''')
 for i in global_macros:
-    component.add_global_macro(i)
+    component.add_global_macros(i)
 
 
 

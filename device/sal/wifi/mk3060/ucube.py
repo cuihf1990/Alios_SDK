@@ -10,4 +10,4 @@ component.add_component_dependencis('kernel/yloop')
 
 component.add_global_includes('.')
 
-component.add_global_macro('DEV_SAL_MK3060')
+component.add_global_macros('DEV_SAL_MK3060')

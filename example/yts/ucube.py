@@ -19,9 +19,9 @@ if aos_global_config.board == 'linuxhost':
     component.add_component_dependencis('framework/netmgr')
     component.add_component_dependencis('kernel/modules/fs/fatfs')
     component.add_component_dependencis('framework/common')
-    component.add_global_macro('CONFIG_AOS_MESHYTS')
-    component.add_global_macro('DEBUG')
-    component.add_global_macro('YTS_LINUX')
+    component.add_global_macros('CONFIG_AOS_MESHYTS')
+    component.add_global_macros('DEBUG')
+    component.add_global_macros('YTS_LINUX')
 else:
     component.add_component_dependencis('tools/cli')
 

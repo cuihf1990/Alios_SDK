@@ -8,4 +8,4 @@ component.add_component_dependencis('utility/log')
 
 component.add_global_includes('include')
 
-component.add_global_macro('AOS_KV')
+component.add_global_macros('AOS_KV')
