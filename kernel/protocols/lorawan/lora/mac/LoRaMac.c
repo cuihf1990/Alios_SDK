@@ -1434,6 +1434,10 @@ static void OnTxDelayedTimerEvent( void )
         ResetMacParameters( );
 
         altDr.NbTrials = JoinRequestTrials + 1;
+#ifdef CONFIG_LINKLORA
+        altDr.joinmethod = LoRaMacParams.method;
+        altDr.datarate = LoRaMacParams.ChannelsDatarate;
+#endif
         LoRaMacParams.ChannelsDatarate = RegionAlternateDr( LoRaMacRegion, &altDr );
 
         macHdr.Value = 0;
@@ -1938,6 +1942,10 @@ static LoRaMacStatus_t ScheduleTx( void )
     nextChan.DutyCycleEnabled = DutyCycleOn;
     nextChan.Joined = IsLoRaMacNetworkJoined;
     nextChan.LastAggrTx = AggregatedLastTxDoneTime;
+#ifdef CONFIG_LINKLORA
+    nextChan.joinmethod = LoRaMacParams.method;
+    nextChan.freqband = LoRaMacParams.freqband;
+#endif
 
     // Select channel
     while( RegionNextChannel( LoRaMacRegion, &nextChan, &Channel, &dutyCycleTimeOff, &AggregatedTimeOff ) == false )
@@ -3181,8 +3189,9 @@ LoRaMacStatus_t LoRaMacMlmeRequest( MlmeReq_t *mlmeRequest )
 #ifdef CONFIG_LINKLORA
             altDr.joinmethod = mlmeRequest->Req.Join.method;
             altDr.datarate = mlmeRequest->Req.Join.datarate;
+            LoRaMacParams.method = altDr.joinmethod;
+            LoRaMacParams.freqband = mlmeRequest->Req.Join.freqband;
 #endif
-
             LoRaMacParams.ChannelsDatarate = RegionAlternateDr( LoRaMacRegion, &altDr );
 
             status = Send( &macHdr, 0, NULL, 0 );

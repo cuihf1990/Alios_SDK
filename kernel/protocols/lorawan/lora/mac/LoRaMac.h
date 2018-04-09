@@ -303,6 +303,11 @@ typedef struct sLoRaMacParams
      * Antenna gain of the node
      */
     float AntennaGain;
+
+#ifdef CONFIG_LINKLORA
+    join_method_t method;
+    uint32_t freqband;
+#endif
 }LoRaMacParams_t;
 
 /*!
@@ -1007,6 +1012,7 @@ typedef struct sMlmeReqJoin
 #ifdef CONFIG_LINKLORA
     int8_t datarate;
     join_method_t method;
+    uint32_t freqband;
 #endif
 }MlmeReqJoin_t;
 
