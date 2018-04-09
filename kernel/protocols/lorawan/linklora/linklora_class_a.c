@@ -4,6 +4,9 @@
 
 #include "linklora.h"
 #include "commissioning.h"
+#include "utilities.h"
+#include "LoRaMac.h"
+#include "Region.h"
 #include "timeServer.h"
 
 static uint8_t dev_eui[] = LORAWAN_DEVICE_EUI;
@@ -15,10 +18,15 @@ static uint8_t app_key[] = LORAWAN_APPLICATION_KEY;
 static uint8_t app_data_buff[LORAWAN_APP_DATA_BUFF_SIZE];
 static lora_AppData_t app_data = { app_data_buff, 0, 0 };
 
+static LoRaMacPrimitives_t LoRaMacPrimitives;
+static LoRaMacCallback_t LoRaMacCallbacks;
 static LoRaMainCallback_t *app_callbacks;
-static int8_t is_tx_confirmed;
+static MibRequestConfirm_t mibReq;
 
+static int8_t is_tx_confirmed;
 static bool next_tx = true;
+
+static LoRaParam_t *LoRaParamInit;
 
 static TimerEvent_t TxNextPacketTimer;
 static DeviceState_t device_state = DEVICE_STATE_INIT;
@@ -46,8 +54,8 @@ static void prepare_tx_frame(uint8_t port)
         case 224:
             break;
         default:
-            LoRaMainCallbacks->LoraTxData( &app_data, &is_tx_confirmed );
-            break
+            app_callbacks->LoraTxData( &app_data, &is_tx_confirmed );
+            break;
     }
 }
 
@@ -56,24 +64,24 @@ static bool send_frame(void)
     McpsReq_t mcpsReq;
     LoRaMacTxInfo_t txInfo;
 
-    if (LoRaMacQueryTxPossible(AppData.BuffSize, &txInfo) != LORAMAC_STATUS_OK) {
+    if (LoRaMacQueryTxPossible(app_data.BuffSize, &txInfo) != LORAMAC_STATUS_OK) {
         // Send empty frame in order to flush MAC commands
         mcpsReq.Type = MCPS_UNCONFIRMED;
         mcpsReq.Req.Unconfirmed.fBuffer = NULL;
         mcpsReq.Req.Unconfirmed.fBufferSize = 0;
         mcpsReq.Req.Unconfirmed.Datarate = LoRaParamInit->TxDatarate;
     } else {
-        if (IsTxConfirmed == DISABLE) {
+        if (is_tx_confirmed == DISABLE) {
             mcpsReq.Type = MCPS_UNCONFIRMED;
-            mcpsReq.Req.Unconfirmed.fPort = AppData.Port;
-            mcpsReq.Req.Unconfirmed.fBuffer = AppData.Buff;
-            mcpsReq.Req.Unconfirmed.fBufferSize = AppData.BuffSize;
+            mcpsReq.Req.Unconfirmed.fPort = app_data.Port;
+            mcpsReq.Req.Unconfirmed.fBuffer = app_data.Buff;
+            mcpsReq.Req.Unconfirmed.fBufferSize = app_data.BuffSize;
             mcpsReq.Req.Unconfirmed.Datarate = LoRaParamInit->TxDatarate;
         } else {
             mcpsReq.Type = MCPS_CONFIRMED;
-            mcpsReq.Req.Confirmed.fPort = AppData.Port;
-            mcpsReq.Req.Confirmed.fBuffer = AppData.Buff;
-            mcpsReq.Req.Confirmed.fBufferSize = AppData.BuffSize;
+            mcpsReq.Req.Confirmed.fPort = app_data.Port;
+            mcpsReq.Req.Confirmed.fBuffer = app_data.Buff;
+            mcpsReq.Req.Confirmed.fBufferSize = app_data.BuffSize;
             mcpsReq.Req.Confirmed.NbTrials = 8;
             mcpsReq.Req.Confirmed.Datarate = LoRaParamInit->TxDatarate;
         }
@@ -158,7 +166,7 @@ static void mcps_confirm(McpsConfirm_t *mcpsConfirm)
 
                 reset_join_state();
                 g_join_method = STORED_JOIN_METHOD;
-                PRINTF("Not receive Ack,Start to Join...\r\n");
+                DBG_LINKLORA("Not receive Ack,Start to Join...\r\n");
                 break;
             }
             case MCPS_PROPRIETARY:
@@ -195,7 +203,7 @@ static void McpsIndication( McpsIndication_t *mcpsIndication )
         }
         case MCPS_MULTICAST:
             {
-            DBG_PRINTF( "MCPS_MULTICAST\n" );
+            DBG_LINKLORA( "MCPS_MULTICAST\n" );
             break;
         }
         default:
@@ -211,7 +219,7 @@ static void McpsIndication( McpsIndication_t *mcpsIndication )
     // Check Rssi
     // Check Snr
     // Check RxSlot
-    DBG_PRINTF( "rssi = %d, snr = %d, datarate = %d\n", mcpsIndication->Rssi, mcpsIndication->Snr,
+    DBG_LINKLORA( "rssi = %d, snr = %d, datarate = %d\n", mcpsIndication->Rssi, mcpsIndication->Snr,
                 mcpsIndication->RxDatarate );
 
     if ( ComplianceTest.Running == true )
@@ -236,9 +244,9 @@ static void McpsIndication( McpsIndication_t *mcpsIndication )
                          &&
                          (mcpsIndication->Buffer[3] == 0x01) )
                     {
-                        IsTxConfirmed = DISABLE;
-                        AppData.Port = 224;
-                        AppData.BuffSize = 2;
+                        is_tx_confirmed = DISABLE;
+                        app_data.Port = 224;
+                        app_data.BuffSize = 2;
                         ComplianceTest.DownLinkCounter = 0;
                         ComplianceTest.LinkCheck = false;
                         ComplianceTest.DemodMargin = 0;
@@ -274,23 +282,23 @@ static void McpsIndication( McpsIndication_t *mcpsIndication )
 #endif
                             break;
                         case 1: // (iii, iv)
-                            AppData.BuffSize = 2;
+                            app_data.BuffSize = 2;
                             break;
                         case 2: // Enable confirmed messages (v)
-                            IsTxConfirmed = ENABLE;
+                            is_tx_confirmed = ENABLE;
                             ComplianceTest.State = 1;
                             break;
                         case 3: // Disable confirmed messages (vi)
-                            IsTxConfirmed = DISABLE;
+                            is_tx_confirmed = DISABLE;
                             ComplianceTest.State = 1;
                             break;
                         case 4: // (vii)
-                            AppData.BuffSize = mcpsIndication->BufferSize;
+                            app_data.BuffSize = mcpsIndication->BufferSize;
 
-                            AppData.Buff[0] = 4;
-                            for ( uint8_t i = 1; i < AppData.BuffSize; i++ )
+                            app_data.Buff[0] = 4;
+                            for ( uint8_t i = 1; i < app_data.BuffSize; i++ )
                             {
-                                AppData.Buff[i] = mcpsIndication->Buffer[i] + 1;
+                                app_data.Buff[i] = mcpsIndication->Buffer[i] + 1;
                             }
                             break;
                         case 5: // (viii)
@@ -319,9 +327,9 @@ static void McpsIndication( McpsIndication_t *mcpsIndication )
 
                             mlmeReq.Type = MLME_JOIN;
 
-                            mlmeReq.Req.Join.DevEui = DevEui;
-                            mlmeReq.Req.Join.AppEui = AppEui;
-                            mlmeReq.Req.Join.AppKey = AppKey;
+                            mlmeReq.Req.Join.DevEui = dev_eui;
+                            mlmeReq.Req.Join.AppEui = app_eui;
+                            mlmeReq.Req.Join.AppKey = app_key;
                             mlmeReq.Req.Join.NbTrials = 3;
 
                             LoRaMacMlmeRequest( &mlmeReq );
@@ -360,11 +368,11 @@ static void McpsIndication( McpsIndication_t *mcpsIndication )
                 break;
             default:
 
-                AppData.Port = mcpsIndication->Port;
-                AppData.BuffSize = mcpsIndication->BufferSize;
-                memcpy1( AppData.Buff, mcpsIndication->Buffer, AppData.BuffSize );
+                app_data.Port = mcpsIndication->Port;
+                app_data.BuffSize = mcpsIndication->BufferSize;
+                memcpy1( app_data.Buff, mcpsIndication->Buffer, app_data.BuffSize );
 
-                LoRaMainCallbacks->LoraRxData( &AppData );
+                app_callbacks->LoraRxData( &app_data );
                 break;
         }
     }
@@ -412,61 +420,61 @@ void lora_init(LoRaMainCallback_t *callbacks, LoRaParam_t *LoRaParam)
 {
     device_state = DEVICE_STATE_INIT;
     LoRaParamInit = LoRaParam;
-    LoRaMainCallbacks = callbacks;
+    app_callbacks = callbacks;
 
 #if (STATIC_DEVICE_EUI != 1)
-    LoRaMainCallbacks->BoardGetUniqueId( DevEui );
+    app_callbacks->BoardGetUniqueId(dev_eui);
 #endif
 
 #if (OVER_THE_AIR_ACTIVATION != 0)
 
-    PRINTF_RAW( "OTAA\r\n" );
-    PRINTF_RAW( "DevEui= %02X", DevEui[0] );
+    DBG_LINKLORA( "OTAA\r\n" );
+    DBG_LINKLORA( "DevEui= %02X", dev_eui[0] );
     for ( int i = 1; i < 8; i++ )
     {
-        PRINTF_RAW( "-%02X", DevEui[i] );
+        DBG_LINKLORA( "-%02X", dev_eui[i] );
     };
-    PRINTF_RAW( "\r\n" );
-    PRINTF_RAW( "AppEui= %02X", AppEui[0] );
+    DBG_LINKLORA( "\r\n" );
+    DBG_LINKLORA( "AppEui= %02X", app_eui[0] );
     for ( int i = 1; i < 8; i++ )
     {
-        PRINTF_RAW( "-%02X", AppEui[i] );
+        DBG_LINKLORA( "-%02X", app_eui[i] );
     };
-    PRINTF_RAW( "\r\n" );
-    PRINTF_RAW( "AppKey= %02X", AppKey[0] );
+    DBG_LINKLORA( "\r\n" );
+    DBG_LINKLORA( "AppKey= %02X", app_key[0] );
     for ( int i = 1; i < 16; i++ )
     {
-        PRINTF_RAW( " %02X", AppKey[i] );
+        DBG_LINKLORA( " %02X", app_key[i] );
     };
-    PRINTF_RAW( "\n\r\n" );
+    DBG_LINKLORA( "\n\r\n" );
 #else
 
 #if (STATIC_DEVICE_ADDRESS != 1)
     // Random seed initialization
-    srand1(LoRaMainCallbacks->BoardGetRandomSeed());
+    srand1(app_callbacks->BoardGetRandomSeed());
     // Choose a random device address
     DevAddr = randr(0, 0x01FFFFFF);
 #endif
-    PRINTF_RAW("ABP\r\n");
-    PRINTF_RAW("DevEui= %02X", DevEui[0]);
+    DBG_LINKLORA("ABP\r\n");
+    DBG_LINKLORA("DevEui= %02X", dev_eui[0]);
     for (int i = 1; i < 8; i++)
     {
-        PRINTF_RAW("-%02X", DevEui[i]);
+        DBG_LINKLORA("-%02X", dev_eui[i]);
     };
-    PRINTF_RAW("\r\n");
-    PRINTF_RAW("DevAdd=  %08X\n\r", DevAddr);
-    PRINTF_RAW("NwkSKey= %02X", NwkSKey[0]);
+    DBG_LINKLORA("\r\n");
+    DBG_LINKLORA("DevAdd=  %08X\n\r", DevAddr);
+    DBG_LINKLORA("NwkSKey= %02X", NwkSKey[0]);
     for (int i = 1; i < 16; i++)
     {
-        PRINTF_RAW(" %02X", NwkSKey[i]);
+        DBG_LINKLORA(" %02X", NwkSKey[i]);
     };
-    PRINTF_RAW("\r\n");
-    PRINTF_RAW("AppSKey= %02X", AppSKey[0]);
+    DBG_LINKLORA("\r\n");
+    DBG_LINKLORA("AppSKey= %02X", AppSKey[0]);
     for (int i = 1; i < 16; i++)
     {
-        PRINTF_RAW(" %02X", AppSKey[i]);
+        DBG_LINKLORA(" %02X", AppSKey[i]);
     };
-    PRINTF_RAW("\r\n");
+    DBG_LINKLORA("\r\n");
 #endif
 }
 
@@ -478,7 +486,7 @@ void lora_fsm( void )
             LoRaMacPrimitives.MacMcpsConfirm = mcps_confirm;
             LoRaMacPrimitives.MacMcpsIndication = McpsIndication;
             LoRaMacPrimitives.MacMlmeConfirm = MlmeConfirm;
-            LoRaMacCallbacks.GetBatteryLevel = LoRaMainCallbacks->BoardGetBatteryLevel;
+            LoRaMacCallbacks.GetBatteryLevel = app_callbacks->BoardGetBatteryLevel;
 #if defined(REGION_AS923)
             LoRaMacInitialization(&LoRaMacPrimitives, &LoRaMacCallbacks, LORAMAC_REGION_AS923);
 #elif defined(REGION_AS923)
@@ -499,6 +507,8 @@ void lora_fsm( void )
             LoRaMacInitialization(&LoRaMacPrimitives, &LoRaMacCallbacks, LORAMAC_REGION_US915);
 #elif defined(REGION_US915_HYBRID)
             LoRaMacInitialization(&LoRaMacPrimitives, &LoRaMacCallbacks, LORAMAC_REGION_US915_HYBRID);
+#elif defined( REGION_CN470S )
+            LoRaMacInitialization( &LoRaMacPrimitives, &LoRaMacCallbacks, LORAMAC_REGION_CN470S);
 #else
 #error "Please define a region in the compiler options."
 #endif
@@ -543,10 +553,10 @@ void lora_fsm( void )
 #endif
             // TODO: get config from flash
             //aos_kv_get("lora_cfg", &g_lora_config, sizeof(g_lora_config));
-            if (g_lora_config.flag == VALID_JOIN_FLAG) {
+            if (g_lora_config.flag == VALID_LORA_CONFIG) {
                 g_join_method = STORED_JOIN_METHOD;
             }
-            DeviceState = DEVICE_STATE_JOIN;
+            device_state = DEVICE_STATE_JOIN;
             break;
         }
 
@@ -556,9 +566,9 @@ void lora_fsm( void )
             MlmeReq_t mlmeReq;
 
             mlmeReq.Type = MLME_JOIN;
-            mlmeReq.Req.Join.DevEui = DevEui;
-            mlmeReq.Req.Join.AppEui = AppEui;
-            mlmeReq.Req.Join.AppKey = AppKey;
+            mlmeReq.Req.Join.DevEui = dev_eui;
+            mlmeReq.Req.Join.AppEui = app_eui;
+            mlmeReq.Req.Join.AppKey = app_key;
 
             mlmeReq.Req.Join.method = g_join_method;
             if (g_join_method == STORED_JOIN_METHOD) {
@@ -573,7 +583,7 @@ void lora_fsm( void )
                 DBG_LINKLORA("Start to Join,Nbtrials:%d\r\n", mlmeReq.Req.Join.NbTrials);
             }
 
-            DeviceState = DEVICE_STATE_SLEEP;
+            device_state = DEVICE_STATE_SLEEP;
 #else
             mibReq.Type = MIB_NET_ID;
             mibReq.Param.NetID = LORAWAN_NETWORK_ID;
@@ -595,7 +605,7 @@ void lora_fsm( void )
             mibReq.Param.IsNetworkJoined = true;
             LoRaMacMibSetRequestConfirm(&mibReq);
 
-            DeviceState = DEVICE_STATE_SEND;
+            device_state = DEVICE_STATE_SEND;
 #endif
             break;
         }
@@ -603,14 +613,14 @@ void lora_fsm( void )
         {
             DBG_LINKLORA("Joined\n\r");
             //aos_kv_set();
-            DeviceState = DEVICE_STATE_SEND;
+            device_state = DEVICE_STATE_SEND;
             break;
         }
         case DEVICE_STATE_SEND:
             {
             if ( next_tx == true )
             {
-                prepare_tx_frame( );
+                prepare_tx_frame(100);
                 next_tx = send_frame( );
             }
             if ( ComplianceTest.Running == true )
@@ -626,7 +636,7 @@ void lora_fsm( void )
                 TimerStart( &TxNextPacketTimer );
             }
 
-            DeviceState = DEVICE_STATE_SLEEP;
+            device_state = DEVICE_STATE_SLEEP;
             break;
         }
         case DEVICE_STATE_SLEEP:
@@ -636,7 +646,7 @@ void lora_fsm( void )
         }
         default:
         {
-            DeviceState = DEVICE_STATE_INIT;
+            device_state = DEVICE_STATE_INIT;
             break;
         }
     }
@@ -644,5 +654,5 @@ void lora_fsm( void )
 
 DeviceState_t lora_getDeviceState( void )
 {
-    return DeviceState;
+    return device_state;
 }

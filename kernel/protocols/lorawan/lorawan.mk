@@ -8,6 +8,7 @@ $(NAME)_SOURCES := lora/system/crypto/aes.c                \
                    lora/system/utilities.c       \
                    lora/system/delay.c           \
                    lora/mac/region/Region.c         \
+                   lora/mac/region/RegionCommon.c   \
                    lora/mac/LoRaMac.c               \
                    lora/mac/LoRaMacCrypto.c    \
                    ../../../device/lora/eml3047_lrwan/eml3047.c    \
@@ -46,7 +47,6 @@ $(NAME)_SOURCES += lora/mac/region/RegionAS923.c    \
                    lora/mac/region/RegionAU915.c    \
                    lora/mac/region/RegionCN470.c    \
                    lora/mac/region/RegionCN779.c    \
-                   lora/mac/region/RegionCommon.c   \
                    lora/mac/region/RegionEU433.c    \
                    lora/mac/region/RegionEU868.c    \
                    lora/mac/region/RegionIN865.c    \

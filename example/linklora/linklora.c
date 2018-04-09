@@ -13,6 +13,8 @@
 #include "delay.h"
 
 #include "LoRaMac.h"
+#include "Region.h"
+#include "commissioning.h"
 
 #define APP_TX_DUTYCYCLE 30000
 #define LORAWAN_ADR_ON 1
@@ -46,7 +48,7 @@ int application_start( void )
     HW_Init( );
     DBG_Init( );
 
-    lora_Init( &LoRaMainCallbacks, &LoRaParamInit );
+    lora_init( &LoRaMainCallbacks, &LoRaParamInit );
 
     while (1) {
         lora_fsm( );

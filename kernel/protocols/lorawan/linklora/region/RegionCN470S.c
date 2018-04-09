@@ -35,7 +35,11 @@ Maintainer: Miguel Luis ( Semtech ), Gregory Cristian ( Semtech ) and Daniel Jae
 #include "debug.h"
 
 // Definitions
-#define CHANNELS_MASK_SIZE              1
+#define CHANNELS_MASK_SIZE 1
+
+uint16_t LoRaMacFreqBandMask = 0x0100;
+
+#define RADIO_WAKEUP_TIME 2
 
 // Global attributes
 /*!
@@ -313,7 +317,7 @@ PhyParam_t RegionCN470SGetPhyParam( GetPhyParams_t* getPhy )
 
 void RegionCN470SSetBandTxDone( SetBandTxDoneParams_t* txDone )
 {
-    RegionCommonSetBandTxDone(txDone->joined, &Bands[Channels[txDone->Channel].Band], txDone->LastTxDoneTime );
+    RegionCommonSetBandTxDone(txDone->Joined, &Bands[Channels[txDone->Channel].Band], txDone->LastTxDoneTime );
 }
 
 void RegionCN470SInitDefaults( InitType_t type )
@@ -572,7 +576,7 @@ bool RegionCN470SRxConfig( RxConfigParams_t* rxConfig, int8_t* datarate )
     // Read the physical datarate from the datarates table
     phyDr = DataratesCN470S[dr];
 
-    if(rxConfig->NodeWorkMode == NodeWorkMode_Repeater)
+    if(rxConfig->NodeWorkMode == NODE_MODE_REPEATER)
     {
         frequency = rxConfig->RepeaterFrequency;
         iqInverted = false;
@@ -631,7 +635,7 @@ bool RegionCN470STxConfig( TxConfigParams_t* txConfig, int8_t* txPower, TimerTim
     // Calculate physical TX power
     phyTxPower = RegionCommonComputeTxPower( txPowerLimited, txConfig->MaxEirp, txConfig->AntennaGain );
 
-    if(txConfig->NodeWorkMode == NodeWorkMode_Repeater)
+    if(txConfig->NodeWorkMode == NODE_MODE_REPEATER)
     {
         frequency = txConfig->RepeaterFrequency;
         preambleLen = PreambleLenthCN470S[txConfig->Datarate];
@@ -884,17 +888,17 @@ int8_t RegionCN470SAlternateDr( AlternateDrParams_t* alternateDr )
 
     switch (alternateDr->joinmethod) {
         case 0:  // use stored channel and datarate
-           datarate = alternatedr->datarate - 1;
-           if (datarate < DR2) {
-                datarate = DR2;
+           datarate = alternateDr->datarate - 1;
+           if (datarate < DR_2) {
+                datarate = DR_2;
            }
         break;
         case 1:  // use default channel and datarate
         case 2:  // scan
            if (alternateDr->NbTrials == 1) {
-               datarate = DR3;
+               datarate = DR_3;
            } else {
-               datarate = DR2;
+               datarate = DR_2;
            }
         break;
         default:
@@ -941,9 +945,10 @@ bool RegionCN470SNextChannel( NextChanParams_t* nextChanParams, uint8_t* channel
     uint8_t enabledChannels[CN470S_MAX_NB_CHANNELS] = { 0 };
     TimerTime_t nextTxDelay = 0;
     MibRequestConfirm_t mib_req;
+    static uint8_t RxFreqBandNum = 0;
 
-    mib_req->Type = MIB_NETWORK_JOINED;
-    LoRaMacMibGetRequestConfirm(mib_req);
+    mib_req.Type = MIB_NETWORK_JOINED;
+    LoRaMacMibGetRequestConfirm(&mib_req);
 
     if (mib_req.Param.IsNetworkJoined == false) {
         if(node_freq_type == FREQ_TYPE_INTER) {
@@ -984,7 +989,7 @@ bool RegionCN470SNextChannel( NextChanParams_t* nextChanParams, uint8_t* channel
         *aggregatedTimeOff = 0;
 
         // Update bands Time OFF
-        nextTxDelay = RegionCommonUpdateBandTimeOff( nextChanParams->DutyCycleEnabled, Bands, CN470S_MAX_NB_BANDS );
+        nextTxDelay = RegionCommonUpdateBandTimeOff(nextChanParams->Joined, nextChanParams->DutyCycleEnabled, Bands, CN470S_MAX_NB_BANDS );
 
         // Search how many channels are enabled
         nbEnabledChannels = CountNbOfEnabledChannels( nextChanParams->Joined, nextChanParams->Datarate,
