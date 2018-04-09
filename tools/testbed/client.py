@@ -491,14 +491,14 @@ class Client:
         finally:
             self.devices[device]['iolock'].release()
         print 'erasing', device, '...', ret
-        content = ','.join(term) + ',' + ret
-        self.send_packet(pkt.DEVICE_ERASE, content)
+        content = ','.join(term) + ',' + pkt.DEVICE_ERASE + ',' + ret
+        self.send_packet(pkt.RESPONSE, content)
 
     def device_program(self, device, address, file, term):
         if device not in self.devices:
             print "error: progamming nonexist device {0}".format(device)
-            content = ','.join(term) + ',' + 'device nonexist'
-            self.send_packet(pkt.DEVICE_PROGRAM, content)
+            content = ','.join(term) + ',' + pkt.DEVICE_PROGRAM + ',' + 'device nonexist'
+            self.send_packet(pkt.RESPONSE, content)
             return
 
         interface = self.devices[device]['interface']
@@ -511,15 +511,15 @@ class Client:
         finally:
             self.devices[device]['iolock'].release()
         print 'programming', file, 'to', device, '@', address, '...', ret
-        content = ','.join(term) + ',' + ret
-        self.send_packet(pkt.DEVICE_PROGRAM, content)
+        content = ','.join(term) + ',' + pkt.DEVICE_PROGRAM + ',' + ret
+        self.send_packet(pkt.RESPONSE, content)
 
     def device_control(self, device, type, term):
         operations= {pkt.DEVICE_RESET:'reset', pkt.DEVICE_STOP:'stop', pkt.DEVICE_START:'start'}
         if device not in self.devices:
             print "error: controlling nonexist device {0}".format(device)
-            content = ','.join(term) + ',' + 'device nonexist'
-            self.send_packet(type, content)
+            content = ','.join(term) + ',' + type + ',' + 'device nonexist'
+            self.send_packet(pkt.RESPONSE, content)
             return
 
         interface = self.devices[device]['interface']
@@ -529,14 +529,14 @@ class Client:
             if DEBUG: traceback.print_exc()
             ret = 'fail'
         print operations[type], device, ret
-        content = ','.join(term) + ',' + ret
-        self.send_packet(type, content)
+        content = ','.join(term) + ',' + type + ','  + ret
+        self.send_packet(pkt.RESPONSE, content)
 
     def device_run_cmd(self, device, cmd, term):
         if device not in self.devices:
             print "error: run command at nonexist device {0}".format(device)
-            content = ','.join(term) + ',' + 'device nonexist'
-            self.send_packet(pkt.DEVICE_CMD, content)
+            content = ','.join(term) + ',' + pkt.DEVICE_CMD + ',' + 'device nonexist'
+            self.send_packet(pkt.RESPONSE, content)
             return
 
         try:
@@ -547,8 +547,8 @@ class Client:
             if DEBUG: traceback.print_exc()
             result='fail'
             print "run command '{0}' at {1} failed".format(cmd, device)
-        content = ','.join(term) + ',' + result
-        self.send_packet(pkt.DEVICE_CMD, content)
+        content = ','.join(term) + ',' + pkt.DEVICE_CMD + ',' + result
+        self.send_packet(pkt.RESPONSE, content)
 
 
 
@@ -618,15 +618,15 @@ class Client:
                         filename = split_value[2]
                         if hash in file_received:
                             if path.exists(file_received[hash]) == True:
-                                content = term + ',' + 'exist'
-                                self.send_packet(type, content)
+                                content = term + ',' + type + ',' + 'exist'
+                                self.send_packet(pkt.RESPONSE, content)
                                 continue
                             else:
                                 file_received.pop(hash)
 
                         if hash in file_receiving:
-                            content = term + ',' + 'busy'
-                            self.send_packet(type, content)
+                            content = term + ',' + type + ',' + 'busy'
+                            self.send_packet(pkt.RESPONSE, content)
                             print "busy: refused to recive {0}:{1}".format(filename, hash)
                             continue
 
@@ -636,8 +636,8 @@ class Client:
                         filehandle = open(filename, 'wb')
                         timeout = time.time() + 4
                         file_receiving[hash] = {'name':filename, 'seq':0, 'handle':filehandle, 'timeout': timeout}
-                        content = term + ',' + 'ok'
-                        self.send_packet(type, content)
+                        content = term + ',' + type + ',' + 'ok'
+                        self.send_packet(pkt.RESPONSE, content)
                         if DEBUG:
                             print 'start receiving {0} as {1}'.format(split_value[2], filename)
                     elif type == pkt.FILE_DATA:
@@ -652,21 +652,21 @@ class Client:
                             print "argument error: {0}".format(type)
                             continue
                         if hash not in file_receiving:
-                            content = term + ',' + 'noexist'
-                            self.send_packet(type, content)
+                            content = term + ',' + type + ',' + 'noexist'
+                            self.send_packet(pkt.RESPONSE, content)
                             print "error: drop data fragment {0}:{1}, hash not in receiving file".format(hash, seq)
                             continue
                         if file_receiving[hash]['seq'] != seq and file_receiving[hash]['seq'] != seq + 1:
-                            content = term + ',' + 'seqerror'
-                            self.send_packet(type, content)
+                            content = term + ',' + type + ',' + 'seqerror'
+                            self.send_packet(pkt.RESPONSE, content)
                             print "error: drop data fragment {0}:{1}, sequence error".format(hash, seq)
                             continue
                         if file_receiving[hash]['seq'] == seq:
                             file_receiving[hash]['handle'].write(data)
                             file_receiving[hash]['seq'] += 1
                             file_receiving[hash]['timeout'] = time.time() + 4
-                        content = term + ',' + 'ok'
-                        self.send_packet(type, content)
+                        content = term + ',' + type + ',' + 'ok'
+                        self.send_packet(pkt.RESPONSE, content)
                     elif type == pkt.FILE_END:
                         try:
                             split_value = value.split(':')
@@ -676,8 +676,8 @@ class Client:
                             print "argument error: {0} {1}".format(type, value)
                             continue
                         if hash not in file_receiving:
-                            content = term + ',' + 'noexist'
-                            self.send_packet(type, content)
+                            content = term + ',' + type + ',' + 'noexist'
+                            self.send_packet(pkt.RESPONSE, content)
                             continue
                         file_receiving[hash]['handle'].close()
                         localhash = pkt.hash_of_file(file_receiving[hash]['name'])
@@ -689,8 +689,8 @@ class Client:
                         if DEBUG:
                             print 'finished receiving {0}, result:{1}'.format(file_receiving[hash]['name'], response)
                         file_receiving.pop(hash)
-                        content = term + ',' + response
-                        self.send_packet(type, content)
+                        content = term + ',' + type + ',' + response
+                        self.send_packet(pkt.RESPONSE, content)
                     elif type == pkt.DEVICE_ERASE:
                         args = value.split(',')
                         if len(args) != 3:
@@ -707,8 +707,8 @@ class Client:
                         else:
                             result = 'nonexist'
                             print 'erase', device,  'failed, device nonexist'
-                        content = ','.join(term) + ',' + result
-                        self.send_packet(type, content)
+                        content = ','.join(term) + ',' + type + ',' + result
+                        self.send_packet(pkt.RESPONSE, content)
                     elif type == pkt.DEVICE_PROGRAM:
                         args = value.split(',')
                         if len(args) != 5:
@@ -718,8 +718,8 @@ class Client:
                         address = args[3]
                         hash = args[4]
                         if hash not in file_received:
-                            content = ','.join(term) + ',' + 'error'
-                            self.send_packet(type, content)
+                            content = ','.join(term) + ',' + type + ',' + 'error'
+                            self.send_packet(pkt.RESPONSE, content)
                             continue
                         filename = file_received[hash]
                         if device in self.devices:
@@ -732,8 +732,8 @@ class Client:
                         else:
                             result = 'error'
                             print 'program {0} to {1} @ {2} failed, device nonexist'.format(filename, device, address)
-                        content = ','.join(term) + ',' + result
-                        self.send_packet(type, content)
+                        content = ','.join(term) + ',' + type + ',' + result
+                        self.send_packet(pkt.RESPONSE, content)
                     elif type in [pkt.DEVICE_RESET, pkt.DEVICE_START, pkt.DEVICE_STOP]:
                         operations = {pkt.DEVICE_RESET:'reset', pkt.DEVICE_START:'start', pkt.DEVICE_STOP:'stop'}
                         args = value.split(',')
@@ -751,8 +751,8 @@ class Client:
                         else:
                             result = 'nonexist'
                             print operations[type], device, 'failed, device nonexist'
-                        content = ','.join(term) + ',' + result
-                        self.send_packet(type, content)
+                        content = ','.join(term) + ',' + type + ',' + result
+                        self.send_packet(pkt.RESPONSE, content)
                     elif type == pkt.DEVICE_CMD:
                         args = value.split(':')[0]
                         arglen = len(args) + 1
@@ -770,8 +770,8 @@ class Client:
                         else:
                             result = 'nonexist'
                             print "run command '{0}' at {1} failed, device nonexist".format(cmd, device)
-                        content = ','.join(term) + ',' + result
-                        self.send_packet(type, content)
+                        content = ','.join(term) + ',' + type + ',' + result
+                        self.send_packet(pkt.RESPONSE, content)
                     elif type == pkt.CLIENT_UUID:
                         print 'server request UUID'
                         self.send_packet(pkt.CLIENT_UUID, self.uuid)

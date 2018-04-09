@@ -30,10 +30,8 @@ class Terminal:
         self.connected = False
         self.device_list= {}
         self.service_socket = None
-        self.cmd_excute_state = 'idle'
-        self.cmd_excute_return = ''
-        self.cmd_excute_event = threading.Event()
         self.output_queue = Queue.Queue(256)
+        self.response_queue = Queue.Queue(256)
         self.log_content = []
         self.log_curr_line = -1
         self.log_subscribed = []
@@ -418,15 +416,14 @@ class Terminal:
                         if dev in self.log_subscribed:
                             log =  str(index) + log
                             self.log_display(logtime, log)
-                    if type == pkt.CMD_DONE:
-                        self.cmd_excute_return = value
-                        self.cmd_excute_state = 'done'
-                        self.cmd_excute_event.set()
                         continue
-                    if type == pkt.CMD_ERROR:
-                        self.cmd_excute_return = value
-                        self.cmd_excute_state = 'error'
-                        self.cmd_excute_event.set()
+                    if type == pkt.RESPONSE:
+                        type = value.split(',')[0]
+                        value = value[len(type) + 1:]
+                        try:
+                            self.response_queue.put([type, value], False)
+                        except:
+                            pass
                         continue
             except ConnectionLost:
                 self.connected = False
@@ -486,12 +483,25 @@ class Terminal:
                 return []
             return [index]
 
-    def wait_cmd_excute_done(self, timeout):
-        self.cmd_excute_state = 'wait_response'
-        self.cmd_excute_return = None
-        self.cmd_excute_event.clear()
-        if self.cmd_excute_event.wait(timeout) == False:
-            self.cmd_excute_state = 'timeout'
+    def wait_cmd_response(self, type, timeout):
+        while self.response_queue.empty() == False:
+            self.response_queue.get()
+        response = None
+        start = time.time()
+        while True:
+            try:
+                item = self.response_queue.get(False)
+            except:
+                item = None
+            if time.time() - start >= timeout:
+                break
+            if item == None:
+                time.sleep(0.01)
+                continue
+            if item[0] == type:
+                response = item[1]
+                break
+        return response
 
     def send_file_to_client(self, filename, index):
         status_str = 'sending file {0} to {1}...'.format(filename, self.get_devstr_by_index(index).split(',')[0])
@@ -504,27 +514,23 @@ class Terminal:
         retry = 4
         while retry > 0:
             self.send_packet(pkt.FILE_BEGIN, content)
-            self.wait_cmd_excute_done(0.2)
-            if self.cmd_excute_state == 'timeout':
+            response = self.wait_cmd_response(pkt.FILE_BEGIN, 0.2)
+            if response == None: #timeout
                 retry -= 1;
                 continue
-            if self.cmd_excute_return == 'busy':
+            if response == 'busy':
                 time.sleep(5)
                 continue
-            elif self.cmd_excute_return == 'ok' or self.cmd_excute_return == 'exist':
+            elif response == 'ok' or response == 'exist':
                 break
             else:
-                status_str += 'error'
-                self.cmdrun_status_display(status_str)
+                self.log_display(time.time(), "file transfer error: unexpected response '{0}'".format(response))
                 return False
         if retry == 0:
-            status_str += 'error'
-            self.cmdrun_status_display(status_str)
+            self.log_display(time.time(), 'file transfer error: retry timeout')
             return False
 
-        if self.cmd_excute_return == 'exist':
-            status_str += 'done'
-            self.cmdrun_status_display(status_str)
+        if response == 'exist':
             return True
 
         #send file data
@@ -536,20 +542,17 @@ class Terminal:
             retry = 4
             while retry > 0:
                 self.send_packet(pkt.FILE_DATA, header + content)
-                self.wait_cmd_excute_done(0.2)
-                if self.cmd_excute_return == None:
+                response = self.wait_cmd_response(pkt.FILE_DATA, 0.2)
+                if response == None: #timeout
                     retry -= 1;
                     continue
-                elif self.cmd_excute_return != 'ok':
-                    status_str += 'error'
-                    self.cmdrun_status_display(status_str)
+                elif response != 'ok':
+                    self.log_display(time.time(), 'send data fragement {0} failed, error: {1}'.format(header, response))
                     file.close()
                     return False
                 break
 
             if retry == 0:
-                status_str += 'error'
-                self.cmdrun_status_display(status_str)
                 file.close()
                 return False
 
@@ -563,18 +566,15 @@ class Terminal:
         retry = 4
         while retry > 0:
             self.send_packet(pkt.FILE_END, content)
-            self.wait_cmd_excute_done(0.2)
-            if self.cmd_excute_return == None:
+            response = self.wait_cmd_response(pkt.FILE_END, 0.2)
+            if response == None: #timeout
                 retry -= 1;
                 continue
-            elif self.cmd_excute_return != 'ok':
-                status_str += 'error'
-                self.cmdrun_status_display(status_str)
+            elif response != 'ok':
+                self.log_display(time.time(), 'send file failed, error: {0}'.format(response))
                 return False
             break
         if retry == 0:
-            status_str += 'error'
-            self.cmdrun_status_display(status_str)
             return False
 
         status_str += 'done'
@@ -598,14 +598,13 @@ class Terminal:
                 self.cmdrun_status_display(status_str)
                 dev_str = self.get_devstr_by_index(index)
                 self.send_packet(pkt.DEVICE_ERASE, dev_str);
-                self.wait_cmd_excute_done(10)
-                status_str += self.cmd_excute_state
+                response = self.wait_cmd_response(pkt.DEVICE_ERASE, 10)
+                status_str += response
                 self.cmdrun_status_display(status_str)
-                if self.cmd_excute_state == 'done':
+                if response == "success":
                     succeed.append(index)
                 else:
                     failed.append(index)
-                self.cmd_excute_state = 'idle'
                 if dev_str not in self.using_list:
                     self.using_list.append(dev_str)
         status_str = ''
@@ -659,14 +658,13 @@ class Terminal:
                 self.cmdrun_status_display(status_str)
                 content = dev_str + ',' + address + ',' + filehash
                 self.send_packet(pkt.DEVICE_PROGRAM, content);
-                self.wait_cmd_excute_done(270)
-                status_str += self.cmd_excute_state
+                response = self.wait_cmd_response(pkt.DEVICE_PROGRAM, 270)
+                status_str += response
                 self.cmdrun_status_display(status_str)
-                if self.cmd_excute_state == 'done':
+                if response == "success":
                     succeed.append(index)
                 else:
                     failed.append(index)
-                self.cmd_excute_state = 'idle'
                 if dev_str not in self.using_list:
                     self.using_list.append(dev_str)
         status_str = ''
@@ -695,12 +693,11 @@ class Terminal:
             for index in indexes:
                 dev_str = self.get_devstr_by_index(index)
                 self.send_packet(operate, dev_str)
-                self.wait_cmd_excute_done(1.5)
-                if self.cmd_excute_state == 'done':
+                response = self.wait_cmd_response(operate, 1.5)
+                if response == "success":
                     succeed.append(index)
                 else:
                     failed.append(index)
-                self.cmd_excute_state = 'idle'
                 if dev_str not in self.using_list:
                     self.using_list.append(dev_str)
         status_str = ''
@@ -752,16 +749,15 @@ class Terminal:
                 return False
             for index in indexes:
                 device = self.get_devstr_by_index(index).split(',')
-                status_str = 'downloading log file for {0}.{1}:{2}...'.format(index, device[0], device[1].replace('/dev/', ''))
+                status_str = 'downloading log file for {0}.{1}:{2}...'.format(index, device[0], path.basename(device[1]))
                 self.cmdrun_status_display(status_str)
                 content = ','.join(device)
                 self.send_packet(pkt.LOG_DOWNLOAD, content)
-                self.wait_cmd_excute_done(480)
-                if self.cmd_excute_state == 'done':
+                response = self.wait_cmd_response(pkt.LOG_DOWNLOAD, 480)
+                if response == 'success':
                     succeed.append(index)
                 else:
                     failed.append(index)
-                self.cmd_excute_state = 'idle'
         status_str = ''
         if succeed != []:
             status_str += 'succeed: {0}'.format(succeed)
@@ -803,15 +799,12 @@ class Terminal:
             dev_str = self.get_devstr_by_index(index)
             content = dev_str + ':' + '|'.join(args)
             self.send_packet(pkt.DEVICE_CMD, content)
-            self.wait_cmd_excute_done(1.5)
-            if self.cmd_excute_state == 'done':
+            response = self.wait_cmd_response(pkt.DEVICE_CMD, 1.5)
+            if response == 'success':
                 succeed.append(index)
             else:
                 failed.append(index)
-            self.cmd_excute_state = 'idle'
-            if self.cmd_excute_return == None:
-                self.cmd_excute_return = 'timeout'
-            status_str = '{0} run: '.format(index) + ' '.join(args) + ', ' + self.cmd_excute_return
+            status_str = '{0} run: '.format(index) + ' '.join(args) + ', ' + response
             self.cmdrun_status_display(status_str)
             if dev_str not in self.using_list:
                 self.using_list.append(dev_str)

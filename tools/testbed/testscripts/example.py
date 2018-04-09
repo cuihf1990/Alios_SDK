@@ -25,13 +25,13 @@ if at.device_subscribe(devices) == False:  #subscribe to these devices
     sys.exit(1)
 
 #do some test operations
-at.device_run_cmd('A', ['netmgr', 'clear'])  #run 'netmgr clear' command at device A
-at.device_control('A', 'reset')              #control device A, let it reboot
-time.sleep(5)                                #wait some time
-at.device_run_cmd('A', ['netmgr', 'connect', 'aos_test_01', 'Alios@Embedded']) #connect device A to wifi
-time.sleep(30)                               #wait some time
+at.device_run_cmd('A', 'netmgr clear')  #run 'netmgr clear' command at device A
+at.device_control('A', 'reset')         #control device A, let it reboot
+time.sleep(5)                           #wait some time
+at.device_run_cmd('A', 'netmgr connect aos_test_01 Alios@Embedded') #connect device A to wifi
+time.sleep(30)                          #wait some time
 filter = ['disabled', 'detached', 'attached', 'leaf', 'router', 'super_router', 'leader', 'unknown']
-print at.device_run_cmd('A', ['umesh', 'state'], 1, 0.5, filter) #run 'umesh state' command, and get returned mesh state
+print at.device_run_cmd('A', 'umesh state', 1, 0.5, filter) #run 'umesh state' command, and get returned mesh state
 
 #disconnect testbed server
 at.stop()
