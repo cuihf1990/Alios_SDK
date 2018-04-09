@@ -1,6 +1,6 @@
 src = ['board_init.c', 'net/ethernetif.c']
 
-component = aos_arch_component('board_hobbit1_2', src)
+component = aos_mcu_component('board_hobbit1_2', src)
 
 component.add_global_includes('include')
 component.add_component_dependencis('platform/mcu/csky')

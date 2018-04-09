@@ -150,7 +150,7 @@ if ble:
     global_macro.append('CONFIG_ESP32_WITH_BLE')
     global_macro.append('CONFIG_XTENSA')
 
-component = aos_arch_component('esp32', src)
+component = aos_mcu_component('esp32', src)
 
 component.add_includes(*local_includes)
 component.add_global_includes(*global_includes)

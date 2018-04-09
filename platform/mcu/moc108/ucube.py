@@ -277,7 +277,7 @@ global_incs = Split('''
         mx108/mx378/driver/entry
         #security/alicrypto/libalicrypto/inc/
 ''')
-component = aos_arch_component('moc108', src)
+component = aos_mcu_component('moc108', src)
 component.add_includes(*incs)
 component.add_global_includes(*global_incs)
 

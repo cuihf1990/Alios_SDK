@@ -105,7 +105,7 @@ else:
     src.append('aos/soc_impl.c')
     src.append('aos/trace_impl.c')
 
-component = aos_arch_component('esp8266', src)
+component = aos_mcu_component('esp8266', src)
 component.add_component_dependencis(*dependencis)
 
 component.add_includes(*local_includes)

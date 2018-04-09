@@ -176,7 +176,7 @@ class aos_component:
         return aos_global_config.mcu_family
 
 
-class aos_arch_component(aos_component):
+class aos_mcu_component(aos_component):
     def __init__(self, name, src):
         aos_component.__init__(self, name, src)
 
