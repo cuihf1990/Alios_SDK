@@ -25,10 +25,11 @@
  ** ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 // Optimized for minimal code size.
-#include "sha256.h"
 #include <stdio.h>
 #include <string.h>
-//#include "os.h"
+#include "os.h"
+#include "sha256.h"
+
 #define ror(value, bits) (((value) >> (bits)) | ((value) << (32 - (bits))))
 #define shr(value, bits) ((value) >> (bits))
 

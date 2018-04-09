@@ -109,6 +109,15 @@ extern "C"
  */
 #define platform_msleep HAL_SleepMs
 
+/**
+ * @brief system reboot immediately.
+ *
+ * @return None.
+ * @see None.
+ * @note None.
+ */
+#define platform_reboot HAL_Sys_reboot
+
 /** @} */ //end of platform_thread
 
 
@@ -185,8 +194,6 @@ extern "C"
  */
 #define platform_semaphore_destroy HAL_SemaphoreDestroy
 
-
-
 /**
  * @brief Wait until the specified mutex is in the signaled state or the time-out interval elapses.
  *
@@ -245,24 +252,6 @@ extern "C"
 
 /** @} */ //end of platform_memory_manage
 
-
-/********************************** network interface **********************************/
-
-/** @defgroup group_network network
- *  @{
- */
-
-/**
- * @brief this is a network address structure, including host(ip or host name) and port.
- */
-typedef struct
-{
-	char host[16]; /**< host ip(dotted-decimal notation) or host name(string) */
-	uint16_t port; /**< udp port or tcp port */
-} platform_netaddr_t, *pplatform_netaddr_t;
-
-/** @} */ //end of platform_network
-
 /********************************** system interface **********************************/
 
 /** @defgroup group_platform_system system
@@ -278,7 +267,7 @@ typedef struct
  * @see None.
  * @note None.
  */
-//#define platform_sys_net_is_ready HAL_Sys_Net_Is_Ready
+#define platform_sys_net_is_ready HAL_Sys_Net_Is_Ready
 
 /**
  * @brief Retrieves the number of milliseconds that have elapsed since the system was boot.
@@ -616,8 +605,6 @@ typedef awss_recv_80211_frame_cb_t platform_awss_recv_80211_frame_cb_t;
  * @see None.
  * @note None.
  */
-typedef void (*platform_wifi_mgnt_frame_cb_t)(_IN_ uint8_t *buffer,
-                                              _IN_ int len, _IN_ char rssi_dbm, _IN_ int buffer_type);
 typedef awss_wifi_mgmt_frame_cb_t platform_wifi_mgnt_frame_cb_t;
 
 /**
@@ -641,8 +628,6 @@ typedef awss_wifi_mgmt_frame_cb_t platform_wifi_mgnt_frame_cb_t;
 #define platform_wifi_enable_mgnt_frame_filter HAL_Wifi_Enable_Mgmt_Frame_Filter
 
 /** @} */ //end of platform__awss
-
-typedef awss_ap_info_t ap_info_t;
 
 /**
  * @brief handle one piece of AP information from wifi scan result
@@ -813,6 +798,22 @@ typedef awss_wifi_scan_result_cb_t platform_wifi_scan_result_cb_t;
  * @note None.
  */
 #define platform_get_encrypt_type HAL_Awss_Get_Encrypt_Type
+
+/**
+ * @brief    Get Security level for wifi configuration with connection.
+ *           Used for AP solution of router and App.
+ *
+ * @param None.
+ * @return The security level:
+   @verbatim
+    3: aes128cfb with aes-key per product and aes-iv = random
+    4: aes128cfb with aes-key per device and aes-iv = random
+    5: aes128cfb with aes-key per manufacture and aes-iv = random
+    others: invalid
+   @endverbatim
+ * @see None.
+ */
+#define platform_get_conn_encrypt_type HAL_Awss_Get_Conn_Encrypt_Type
 
 /** @} */ //end of platform__awss
 

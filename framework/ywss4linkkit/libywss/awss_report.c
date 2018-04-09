@@ -26,6 +26,8 @@
  */
 #include "awss_main.h"
 #include "log.h"
+#include "zconfig_utils.h"
+#include "json_parser.h"
 #include "work_queue.h"
 #include "awss_cmp.h"
 #include "passwd.h"
@@ -54,13 +56,13 @@ static int awss_report_reset_to_cloud();
 static struct work_struct match_work = {
     .func = (work_func_t)&awss_report_token_to_cloud,
     .prio = DEFAULT_WORK_PRIO,
-    .name = "match monitor",
+    .name = "match",
 };
 
 static struct work_struct reset_work = {
     .func = (work_func_t)&awss_report_reset_to_cloud,
     .prio = DEFAULT_WORK_PRIO,
-    .name = "reset monitor",
+    .name = "reset",
 };
 
 int awss_report_token_reply(char *topic, int topic_len, void *payload, int payload_len, void *ctx)
@@ -77,13 +79,91 @@ int awss_report_reset_reply(char *topic, int topic_len, void *payload, int paylo
     return 0;
 }
 
+int awss_online_switchap(char *topic, int topic_len, void *payload, int payload_len, void *ctx)
+{
+#define SWITCHAP_RSP_LEN  (64)
+#define AWSS_SSID         "ssid"
+#define AWSS_PASSWD       "passwd"
+#define AWSS_BSSID        "bssid"
+#define AWSS_SWITCH_MODE  "switchMode"
+    int len = 0, switch_mode = 0;
+    char *packet = NULL, *awss_info = NULL, *elem = NULL;
+    int packet_len = SWITCHAP_RSP_LEN, awss_info_len = 0;
+    char ssid[OS_MAX_SSID_LEN + 1] = {0}, passwd[OS_MAX_PASSWD_LEN] = {0};
+    uint8_t bssid[ETH_ALEN] = {0};
+
+    awss_debug("%s\r\n", __func__);
+    if (payload == NULL || payload_len == 0)
+        goto ONLINE_SWITCHAP_FAIL;
+
+    awss_debug("online switchap len:%u, payload:%s\r\n", payload_len, payload);
+    packet = os_zalloc(packet_len + 1);
+    if (packet == NULL)
+        goto ONLINE_SWITCHAP_FAIL;
+
+    awss_info = json_get_value_by_name(payload, payload_len, AWSS_JSON_PARAM, &awss_info_len, NULL);
+    if (awss_info == NULL || awss_info_len == 0)
+        goto ONLINE_SWITCHAP_FAIL;
+
+    elem = json_get_value_by_name(awss_info, awss_info_len, AWSS_SSID, &len, NULL);
+    if (elem == NULL || len <= 0 || len >= OS_MAX_SSID_LEN)
+        goto ONLINE_SWITCHAP_FAIL;
+    memcpy(ssid, elem, len);
+
+    len = 0;
+    elem = json_get_value_by_name(awss_info, awss_info_len, AWSS_PASSWD, &len, NULL);
+    if (elem != NULL && len >0 && len < OS_MAX_PASSWD_LEN)
+        memcpy(passwd, elem, len);
+
+    len = 0;
+    elem = json_get_value_by_name(awss_info, awss_info_len, AWSS_BSSID, &len, NULL);
+    if (elem != NULL && len == ETH_ALEN)
+        memcpy(bssid, elem, len);
+
+    len = 0;
+    elem = json_get_value_by_name(awss_info, awss_info_len, AWSS_SWITCH_MODE, &len, NULL);
+    if (elem != NULL && elem[0] != '0')
+        switch_mode = 1;
+
+    {  // reduce stack used
+        char *id = NULL;
+        char id_str[MSG_REQ_ID_LEN] = {0};
+        id = json_get_value_by_name(payload, payload_len, AWSS_JSON_ID, &len, NULL);
+        memcpy(id_str, id, len > MSG_REQ_ID_LEN - 1 ? MSG_REQ_ID_LEN - 1 : len);
+        awss_build_packet(AWSS_CMP_PKT_TYPE_RSP, id_str, ILOP_VER, METHOD_EVENT_ZC_SWITCHAP, "{}", 200, packet, &packet_len);
+    }
+
+    char reply[TOPIC_LEN_MAX] = {0};
+    awss_build_topic(TOPIC_SWITCHAP_REPLY, reply, TOPIC_LEN_MAX);
+    awss_cmp_mqtt_send(reply, packet, packet_len);
+    os_free(packet);
+
+    /* make sure the packet is sent to cloud */
+    os_msleep(1000);
+
+    if (switch_mode) {
+        int ret = os_awss_connect_ap(WLAN_CONNECTION_TIMEOUT_MS, ssid, passwd,
+                                 AWSS_AUTH_TYPE_INVALID, AWSS_ENC_TYPE_INVALID, bssid, 0);
+        if (ret != 0) { // connect fail
+            os_reboot();
+            while (1);
+        }
+    }
+
+    return 0;
+
+ONLINE_SWITCHAP_FAIL:
+    log_warn("ilop online switchap failed");
+    if (packet) os_free(packet);
+    return -1;
+}
+
 static int awss_report_token_to_cloud()
 {
 #define REPORT_TOKEN_PARAM_LEN  (64)
     if (awss_report_token_suc || awss_report_token_cnt ++ > MATCH_REPORT_CNT_MAX)
         return 0;
 
-    char topic[TOPIC_LEN_MAX] = {0};
     int packet_len = AWSS_REPORT_LEN_MAX;
 
     char *packet = os_zalloc(packet_len + 1);
@@ -92,7 +172,7 @@ static int awss_report_token_to_cloud()
 
     queue_delayed_work(&match_work, MATCH_MONITOR_TIMEOUT_MS);
 
-    {
+    {  // reduce stack used
         unsigned char i;
         char id_str[MSG_REQ_ID_LEN] = {0};
         char param[REPORT_TOKEN_PARAM_LEN] = {0};
@@ -111,6 +191,7 @@ static int awss_report_token_to_cloud()
     }
 
     awss_debug("report token:%s\r\n", packet);
+    char topic[TOPIC_LEN_MAX] = {0};
     awss_build_topic(TOPIC_MATCH_REPORT, topic, TOPIC_LEN_MAX);
 
     awss_cmp_mqtt_send(topic, packet, packet_len);

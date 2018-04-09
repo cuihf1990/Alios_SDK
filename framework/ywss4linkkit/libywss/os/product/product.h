@@ -33,8 +33,7 @@ extern "C" {
 #endif
 
 #include "platform/platform.h"
-#include "iot_import_product.h"
-#include "iot_import_awss.h"
+#include "platform/iot_import_product.h"
 
 /** @defgroup group_product product
  *  @{

@@ -31,7 +31,6 @@
 #include "aws_lib.h"
 #include "zconfig_lib.h"
 #include "zconfig_utils.h"
-#include "zconfig_config.h"
 #include "zconfig_protocol.h"
 #include "enrollee.h"
 #include "awss_main.h"
@@ -65,10 +64,10 @@ struct aws_info {
 
 #define AWS_MAX_CHN_NUMS             (2 * 13 + 5)    /* +5 for safety gap */
     u8 chn_list[AWS_MAX_CHN_NUMS];
+    u8  stop;
 
     u32 chn_timestamp;/* channel start time */
     u32 start_timestamp;/* aws start time */
-    u8  stop;
 } *aws_info;
 
 #define aws_state                    (aws_info->state)
@@ -94,14 +93,14 @@ static void clr_aplist_monitor();
 static struct work_struct rescan_monitor_work = {
     .func = (work_func_t)&rescan_monitor,
     .prio = 1, /* smaller digit means higher priority */
-    .name = "awss rescan monitor",
+    .name = "rescan",
 };
 
 #define CLR_APLIST_MONITOR_TIMEOUT_MS  (24 * 60 *60 * 1000)
 static struct work_struct clr_aplist_monitor_work = {
     .func = (work_func_t)&clr_aplist_monitor,
     .prio = 1, /* smaller digit means higher priority */
-    .name = "awss clr aplist monitor",
+    .name = "clr aplist",
 };
 static uint8_t rescan_available = 0;
 static uint8_t clr_aplist = 0;
@@ -226,7 +225,7 @@ void aws_switch_channel(void)
 
     aws_chn_timestamp = os_get_time_ms();
 
-    awss_debug("channel %d\r\n", channel);
+    os_printf("chan %d\r\n", channel);
 }
 
 enum {
@@ -235,7 +234,7 @@ enum {
     CHNSCAN_TIMEOUT /* aws timeout */
 };
 
-ATTR int aws_is_chnscan_timeout(void)
+int aws_is_chnscan_timeout(void)
 {
     if (aws_stop == AWS_STOPPING) {
         awss_debug("aws will stop...\r\n");
@@ -267,7 +266,7 @@ int zconfig_add_active_channel(int channel)
  * platform like mc300, 雄迈 depend on auth & encry type
  * so keep scanning if auth & encry is incomplete
  */
-ATTR int aws_force_scanning(void)
+int aws_force_scanning(void)
 {
 #ifdef WITH_AUTH_ENCRY
     int timeout = sizeof(aws_fixed_scanning_channels) / sizeof(u8)

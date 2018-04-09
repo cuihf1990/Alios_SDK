@@ -37,8 +37,7 @@ extern "C"
 {
 #endif
 
-void produce_random(unsigned char *random, unsigned int len);
-int produce_signature(unsigned char *sign, unsigned char *txt, unsigned int txt_len);
+int produce_signature(unsigned char *sign, unsigned char *txt, unsigned int txt_len, const char *key);
 int aes_decrypt_string(char *cipher, char *plain, int len, int sec_lvl, char cbc);
 
 const char *cal_passwd(void *key, void *random, void *passwd);

@@ -93,7 +93,7 @@ extern struct adha_info *adha_aplist;
 extern u8 zconfig_aplist_num;
 
 int ieee80211_data_extract(u8 *in, int len, int link_type,
-        struct parser_res *res);
+                           struct parser_res *res, char rssi);
 
 struct ap_info *zconfig_get_apinfo(u8 *mac);
 struct ap_info *zconfig_get_apinfo_by_ssid(u8 *ssid);
