@@ -36,10 +36,10 @@ void  *cpu_task_stack_init(cpu_stack_t *base, size_t size, void *arg, task_entry
 extern volatile uint32_t g_nmilock_cnt;
 extern uint32_t WDEV_INTEREST_EVENT;
 
-#define CPSR_ALLOC() size_t cpsr
+#define CPSR_ALLOC() size_t cpsr = 0
 #define RHINO_CPU_INTRPT_DISABLE() do {       \
-        cpsr = XTOS_SET_INTLEVEL(XCHAL_EXCM_LEVEL);     \
         if (NMIIrqIsOn == 0) {      \
+            cpsr = XTOS_SET_INTLEVEL(XCHAL_EXCM_LEVEL);     \
             if (g_nmilock_cnt == 0) \
             {                       \
                 __asm__ __volatile__("rsync":::"memory");       \
@@ -61,8 +61,8 @@ extern uint32_t WDEV_INTEREST_EVENT;
                 REG_WRITE(INT_ENA_WDEV, WDEV_INTEREST_EVENT);   \
                 __asm__ __volatile__("rsync":::"memory");       \
             }                           \
+            XTOS_RESTORE_JUST_INTLEVEL(cpsr);               \
         }   \
-        XTOS_RESTORE_JUST_INTLEVEL(cpsr);               \
     } while(0)
 #endif
 
