@@ -9,6 +9,8 @@
 #include "stm32l4xx_hal.h"
 #include "hal_uart_stm32l4.h"
 
+#ifdef HAL_UART_MODULE_ENABLED 
+
 /* Init function for uart1 */
 static int32_t uart1_init(uart_dev_t *uart);
 static int32_t uart2_init(uart_dev_t *uart);
@@ -566,3 +568,4 @@ static void UART_RxISR_8BIT_Buf_Queue(UART_HandleTypeDef *huart)
     __HAL_UART_SEND_REQ(huart, UART_RXDATA_FLUSH_REQUEST);
   }
 }
+#endif

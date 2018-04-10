@@ -45,6 +45,8 @@
   ******************************************************************************
   */
 
+#ifdef HAL_FLASH_MODULE_ENABLED
+
 /* Includes ------------------------------------------------------------------*/
 #include <string.h>
 #include <stdbool.h>
@@ -246,6 +248,6 @@ int FLASH_read_at(uint32_t address, uint64_t *pData, uint32_t len_bytes)
     ret = 0;
     return ret;
 }
-
+#endif
 /************************ (C) COPYRIGHT STMicroelectronics *****END OF FILE****/
 
