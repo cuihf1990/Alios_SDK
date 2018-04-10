@@ -109,6 +109,15 @@ extern "C"
  */
 #define platform_msleep HAL_SleepMs
 
+/**
+ * @brief system reboot immediately.
+ *
+ * @return None.
+ * @see None.
+ * @note None.
+ */
+#define platform_reboot HAL_Sys_reboot
+
 /** @} */ //end of platform_thread
 
 
@@ -255,11 +264,11 @@ extern "C"
 /**
  * @brief this is a network address structure, including host(ip or host name) and port.
  */
-typedef struct
-{
-	char host[16]; /**< host ip(dotted-decimal notation) or host name(string) */
-	uint16_t port; /**< udp port or tcp port */
-} platform_netaddr_t, *pplatform_netaddr_t;
+// typedef struct
+// {
+// 	char host[16]; /**< host ip(dotted-decimal notation) or host name(string) */
+// 	uint16_t port; /**< udp port or tcp port */
+// } platform_netaddr_t, *pplatform_netaddr_t;
 
 /** @} */ //end of platform_network
 
@@ -278,7 +287,7 @@ typedef struct
  * @see None.
  * @note None.
  */
-//#define platform_sys_net_is_ready HAL_Sys_Net_Is_Ready
+#define platform_sys_net_is_ready HAL_Sys_Net_Is_Ready
 
 /**
  * @brief Retrieves the number of milliseconds that have elapsed since the system was boot.
@@ -814,6 +823,21 @@ typedef awss_wifi_scan_result_cb_t platform_wifi_scan_result_cb_t;
  */
 #define platform_get_encrypt_type HAL_Awss_Get_Encrypt_Type
 
+/**
+ * @brief    Get Security level for wifi configuration with connection.
+ *           Used for AP solution of router and App.
+ *
+ * @param None.
+ * @return The security level:
+   @verbatim
+    3: aes128cfb with aes-key per product and aes-iv = random
+    4: aes128cfb with aes-key per device and aes-iv = random
+    5: aes128cfb with aes-key per manufacture and aes-iv = random
+    others: invalid
+   @endverbatim
+ * @see None.
+ */
+#define platform_get_conn_encrypt_type HAL_Awss_Get_Conn_Encrypt_Type
 /** @} */ //end of platform__awss
 
 /** @} */ //end of group_platform
