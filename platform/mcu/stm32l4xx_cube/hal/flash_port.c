@@ -1,5 +1,6 @@
 #include "hal/soc/soc.h"
 #include "stm32l4xx.h"
+#include "stm32l4xx_hal.h"
 #include "stm32l4xx_hal_flash.h"
 #ifdef HAL_FLASH_MODULE_ENABLED
 
