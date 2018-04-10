@@ -7,7 +7,9 @@ $(NAME)_PREBUILT_LIBRARY := ./ARM968E-S/activation.a
 endif
 
 ifeq ($(HOST_ARCH),Cortex-M4)
-ifeq ($(COMPILER),armcc)
+ifeq ($(ENABLE_VFP),1)
+$(NAME)_PREBUILT_LIBRARY := ./Cortex-M4/VFP/activation.a
+else ifeq ($(COMPILER),armcc)
 $(NAME)_PREBUILT_LIBRARY := ./Cortex-M4/KEIL/activation.a
 else ifeq ($(COMPILER),iar)
 $(NAME)_PREBUILT_LIBRARY := ./Cortex-M4/IAR/activation.a
