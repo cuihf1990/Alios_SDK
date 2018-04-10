@@ -29,19 +29,93 @@
 #include "os.h"
 #include "passwd.h"
 #include "awss_cmp.h"
-#include "awss_wifimgr.h"
-#include "awss_notify.h"
 #include "awss_main.h"
+#include "awss_notify.h"
+#include "enrollee.h"
+#include "utils.h"
 
-#define LCMP_TOPIC_CNT_MAX  (10)
+#define AWSS_DEV_RAND_FMT       ",\"random\":\"%s\",\"signMethod\":%d,\"sign\":\"%s\""
+#define AWSS_DEV_TOKEN_FMT      ",\"token\":\"%s\",\"type\":%d"
+#define AWSS_DEV_INFO_FMT       "\"awssVer\":%s,\"productKey\":\"%s\",\"deviceName\":\"%s\",\"mac\":\"%s\",\"ip\":\"%s\",\"cipherType\":%d"
 
 #if defined(__cplusplus)  /* If this is a C++ compiler, use C linkage */
 extern "C"
 {
 #endif
 
-static char local_init = 0;
-static char online_init = 0;
+static void * awss_get_dev_info(void *dev_info, int len)
+{
+    if (dev_info == NULL || len <= 0)
+        return NULL;
+
+    char dev_name[PRODUCT_NAME_LEN + 1] = {0};
+    char mac_str[OS_MAC_LEN + 1] = {0};
+    char pk[PRODUCT_KEY_LEN + 1] = {0};
+    char ip_str[OS_IP_LEN + 1] = {0};
+
+    os_product_get_key(pk);
+    os_product_get_name(dev_name);
+    os_wifi_get_mac_str(mac_str);
+    os_wifi_get_ip(ip_str, NULL);
+
+    snprintf(dev_info, len - 1, AWSS_DEV_INFO_FMT, AWSS_VER, pk, dev_name, mac_str, ip_str, os_get_conn_encrypt_type());
+
+    return dev_info;
+}
+
+void *awss_build_dev_info(int type, void *dev_info, int info_len)
+{
+    int len = 0;
+    char *buf = NULL;
+
+    if (dev_info == NULL || info_len <= 0)
+        return NULL;
+
+    buf = os_zalloc(DEV_INFO_LEN_MAX);
+    if (buf == NULL)
+        return NULL;
+
+    len += snprintf(dev_info + len, info_len - len - 1, "%s", (char *)awss_get_dev_info(buf, DEV_INFO_LEN_MAX));
+    os_free(buf);
+    buf = NULL;
+
+    switch (type) {
+        case AWSS_NOTIFY_DEV_TOKEN:
+        {
+            char rand_str[(RANDOM_MAX_LEN << 1) + 1] = {0};
+            utils_hex_to_str(aes_random, RANDOM_MAX_LEN, rand_str, sizeof(rand_str));
+            len += snprintf(dev_info + len, info_len - len - 1, AWSS_DEV_TOKEN_FMT, rand_str, 0);
+            break;
+        }
+        case AWSS_NOTIFY_DEV_RAND:
+        {
+
+            char sign_str[ENROLLEE_SIGN_SIZE * 2 + 1] = {0};
+            {
+                int txt_len = 80;
+                char txt[80] = {0};
+                char key[OS_DEVICE_SECRET_LEN + 1] = {0};
+                uint8_t sign[ENROLLEE_SIGN_SIZE + 1] = {0};
+
+                if (os_get_conn_encrypt_type() == 3) // aes-key per product
+                    os_product_get_secret(key);
+                else  // aes-key per device
+                    os_get_device_secret(key);
+                awss_build_sign_src(txt, &txt_len);
+                produce_signature(sign, (uint8_t *)txt, txt_len, key);
+                utils_hex_to_str(sign, ENROLLEE_SIGN_SIZE, sign_str, sizeof(sign_str));
+            }
+            char rand_str[(RANDOM_MAX_LEN << 1) + 1] = {0};
+            utils_hex_to_str(aes_random, RANDOM_MAX_LEN, rand_str, sizeof(rand_str));
+            len += snprintf(dev_info + len, info_len - len - 1, AWSS_DEV_RAND_FMT, rand_str, 0, sign_str);
+            break;
+        }
+        default:
+            break;
+    }
+
+    return dev_info;
+}
 
 char *awss_build_sign_src(char *sign_src, int *sign_src_len)
 {
@@ -120,118 +194,6 @@ int awss_build_packet(int type, void *id, void *ver, void *method,void *data, in
         return 0;
     }
     return -1;
-}
-
-struct awss_cmp_couple {
-    char *topic;
-    void *cb;
-};
-
-#define AWSS_LOCAL_COUPLE_CNT  (6)
-const struct awss_cmp_couple awss_local_couple[AWSS_LOCAL_COUPLE_CNT] = {
-    {TOPIC_AWSS_SWITCHAP,            wifimgr_process_switch_ap_request},
-    {TOPIC_AWSS_WIFILIST,            wifimgr_process_get_wifilist_request},
-    {TOPIC_AWSS_GETDEVICEINFO_MCAST, wifimgr_process_mcast_get_device_info},
-    {TOPIC_AWSS_GETDEVICEINFO_UCAST, wifimgr_process_ucast_get_device_info},
-    {TOPIC_GETDEVICEINFO_MCAST,      online_mcast_get_device_info},
-    {TOPIC_GETDEVICEINFO_UCAST,      online_ucast_get_device_info}
-};
-
-int awss_cmp_local_init()
-{
-    if (local_init)
-        return 0;
-
-    local_init = 1;
-
-    char topic[TOPIC_LEN_MAX] = {0};
-    int i;
-
-    for (i = 0; i < sizeof(awss_local_couple) / sizeof(awss_local_couple[0]); i ++) {
-        memset(topic, 0, sizeof(topic));
-        awss_build_topic(awss_local_couple[i].topic, topic, TOPIC_LEN_MAX);
-        awss_cmp_coap_register_cb(topic, awss_local_couple[i].cb);
-    }
-
-    awss_cmp_coap_loop(NULL);
-
-    return 0;
-}
-
-
-
-#define AWSS_ONLINE_COUPLE_CNT  (5)
-const struct awss_cmp_couple awss_online_couple[AWSS_ONLINE_COUPLE_CNT] = {
-    {TOPIC_ZC_CHECKIN,         awss_enrollee_checkin},
-    {TOPIC_ZC_ENROLLEE_REPLY,  awss_report_enrollee_reply},
-    {TOPIC_ZC_CIPHER_REPLY,    awss_get_cipher_reply},
-    {TOPIC_MATCH_REPORT_REPLY, awss_report_token_reply},
-    {TOPIC_RESET_REPORT_REPLY, awss_report_reset_reply}
-};
-
-int awss_cmp_online_init()
-{
-    if (online_init)
-        return 0;
-
-    char topic[TOPIC_LEN_MAX] = {0};
-    int i;
-
-    for (i = 0; i < sizeof(awss_online_couple) / sizeof(awss_online_couple[0]); i ++) {
-        memset(topic, 0, sizeof(topic));
-        awss_build_topic(awss_online_couple[i].topic, topic, TOPIC_LEN_MAX);
-        awss_cmp_mqtt_register_cb(topic, awss_online_couple[i].cb);
-    }
-
-    online_init = 1;
-
-    return 0;
-}
-
-void awss_cmp_unrgist_topic()
-{
-    char topic[TOPIC_LEN_MAX] = { 0 };
-    int i;
-    int topic_len = 0;
-
-    extern char awss_report_token_flag;
-    awss_report_token_flag = 0;// don't report token when awss finished
-    if (local_init){
-        //TODO unregist local topic
-    }
-
-    if (online_init){
-        topic_len = sizeof(awss_online_couple) / sizeof(awss_online_couple[0]);
-        for (i = 0; i < topic_len - 1;i++) {//"reset_reply don't need unregister for reset"
-            memset(topic, 0, sizeof(topic));
-            awss_build_topic(awss_online_couple[i].topic, topic, TOPIC_LEN_MAX);
-            awss_cmp_mqtt_unregister_cb(topic);
-        }
-    }
-
-}
-
-int awss_cmp_deinit()
-{
-    int i;
-    char topic[TOPIC_LEN_MAX] = {0};
-
-    if (!local_init && !online_init)
-        return 0;
-    awss_connectap_notify_stop();
-    awss_devinfo_notify_stop();
-    awss_cmp_coap_deinit();
-
-    for (i = 0; i < sizeof(awss_online_couple) / sizeof(awss_online_couple[0]); i ++) {
-        memset(topic, 0, sizeof(topic));
-        awss_build_topic(awss_online_couple[i].topic, topic, TOPIC_LEN_MAX);
-        awss_cmp_mqtt_unregister_cb(topic);
-    }
-
-    local_init = 0;
-    online_init = 0;
-
-    return 0;
 }
 
 #if defined(__cplusplus)  /* If this is a C++ compiler, use C linkage */

@@ -76,6 +76,14 @@ class aos_global_config:
     def tool_chain_config(tool_chain):
         tool_chain.tools_config()
 
+    @staticmethod
+    def add_ld_files(*lds):
+        for ld in lds:
+            path = ld
+            if not os.path.isabs(path) and not path.startswith('#'):
+                path = os.path.join(os.getcwd(), path)
+            aos_global_config.ld_files.append(path)
+
 
 class aos_component:
     def __init__(self, name, src):
@@ -168,14 +176,9 @@ class aos_component:
         return aos_global_config.mcu_family
 
 
-class aos_arch_component(aos_component):
+class aos_mcu_component(aos_component):
     def __init__(self, name, src):
         aos_component.__init__(self, name, src)
-
-    def add_global_ld_file(self, file):
-        if not os.path.isabs(file) and not file.startswith('#'):
-            file = os.path.join(self.dir, file)
-        aos_global_config.ld_files.append(file)
 
     @staticmethod
     def add_global_cflags(*cflags):
@@ -196,18 +199,20 @@ class aos_arch_component(aos_component):
     def set_global_arch(arch):
         aos_global_config.arch = arch
 
-    @staticmethod
-    def set_global_mcu_family(mcu_family):
-        aos_global_config.mcu_family = mcu_family
-
 
 class aos_board_component(aos_component):
-    def __init__(self, name, src):
+    def __init__(self, name, mcu, src):
         aos_component.__init__(self, name, src)
+        self.set_global_mcu_family(mcu)
+        self.add_component_dependencis(os.path.join('platform/mcu', mcu))
 
     @staticmethod
     def set_global_testcases(testcases):
         aos_global_config.testcases = testcases
+
+    @staticmethod
+    def set_global_mcu_family(mcu_family):
+        aos_global_config.mcu_family = mcu_family
 
 
 def do_process(process):

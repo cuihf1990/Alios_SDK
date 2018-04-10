@@ -31,15 +31,12 @@ CoAPContext *CoAPServer_init();
 #ifndef COAP_WITH_YLOOP
 void *CoAPServer_yield(void *param);
 #endif
-
+void CoAPServer_add_timer (void (*on_timer)(void*));
 void CoAPServer_loop(CoAPContext *context);
 
-#define CoAPServer_deinit(c) \
-    do {\
-        CoAPServer_deinit0(c);\
-    } while (0)
 
-void CoAPServer_deinit0(CoAPContext *context);
+void CoAPServer_deinit(CoAPContext *context);
+//void CoAPServer_deinit0(CoAPContext *context);
 
 int CoAPServer_register(CoAPContext *context, const char *uri, CoAPRecvMsgHandler callback);
 

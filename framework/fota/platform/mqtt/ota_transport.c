@@ -23,7 +23,6 @@
 #define MSG_REPORT_LEN  (256)
 #define MSG_INFORM_LEN  (128)
 
-
 typedef struct ota_device_info {
     char product_key[PRODUCT_KEY_MAXLEN + 1];
     char device_name[DEVICE_NAME_MAXLEN + 1];
@@ -39,6 +38,8 @@ typedef enum {
 OTA_device_info g_ota_device_info;
 
 static char *g_upgrad_topic;
+
+extern int version_report();
 
 static const char *to_capital_letter(char *value, int len);
 static int  ota_mqtt_gen_topic_name(char *buf, size_t buf_len, const char *ota_topic_type, const char *product_key,
@@ -416,7 +417,11 @@ int8_t platform_ota_result_post(void)
         OTA_LOG_E("Report version failed");
         return -1;
     }
-
+    ret = version_report();
+    if (0 != ret) {
+        OTA_LOG_E("Report detail version failed");
+        return -1;
+    }
     return ret;
 }
 

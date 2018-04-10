@@ -10,6 +10,7 @@
 #include "hal_spi_stm32l4.h"
 #include "stm32l4xx_hal_spi.h"
 
+#ifdef HAL_SPI_MODULE_ENABLED 
 /* Init and deInit function for spi1 */
 static int32_t spi1_init(spi_dev_t *spi);
 static int32_t spi1_DeInit(void);
@@ -169,3 +170,4 @@ static int32_t spi_freq_transform(uint32_t freq_hal, uint32_t *BaudRatePrescaler
 
     return ret;
 }
+#endif

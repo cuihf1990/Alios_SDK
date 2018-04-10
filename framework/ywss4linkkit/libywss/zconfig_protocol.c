@@ -26,13 +26,13 @@
  */
 
 #include <stdlib.h>
-#include <string.h>                // strcpy, memset()
-#include <ctype.h>                // isascii()
+#include <string.h>            // strcpy, memset()
+#include <ctype.h>             // isascii()
 #include "os.h"                // uint32_t
-#include <stdio.h>                // snprintf
+#include "log.h"
+#include <stdio.h>             // snprintf
 #include "zconfig_utils.h"
 #include "zconfig_ieee80211.h"
-#include "zconfig_config.h"
 #include "zconfig_protocol.h"
 #include "passwd.h"
 #include "awss_main.h"
@@ -102,7 +102,7 @@ static inline u8 get_group_index(u16 len)
 static inline u8 get_data_index(u16 len)
 {
     u8 index = (len >> PAYLOAD_BITS_CNT) & 0xF;
-    return index - (ZC_GRP_PKT_IDX_START - 1);        /* from 1 to 15 */
+    return index - (ZC_GRP_PKT_IDX_START - 1);        /* from 1 to 9 */
 }
 
 #define sn_minus(a,b)    (((a) - (b)) & 0xfff)
@@ -268,7 +268,7 @@ static inline int zconfig_recv_completed(u8 tods)
                 goto skip_ssid_auto_complete;
             }
 
-            awss_debug("ssid auto-complete: %s\r\n", zc_ssid);
+            os_printf("ssid auto-complete: %s\r\n", zc_ssid);
             pkg_score(2) = SSID_AUTO_COMPLETE_SCORE;
 
             pkg_len(3) = ssid_len | 0x200;    /* 0x200 is the index 3 */
@@ -297,7 +297,7 @@ static inline int zconfig_recv_completed(u8 tods)
             buf = os_zalloc(256);
             bug_on(!buf, "malloc failed!\r\n");
 
-            awss_debug("chinese ssid auto-complete: %s\r\n", zc_ssid);
+            os_printf("chinese ssid auto-complete: %s\r\n", zc_ssid);
             encode_chinese(zc_ssid, ssid_len, buf, &buf_len, 6);
 
             pkg_score(2) = SSID_AUTO_COMPLETE_SCORE;
@@ -316,9 +316,9 @@ static inline int zconfig_recv_completed(u8 tods)
 
 skip_ssid_auto_complete:
     awss_debug("expect len = %d, max len = %d\r\n", len, zc_max_pos);
-    if (zc_max_pos < len - 1) return 0;/* -1 for crc bug */
+    if (zc_max_pos < len) return 0;  // receive all the packets
 
-    for (i = 1; i <= len - 1; i++) {/* -1 for crc bug */
+    for (i = 1; i <= len; i ++) {  // check score for all the packets
         if (pkg_score(i) <= score_min) {
             return 0;
         }
@@ -351,15 +351,17 @@ static inline int zconfig_get_ssid_passwd(u8 tods)
     /* package num */
     package_num = pkg_len(1) & PAYLOAD_BITS_MASK;/* total len, include len(1B) & crc(2B) */
 
+    os_printf("\r\n\r\n");
     for (i = 1; i <= package_num; i ++) {
         data = pkg_len(i);
         score = pkg_score(i);
         buf[i - 1] = data & PAYLOAD_BITS_MASK;
-        awss_debug("%02x %s", score, (i % GROUP_NUMBER == 0) ? "  " : "");
+        os_printf("%02x %s", score, (i % GROUP_NUMBER == 0) ? "\r\n" : "");
     }
-    awss_debug("\r\n");
 
+    os_printf("\r\n\r\n");
     dump_hex(&buf[0], package_num, GROUP_NUMBER);
+    os_printf("\r\n\r\n");
 
     crc = os_get_unaligned_be16(&buf[package_num - 2]);
 
@@ -371,7 +373,7 @@ static inline int zconfig_get_ssid_passwd(u8 tods)
     passwd_encrypt = (flag & PASSWD_ENCRYPT_MASK) >> PASSWD_ENCRYPT_BIT_OFFSET;
 
     if (passwd_encrypt == PASSWD_ENCRYPT_CIPHER || passwd_encrypt == PASSWD_ENCRYPT_OPEN) {
-        log_error("passwd encypt without aes128-cfb not support: flag 0x%x\r\n", flag);
+        log_error("!aes128-cfb is not support: flag 0x%x\r\n", flag);
         ret = -1;
         goto exit;
     } else {
@@ -379,7 +381,8 @@ static inline int zconfig_get_ssid_passwd(u8 tods)
     }
 
     if (crc != cal_crc) {
-        log_error("crc check error: recv 0x%x != 0x%x\r\n", crc, cal_crc);
+        log_error("crc error: recv 0x%x != 0x%x\r\n", crc, cal_crc);
+        memset(zconfig_data, 0, sizeof(*zconfig_data));
         ret = -1;
         goto exit;
     }
@@ -403,15 +406,15 @@ static inline int zconfig_get_ssid_passwd(u8 tods)
 
         if (zc_ssid[0] == '\0' || zc_ssid_auto_complete_disable) {
             strncpy((char *)zc_ssid, (const char *)tmp, ZC_MAX_SSID_LEN);
-            awss_debug("SSID: [%s]\r\n", zc_ssid);
+            os_printf("SSID: [%s]\r\n", zc_ssid);
         } else {
             if (!strncmp((const char *)tmp, (char *)zc_ssid, ZC_MAX_SSID_LEN)) {
-                awss_debug("SSID: [%s]\r\n", zc_ssid);
+                os_printf("SSID: [%s]\r\n", zc_ssid);
             } else {
                 if (zc_ssid_is_gbk)
-                    awss_debug("gbk SSID: [%s]\r\n", zc_ssid);
+                    os_printf("gbk SSID: [%s]\r\n", zc_ssid);
                 else
-                    awss_debug("gbk? SSID: [%s]\r\n", zc_ssid);
+                    os_printf("gbk? SSID: [%s]\r\n", zc_ssid);
             }
         }
 
@@ -434,6 +437,12 @@ static inline int zconfig_get_ssid_passwd(u8 tods)
         passwd_len = passwd_cipher_len;
         memset(zc_passwd, 0, ZC_MAX_PASSWD_LEN);
         aes_decrypt_string((char *)tmp, (char *)zc_passwd, passwd_len, os_get_encrypt_type(), 0);
+        if (is_utf8((const char *)zc_passwd, passwd_len) == 0) {
+            log_error("passwd err\r\n");
+            memset(zconfig_data, 0, sizeof(*zconfig_data));
+            ret = -1;
+            goto exit;
+        }
     } else {
         memcpy((char *)tmp, pbuf, passwd_len);
         tmp[passwd_len] = '\0';
@@ -441,7 +450,8 @@ static inline int zconfig_get_ssid_passwd(u8 tods)
             tmp[i] += 32;
         strncpy((char *)zc_passwd, (const char *)tmp, ZC_MAX_PASSWD_LEN);
 
-        log_error("zconfig encrypt:%d not support\r\n", passwd_encrypt);
+        log_error("encrypt:%d not support\r\n", passwd_encrypt);
+        memset(zconfig_data, 0, sizeof(*zconfig_data));
         ret = -1;
         goto exit;
     }
@@ -562,6 +572,7 @@ static inline void passwd_check_utf8(u8 *passwd, int *passwd_len)
  */
 static inline int get_ssid_passwd_from_w(u8 *in, int total_len, u8 *src, u8* bssid)
 {
+    uint8_t tmp_ssid[ZC_MAX_SSID_LEN + 1] = {0}, tmp_passwd[ZC_MAX_PASSWD_LEN + 1] = {0};
     int ssid_len, passwd_len, ssid_truncated = 0;
     u16 crc, cal_crc;
     char encrypt = 0;
@@ -621,6 +632,7 @@ static inline int get_ssid_passwd_from_w(u8 *in, int total_len, u8 *src, u8* bss
     }
 
     in += 1;/* eating ssid_len(1B) */
+
     memset(tmp_ssid, 0, ZC_MAX_SSID_LEN);
     memset(tmp_passwd, 0, ZC_MAX_PASSWD_LEN);
 
@@ -644,10 +656,16 @@ static inline int get_ssid_passwd_from_w(u8 *in, int total_len, u8 *src, u8* bss
         memset(tmp_passwd, 0, ZC_MAX_PASSWD_LEN);
         aes_decrypt_string((char *)passwd_cipher, (char *)tmp_passwd, passwd_len, os_get_encrypt_type(), 0);
         os_free(passwd_cipher);
+        if (is_utf8((const char *)tmp_passwd, passwd_len) == 0) {
+            memset(zconfig_data, 0, sizeof(*zconfig_data));
+            warn_on(1, "p2p decrypt passwd content err\r\n");
+            return GOT_NOTHING;
+        }
         break;
     }
     default:
         warn_on(1, "p2p encypt:%d not support\r\n", encrypt);
+        memset(zconfig_data, 0, sizeof(*zconfig_data));
         return GOT_NOTHING;
     }
 
@@ -724,19 +742,19 @@ static inline int get_ssid_passwd_from_w(u8 *in, int total_len, u8 *src, u8* bss
 /* debug code */
 void dump_pkgs(u8 tods)
 {
-    u8 package_num, i, data, score = score;
+    u8 package_num, i, data, score;
     u8 buf[128];
 
     /* package num */
     package_num = pkg_len(1) & PAYLOAD_BITS_MASK;/* total len, include len(1B) & crc(2B) */
 
-    for (i = 1; i <= package_num; i++) {
+    for (i = 1; i <= package_num; i ++) {
         data = pkg_len(i);
         score = pkg_score(i);
-        buf[i-1] = data & PAYLOAD_BITS_MASK;
-        awss_debug("%02x %s", score, (i % GROUP_NUMBER == 0) ? "  " : "");
+        buf[i - 1] = data & PAYLOAD_BITS_MASK;
+        os_printf("%02x %s", score, (i % GROUP_NUMBER == 0) ? "  " : "");
     }
-    awss_debug("\r\n");
+    os_printf("\r\n");
 
     dump_hex(&buf[0], package_num, GROUP_NUMBER);
 }
@@ -765,7 +783,7 @@ static inline void package_save(u8 *package, u8 *src, u8 *dst, u8 tods, u16 len)
 }
 
 /* len -= (rth->it_len + hdrlen); see ieee80211.c */
-u8 zconfig_fixed_offset[ZC_ENC_TYPE_MAX + 1][2] = {
+const u8 zconfig_fixed_offset[ZC_ENC_TYPE_MAX + 1][2] = {
     {//open, none, ip(20) + udp(8) + 8(LLC)
         36, 36
     },
@@ -783,7 +801,7 @@ u8 zconfig_fixed_offset[ZC_ENC_TYPE_MAX + 1][2] = {
     }
 };
 
-u16 zconfig_hint_frame[] = {/* GROUP_FRAME is not used, gourp 0 - 7 */
+const u16 zconfig_hint_frame[] = {/* GROUP_FRAME is not used, gourp 0 - 7 */
     START_FRAME, GROUP_FRAME + 1, GROUP_FRAME + 2, GROUP_FRAME + 3, GROUP_FRAME + 4,
     GROUP_FRAME + 5, GROUP_FRAME + 6, GROUP_FRAME + 7,
     0    /* NULL terminated */
@@ -899,11 +917,11 @@ static inline u8 get_data_score(u16 group_sn, u16 sn_now, u16 sn_last, u8 index_
 {
 /*
 example: 1
-8+3 250 0  d0e cc:fa:00:c8:cf:d2 > ff:ff:ff:ff:ff:ff
-8+4 2bf 0  d15 cc:fa:00:c8:cf:d2 > ff:ff:ff:ff:ff:ff    //两个包index_delta=1, sn_delta=7
+ 8+3 250 0  d0e cc:fa:00:c8:cf:d2 > ff:ff:ff:ff:ff:ff
+ 8+4 2bf 0  d15 cc:fa:00:c8:cf:d2 > ff:ff:ff:ff:ff:ff    //两个包index_delta=1, sn_delta=7
 
 example: 2
-8+0, 3e1,  9a5
+ 8+0, 3e1,  9a5
  8+1, 13f,  9a7
          group_sn=9a7, sn=9ab-9a7, pos=e-9, len=3ce        //here, index_delta=5, sn_delta=4
          group_sn=9a7, sn=9ac-9ab, pos=f-9, len=454
@@ -912,13 +930,13 @@ example: 3
  8+3, 225,  a32
  8+6, 3c7,  a39        //此处应该是16+6, index_delta=3, sn_delta=7
 example: 4
-0+0, 4e0,  da5
+ 0+0, 4e0,  da5
  0+7, 441,  dab        //此处应该是8+7， index_delta=7, sn_delta=6
-0+0, 4e0,  d89
+ 0+0, 4e0,  d89
  0+8, 4c2,  d8f        //此处应该是8+8， index_delta=8, sn_delta=6
 
 //example: 4
-0+0 [100] 294 0 4e0
+ 0+0 [100] 294 0 4e0
  0+1 [60] 2a2 0 11a
  0+2 [40] 2aa 0 181
          group_sn:2aa, sn:2b8-2aa=14, pos:3-2, len:20a
@@ -929,13 +947,13 @@ example: 4
          group_sn:2aa, sn:2cc-2c8=34, pos:8-2, len:493
 */
     static const u16 score_level[][2] = {
-        {0,            0},
-        {1,         2}, //include, example 1, 3
-        {4,            8},
-        {8,            16},//example 1
-        {15,         30},
-        {40,        40},
-        {0xFFFF,    score_max}    //the end missing seq, example 2
+        {0,      0},
+        {1,      2}, //include, example 1, 3
+        {4,      8},
+        {8,      16},//example 1
+        {15,     30},
+        {40,     40},
+        {0xFFFF, score_max}    //the end missing seq, example 2
     };
 
     u16 sn_delta = sn_minus(sn_now, group_sn) - 1;
@@ -1070,15 +1088,15 @@ retry:
 replace:
     if (final_pos != -1) {
         reason = reason;
-        awss_debug("\tX = %d, score=%d, match=%d, reason=%d\r\n", final_pos, match_score, max_match, reason);
+        os_printf("\tX = %d, score=%d, match=%d, reason=%d\r\n", final_pos, match_score, max_match, reason);
         if (match_end != GROUP_NUMBER)
-            awss_debug("\t match from [1-%d]\r\n", match_end);
+            os_printf("\t match from [1-%d]\r\n", match_end);
         for (i = final_pos + 1, j = 1; i <= final_pos + match_end; i++, j++) {
             if (pkg_score(i) < match_score && tmp_score(j)) {
                 pkg_len(i) = tmp_len(j);
                 pkg_score(i) = (match_score > tmp_score(j) - 1) ?
                             (match_score - (tmp_score(j) - 1)) : match_score;//TODO
-                awss_debug("\t%d+%d [%d] %c %-3x\r\n", final_pos, j, pkg_score(i), flag_tods(tods), tmp_len(j));
+                os_printf("\t%d+%d [%d] %c %-3x\r\n", final_pos, j, pkg_score(i), flag_tods(tods), tmp_len(j));
 
                 zc_replace = 1;
                 if (zc_max_pos < i)
@@ -1281,7 +1299,7 @@ int is_invalid_pkg(void *pkt_data, u32 pkt_length)
       return 0;
 }
 
-ATTR int zconfig_recv_callback_w(struct parser_res *res)
+int zconfig_recv_callback_w(struct parser_res *res)
 {
     u8 *data = res->u.wps.data;
     u16 len = res->u.wps.data_len;
@@ -1309,7 +1327,7 @@ rcv_done:
     return PKG_END;
 }
 
-ATTR int zconfig_recv_callback_broadcast(struct parser_res *res)
+int zconfig_recv_callback_broadcast(struct parser_res *res)
 {
     u32 timestamp = zconfig_get_time();
 
@@ -1328,11 +1346,9 @@ ATTR int zconfig_recv_callback_broadcast(struct parser_res *res)
 
     u16 pos = 0, index = 0;
 
-#ifdef PRINT_FRAME_INFO //debug for new-platform
     awss_debug("len=%d, %c, sn=%d, enc=%d, chn=%d, src=%02x%02x%02x%02x%02x%02x\r\n",
-          len, flag_tods(tods), sn, encry_type, channel,
-          src[0], src[1], src[2], src[3], src[4], src[5]);
-#endif
+               len, flag_tods(tods), sn, encry_type, channel,
+               src[0], src[1], src[2], src[3], src[4], src[5]);
 
     /*
      * STATE_CHN_LOCKED_BY_P2P is set by v2 wps/action frame, which means
@@ -1343,12 +1359,12 @@ ATTR int zconfig_recv_callback_broadcast(struct parser_res *res)
     if (zc_state == STATE_CHN_LOCKED_BY_P2P ||
         zc_state == STATE_CHN_SCANNING) {
         if (is_hint_frame(encry_type, len, bssid, src, channel, tods, sn)) {
-            awss_debug("hint frame: offset:%d, %c, sn:%x\r\n",
-                  zc_frame_offset, flag_tods(tods), sn);
+            os_printf("hint frame: offset:%d, %c, sn:%x\r\n",
+                      zc_frame_offset, flag_tods(tods), sn);
 
-            awss_debug("src:%02x%02x%02x%02x%02x%02x, bssid:%02x%02x%02x%02x%02x%02x\r\n",
-                  src[0], src[1], src[2], src[3], src[4], src[5],
-                  bssid[0], bssid[1], bssid[2], bssid[3], bssid[4], bssid[5]);
+            os_printf("src:%02x%02x%02x%02x%02x%02x, bssid:%02x%02x%02x%02x%02x%02x\r\n",
+                      src[0], src[1], src[2], src[3], src[4], src[5],
+                      bssid[0], bssid[1], bssid[2], bssid[3], bssid[4], bssid[5]);
 
             pkg_type = PKG_START_FRAME;
             zconfig_set_state(STATE_CHN_LOCKED_BY_BR, tods, channel);
@@ -1357,12 +1373,12 @@ ATTR int zconfig_recv_callback_broadcast(struct parser_res *res)
         } else if (!memcmp(zc_android_src, src, ETH_ALEN)) {
             struct ap_info *ap_info = zconfig_get_apinfo(bssid);
             if (ap_info) {
-                strncpy((char *)zc_android_ssid, ap_info->ssid, ZC_MAX_SSID_LEN);
+                if (ap_info->ssid[0] != 0x00 && ap_info->ssid[0] != 0xFF)
+                    strncpy((char *)zc_android_ssid, ap_info->ssid, ZC_MAX_SSID_LEN);
                 memcpy(zc_android_bssid, bssid, ETH_ALEN);
-                awss_debug("src %02x%02x%02x match %02x%02x%02x\r\n",
-                      zc_android_src[0], zc_android_src[1],
-                      zc_android_src[2], zc_android_bssid[0],
-                      zc_android_bssid[1], zc_android_bssid[2]);
+                os_printf("src %02x%02x%02x match %02x%02x%02x\r\n",
+                          zc_android_src[0], zc_android_src[1], zc_android_src[2],
+                          zc_android_bssid[0], zc_android_bssid[1], zc_android_bssid[2]);
             }
         }
     } else if (zc_state == STATE_CHN_LOCKED_BY_BR) {
@@ -1378,11 +1394,13 @@ ATTR int zconfig_recv_callback_broadcast(struct parser_res *res)
         }
 
         ret = sn_compare(sn, zc_prev_sn);
+        if (ret <= 0)  // retry packet, update timestamp
+            zc_timestamp = timestamp;
         if (ret == 0) {
-            log("drop: %3x == %3x\r\n", sn, zc_prev_sn);//log level, too many retry pkg
+            os_printf("drop: %3x == %3x\r\n", sn, zc_prev_sn);//log level, too many retry pkg
             goto drop;
         } else if ((sn_compare(sn, zc_prev_sn) < 0) && (!timeout)) {//if timeout, goto pos_unsync
-            awss_debug("drop: %3x < %3x\r\n", sn, zc_prev_sn);//TODO: better not drop
+            os_printf("drop: %3x < %3x\r\n", sn, zc_prev_sn);//TODO: better not drop
             goto update_sn;//FIXME: update sn???
         }
 
@@ -1406,19 +1424,19 @@ ATTR int zconfig_recv_callback_broadcast(struct parser_res *res)
              *     case1: 进入条件同时也是退出条件
              *     case2: 收到同步帧
              */
-            if (index < zc_last_index || (index == zc_last_index && len != zc_last_len)
-                    || timeout) {
+            if (index < zc_last_index ||
+                (index == zc_last_index && len != zc_last_len) || timeout) {
                 if (zc_pos_unsync) {/* already in pos_unsync state */
-                    log("\texit try_to_sync_pos: re-enter!\r\n");
+                    os_printf("\texit try_to_sync_pos: re-enter!\r\n");
                     try_to_sync_pos(tods, zc_prev_sn, sn, zc_group_pos, -1);
                 }
                 zc_pos_unsync = 1;/* also a new start */
                 if (index < zc_last_index)
-                    log("\tenter try_to_sync_pos: rollback \r\n");
+                    os_printf("\tenter try_to_sync_pos: rollback \r\n");
                 else if (timeout)
-                    log("\tenter try_to_sync_pos: timeout \r\n");
+                    os_printf("\tenter try_to_sync_pos: timeout \r\n");
                 else
-                    log("\tenter try_to_sync_pos: != \r\n");
+                    os_printf("\tenter try_to_sync_pos: != \r\n");
             }
 pos_unsync:
             if (zc_pos_unsync) {/* tmp save */
@@ -1427,15 +1445,15 @@ pos_unsync:
                     tmp_score(index) = 1;
                 else
                     tmp_score(index) = (sn - zc_prev_sn);//TODO: index? last_tmp_score
-                zc_pos_unsync++; /* unsync pkg counter */
-                awss_debug("\tX+%d [%d] %-3x %c %-3x\r\n", index, tmp_score(index), sn, flag_tods(tods), len);
+                zc_pos_unsync ++; /* unsync pkg counter */
+                os_printf("\tX+%d [%d] %-3x %c %-3x\r\n", index, tmp_score(index), sn, flag_tods(tods), len);
                 goto update_sn;//FIXME: update prev_sn or not?
             }
 
             // assert(sn > zc_prev_sn && pos > zc_cur_pos)
             score = get_data_score(zc_group_sn, sn, zc_prev_sn, pos, zc_cur_pos, tods);
             if (score == score_min) {//better not drop any pkg here
-                awss_debug("\t drop: group_sn:%x, sn:%x-%x=%x, pos:%d-%d, len:%x\r\n",
+                os_printf("\t drop: group_sn:%x, sn:%x-%x=%x, pos:%d-%d, len:%x\r\n",
                         zc_group_sn, sn, zc_prev_sn, sn_minus(sn, zc_group_sn), pos, zc_cur_pos, len);
                 goto update_sn;
             } else {
@@ -1443,14 +1461,14 @@ pos_unsync:
                     zc_score_uplimit = score;/* inherit last limit */
 
                 zc_group_sn = sn;//TODO
-                awss_debug("%d+%d [%d] %-3x %c %-3x\r\n", zc_group_pos, index, score, sn, flag_tods(tods), len);
+                os_printf("%d+%d [%d] %-3x %c %-3x\r\n", zc_group_pos, index, score, sn, flag_tods(tods), len);
             }
         } else {
             if (is_start_frame(len) || is_group_frame(len)) {
                 u8 group = get_group_index(len);
 
                 if (zc_pos_unsync) {
-                    log("\texit try_to_sync_pos: group frame\r\n");
+                    os_printf("\texit try_to_sync_pos: group frame\r\n");
                     try_to_sync_pos(tods, zc_prev_sn, sn, zc_group_pos, group);
                 }
 
@@ -1459,7 +1477,7 @@ pos_unsync:
                 zc_group_sn = sn;
                 zc_score_uplimit = score_max;
 
-                awss_debug("%d+%d [%d] %-3x %c %-3x\r\n", group, 0, zc_score_uplimit, sn, flag_tods(tods), len);
+                os_printf("%d+%d [%d] %-3x %c %-3x\r\n", group, 0, zc_score_uplimit, sn, flag_tods(tods), len);
 
                 //ignore PKG_GROUP_FRAME here
                 pkg_type = PKG_START_FRAME;
@@ -1473,14 +1491,14 @@ pos_unsync:
                 //zc_replace may happen in try_to_sync_pos(), so goto is_recv_completed
                 goto is_recv_completed;
             } else {
-                awss_debug("\t invalid len = %d\r\n", len + zc_frame_offset);
+                os_printf("\t invalid len = %d\r\n", len + zc_frame_offset);
                 goto drop;
             }
         }
 
         /* start from pkg(1), leave pkg(0) for start frame */
         if (pos >= MAX_PKG_NUMS || pos <= 0) {
-            log("msg index(%d) out of range!\r\n", pos);
+            os_printf("msg index(%d) out of range!\r\n", pos);
             goto drop;
         }
 
@@ -1497,44 +1515,48 @@ pos_unsync:
            1) data equal:    score_uplimit up???
            2) not equal:    goto pos_unsync
          */
-        equal = !package_cmp((u8 *)pkg(pos), src, dst, tods, len);
+        for (tods = 0; tods < 2; tods ++) {
+            equal = !package_cmp((u8 *)pkg(pos), src, dst, tods, len);
 
-        if (score > pkg_score(pos)) {
-            pkg_score(pos) = score;    //update score first
-            if (!equal) {
+            if (score > pkg_score(pos)) {
+                pkg_score(pos) = score;    //update score first
+                if (equal) continue;
+                // not equal
                 zc_replace = 1;
                 package_save((u8 *)pkg(pos), src, dst, tods, len);
-                //dump_mac(src, bssid);
-            }
-        } else if (score == pkg_score(pos)) {/* range check ? */
-            if (equal)
-                pkg_score(pos)++;
-            else {//not equal
+            } else if (score == pkg_score(pos)) {/* range check ? */
+                if (equal) {
+                    pkg_score(pos) ++;
+                    continue;
+                }
+                // not equal
                 int replace = try_to_replace_same_pos(tods, pos, len);
-                if (!replace) {
-                    pkg_score(pos) /= 2;
-                    if (score >= score_mid)//better not happen
-                        warn("xxxxxxxx warn: pos=%d, score=[%d], %x != %x\r\n",
-                                pos, score, pkg_len(pos), len);
-                } else
-                    awss_debug("\t replace @ %d, len=%x\r\n", pos, len);
-            }
-        } else {//pkg_score(pos) > score
-            if (!equal) {/* data not equal */
-                if (!zc_pos_unsync) {
+                if (replace) {
+                    os_printf("\t replace @ %d, len=%x\r\n", pos, len);
+                    continue;
+                }
+                pkg_score(pos) /= 2;
+                if (score >= score_mid)  // better not happen
+                    warn("xxxxxxxx warn: pos=%d, score=[%d], %x != %x\r\n",
+                         pos, score, pkg_len(pos), len);
+
+            } else if (tods == res->tods) {//pkg_score(pos) > score
+                if (!equal) {/* data not equal */
+                    if (zc_pos_unsync)
+                        continue;
                     zc_pos_unsync = 1;
-                    log("\tenter try_to_sync_pos: data mismatch\r\n");
+                    os_printf("\tenter try_to_sync_pos: data mismatch\r\n");
+                    tods = res->tods;
                     goto pos_unsync;
-                } //else {} should not reach here
-            } else {/* data equal */
-                if (zc_score_uplimit >= score_mid && pkg_score(pos) - score < 10) {
+                } else if (zc_score_uplimit >= score_mid && pkg_score(pos) - score < 10) { /* data equal */
                     u8 uplimit = (zc_score_uplimit + pkg_score(pos)) / 2;
                     if (zc_score_uplimit != uplimit)
-                        awss_debug("\t\t\t uplimit [%d] -> [%d]\r\n", zc_score_uplimit, uplimit);
+                        os_printf("\t\t\t uplimit [%d] -> [%d]\r\n", zc_score_uplimit, uplimit);
                     zc_score_uplimit = uplimit;
                 }
             }
         }
+        tods = res->tods;
 
 is_recv_completed:
         zc_max_pos = (zc_max_pos < zc_cur_pos) ? zc_cur_pos : zc_max_pos;
@@ -1621,8 +1643,6 @@ int zconfig_recv_callback_zero_config(struct parser_res *res)
     if (ret)
         return PKG_INVALID;
 
-    awss_debug("Registrar decrypt %s.\r\n", !ret ? "success" : "failed");
-
     zconfig_set_state(STATE_RCV_DONE, tods, channel);
 
     return PKG_END;
@@ -1663,21 +1683,20 @@ void ht40_init(void)
 
 int ht40_lock_channel(u8 channel, u8 filter)
 {
-    if (1 <= channel && channel <= 13) {
-        if (!ht40_channel[channel]) {//replace when 0
-            ht40_channel[channel]++;
-            ht40_channel_filter[channel] = filter;
-        } else {
-            if (filter == ht40_channel_filter[channel])
-                ht40_channel[channel]++; /* increase */
-            else
-                ht40_channel[channel]--; /* decrease */
-        }
+    if (channel < 1 || channel > 14)
+        return 0;
 
-        if (ht40_channel[channel] >= HIT_FRAME_PER_CHANNEL)
-            return 1;
-    } else
-        warn("bad channel %d\r\n", channel);
+    if (!ht40_channel[channel]) {  // replace when 0
+        ht40_channel[channel] ++;
+        ht40_channel_filter[channel] = filter;
+    } else if (filter == ht40_channel_filter[channel]) {
+        ht40_channel[channel] ++;  /* increase */
+    } else {
+        ht40_channel[channel] --;  /* decrease */
+    }
+
+    if (ht40_channel[channel] >= HIT_FRAME_PER_CHANNEL)
+        return 1;
 
     return 0;
 }
@@ -1703,7 +1722,7 @@ int ht40_scanning_hint_frame(u8 filter, char rssi, u32 length, u8 channel)
                 if (zconfig_hint_frame[k] + zconfig_fixed_offset[j][0] + i * 2 == length) {
                     hint_pos = i * 32 + j * 8 + k;
 #if 1
-                    awss_debug("\r\nfilter:%x, rssi:%d, len:%d, Qos:%d, auth:%d, group:%d, %s\r\n",
+                    os_printf("\r\nfilter:%x, rssi:%d, len:%d, Qos:%d, auth:%d, group:%d, %s\r\n",
                             filter, rssi, length, i, j, k,
                             next_loop ? "DUP" : "");
 #endif
@@ -1730,7 +1749,7 @@ int ht40_scanning_hint_frame(u8 filter, char rssi, u32 length, u8 channel)
 
         ht40_filter = filter;
 
-        awss_debug("filter:%x, rssi range:[%d, %d]\r\n",
+        os_printf("filter:%x, rssi range:[%d, %d]\r\n",
                 filter, ht40_rssi_low, ht40_rssi_high);
     }
 
@@ -1773,7 +1792,7 @@ int ht40_get_qos_auth_group_info(u32 length)
             max_continues, second_continues, max_count, max_count_pos, max_continues_pos);
 
     if (max_continues > second_continues // not >=
-            && max_count_pos == max_continues_pos) {
+        && max_count_pos == max_continues_pos) {
         u8 qos = max_count_pos / 32;
         u8 auth = (max_count_pos % 32) / 8;
 
@@ -1790,8 +1809,7 @@ int ht40_get_qos_auth_group_info(u32 length)
             ht40_state = STATE_RCV_IN_PROGRESS;
             awss_debug("len:%d, qos:%d, auth:%d, group:%d, offset:%d\r\n",
                     length, qos, auth, group, zc_frame_offset);
-        } else
-            warn("invalid length:%d\r\n", length);
+        }
     }
 
     return 0;
@@ -1871,7 +1889,7 @@ int zconfig_recv_callback_ht40_ctrl(u8 filter, char rssi, u32 length, u8 channel
             score = zc_score_uplimit - (pos - zc_cur_pos - 1);
             zc_score_uplimit = score;
 
-            awss_debug("ht40 %d+%d [%d] -- T %-3x\r\n", zc_group_pos, index, score, len);
+            os_printf("ht40 %d+%d [%d] -- T %-3x\r\n", zc_group_pos, index, score, len);
             /*
                score now > last:
                1) data equal:    pkg_score = now
@@ -1927,7 +1945,7 @@ int zconfig_recv_callback_ht40_ctrl(u8 filter, char rssi, u32 length, u8 channel
 
                     zc_cur_pos = group;
 
-                    awss_debug("%d+%d [%d] -- T %-3x\r\n", group, 0, zc_score_uplimit, len);
+                    os_printf("%d+%d [%d] -- T %-3x\r\n", group, 0, zc_score_uplimit, len);
 
                     //ignore PKG_GROUP_FRAME here
                     pkg_type = PKG_START_FRAME;
@@ -1951,8 +1969,8 @@ drop:
  * @Return:
  *     zconfig state
  */
-ATTR int zconfig_recv_callback(void *pkt_data, u32 pkt_length, u8 channel,
-        int link_type, int with_fcs, char rssi)
+int zconfig_recv_callback(void *pkt_data, u32 pkt_length, u8 channel,
+                               int link_type, int with_fcs, char rssi)
 {
     int data_type = ALINK_INVALID;
     struct parser_res res;
@@ -1976,19 +1994,19 @@ ATTR int zconfig_recv_callback(void *pkt_data, u32 pkt_length, u8 channel,
     memset(&res, 0, sizeof(res));
     res.channel = channel;
 
-    data_type = ieee80211_data_extract(pkt_data, pkt_length, link_type, &res);
+    data_type = ieee80211_data_extract(pkt_data, pkt_length, link_type, &res, rssi);
 
     switch (data_type) {
         case ALINK_WPS:
-            return zconfig_recv_callback_w(&res);
+            return zconfig_recv_callback_w(&res);             // android p2p
         case ALINK_BROADCAST:
-            return zconfig_recv_callback_broadcast(&res);
-        case ALINK_DEFAULT_SSID:
-            return zconfig_recv_callback_default_ssid(&res);
+            return zconfig_recv_callback_broadcast(&res);     // smartconfig-bcast
         case ALINK_ZERO_CONFIG:
-            return zconfig_recv_callback_zero_config(&res);
+            return zconfig_recv_callback_zero_config(&res);   // zero-config with probe-req
         case ALINK_ADHA_SSID:
-            return zconfig_recv_callback_adha_ssid(&res);
+            return zconfig_recv_callback_adha_ssid(&res);     // adha
+        case ALINK_DEFAULT_SSID:
+            return zconfig_recv_callback_default_ssid(&res);  // aha
         default:
             return PKG_INVALID;
     }

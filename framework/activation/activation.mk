@@ -7,7 +7,9 @@ $(NAME)_PREBUILT_LIBRARY := ./ARM968E-S/activation.a
 endif
 
 ifeq ($(HOST_ARCH),Cortex-M4)
-ifeq ($(COMPILER),armcc)
+ifeq ($(ENABLE_VFP),1)
+$(NAME)_PREBUILT_LIBRARY := ./Cortex-M4/VFP/activation.a
+else ifeq ($(COMPILER),armcc)
 $(NAME)_PREBUILT_LIBRARY := ./Cortex-M4/KEIL/activation.a
 else ifeq ($(COMPILER),iar)
 $(NAME)_PREBUILT_LIBRARY := ./Cortex-M4/IAR/activation.a
@@ -21,6 +23,10 @@ $(NAME)_PREBUILT_LIBRARY := ./linux/activation.a
 endif
 
 ifeq ($(HOST_ARCH),xtensa)
-$(NAME)_PREBUILT_LIBRARY := ./xtensa/activation.a
+ifeq ($(HOST_MCU_FAMILY),esp32)
+$(NAME)_PREBUILT_LIBRARY := ./xtensa/esp32/activation.a
+else ifeq ($(HOST_MCU_FAMILY),esp8266)
+$(NAME)_PREBUILT_LIBRARY := ./xtensa/esp8266/activation.a
+endif
 endif
 

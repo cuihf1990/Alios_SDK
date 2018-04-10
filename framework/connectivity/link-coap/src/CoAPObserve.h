@@ -20,6 +20,8 @@
 #include "CoAPExport.h"
 #include "CoAPMessage.h"
 #include "CoAPResource.h"
+#include "lite-list.h"
+
 
 #ifdef __cplusplus
 extern "C" {

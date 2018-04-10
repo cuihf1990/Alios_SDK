@@ -8,6 +8,7 @@
 #include "hal/hal.h"
 #include "stm32l4xx_hal.h"
 #include "hal_gpio_stm32l4.h"
+#ifdef HAL_GPIO_MODULE_ENABLED
 
 static int32_t gpio_para_transform(gpio_dev_t *gpio, GPIO_InitTypeDef * init_str);
 static int32_t get_gpio_group(gpio_dev_t *gpio, GPIO_TypeDef **GPIOx);
@@ -309,3 +310,5 @@ uint32_t get_gpio_pin(uint8_t pin)
 
     return result;
 }
+#endif
+

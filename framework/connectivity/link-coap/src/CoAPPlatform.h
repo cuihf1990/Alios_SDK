@@ -27,7 +27,6 @@
 #include "lite-log.h"
 #endif
 
-#include "lite-log.h"
 #ifdef __cplusplus
 extern "C" {
 #endif /* __cplusplus */
@@ -54,10 +53,8 @@ extern "C" {
 #define LOG_TAG "CoAP"
 #define COAP_DUMP(fmt, args...)  LOGD(LOG_TAG,fmt, ##args)
 #define COAP_TRC(fmt,  args...)  LOGD(LOG_TAG,fmt, ##args)
-//#define COAP_DEBUG(fmt,args...)  LOGD(LOG_TAG,fmt, ##args)
-//#define COAP_DEBUG(fmt,args...)  LOGD(LOG_TAG,fmt, ##args)
-#define COAP_DEBUG(fmt, args...)
-#define COAP_INFO(fmt, args...)
+#define COAP_DEBUG(fmt, args...) LOGD(LOG_TAG,fmt, ##args)
+#define COAP_INFO(fmt, args...)  LOGI(LOG_TAG,fmt, ##args) 
 #define COAP_ERR(fmt,  args...)  LOGE(LOG_TAG,fmt, ##args)
 #endif
 

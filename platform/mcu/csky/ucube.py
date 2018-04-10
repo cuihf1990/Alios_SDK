@@ -155,7 +155,7 @@ else:
     src.extend(tmp_src)
 
 
-component = aos_arch_component('csky', src)
+component = aos_mcu_component('csky', src)
 component.add_global_includes(*global_includes)
 component.add_component_dependencis(*dependencis)
 

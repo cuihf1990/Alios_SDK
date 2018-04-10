@@ -1,6 +1,8 @@
 #include "hal/soc/soc.h"
 #include "stm32l4xx.h"
+#include "stm32l4xx_hal.h"
 #include "stm32l4xx_hal_flash.h"
+#ifdef HAL_FLASH_MODULE_ENABLED
 
 #define ROUND_DOWN(a,b) (((a) / (b)) * (b))
 
@@ -81,5 +83,5 @@ int32_t hal_flash_dis_secure(hal_partition_t partition, uint32_t off_set, uint32
 {
     return 0;
 }
-
+#endif
 

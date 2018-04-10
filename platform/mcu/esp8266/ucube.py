@@ -105,7 +105,7 @@ else:
     src.append('aos/soc_impl.c')
     src.append('aos/trace_impl.c')
 
-component = aos_arch_component('esp8266', src)
+component = aos_mcu_component('esp8266', src)
 component.add_component_dependencis(*dependencis)
 
 component.add_includes(*local_includes)
@@ -126,11 +126,9 @@ for lib in prebuild_libs:
 for macro in global_macro:
     component.add_global_macros(macro)
 
-for ld in ld_files:
-    component.add_global_ld_file(ld)
+aos_global_config.add_ld_files(*ld_files)
 
-# component.set_global_arch('Xtensa')
-component.set_global_mcu_family('esp8266')
+component.set_global_arch('xtensa')
 
 aos_global_config.set('use_private_lwip', 1)
 

@@ -10,6 +10,8 @@
 #include "hal_adc_stm32l4.h"
 #include "stm32l4xx_hal_adc.h"
 
+#ifdef HAL_ADC_MODULE_ENABLED
+
 /* Init and deInit function for adc1 */
 static int32_t adc1_init(adc_dev_t *uart);
 static int32_t adc1_DeInit(void);
@@ -127,3 +129,5 @@ uint16_t get_adc_channel(uint8_t port)
     /* Get adc channel according to adc->port */
     return 0;
 }
+#endif
+

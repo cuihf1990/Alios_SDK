@@ -49,6 +49,7 @@
 #include <string.h>
 #include <stdbool.h>
 #include "stm32l4xx.h"
+#include "stm32l4xx_hal.h"
 #include "stm32l4xx_hal_flash.h"
 #include <aos/aos.h>
 /* Private typedef -----------------------------------------------------------*/
@@ -56,6 +57,7 @@
 #define ROUND_DOWN(a,b) (((a) / (b)) * (b))
 #define MIN(a,b)        (((a) < (b)) ? (a) : (b))
 
+#ifdef HAL_FLASH_MODULE_ENABLED
 /* Private variables ----------------------------------------------------------*/
 /* Private function prototypes -----------------------------------------------*/
 /* Functions Definition ------------------------------------------------------*/
@@ -246,6 +248,6 @@ int FLASH_read_at(uint32_t address, uint64_t *pData, uint32_t len_bytes)
     ret = 0;
     return ret;
 }
-
+#endif
 /************************ (C) COPYRIGHT STMicroelectronics *****END OF FILE****/
 

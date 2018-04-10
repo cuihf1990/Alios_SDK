@@ -495,7 +495,7 @@ struct ieee80211_mgmt {
     } u;
 };
 
-ATTR const u8 *cfg80211_find_ie(u8 eid, const u8 *ies, int len)
+const u8 *cfg80211_find_ie(u8 eid, const u8 *ies, int len)
 {
     while (len > 2 && ies[0] != eid) {
         len -= ies[1] + 2;
@@ -524,7 +524,7 @@ ATTR const u8 *cfg80211_find_ie(u8 eid, const u8 *ies, int len)
  * Note: There are no checks on the element length other than having to fit into
  * the given data.
  */
-ATTR const u8 *cfg80211_find_vendor_ie(
+const u8 *cfg80211_find_vendor_ie(
         unsigned int oui, u8 oui_type, const u8 *ies, int len)
 {
     struct ieee80211_vendor_ie *ie;
@@ -591,7 +591,7 @@ static inline int ieee80211_get_ssid(u8 *beacon_frame, u16 frame_len, u8 *ssid)
  * Return:
  *     bss channel 1-13, 0--means invalid channel
  */
-ATTR int cfg80211_get_bss_channel(u8 *beacon_frame, u16 frame_len)
+int cfg80211_get_bss_channel(u8 *beacon_frame, u16 frame_len)
 {
     u16 ieoffset = offsetof(struct ieee80211_mgmt, u.beacon.variable);//same as u.probe_resp.variable
     const u8 *ie = beacon_frame + ieoffset;
@@ -642,7 +642,7 @@ static const u8 RSN_CIPHER_SUITE_WEP10423A[] = { 0x00, 0x0f, 0xac, 5 };
 #define WPA_CIPHER_TKIP         BIT(3)
 #define WPA_CIPHER_CCMP         BIT(4)
 
-ATTR static u8 map_cipher_to_encry(u8 cipher)
+static u8 map_cipher_to_encry(u8 cipher)
 {
     switch (cipher) {
     case WPA_CIPHER_CCMP:
@@ -662,7 +662,7 @@ ATTR static u8 map_cipher_to_encry(u8 cipher)
     }
 }
 
-ATTR static int get_wpa_cipher_suite(const u8 *s)
+static int get_wpa_cipher_suite(const u8 *s)
 {
     if (!memcmp(s, WPA_CIPHER_SUITE_NONE23A, WPA_SELECTOR_LEN))
         return WPA_CIPHER_NONE;
@@ -678,7 +678,7 @@ ATTR static int get_wpa_cipher_suite(const u8 *s)
     return 0;
 }
 
-ATTR static int get_wpa2_cipher_suite(const u8 *s)
+static int get_wpa2_cipher_suite(const u8 *s)
 {
     if (!memcmp(s, RSN_CIPHER_SUITE_NONE23A, RSN_SELECTOR_LEN))
         return WPA_CIPHER_NONE;
@@ -694,7 +694,7 @@ ATTR static int get_wpa2_cipher_suite(const u8 *s)
     return 0;
 }
 
-ATTR int cfg80211_parse_wpa_info(const u8 *wpa_ie, int wpa_ie_len,
+int cfg80211_parse_wpa_info(const u8 *wpa_ie, int wpa_ie_len,
         u8 *group_cipher, u8 *pairwise_cipher, u8 *is_8021x)
 {
     int i, ret = 0;
@@ -758,7 +758,7 @@ ATTR int cfg80211_parse_wpa_info(const u8 *wpa_ie, int wpa_ie_len,
     return ret;
 }
 
-ATTR int cfg80211_parse_wpa2_info(const u8* rsn_ie, int rsn_ie_len, u8 *group_cipher,
+int cfg80211_parse_wpa2_info(const u8* rsn_ie, int rsn_ie_len, u8 *group_cipher,
         u8 *pairwise_cipher, u8 *is_8021x)
 {
     int i, ret = 0;
@@ -926,7 +926,7 @@ struct adha_info *adha_aplist = NULL;
 /* aplist num, less than MAX_APLIST_NUM */
 u8 zconfig_aplist_num = 0;
 
-ATTR struct ap_info *zconfig_get_apinfo(u8 *mac)
+struct ap_info *zconfig_get_apinfo(u8 *mac)
 {
     int i;
 
@@ -938,7 +938,7 @@ ATTR struct ap_info *zconfig_get_apinfo(u8 *mac)
     return NULL;
 }
 
-ATTR struct ap_info *zconfig_get_apinfo_by_ssid(u8 *ssid)
+struct ap_info *zconfig_get_apinfo_by_ssid(u8 *ssid)
 {
     int i;
 
@@ -1017,8 +1017,8 @@ struct ap_info *zconfig_get_apinfo_by_ssid_suffix(u8 *ssid_suffix)
  *     0/success, -1/invalid params(empty ssid/bssid)
  */
 
-static inline int __zconfig_save_apinfo(u8 *ssid, u8* bssid, u8 channel,
-        u8 auth, u8 pairwise_cipher, u8 group_cipher)
+static inline int __zconfig_save_apinfo(u8 *ssid, u8* bssid, u8 channel, u8 auth,
+                                        u8 pairwise_cipher, u8 group_cipher, char rssi)
 {
     int i;
 
@@ -1076,9 +1076,10 @@ static inline int __zconfig_save_apinfo(u8 *ssid, u8* bssid, u8 channel,
         i = 0;    /* [0] for temp use, always replace [0] */
     }
 
-    strcpy((char *)&zconfig_aplist[i].ssid, (char *)&ssid[0]);
+    strncpy((char *)&zconfig_aplist[i].ssid, (char *)&ssid[0], ZC_MAX_SSID_LEN - 1);
     memcpy(&zconfig_aplist[i].mac, bssid, ETH_ALEN);
     zconfig_aplist[i].auth = auth;
+    zconfig_aplist[i].rssi = rssi;
     zconfig_aplist[i].channel = channel;
     zconfig_aplist[i].encry[0] = group_cipher;
     zconfig_aplist[i].encry[1] = pairwise_cipher;
@@ -1088,19 +1089,18 @@ static inline int __zconfig_save_apinfo(u8 *ssid, u8* bssid, u8 channel,
             adha_aplist->aplist[adha_aplist->cnt ++] = i;
     }
 
-    awss_debug("[%d] ssid:%s, mac:%02x%02x%02x%02x%02x%02x, chn:%d, auth:%s, %s, %s, adha:%d\r\n",
+    log_debug("[%d] ssid:%s, mac:%02x%02x%02x%02x%02x%02x, chn:%d, auth:%s, %s, %s, rssi:%d, adha:%d\r\n",
         i, ssid, bssid[0], bssid[1], bssid[2],
         bssid[3], bssid[4], bssid[5], channel,
         zconfig_auth_str(auth),
         zconfig_encry_str(pairwise_cipher),
-        zconfig_encry_str(group_cipher), adha_aplist->cnt);
+        zconfig_encry_str(group_cipher), rssi - 256, adha_aplist->cnt);
     /*
      * if chn already locked(zc_bssid set),
      * copy ssid to zc_ssid for ssid-auto-completion
      */
     if (!memcmp(zc_bssid, bssid, ETH_ALEN) && ssid[0] != '\0') {
-        strcpy((char *)zc_ssid, (char const *)ssid);
-        awss_debug("save ssid %s\r\n", ssid);
+        strncpy((char *)zc_ssid, (char const *)ssid, ZC_MAX_SSID_LEN - 1);
     }
 
     return 0;
@@ -1118,20 +1118,18 @@ static inline int __zconfig_save_apinfo(u8 *ssid, u8* bssid, u8 channel,
  *  < 0, error
  *
  */
-static inline int zconfig_extract_apinfo_from_beacon(u8 *data, u16 len)
+static inline int zconfig_extract_apinfo_from_beacon(u8 *data, u16 len, char rssi)
 {
-    u8 ssid[ZC_MAX_SSID_LEN] = { 0 }, bssid[ETH_ALEN] = { 0 };
+    u8 ssid[ZC_MAX_SSID_LEN] = {0}, bssid[ETH_ALEN] = {0};
     int ret1, ret2, channel;
     u8 auth, pairwise_cipher, group_cipher;
 
     ret1 = ieee80211_get_bssid(data, bssid);
     if (ret1 < 0) {
-        warn("no bssid found!\r\n");
         return -1;
     }
     ret2 = ieee80211_get_ssid(data, len, ssid);
     if (ret2 < 0) {
-        warn("no ssid found!\r\n");
         return -1;
     }
 
@@ -1151,8 +1149,8 @@ static inline int zconfig_extract_apinfo_from_beacon(u8 *data, u16 len)
     channel = cfg80211_get_bss_channel(data, len);
 
     cfg80211_get_cipher_info(data, len, &auth, &pairwise_cipher, &group_cipher);
-    __zconfig_save_apinfo(ssid, bssid, channel,
-            auth, pairwise_cipher, group_cipher);
+    __zconfig_save_apinfo(ssid, bssid, channel, auth,
+            pairwise_cipher, group_cipher, rssi);
 
     /*
      * If user press the configure button,
@@ -1178,7 +1176,6 @@ static inline int zconfig_extract_apinfo_from_beacon(u8 *data, u16 len)
 
 static void awss_press_timeout()
 {
-    log_debug("awss_press_timeout ------------\n");
     g_user_press = 0;
 }
 
@@ -1186,7 +1183,7 @@ static void awss_press_timeout()
 static struct work_struct awss_press = {
     .func = (work_func_t)&awss_press_timeout,
     .prio = 1, /* smaller digit means higher priority */
-    .name = "awss user press",
+    .name = "press",
 };
 
 int awss_config_press()
@@ -1194,8 +1191,8 @@ int awss_config_press()
     int timeout = os_awss_get_timeout_interval_ms();
 
     g_user_press = 1;
+    os_printf("press\r\n");
 
-    log_debug("awss_config_press %d\n", g_user_press);
     cancel_work(&awss_press);
     if (timeout < AWSS_PRESS_TIMEOUT_MS)
         timeout = AWSS_PRESS_TIMEOUT_MS;
@@ -1221,11 +1218,11 @@ uint8_t zconfig_get_press_status()
  * Return:
  *     0/success, -1/invalid params
  */
-int zconfig_set_apinfo(u8 *ssid, u8* bssid, u8 channel,
-        u8 auth, u8 pairwise_cipher, u8 group_cipher)
+int zconfig_set_apinfo(u8 *ssid, u8* bssid, u8 channel, u8 auth,
+                       u8 pairwise_cipher, u8 group_cipher, char rssi)
 {
     return __zconfig_save_apinfo(ssid, bssid, channel,
-            auth, pairwise_cipher, group_cipher);
+            auth, pairwise_cipher, group_cipher, rssi);
 }
 
 /*
@@ -1240,7 +1237,6 @@ do {\
         buf_addr = word_align_addr;\
     }\
 } while (0)
-
 
 static inline u8 *zconfig_remove_link_header(u8 **in, int *len, int link_type)
 {
@@ -1328,7 +1324,7 @@ do {\
  *
  * @Note: howto deal with radio SSI signal
  */
-ATTR int ieee80211_data_extract(u8 *in, int len, int link_type, struct parser_res *res)
+int ieee80211_data_extract(u8 *in, int len, int link_type, struct parser_res *res, char rssi)
 {
     struct ieee80211_hdr *hdr;
     int hdrlen, fc, seq_ctrl, ret;
@@ -1343,7 +1339,7 @@ ATTR int ieee80211_data_extract(u8 *in, int len, int link_type, struct parser_re
 
     //beacon frame check
     if (ieee80211_is_beacon(fc)) {
-        ret = zconfig_extract_apinfo_from_beacon(in, len);
+        ret = zconfig_extract_apinfo_from_beacon(in, len, rssi);
         if (ret <= 0)
             goto drop;
         alink_type = ret;
@@ -1352,7 +1348,7 @@ ATTR int ieee80211_data_extract(u8 *in, int len, int link_type, struct parser_re
         u16 ieoffset = offsetof(struct ieee80211_mgmt, u.probe_resp.variable);
         const u8 *registrar_ie = cfg80211_find_vendor_ie(WLAN_OUI_ALIBABA,
                 WLAN_OUI_TYPE_REGISTRAR, in + ieoffset, len - ieoffset);
-        ret = zconfig_extract_apinfo_from_beacon(in, len);
+        ret = zconfig_extract_apinfo_from_beacon(in, len, rssi);
 
         if (registrar_ie && g_user_press) {
             alink_type = ALINK_ZERO_CONFIG;
@@ -1384,9 +1380,8 @@ ATTR int ieee80211_data_extract(u8 *in, int len, int link_type, struct parser_re
             goto output;
         }
 
-        if (wps_ie) {//got wps
+        if (wps_ie) {  // got wps
             u8 attr_len = 0;
-            //log("got a %s fc=%x\r\n", "probe_req", fc);
             wps_ie = get_device_name_attr_from_w((u8 *)wps_ie, &attr_len);
             if (wps_ie) {//got device name
                 alink_type = ALINK_WPS;
@@ -1481,8 +1476,7 @@ encry_collision:
     }//end of br frame
 
 output:
-    /* convert IEEE 802.11 header + possible LLC headers into Ethernet
-     * header
+    /* convert IEEE 802.11 header + possible LLC headers into Ethernet header
      * IEEE 802.11 address fields:
      * ToDS FromDS Addr1 Addr2 Addr3 Addr4
      *   0     0   DA    SA    BSSID n/a

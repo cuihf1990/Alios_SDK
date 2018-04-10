@@ -13,7 +13,9 @@ $(NAME)_SOURCES := \
     src/CoAPResource.c \
     src/CoAPSerialize.c \
     src/CoAPServer.c 
-    
+
+
+
 ifeq ($(LINK_COAP_ALONE),1)
 $(NAME)_INCLUDES +=./platform    ../../protocol/alink-ilop/iotkit-system 
 $(NAME)_SOURCES :+=  \

@@ -26,10 +26,6 @@
 #ifndef SYSTEM_CORE_INCLUDE_MINCRYPT_SHA256_H_
 #define SYSTEM_CORE_INCLUDE_MINCRYPT_SHA256_H_
 
-//#include "os.h"
-//#include "hash-internal.h"
-#include "os.h"
-
 #ifdef __cplusplus
 extern "C" {
 #endif // __cplusplus
@@ -40,7 +36,6 @@ typedef struct SHA256_CTX {
 	uint8_t buf[64];
 	uint32_t state[8];  // upto SHA2
 } SHA256_CTX;
-
 
 //typedef HASH_CTX SHA256_CTX;
 void SHA256_init(SHA256_CTX* ctx);
