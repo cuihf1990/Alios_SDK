@@ -7,6 +7,7 @@ HOST_ARCH            := Cortex-M4
 HOST_MCU_FAMILY      := stm32l4xx
 SUPPORT_BINS         := no
 HOST_MCU_NAME        := STM32L433RC-Nucleo
+ENABLE_VFP           := 1
 
 $(NAME)_SOURCES += board.c board_cli.c st7789.c
 
