@@ -4,7 +4,7 @@ NAME := esp8266
 
 $(NAME)_TYPE := kernel 
 
-$(NAME)_COMPONENTS := framework.common modules.fs.kv libc
+$(NAME)_COMPONENTS := framework.common yloop modules.fs.kv libc
 $(NAME)_COMPONENTS += protocols.net alicrypto hal
 
 use_private_lwip := 1

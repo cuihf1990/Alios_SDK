@@ -23,6 +23,10 @@ $(NAME)_PREBUILT_LIBRARY := ./linux/activation.a
 endif
 
 ifeq ($(HOST_ARCH),xtensa)
-$(NAME)_PREBUILT_LIBRARY := ./xtensa/activation.a
+ifeq ($(HOST_MCU_FAMILY),esp32)
+$(NAME)_PREBUILT_LIBRARY := ./xtensa/esp32/activation.a
+else ifeq ($(HOST_MCU_FAMILY),esp8266)
+$(NAME)_PREBUILT_LIBRARY := ./xtensa/esp8266/activation.a
+endif
 endif
 
