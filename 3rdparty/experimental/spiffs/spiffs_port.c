@@ -78,8 +78,11 @@ static char* translate_relative_path(const char *path)
         return NULL;
 
     memset(relpath, 0, len + 1);
-    p = (char *)(path + prefix_len + 1);
-    memcpy(relpath, p, len - 1);
+    if (len > 0) {
+        p = (char *)(path + prefix_len + 1);
+        memcpy(relpath, p, len - 1);
+    }
+
     relpath[len] = '\0';
 
     return relpath;
