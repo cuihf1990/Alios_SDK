@@ -54,10 +54,10 @@
 #define DEVICE_SECRET           "fSCl9Ns5YPnYN8Ocg0VEel1kXFnRlV6c"
 #define PRODUCT_SECRET          ""
 #elif  TEST_ALCS
-#define DEVICE_NAME             "6iAdTeQKVUruUL0NXfVx"
-#define DEVICE_SECRET           "DkdrIbw406ZetQdWy98ZTx808BeFrUb5"
 #define PRODUCT_KEY             "a1I6ZYgfWMK"
 #define PRODUCT_SECRET          "uhfUXepJkTMIS1Bu"
+#define DEVICE_NAME             "cGqfgn8pJX8f0ArUYI2Z"
+#define DEVICE_SECRET           "v373IYG3sOfpW9UYE7uPd3ZFUfcSFw48"
 #else
 #define PRODUCT_KEY             "a1AzoSi5TMc"
 #define PRODUCT_SECRET          "Z9Ze6qgMrWgTOezW"
