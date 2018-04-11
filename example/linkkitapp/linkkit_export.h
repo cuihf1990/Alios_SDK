@@ -5,30 +5,50 @@
 extern "C" {
 #endif /* __cplusplus */
 
-#include "dm_export.h"
+#include "iot_export_dm.h"
 #include "lite_queue.h"
 
 #ifdef SERVICE_OTA_ENABLED
-#include "fota_export.h"
+#include "iot_export_fota.h"
 #endif /* SERVICE_OTA_ENABLED */
 
 typedef struct _linkkit_ops {
-    int (*on_connect)(void *ctx);
-    int (*on_disconnect)(void *ctx);
-
-    int (*raw_data_arrived)(void *thing_id, void *data, int len, void *ctx);
-
-    int (*thing_create)(void *thing_id, void *ctx);
-
-    int (*thing_enable)(void *thing_id, void *ctx);
-    int (*thing_disable)(void *thing_id, void *ctx);
-#ifdef RRPC_ENABLED
-    int (*thing_call_service)(void *thing_id, char *service, int request_id, int rrpc, void *ctx);
+#ifdef LOCAL_CONN_ENABLE
+    int (*on_connect)(void* ctx, int cloud); /* true: cloud connection; false: local connection */
+    int (*on_disconnect)(void* ctx, int cloud); /* true: cloud connection; false: local connection */
 #else
-    int (*thing_call_service)(void *thing_id, char *service, int request_id, void *ctx);
+    int (*on_connect)(void* ctx); /* true: cloud connection; false: local connection */
+    int (*on_disconnect)(void* ctx); /* true: cloud connection; false: local connection */
+#endif
+    int (*raw_data_arrived)(const void* thing_id, const void* data, int len, void* ctx);
+
+    int (*thing_create)(const void* thing_id, void* ctx);
+
+    int (*thing_enable)(const void* thing_id, void* ctx);
+    int (*thing_disable)(const void* thing_id, void* ctx);
+#ifdef RRPC_ENABLED
+    int (*thing_call_service)(const void* thing_id, const char* service, int request_id, int rrpc, void* ctx);
+#else
+    int (*thing_call_service)(const void* thing_id, const char* service, int request_id, void* ctx);
 #endif /* RRPC_ENABLED */
-    int (*thing_prop_changed)(void *thing_id, char *property, void *ctx);
+    int (*thing_prop_changed)(const void* thing_id, const char* property, void* ctx);
+    int (*response_arrived)(const void* thing_id, const int respons_id, int code, char* message, void *ctx);
+    int (*linkit_data_arrived)(const void* thing_id, const void* data, int len, void* ctx);
 } linkkit_ops_t;
+
+typedef struct _linkkit_subdev_ops {
+    int (*topo_add_success)(const void* sub_thing_id, void* ctx);
+    int (*topo_add_fail)(const void* sub_thing_id, int code, const char* message, void* ctx);
+
+    int (*login_success)(const void* sub_thing_id, void* ctx);
+    int (*login_fail)(const void* sub_thing_id, int code, const char* message, void* ctx);
+
+    int (*raw_data_arrived)(const void* sub_thing_id, const void* data, int len, void* ctx);
+    int (*thing_create)(const void* sub_thing_id, void* ctx);
+    int (*thing_enable)(const void* sub_thing_id, void* ctx);
+    int (*thing_disable)(const void* sub_thing_id, void* ctx);
+    int (*linkit_data_arrived)(const void* sub_thing_id, const void* data, int len, void* ctx);
+} linkkit_subdev_ops_t;
 
 typedef enum _linkkit_loglevel {
     linkkit_loglevel_emerg = 0,
@@ -52,18 +72,22 @@ typedef enum {
 
 /* device info related operation */
 typedef enum {
-    linkkit_deviceinfo_operate_update,
-    linkkit_deviceinfo_operate_delete,
+    linkkit_extended_info_operate_update,
+    linkkit_extended_info_operate_delete,
 
     linkkit_deviceinfo_operate_max,
-} linkkit_deviceinfo_operate_t;
+} linkkit_extended_info_operate_t;
 
 /**
  * @brief dispatch message of queue for further process.
  *
- * @return int, 0 when success, -1 when fail.
+ * @return void*
  */
-int linkkit_dispatch(void);
+#ifdef CM_SUPPORT_MULTI_THREAD
+void* linkkit_dispatch(void* params);
+#else
+void* linkkit_dispatch();
+#endif
 
 /**
  * @brief start linkkit routines, and install callback funstions(async type for cloud connecting).
@@ -218,32 +242,43 @@ extern int linkkit_invoke_raw_service(const void* thing_id, int is_up_raw, void*
 extern int linkkit_invoke_ota_service(void* data_buf, int data_buf_length);
 #endif /* SERVICE_OTA_ENABLED */
 
-#ifdef DEVICEINFO_ENABLED
+#ifdef EXTENDED_INFO_ENABLED
 /**
- * @brief trigger deviceinfo update procedure.
+ * @brief trigger extended info update procedure.
  *
  * @param thing_id, pointer to thing object.
  * @param params, json type string that user to send to cloud.
- * @param linkkit_deviceinfo_operation, specify update type or delete type.
+ * @param linkkit_extended_info_operation, specify update type or delete type.
  *
  * @return 0 when success, -1 when fail.
  */
 
-int linkkit_trigger_deviceinfo_operate(const void* thing_id, const char* params, linkkit_deviceinfo_operate_t linkkit_deviceinfo_operation);
-#endif
+int linkkit_trigger_extended_info_operate(const void* thing_id, const char* params, linkkit_extended_info_operate_t linkkit_extended_info_operation);
+#endif /* EXTENDED_INFO_ENABLED */
 
 /**
  * @brief trigger a event to post to cloud.
  *
  * @param thing_id, pointer to thing object.
  * @param event_identifier, event identifier to trigger.
+ *
+ * @return 0 when success, -1 when fail.
+ */
+
+extern int linkkit_trigger_event(const void* thing_id, const char* event_identifier);
+
+/**
+ * @brief trigger a event to post to cloud.
+ *
+ * @param thing_id, pointer to thing object.
  * @param property_identifier, used when trigger event with method "event.property.post", if set, post specified property, if NULL, post all.
  *
  * @return 0 when success, -1 when fail.
  */
-extern int linkkit_trigger_event(const void* thing_id, const char* event_identifier, const char* property_identifier);
+extern int linkkit_post_property(const void* thing_id, const char* property_identifier);
 
-#ifndef CMP_SUPPORT_MULTI_THREAD
+void* linkkit_add_subdev(const void* gw_thing_id, const char* product_key, const char* device_name, const char* device_secret, const char* tsl, int tsl_len);
+#ifndef CM_SUPPORT_MULTI_THREAD
 /**
  * @brief this function used to yield when want to receive or send data.
  *        if multi-thread enabled, user should NOT call this function.
@@ -253,7 +288,18 @@ extern int linkkit_trigger_event(const void* thing_id, const char* event_identif
  * @return 0 when success, -1 when fail.
  */
 extern int linkkit_yield(int timeout_ms);
-#endif
+#endif /* CM_SUPPORT_MULTI_THREAD */
+
+/**
+ * @brief init subdev service routines, and install subdev callback funstions.
+ *
+ * @param subdev_ops, callback function struct to be installed for subdev
+ * @param user_subdev_context, environment variables of subdev.
+ *
+ * @return int, 0 when success, -1 when fail.
+ */
+int linkkit_subdev_init(linkkit_subdev_ops_t* subdev_ops, void* user_subdev_context);
+
 
 #ifdef __cplusplus
 }

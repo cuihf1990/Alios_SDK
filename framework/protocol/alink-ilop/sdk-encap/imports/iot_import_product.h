@@ -13,10 +13,15 @@
 
 
 #ifdef ON_DAILY
-#define PRODUCT_KEY             "a1DPfXuJJsR"
-#define PRODUCT_SECRET          "M4yY1ggbRnWYXzU3"
-#define DEVICE_NAME             "test_3060_01"
-#define DEVICE_SECRET           "6BhvTPQqCEj48gIHChFQKCWgDjNnQX5f"
+//#define PRODUCT_KEY             "a1DPfXuJJsR"
+//#define PRODUCT_SECRET          "M4yY1ggbRnWYXzU3"
+//#define DEVICE_NAME             "test_3060_01"
+//#define DEVICE_SECRET           "6BhvTPQqCEj48gIHChFQKCWgDjNnQX5f"
+#define PRODUCT_KEY             "a1fG355fLM5"
+#define DEVICE_NAME             "zhengcheng"
+#define DEVICE_SECRET           "gH9mD5TRrgz8V2iPCxmpN0AkqWT6GDmu"
+#define PRODUCT_SECRET          ""
+
 #elif ON_PRE 
 #define PRODUCT_KEY             "a1DQA90NlFe"
 #define PRODUCT_SECRET          "0VDRjoQAbieMcYyZ"
@@ -48,6 +53,11 @@
 #define DEVICE_NAME             "TestDeviceForDemo"
 #define DEVICE_SECRET           "fSCl9Ns5YPnYN8Ocg0VEel1kXFnRlV6c"
 #define PRODUCT_SECRET          ""
+#elif  TEST_ALCS
+#define PRODUCT_KEY             "a1I6ZYgfWMK"
+#define PRODUCT_SECRET          "uhfUXepJkTMIS1Bu"
+#define DEVICE_NAME             "cGqfgn8pJX8f0ArUYI2Z"
+#define DEVICE_SECRET           "v373IYG3sOfpW9UYE7uPd3ZFUfcSFw48"
 #else
 #define PRODUCT_KEY             "a1AzoSi5TMc"
 #define PRODUCT_SECRET          "Z9Ze6qgMrWgTOezW"

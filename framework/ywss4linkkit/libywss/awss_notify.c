@@ -31,7 +31,7 @@
 #include "utils.h"
 #include "zconfig_utils.h"
 #include "passwd.h"
-#include "platform.h"
+#include "platform/platform.h"
 #include "awss_notify.h"
 #include "json_parser.h"
 #include "awss_cmp.h"

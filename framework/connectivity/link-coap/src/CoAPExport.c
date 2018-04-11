@@ -55,6 +55,18 @@ static void cb_recv(int fd, void *arg)
 }
 #endif
 
+#ifdef COAP_WITH_YLOOP
+static void read_event(void * ctx)
+{
+    if(ctx==NULL){
+        return;
+    }
+    CoAPIntContext    *p_ctx = ctx;
+    NetworkConf *p_netconf=(NetworkConf *)(p_ctx->p_network);
+    aos_poll_read_fd(p_netconf->fd, cb_recv, p_ctx);
+}
+#endif
+
 CoAPContext *CoAPContext_create(CoAPInitParam *param)
 {
     CoAPIntContext    *p_ctx = NULL;
@@ -150,8 +162,7 @@ CoAPContext *CoAPContext_create(CoAPInitParam *param)
     }
 
 #ifdef COAP_WITH_YLOOP
-    NetworkConf *p_netconf=(NetworkConf *)(p_ctx->p_network);
-    aos_poll_read_fd(p_netconf->fd, cb_recv, p_ctx);
+    aos_schedule_call(read_event, p_ctx);
 #endif
     return p_ctx;
 err:

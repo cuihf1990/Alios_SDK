@@ -27,7 +27,7 @@
 
 #include <stdlib.h>
 #include "awss_wifimgr.h"
-#include "platform.h"
+#include "platform/platform.h"
 #include "log.h"
 #include "awss_main.h"
 #include "passwd.h"
