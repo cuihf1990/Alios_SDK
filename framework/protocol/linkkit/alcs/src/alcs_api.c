@@ -128,7 +128,7 @@ void alcs_rec_auth_info (CoAPContext *ctx, const char *paths, NetworkAddr* from,
 {
     int seqlen, paramlen;
     char* seq, *params;
-    COAP_INFO ("receive data:%.*s", resMsg->payloadlen, resMsg->payload);
+    COAP_INFO ("alcs_rec_auth_info:%d", resMsg->payloadlen);
 
     do {
         if (!req_payload_parser((const char *)resMsg->payload, resMsg->payloadlen, &seq, &seqlen, &params, &paramlen)) {
@@ -269,16 +269,34 @@ int alcs_encrypt (const char* src, int len, const char* key, void* out)
 
     if (len1) {
         p_HAL_Aes128_t aes_e_h = HAL_Aes128_Init ((uint8_t*)key, (uint8_t*)iv, HAL_AES_ENCRYPTION);
-        ret = HAL_Aes128_Cbc_Encrypt(aes_e_h, src, len1 >> 4, out);
-        HAL_Aes128_Destroy (aes_e_h);
+        if (aes_e_h != NULL) {
+            ret = HAL_Aes128_Cbc_Encrypt(aes_e_h, src, len1 >> 4, out);
+            HAL_Aes128_Destroy (aes_e_h);
+            if (ret != 0) {
+                COAP_ERR ("fail to encrypt");
+                return 0;
+            }
+        } else {
+            ret = -1;
+            COAP_ERR ("fail to init aes128 encrypt");
+        }
     }
     if (!ret && pad) {
         char buf[16];
         memcpy (buf, src + len1, len - len1);
         memset (buf + len - len1, pad, pad);
         p_HAL_Aes128_t aes_e_h = HAL_Aes128_Init ((uint8_t*)key, (uint8_t*)iv, HAL_AES_ENCRYPTION);
-        ret = HAL_Aes128_Cbc_Encrypt(aes_e_h, buf, 1, out + len1);
-        HAL_Aes128_Destroy (aes_e_h);
+        if (aes_e_h != NULL) {
+            ret = HAL_Aes128_Cbc_Encrypt(aes_e_h, buf, 1, out + len1);
+            HAL_Aes128_Destroy (aes_e_h);
+            if (ret != 0) {
+                COAP_ERR ("fail to encrypt");
+                return 0;
+            }
+        } else {
+            ret = -1;
+            COAP_ERR ("fail to init aes128 encrypt"); 
+        }
     }
 
     COAP_DEBUG ("to encrypt src:%s, len:%d", src, len2);
@@ -291,11 +309,21 @@ int alcs_decrypt (const char* src, int len, const char* key, void* out)
     char* iv = "a1b1c1d1e1f1g1h1";
 
     p_HAL_Aes128_t aes_d_h;
+    int ret = 0;
     int n = len >> 4;
     if (n > 0) {
         aes_d_h  = HAL_Aes128_Init ((uint8_t*)key, (uint8_t*)iv, HAL_AES_DECRYPTION);
-        HAL_Aes128_Cbc_Decrypt(aes_d_h, src, n - 1, out);
-        HAL_Aes128_Destroy(aes_d_h);
+        if (aes_d_h != NULL) {
+            ret = HAL_Aes128_Cbc_Decrypt(aes_d_h, src, n - 1, out);
+            HAL_Aes128_Destroy(aes_d_h);
+            if (ret != 0) {
+                COAP_ERR ("fail to decrypt");
+                return 0;
+            }
+        } else {
+            COAP_ERR ("fail to init aes128");
+            return -1;
+        }
     }
 
 
@@ -304,8 +332,17 @@ int alcs_decrypt (const char* src, int len, const char* key, void* out)
     out_c[offset] = 0;
 
     aes_d_h  = HAL_Aes128_Init ((uint8_t*)key, (uint8_t*)iv, HAL_AES_DECRYPTION);
-    int ret = HAL_Aes128_Cbc_Decrypt(aes_d_h, src + offset, 1, out_c + offset);
-    HAL_Aes128_Destroy(aes_d_h);
+    if (aes_d_h != NULL) {
+        int ret = HAL_Aes128_Cbc_Decrypt(aes_d_h, src + offset, 1, out_c + offset);
+        HAL_Aes128_Destroy(aes_d_h);
+        if (ret != 0) {
+            COAP_ERR ("fail to decrypt");
+            return 0;
+        }
+    } else {
+        COAP_ERR ("fail to init aes128");
+        return -1;
+    }
 
     char pad = out_c[len - 1];
     out_c[len - pad] = 0;
@@ -336,6 +373,10 @@ int do_secure_send (CoAPContext *ctx, NetworkAddr* addr, CoAPMessage *message, c
 
     sendMsg.payload = (unsigned char *)buf;
     sendMsg.payloadlen = alcs_encrypt ((const char *)message->payload, message->payloadlen, key, buf);
+    if (sendMsg.payloadlen <= 0) {
+        return COAP_ERROR_ENCRYPT_FAILED;
+    }
+
     ret = CoAPMessage_send (ctx, addr, &sendMsg);
 
     return ret;
