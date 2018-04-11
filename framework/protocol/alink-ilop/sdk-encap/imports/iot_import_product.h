@@ -30,8 +30,13 @@
 #elif ON_PRE2
 #define PRODUCT_KEY             "a1AzoSi5TMc"
 #define PRODUCT_SECRET          "Z9Ze6qgMrWgTOezW"
-#define DEVICE_NAME             "Net_cxf01"
-#define DEVICE_SECRET           "4L2fTVD8Ba6lh9fit1vEWWIyvqbxmfiO"
+#define DEVICE_NAME             "xiaofeng01"
+#define DEVICE_SECRET           "dWm0F8QBT5kWXa0QRLFJ0TqlN08yfA9C"
+#elif ON_PRE3
+#define PRODUCT_KEY             "a1AzoSi5TMc"
+#define PRODUCT_SECRET          "Z9Ze6qgMrWgTOezW"
+#define DEVICE_NAME             "xiaofeng02"
+#define DEVICE_SECRET           "yIILhJpxeCkfyIFPuNNMKmMIK7zBPGdq"
 #else
 #ifdef TEST_01
 #define PRODUCT_KEY             "a1AzoSi5TMc"
