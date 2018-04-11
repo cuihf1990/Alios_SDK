@@ -395,7 +395,7 @@ typedef void (*awss_wifi_mgmt_frame_cb_t)(_IN_ uint8_t *buffer, _IN_ int len,
 static void mgnt_rx_cb(uint8_t *data, int len, hal_wifi_link_info_t *info)
 {
     if (monitor_cb) {
-        monitor_cb(data, len, 0, 0);
+        monitor_cb(data, len, info->rssi, 0);
     }
 }
 
