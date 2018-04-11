@@ -13,6 +13,6 @@ src = Split('''
 ''')
 
 component = aos_component('ywss', src)
-component.add_macro('DEBUG')
+component.add_macros('DEBUG')
 
-component.add_global_macro('CONFIG_YWSS')
+component.add_global_macros('CONFIG_YWSS')

@@ -11,18 +11,6 @@
 #define isspace(c)           (c == ' ' || c == '\f' || c == '\n' || c == '\r' || c == '\t' || c == '\v')
 #endif
 
-void os_squeeze(uint8_t s[], int c, int len)
-{
-	int i, j;
-	for (i = 0, j = 0; i < len; i++) {
-		if (s[i] != c) {
-			s[j++] = s[i];
-		}
-	}
-	if (j < i)
-		s[j] = '\0';
-}
-
 /****** Convert values between host and big-/little-endian byte order ******/
 
 //reverse byte order

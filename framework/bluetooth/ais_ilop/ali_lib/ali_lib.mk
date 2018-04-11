@@ -1,5 +1,7 @@
 NAME := ali_lib
 
+$(NAME)_MBINS_TYPE := kernel
+
 $(NAME)_SOURCES := ali_auth/ali_auth.c ali_auth/sha256.c
 $(NAME)_SOURCES += ali_core/ali_core.c
 $(NAME)_SOURCES += ali_gap/ali_gap.c

@@ -1,9 +1,18 @@
+/*
+ * Copyright (C) 2015-2017 Alibaba Group Holding Limited
+ */
+
 #include <pthread.h>
 
 int pthread_attr_init(pthread_attr_t *attr)
 {
-    attr->stacksize                 = DEFAULT_THREAD_STACK_SIZE;
-    attr->schedparam.sched_priority = DEFAULT_THREAD_PRIORITY;
+    if (attr != 0) {
+        attr->stacksize                 = DEFAULT_THREAD_STACK_SIZE;
+        attr->schedparam.sched_priority = DEFAULT_THREAD_PRIORITY;
+        attr->detachstate               = PTHREAD_CREATE_JOINABLE;
+        attr->stackaddr                 = 0;
+    }
+
     return 0;
 }
 

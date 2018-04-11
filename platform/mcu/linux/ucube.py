@@ -1,4 +1,4 @@
-aos_global_config.set_aos_global_config('no_with_lwip','1')
+aos_global_config.set('no_with_lwip','1')
 
 src = Split('''
         soc/soc_impl.c
@@ -13,7 +13,7 @@ src = Split('''
         main/nand.c
         main/vfs_trap.c
 ''')
-component = aos_arch_component('linuximpl', src)
+component = aos_mcu_component('linuximpl', src)
 
 ### can't work start ###
 comp_names = [comp.name for comp in aos_global_config.components]
@@ -21,9 +21,9 @@ if 'fatfs' in comp_names:
     component.add_sources('main/sdmmc.c')
 
 if 'net' in comp_names:
-    aos_global_config.set_aos_global_config('LWIP', '1')
+    aos_global_config.set('LWIP', '1')
 
-LWIP = aos_global_config.get_aos_global_config('LWIP')
+LWIP = aos_global_config.get('LWIP')
 if LWIP == '1':
     lwip_src = Split('''
         csp/lwip/netif/delif.c 
@@ -58,13 +58,13 @@ component.add_component_dependencis('utility/log', 'platform/arch/linux')
 component.add_global_includes('include', 'csp/lwip/include')
 
 
-component.add_global_macro('CONFIG_AOS_RHINO_MMREGION')
-component.add_global_macro('CONFIG_YSH_CMD_DUMPSYS')
-component.add_global_macro('CSP_LINUXHOST')
-component.add_global_macro('CONFIG_LOGMACRO_DETAILS')
-component.add_global_macro('CONFIG_AOS_FATFS_SUPPORT')
-component.add_global_macro('CONFIG_AOS_FATFS_SUPPORT_MMC')
-component.add_global_macro('CONFIG_AOS_FOTA_BREAKPOINT')
+component.add_global_macros('CONFIG_AOS_RHINO_MMREGION')
+component.add_global_macros('CONFIG_YSH_CMD_DUMPSYS')
+component.add_global_macros('CSP_LINUXHOST')
+component.add_global_macros('CONFIG_LOGMACRO_DETAILS')
+component.add_global_macros('CONFIG_AOS_FATFS_SUPPORT')
+component.add_global_macros('CONFIG_AOS_FATFS_SUPPORT_MMC')
+component.add_global_macros('CONFIG_AOS_FOTA_BREAKPOINT')
 
 #move from yts component
 component.add_global_ldflags('-lreadline')

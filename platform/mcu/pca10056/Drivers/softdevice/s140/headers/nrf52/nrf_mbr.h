@@ -62,7 +62,7 @@ extern "C" {
 
 /** @brief The size that must be reserved for the MBR when a SoftDevice is written to flash.
 This is the offset where the first byte of the SoftDevice hex file is written.*/
-#define MBR_SIZE                (0x1000)
+#define MBR_SIZE                (0x0000)
 
 /** @} */
 

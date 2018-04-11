@@ -1,6 +1,8 @@
 NAME := vcall
 
 $(NAME)_TYPE := kernel
+$(NAME)_MBINS_TYPE := share
+
 GLOBAL_INCLUDES += ./mico/include
 
 #default gcc

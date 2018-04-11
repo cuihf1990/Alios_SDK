@@ -27,8 +27,6 @@
 #ifndef AWSS_NOTIFY_H
 #define AWSS_NOTIFY_H
 
-#include "platform.h"
-
 #if defined(__cplusplus)  /* If this is a C++ compiler, use C linkage */
 extern "C"
 {
@@ -41,8 +39,8 @@ enum {
     AWSS_NOTIFY_MAX,
 };
 
-int online_mcast_get_device_info(void *ctx, void *resource, pplatform_netaddr_t remote, void *request);
-int online_ucast_get_device_info(void *ctx, void *resource, pplatform_netaddr_t remote, void *request);
+int online_mcast_get_device_info(void *ctx, void *resource, void *remote, void *request);
+int online_ucast_get_device_info(void *ctx, void *resource, void *remote, void *request);
 
 int awss_notify_dev_info(int type, int count);
 int awss_connectap_notify();

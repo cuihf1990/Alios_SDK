@@ -22,6 +22,11 @@
 #define PRODUCT_SECRET          "0VDRjoQAbieMcYyZ"
 #define DEVICE_NAME             "jaVam0S5dTq8XKUoI2NW"
 #define DEVICE_SECRET           "IpGIaDsdUEpSvcOz237woypTlcxAV5RC"
+#elif ON_PRE2
+#define PRODUCT_KEY             "a1AzoSi5TMc"
+#define PRODUCT_SECRET          "Z9Ze6qgMrWgTOezW"
+#define DEVICE_NAME             "Net_cxf01"
+#define DEVICE_SECRET           "4L2fTVD8Ba6lh9fit1vEWWIyvqbxmfiO"
 #else
 #ifdef TEST_01
 #define PRODUCT_KEY             "a1AzoSi5TMc"

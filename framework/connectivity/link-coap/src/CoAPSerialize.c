@@ -19,6 +19,7 @@
 
 #include <stdio.h>
 #include "CoAPSerialize.h"
+#include "lite-list.h"
 #include "CoAPExport.h"
 
 int CoAPSerialize_Header(CoAPMessage *msg, unsigned char *buf, unsigned short buflen)

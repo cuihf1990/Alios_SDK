@@ -29,12 +29,14 @@
 #define __COAP_RESOURCE_H__
 
 #include <stdint.h>
+#include "lite-list.h"
 #include "CoAPExport.h"
 
 #ifdef __cplusplus
 extern "C" {
 #endif /* __cplusplus */
 
+#define COAP_MAX_PATH_CHECKSUM_LEN (5)
 
 typedef struct
 {
@@ -43,10 +45,12 @@ typedef struct
     unsigned int             ctype;
     unsigned int             maxage;
     struct list_head         reslist;
-    char                     path[COAP_MAX_PATH_LEN+1];
+    char                     path[COAP_MAX_PATH_CHECKSUM_LEN];
 }CoAPResource;
 
 int CoAPResource_init(CoAPContext *context, int res_maxcount);
+
+int CoAPPathMD5_sum (const char* path, int len, char outbuf[], int outlen);
 
 int CoAPResource_register(CoAPContext *context, const char *path,
                     unsigned short permission, unsigned int ctype,

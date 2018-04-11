@@ -38,15 +38,11 @@
 #include "awss_cmp.h"
 #include "awss_notify.h"
 #include "work_queue.h"
+#include "zconfig_utils.h"
 
-#define MAX_AP_NUM_IN_MSG                    (5)
-#define WIFI_APINFO_LIST_LEN                 (MAX_AP_NUM_IN_MSG * 128 + 128)
-#define DEV_SIMPLE_ACK_LEN                   (64)
-
-#define AWSS_DEV_RAND_FMT                    ",\"random\":\"%s\",\"sign\":\"%s\""
-#define AWSS_DEV_TOKEN_FMT                   ",\"token\":\"%s\",\"type\":%d"
-#define AWSS_DEV_INFO_FMT                    "\"awssVer\":%s,\"productKey\":\"%s\",\"deviceName\":\"%s\",\"mac\":\"%s\",\"ip\":\"%s\",\"cipherType\":%d"
-
+#define MAX_AP_NUM_IN_MSG       (5)
+#define WIFI_APINFO_LIST_LEN    (MAX_AP_NUM_IN_MSG * 256 + 128)
+#define DEV_SIMPLE_ACK_LEN      (64)
 
 #if defined(__cplusplus)  /* If this is a C++ compiler, use C linkage */
 extern "C"
@@ -56,130 +52,12 @@ extern "C"
 static char g_req_msg_id[MSG_REQ_ID_LEN];
 static platform_netaddr_t g_wifimgr_req_sa;
 
-static void * wifimgr_get_dev_info(void *dev_info, int len);
 static void wifimgr_scan_request();
 static struct work_struct scan_work = {
     .func = (work_func_t)&wifimgr_scan_request,
     .prio = 1, /* smaller digit means higher priority */
-    .name = "awss scan request",
+    .name = "scan",
 };
-
-
-typedef void (*work_func_t)(struct work_struct *work);
-#define WIFILIST_WORK_CYCLE      (100)
-static void start_scan_result(void *parms);
-static struct work_struct wifilist_work = {
-    .func = (work_func_t)&start_scan_result,
-    .prio = DEFAULT_WORK_PRIO,
-    .name = "wifilist monitor",
-};
-
-void *awss_build_dev_info(int type, void *dev_info, int info_len)
-{
-    int len = 0;
-    char *buf = NULL;
-
-    if (dev_info == NULL || info_len <= 0)
-        return NULL;
-
-    buf = os_zalloc(DEV_INFO_LEN_MAX);
-    if (buf == NULL)
-        return NULL;
-
-    len += snprintf((char *)dev_info + len, info_len - len - 1, "%s", (char *)wifimgr_get_dev_info(buf, DEV_INFO_LEN_MAX));
-    os_free(buf);
-
-    switch (type) {
-        case AWSS_NOTIFY_DEV_TOKEN:
-        {
-            char rand_str[(RANDOM_MAX_LEN << 1) + 1] = {0};
-            utils_hex_to_str(aes_random, RANDOM_MAX_LEN, rand_str, sizeof(rand_str));
-            len += snprintf((char *)dev_info + len, info_len - len - 1, AWSS_DEV_TOKEN_FMT, rand_str, 0);
-            break;
-        }
-        case AWSS_NOTIFY_DEV_RAND:
-        {
-            char rand_str[(RANDOM_MAX_LEN << 1) + 1] = {0};
-            char sign_str[ENROLLEE_SIGN_SIZE * 2 + 1] = {0};
-            {
-                int txt_len = 128;
-                char txt[128] = {0};
-                uint8_t sign[ENROLLEE_SIGN_SIZE + 1] = {0};
-                awss_build_sign_src(txt, &txt_len);
-                produce_signature(sign, (uint8_t *)txt, txt_len);
-                utils_hex_to_str(aes_random, RANDOM_MAX_LEN, rand_str, sizeof(rand_str));
-                utils_hex_to_str(sign, ENROLLEE_SIGN_SIZE, sign_str, sizeof(sign_str));
-            }
-            len += snprintf((char *)dev_info + len, info_len - len - 1, AWSS_DEV_RAND_FMT, rand_str, sign_str);
-            break;
-        }
-        default:
-            break;
-    }
-
-    return dev_info;
-}
-
-int is_utf8(const char *ansi_str, int length)
-{
-    int i = 0;
-    int utf8 = 1;
-    while (i < length) {
-        if ((0x80 & ansi_str[i]) == 0) { // ASCII
-            i++;
-            continue;
-        } else if ((0xE0 & ansi_str[i]) == 0xC0) { // 110xxxxx
-            if (ansi_str[i + 1] == '\0') {
-                utf8 = 0;
-                break;
-            }
-            if ((0xC0 & ansi_str[i + 1]) == 0x80) { // 10xxxxxx
-                i += 2;
-                continue;
-            } else {
-                utf8 = 0;
-                break;
-            }
-        } else if ((0xF0 & ansi_str[i]) == 0xE0) { // 1110xxxx
-            if (ansi_str[i + 1] == '\0') {
-                utf8 = 0;
-                break;
-            }
-            if (ansi_str[i + 2] == '\0') {
-                utf8 = 0;
-                break;
-            }
-            if (((0xC0 & ansi_str[i + 1]) == 0x80) && ((0xC0 & ansi_str[i + 2]) == 0x80)) { // 10xxxxxx 10xxxxxx
-                i += 3;
-                continue;
-            } else {
-                utf8 = 0;
-                break;
-            }
-        } else {
-            utf8 = 0;
-            break;
-        }
-    }
-    return utf8;
-}
-
-/*
- * Get Security level for wifi configuration with connection.
- * Used for AP solution of router and App.
- */
-int get_shub_security_level(void)
-{
-    /*
-     * 0: open
-     * 1: aes256cbc with default aes-key and aes-iv
-     * 2: aes128cbc with default aes-key and aes-iv
-     * 3: aes128cbc with aes-key per product and aes-iv = random
-     * 4: aes128cbc with aes-key per device and aes-iv = random
-     * 5: aes128cfb with aes-key per manufacture and aes-iv = 0
-     */
-    return 4;
-}
 
 static int wifi_scan_runninng;
 static void *g_scan_mutex;
@@ -245,6 +123,7 @@ static int awss_scan_cb(const char ssid[PLATFORM_MAX_SSID_LEN],
            uint8_t channel, char rssi,
            int last_ap)
 {
+
     static char ap_num_in_msg = 0;
     static char *aplist = NULL;
     static int msg_len = 0;
@@ -274,7 +153,6 @@ static int awss_scan_cb(const char ssid[PLATFORM_MAX_SSID_LEN],
                                    ssid, bssid[0], bssid[1], bssid[2], bssid[3], bssid[4], bssid[5],
                                    -(256 - (unsigned char)rssi), other_apinfo);
             } else {
-                awss_debug("not utf8 ssid,must be conever to xssid\n");
                 utils_hex_to_str((unsigned char *)ssid, strlen(ssid), encode_ssid, OS_MAX_SSID_LEN * 2);
                 msg_len += snprintf(aplist + msg_len, WIFI_APINFO_LIST_LEN - msg_len - 1,
                                    "{\"xssid\":\"%s\",\"bssid\":\"%02X:%02X:%02X:%02X:%02X:%02X\",\"rssi\":\"%d\",%s},",
@@ -290,7 +168,6 @@ static int awss_scan_cb(const char ssid[PLATFORM_MAX_SSID_LEN],
     awss_debug("last_ap:%u\r\n", last_ap);
 
     if (last_ap || (MAX_AP_NUM_IN_MSG == ap_num_in_msg)) {
-        awss_debug("sending message to ap_num_in_msg : %d\n", ap_num_in_msg);
         if (aplist[msg_len - 1] == ',') {
             msg_len--;    /* eating the last ',' */
         }
@@ -301,9 +178,7 @@ static int awss_scan_cb(const char ssid[PLATFORM_MAX_SSID_LEN],
 
         char *msg_aplist = os_zalloc(WIFI_APINFO_LIST_LEN);
         if (!msg_aplist) {
-            awss_debug("sending message to msg : %p\n", msg_aplist);
             os_free(aplist);
-            os_free(msg_aplist);
             aplist = NULL;
             return SHUB_ERR;
         }
@@ -341,7 +216,7 @@ static void wifimgr_scan_request()
  * @desc: ????getWifiList??Ϣ
  *
  */
-int wifimgr_process_get_wifilist_request(void *ctx, void *resource, pplatform_netaddr_t remote, void *request)
+int wifimgr_process_get_wifilist_request(void *ctx, void *resource,void *remote, void *request)
 {
     char buf[DEV_SIMPLE_ACK_LEN] = {0};
     char *msg = NULL, *id = NULL;
@@ -371,27 +246,7 @@ int wifimgr_process_get_wifilist_request(void *ctx, void *resource, pplatform_ne
     return SHUB_OK;
 }
 
-static void * wifimgr_get_dev_info(void *dev_info, int len)
-{
-    if (dev_info == NULL || len <= 0)
-        return NULL;
-
-    char dev_name[PRODUCT_NAME_LEN + 1] = {0};
-    char mac_str[OS_MAC_LEN + 1] = {0};
-    char pk[PRODUCT_KEY_LEN + 1] = {0};
-    char ip_str[OS_IP_LEN + 1] = {0};
-
-    os_product_get_key(pk);
-    os_product_get_name(dev_name);
-    os_wifi_get_mac_str(mac_str);
-    os_wifi_get_ip(ip_str, NULL);
-
-    snprintf(dev_info, len - 1, AWSS_DEV_INFO_FMT, AWSS_VER, pk, dev_name, mac_str, ip_str, get_shub_security_level());
-
-    return dev_info;
-}
-
-static int wifimgr_process_get_device_info(void *ctx, void *resource, pplatform_netaddr_t remote, void *request, char is_mcast)
+static int wifimgr_process_get_device_info(void *ctx, void *resource, void *remote, void *request, char is_mcast)
 {
     char *buf = NULL;
     char *dev_info = NULL;
@@ -439,12 +294,12 @@ DEV_INFO_ERR:
     return -1;
 }
 
-int wifimgr_process_mcast_get_device_info(void *ctx, void *resource, pplatform_netaddr_t remote, void *request)
+int wifimgr_process_mcast_get_device_info(void *ctx, void *resource, void *remote, void *request)
 {
     return wifimgr_process_get_device_info(ctx, resource, remote, request, 1);
 }
 
-int wifimgr_process_ucast_get_device_info(void *ctx, void *resource, pplatform_netaddr_t remote, void *request)
+int wifimgr_process_ucast_get_device_info(void *ctx, void *resource, void *remote, void *request)
 {
     return wifimgr_process_get_device_info(ctx, resource, remote, request, 0);
 }
@@ -452,7 +307,7 @@ int wifimgr_process_ucast_get_device_info(void *ctx, void *resource, pplatform_n
 #define WLAN_CONNECTION_TIMEOUT     (30 * 1000) //30 seconds
 int switch_ap_done = 0;
 
-int wifimgr_process_switch_ap_request(void *ctx, void *resource, pplatform_netaddr_t remote, void *request)
+int wifimgr_process_switch_ap_request(void *ctx, void *resource, void *remote, void *request)
 {
     char ssid[PLATFORM_MAX_SSID_LEN * 2 + 1] = {0}, passwd[PLATFORM_MAX_PASSWD_LEN + 1] = {0};
     int str_len = 0, success = 1, i  = 0, len = 0, enc_lvl = SEC_LVL_OPEN;
@@ -460,6 +315,11 @@ int wifimgr_process_switch_ap_request(void *ctx, void *resource, pplatform_netad
     char *str = NULL, *buf = NULL;
     char msg[128] = {0};
     char ssid_found = 0;
+
+    static char switch_ap_parsed = 0;
+    if (switch_ap_parsed != 0)
+        return SHUB_ERR;
+    switch_ap_parsed = 1;
 
     buf = awss_cmp_get_coap_payload(request, &len);
     str = json_get_value_by_name(buf, len, "id", &str_len, 0);
@@ -505,7 +365,7 @@ int wifimgr_process_switch_ap_request(void *ctx, void *resource, pplatform_netad
         }
 
         enc_lvl = atoi(str);
-        if (enc_lvl != get_shub_security_level()) {
+        if (enc_lvl != os_get_conn_encrypt_type()) {
             success = 0;
             snprintf(msg, sizeof(msg) - 1, AWSS_ACK_FMT, req_msg_id, -4, "\"security level error\"");
             break;
@@ -523,32 +383,39 @@ int wifimgr_process_switch_ap_request(void *ctx, void *resource, pplatform_netad
                 break;
         }
 
+        if (success == 0)
+            break;
+
         if (0 == enc_lvl) {
-            if (str_len <= PLATFORM_MAX_PASSWD_LEN) {
+            if (str_len < PLATFORM_MAX_PASSWD_LEN) {
                 memcpy(passwd, str, str_len);
             } else {
-                snprintf(msg, sizeof(msg) - 1, AWSS_ACK_FMT, req_msg_id, -2, "\"passwd error\"");
+                snprintf(msg, sizeof(msg) - 1, AWSS_ACK_FMT, req_msg_id, -2, "\"passwd len error\"");
                 success = 0;
             }
         } else {
-            if (str_len <= (PLATFORM_MAX_PASSWD_LEN * 2)) {
+            if (str_len < (PLATFORM_MAX_PASSWD_LEN * 2) - 1) {
                 char encoded[PLATFORM_MAX_PASSWD_LEN * 2 + 1] = {0};
                 memcpy(encoded, str, str_len);
-                aes_decrypt_string(encoded, passwd, str_len, get_shub_security_level(), 1); //64bytes=2x32bytes
+                aes_decrypt_string(encoded, passwd, str_len, os_get_conn_encrypt_type(), 1); //64bytes=2x32bytes
             } else {
                 snprintf(msg, sizeof(msg) - 1, AWSS_ACK_FMT, req_msg_id, -3, "\"passwd len error\"");
                 success = 0;
             }
         }
 
-        if (!success)
-            break;
+        if (success && is_utf8(passwd, strlen(passwd)) == 0) {
+            snprintf(msg, sizeof(msg) - 1, AWSS_ACK_FMT, req_msg_id,
+                     enc_lvl == SEC_LVL_OPEN ? -2 : -3 , "\"passwd content error\"");
+            success = 0;
+        }
     } while (0);
 
     awss_devinfo_notify_stop();
     awss_connectap_notify_stop();
 
     awss_debug("Sending message to app: %s", msg);
+    awss_debug("switch to ap: '%s' '%s'", ssid, passwd);
     char topic[TOPIC_LEN_MAX] = {0};
     awss_build_topic((const char *)TOPIC_AWSS_SWITCHAP, topic, TOPIC_LEN_MAX);
     for (i = 0; i < 5; i ++) {
@@ -562,7 +429,7 @@ int wifimgr_process_switch_ap_request(void *ctx, void *resource, pplatform_netad
     os_msleep(1000);
 
     if (!success)
-        return SHUB_OK;
+        goto SWITCH_AP_END;
 
     awss_debug("connect '%s' '%s'", ssid, passwd);
     if (0 != os_awss_connect_ap(WLAN_CONNECTION_TIMEOUT,
@@ -589,9 +456,10 @@ int wifimgr_process_switch_ap_request(void *ctx, void *resource, pplatform_netad
 
         produce_random(aes_random, sizeof(aes_random));
     }
-
     awss_debug("connect '%s' '%s' exit", ssid, passwd);
 
+SWITCH_AP_END:
+    switch_ap_parsed = 0;
     return SHUB_OK;
 }
 

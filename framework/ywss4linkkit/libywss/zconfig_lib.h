@@ -40,11 +40,7 @@
 
 #define ZC_MAX_SSID_LEN     (32 + 1)/* ssid: 32 octets at most, include the NULL-terminated */
 #define ZC_MAX_PASSWD_LEN   (64 + 1)/* 8-63 ascii */
-#define MAX_APLIST_NUM      (40)
-
-//used by tpsk
-#define ZC_TPSK_LEN         (44)
-#define ZC_ALINK_IE_HDR     (7)
+#define MAX_APLIST_NUM      (100)
 
 #if defined(__cplusplus)  /* If this is a C++ compiler, use C linkage */
 extern "C"
@@ -115,14 +111,14 @@ void zconfig_destroy(void);
     见enum _PKG_TYPE_结构体说明
 */
 int zconfig_recv_callback(void *pkt_data, u32 pkt_length, u8 channel,
-        int link_type, int with_fcs, char rssi);
+                          int link_type, int with_fcs, char rssi);
 
 /*
  * save apinfo
  * 0 -- success, otherwise, failed.
  */
-int zconfig_set_apinfo(u8 *ssid, u8* bssid, u8 channel,
-        u8 auth, u8 pairwise_cipher, u8 group_cipher);
+int zconfig_set_apinfo(u8 *ssid, u8* bssid, u8 channel, u8 auth,
+                       u8 pairwise_cipher, u8 group_cipher, char rssi);
 
 /* helper function, auth/encry type to string */
 const char *zconfig_auth_str(u8 auth);
@@ -134,10 +130,10 @@ const char *zconfig_lib_version(void);
 int zconfig_add_active_channel(int channel);
 /* channel locked callback */
 void zconfig_channel_locked_callback(u8 primary_channel,
-        u8 secondary_channel, u8 *bssid);
+                                     u8 secondary_channel, u8 *bssid);
 /* got ssid&passwd callback */
 void zconfig_got_ssid_passwd_callback(u8 *ssid, u8 *passwd, u8 *bssid,
-        u8 auth, u8 encry, u8 channel);
+                                      u8 auth, u8 encry, u8 channel);
 
 #if defined(__cplusplus)  /* If this is a C++ compiler, use C linkage */
 }

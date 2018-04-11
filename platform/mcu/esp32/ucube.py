@@ -105,15 +105,15 @@ ld_files = Split('''
 ''')
 
 
-if aos_global_config.get_aos_global_config('bt_mesh') == 1:
+if aos_global_config.get('bt_mesh') == 1:
     src.append('hal/mesh_bt_hal.c')
 
-if aos_global_config.get_aos_global_config('wifi'):
+if aos_global_config.get('wifi'):
     local_cflags.append('ENABLE_WIFI')
 else:
     local_includes.append('bsp')
 
-if aos_global_config.get_aos_global_config('vcall') == 'freertos':
+if aos_global_config.get('vcall') == 'freertos':
     global_includes.append(os.path.join(os.getenv('IDF_PATH'), 'components/espos/include'))
     global_includes.append(os.path.join(os.getenv('IDF_PATH'), 'components/freertos/include'))
     prebuild_libs.append('lib/libespos.a')
@@ -127,10 +127,10 @@ else:
     src.append('aos/trace_impl.c')
     src.append('aos/heap_wrapper.c')
 
-if aos_global_config.get_aos_global_config('mesh'):
+if aos_global_config.get('mesh'):
     dependencis.append('kernel/protocols/mesh')
 
-ble = aos_global_config.get_aos_global_config('mesh', 0)
+ble = aos_global_config.get('mesh', 0)
 if ble:
     dependencis.append('kernel/protocols/bluetooth')
     global_includes.append('bsp/include/bt/include')
@@ -140,7 +140,7 @@ if ble:
     local_includes.append('#kernel/protocols/bluetooth/core/include')
     local_includes.append('#kernel/protocols/bluetooth/include/bluetooth')
 
-    if aos_global_config.get_aos_global_config('hci_h4') != 1:
+    if aos_global_config.get('hci_h4') != 1:
         src.append('ble_hci_driver/hci_driver.c')
     else:
         dependencis.append('kernel/bluetooth/nrf51822')
@@ -150,7 +150,7 @@ if ble:
     global_macro.append('CONFIG_ESP32_WITH_BLE')
     global_macro.append('CONFIG_XTENSA')
 
-component = aos_arch_component('esp32', src)
+component = aos_mcu_component('esp32', src)
 
 component.add_includes(*local_includes)
 component.add_global_includes(*global_includes)
@@ -164,16 +164,15 @@ for ldflag in global_ldflags:
     component.add_global_ldflags(ldflag)
 
 for lib in prebuild_libs:
-    component.add_prebuilt_lib(lib)
+    component.add_prebuilt_libs(lib)
 
 for macro in global_macro:
-    component.add_global_macro(macro)
+    component.add_global_macros(macro)
 
 for ld in ld_files:
-    component.add_global_ld_file(ld)
+    aos_global_config.add_ld_files(ld)
 
-# component.set_global_arch('Xtensa')
-component.set_global_mcu_family('esp32')
+component.set_global_arch('xtensa')
 
 component.add_component_dependencis(*dependencis)
 

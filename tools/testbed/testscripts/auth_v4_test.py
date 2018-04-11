@@ -23,6 +23,18 @@ def main(firmware='lb-mk3060.bin', model='mk3060'):
             if len(args) != 2:
                 print 'wrong argument {0} input, example: --model=mk3060'.format(arg)
             model = args[1]
+        elif arg.startswith('--server='):
+            args = arg.split('=')
+            if len(args) != 2:
+                print 'wrong argument {0} input, example: --server=192.168.10.16'.format(arg)
+                return [1, 'argument {0} error'.format(arg)]
+            server = args[1]
+        elif arg.startswith('--port='):
+            args = arg.split('=')
+            if len(args) != 2 or args[1].isdigit() == False:
+                print 'wrong argument {0} input, example: --port=34568'.format(arg)
+                return [1, 'argument {0} error'.format(arg)]
+            port = int(args[1])
         elif arg.startswith('--wifissid='):
             args = arg.split('=')
             if len(args) != 2:
@@ -74,7 +86,7 @@ def main(firmware='lb-mk3060.bin', model='mk3060'):
     #set specific extnetid to isolate the network
     extnetid = '000102030405' # raspberry pi mesh extended netid
     for device in device_list:
-        at.device_run_cmd(device, ['umesh', 'extnetid', extnetid])
+        at.device_run_cmd(device, 'umesh extnetid {0}'.format(extnetid))
 
     #reboot and get device mac address
     result = reboot_and_get_mac(at, device_list, device_attr)

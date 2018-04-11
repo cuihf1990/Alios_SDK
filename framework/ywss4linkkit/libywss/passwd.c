@@ -26,8 +26,9 @@
  */
 
 #include <stdlib.h>
-#include <time.h>
 
+#include "os.h"
+#include "log.h"
 #include "utils_hmac.h"
 #include "passwd.h"
 #include "sha256.h"
@@ -70,28 +71,14 @@ const char *cal_passwd(void *key, void *random, void *passwd)
     return passwd;
 }
 
-void produce_random(unsigned char *random, unsigned int len)
+int produce_signature(unsigned char *sign, unsigned char *txt,
+                      unsigned int txt_len, const char *key)
 {
-    int i = 0;
-    long long  seed = aos_now();
-    srand((unsigned int)seed);
-    for (i = 0; i < len; i ++) {
-        unsigned int  _rand = (((unsigned int)rand() << 16) + rand());
-        random[i] = _rand & 0xFF;
-    }
-}
-
-extern void utils_hmac_sha1_hex(const char *msg, int msg_len, char *digest, const char *key, int key_len);
-
-int produce_signature(unsigned char *sign, unsigned char *txt, unsigned int txt_len)
-{
-    if (sign == NULL || txt == NULL || txt_len == 0)
+    if (sign == NULL || txt == NULL || txt_len == 0 || key == NULL)
         return -1;
 
-    char ps[OS_PRODUCT_SECRET_LEN + 1] = {0};
-    os_get_device_secret(ps);
     utils_hmac_sha1_hex((const char *)txt, (int)txt_len,
-                    (char *)sign, (const char *)ps, strlen(ps));
+                    (char *)sign, key, strlen(key));
 
     return 0;
 }

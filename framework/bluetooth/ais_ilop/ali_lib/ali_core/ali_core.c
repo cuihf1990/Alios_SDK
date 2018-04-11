@@ -77,6 +77,8 @@
     *((uint8_t *)(data) + 3) = (uint8_t)((val >> 24) & 0xFF); \
 }
 
+extern struct bt_conn *g_conn;
+
 static uint8_t const m_valid_rx_cmd[10]                         /**< Valid command for Rx. */
     = {
         ALI_CMD_CTRL,                ALI_CMD_QUERY,               ALI_CMD_EXT_DOWN,
@@ -224,6 +226,14 @@ static uint32_t tx_func_indicate(ali_t * p_ali, uint8_t cmd, uint8_t * p_data, u
 }
 
 
+static void disconnect_ble(void *arg)
+{
+    (void *)arg;
+    if (!g_conn) return;
+    bt_conn_disconnect(g_conn, BT_HCI_ERR_REMOTE_USER_TERM_CONN);
+}
+
+
 /**@brief Authentication module: event handler function. */
 static void auth_event_handler (ali_t * p_ali, ali_auth_event_t * p_event)
 {
@@ -240,7 +250,7 @@ static void auth_event_handler (ali_t * p_ali, ali_auth_event_t * p_event)
             if (!p_event->data.auth_done.result
                  && p_ali->conn_handle != BLE_CONN_HANDLE_INVALID)
             {
-                //(void) sd_ble_gap_disconnect(p_ali->conn_handle, BLE_HCI_REMOTE_USER_TERMINATED_CONNECTION);
+                disconnect_ble(NULL);
             }
             else
             {
@@ -259,7 +269,7 @@ static void auth_event_handler (ali_t * p_ali, ali_auth_event_t * p_event)
         case ALI_AUTH_EVT_ERROR:
             if (p_event->data.error.err_code == NRF_ERROR_TIMEOUT)
             {
-                //(void) sd_ble_gap_disconnect(p_ali->conn_handle, BLE_HCI_REMOTE_USER_TERMINATED_CONNECTION);
+                disconnect_ble(NULL);
             }
             notify_error(p_ali, p_event->data.error.source, p_event->data.error.err_code);
             break;

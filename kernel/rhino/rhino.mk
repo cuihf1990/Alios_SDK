@@ -1,6 +1,8 @@
 NAME := rhino
 
 $(NAME)_TYPE := kernel
+$(NAME)_MBINS_TYPE := kernel
+
 $(NAME)_COMPONENTS += rhino
 
 GLOBAL_INCLUDES += core/include

@@ -10,6 +10,8 @@
 #include "hal_qspi_stm32l4.h"
 #include "stm32l4xx_hal_qspi.h"
 
+#ifdef HAL_QSPI_MODULE_ENABLED
+
 /* Init and deInit function for qspi1 */
 static int32_t qspi1_init(qspi_dev_t *qspi);
 static int32_t qspi1_DeInit(void);
@@ -231,3 +233,5 @@ static int32_t qspi_freq_transform(uint32_t freq_hal, uint32_t *BaudRatePrescale
 
     return ret;
 }
+#endif
+

@@ -277,7 +277,7 @@ global_incs = Split('''
         mx108/mx378/driver/entry
         #security/alicrypto/libalicrypto/inc/
 ''')
-component = aos_arch_component('moc108', src)
+component = aos_mcu_component('moc108', src)
 component.add_includes(*incs)
 component.add_global_includes(*global_incs)
 
@@ -314,7 +314,7 @@ global_macro = Split('''
         STDIO_UART=0
 ''')
 for macro in global_macro:
-    component.add_global_macro(macro)
+    component.add_global_macros(macro)
 
 global_cflags = Split('''
         -mcpu=arm968e-s
@@ -394,11 +394,10 @@ global_ldflags = Split('''
 for ldflag in global_ldflags:
     component.add_global_ldflags(ldflag)
 
-component.add_global_ld_file('mx108/mx378/build/mx108.ld.S')
+aos_global_config.add_ld_files('mx108/mx378/build/mx108.ld.S')
 
-component.add_prebuilt_lib('librwnx/librwnx.a')
+component.add_prebuilt_libs('librwnx/librwnx.a')
 component.set_global_arch('ARM968E-S')
-component.set_global_mcu_family('moc108')
 
 tool_chain = aos_global_config.create_tool_chain()
 tool_chain.set_prefix('arm-none-eabi-')

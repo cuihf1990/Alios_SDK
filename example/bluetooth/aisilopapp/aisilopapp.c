@@ -11,11 +11,19 @@
 #include <dis.h>
 #include <ali_core.h>
 
+#ifdef AOS_BINS
+#include "hal/soc/uart.h"
+uart_dev_t uart_0;
+#endif
+
+
 #define MODEL_ID 0x3126 /* Model ID, obtained from Ali-Cloud. */
 #define SOFTWARE_VERSION "0.2.0" /* Version number defined by user. Must be in format "%d.%d.%d". */
 #define SOFTWARE_VERSION_LEN 5
 
-uint32_t      m_ali_context[ALI_CONTEXT_SIZE];
+extern uint32_t *fetch_ali_context();
+
+
 uint8_t const m_secret[40] = "sFqTYrjneyyEUlhbZpdOwsDPmShLwMNH8ZHdqLWL";
 static uint8_t m_addr[BD_ADDR_LEN] = {0x01, 0x02, 0x03, 0x04, 0x05, 0x06};
 
@@ -41,8 +49,9 @@ static void advertising_start(void)
     uint32_t err_code;
     uint8_t manuf_spec_data_raw[16] = {0};
     uint16_t length = sizeof(manuf_spec_data_raw);
+    uint32_t *ctx = fetch_ali_context();
 
-    err_code = ali_get_manuf_spec_adv_data(m_ali_context,
+    err_code = ali_get_manuf_spec_adv_data(ctx,
                                            manuf_spec_data_raw,
                                            &length);
     if (err_code) {

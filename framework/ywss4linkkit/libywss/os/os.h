@@ -8,7 +8,6 @@ extern "C" {
 
 #include "iot_import.h"
 #include "product/product.h"
-
 #include "platform/platform.h"
 
 /** @defgroup group_os os
@@ -17,7 +16,6 @@ extern "C" {
 
 #define OS_MAX_SSID_LEN         PLATFORM_MAX_SSID_LEN
 #define OS_MAX_PASSWD_LEN       PLATFORM_MAX_PASSWD_LEN
-
 
 #define OS_CONFIG_SIZE          PLATFORM_CONFIG_SIZE
 #define OS_MAC_LEN              PLATFORM_MAC_LEN
@@ -236,6 +234,41 @@ extern "C" {
  */
 	uint32_t os_get_unaligned_le32(uint8_t * ptr);
 
+/**
+ * @brief sleep thread itself.
+ *
+ * @param[in] ms @n the time interval for which execution is to be suspended, in milliseconds.
+ * @return None.
+ * @see None.
+ * @note None.
+ */
+	static inline void os_msleep(_IN_ uint32_t ms) {
+		platform_msleep(ms);
+	}
+
+/**
+ * @brief sleep thread itself.
+ *
+ * @param[in] sec @n the time interval for which execution is to be suspended, in seconds.
+ * @return None.
+ * @see None.
+ * @note None.
+ */
+	static inline void os_sleep(_IN_ uint32_t sec) {
+		platform_msleep(sec * 1000);
+	}
+
+/**
+ * @brief system reboot immediately.
+ *
+ * @return None.
+ * @see None.
+ * @note None.
+ */
+	static inline void os_reboot() {
+		platform_reboot();
+	}
+
 	/** @} *///end of os_misc
 
 /***************************************** Debug Interface *****************************************/
@@ -306,105 +339,6 @@ do{ \
 	TRACE(fmt, ## args)
 
 	/** @} *///end of os_debug
-
-/***************************************** thread Interface *****************************************/
-
-/** @defgroup group_os_thread thread
- *  @{
- */
-
-
-/**
- * @brief create a thread.
- *
- * @param[in] name @n thread name.
- * @param[in] start_addr @n A pointer to the application-defined function to be executed by the thread.
-		This pointer represents the starting address of the thread.
- * @param[in] arg @n A pointer to a variable to be passed to the thread.
- * @return @n thread handle
- * @see None.
- * @note None.
- * @warning Must use as a pair with os_thread_exit, otherwise will occur fatal error.
- */
-	void *os_thread_create(_IN_ const char *thread_name, _IN_ void *(*thread_func)(void *), _IN_ void *arg);
-
-/**
- * @brief exit itself
- *
- * @param[in] thread_info @n The specific thread.
- * @return
- * @verbatim
- * =  0, no exist.
- * =  1, exist.
- * @endverbatim
- * @see None.
- * @note None
- * @warning
-   @verbatim
-   1, Input parameter must be its own handle, otherwise will occur fatal error.
-   2, Must use as a pair with os_thread_create, otherwise will occur fatal error.
-   @endverbatim
- *
- */
-	void os_thread_exit(_IN_ void *thread_info);
-
-/**
- * @brief check whether the specific thread exist or not.
- *
- * @param[in] thread_info @n the specific thread.
- * @return
-   @verbatim
-   =  0, no exist.
-   =  1, exist.
-   @endverbatim
- * @see none.
- * @note none.
- */
-	int os_thread_is_existence(_IN_ void *thread_info);
-
-/**
- * @brief wait the specific thread to exit and then free the related resource.
- *
- * @param[in] thread_info @n the specific thread.
- * @return
-   @verbatim
-   =  0, on success.
-   <  0, error.
-   @endverbatim
- * @see none.
- * @note none.
- */
-	int os_thread_join(_IN_ void *thread_info);
-
-//int os_thread_post_msg(void *thread_info, void *msg);
-
-//void *os_thread_wait_msg(void *thread_info, uint32_t timeout);
-
-/**
- * @brief sleep thread itself.
- *
- * @param[in] ms @n the time interval for which execution is to be suspended, in milliseconds.
- * @return None.
- * @see None.
- * @note None.
- */
-	static inline void os_msleep(_IN_ uint32_t ms) {
-		platform_msleep(ms);
-	}
-
-/**
- * @brief sleep thread itself.
- *
- * @param[in] sec @n the time interval for which execution is to be suspended, in seconds.
- * @return None.
- * @see None.
- * @note None.
- */
-	static inline void os_sleep(_IN_ uint32_t sec) {
-		platform_msleep(sec * 1000);
-	}
-
-	/** @} */// end of os_thread
 
 /***************************************** mutex Interface *****************************************/
 
@@ -573,80 +507,6 @@ static inline void *os_zalloc(uint32_t size) {
 
 /** @} */// end of os_memory_manage
 
-/**************************************** network Interface ****************************************/
-
-/** @defgroup group_os_network network
- *  @{
- */
-
-	typedef platform_netaddr_t os_netaddr_t, *pos_netaddr_t;
-
-/**
- * @brief Converts a uint32_t from host to TCP/IP network byte order(which is big-endian).
- *
- * @param[in] n @n The data to be converted.
- * @return Converted result.
- * @see None.
- * @note.
- */
-	uint32_t os_htonl(uint32_t n);
-
-/**
- * @brief Converts a uint32_t from TCP/IP network byte order(which is big-endian) to host byte order.
- *
- * @param[in] n @n The data to be converted.
- * @return Converted result.
- * @see None.
- * @note.
- */
-	uint32_t os_ntohl(uint32_t n);
-
-/**
- * @brief Converts a uint16_t from host to TCP/IP network byte order(which is big-endian).
- *
- * @param[in] n @n The data to be converted.
- * @return Converted result.
- * @see None.
- * @note.
- */
-	uint16_t os_htons(uint16_t n);
-
-/**
- * @brief Converts a uint16_t from TCP/IP network byte order(which is big-endian) to host byte order.
- *
- * @param[in] n @n The data to be converted.
- * @return Converted result.
- * @see None.
- * @note.
- */
-	uint16_t os_ntohs(uint16_t n);
-
-/**
- * @brief Convert numeric IP address (in network order) into decimal dotted ASCII representation.
- *
- * @param[in] ip @n The IP address, in network order.
- * @param[out] buf @n The target buffer where the string is stored.
- * @return Pointer to buf which now holds the ASCIIrepresentation of addr.
- * @see None.
- * @note.
- */
-	char *os_ntoa(const uint32_t ip, char buf[OS_IP_LEN]);
-
-/**
- * @brief Check whether ip_str is a valid ASCII representation of an Internet address and convert to a binary address.
- *
- * @param[in] ip_str @n IP address in ASCII representation (e.g. "127.0.0.1").
- * @return
-   @verbatim
-   =  0, on failure.
-   >  0, the successful result.
-   @endverbatim
- * @see None.
- * @note.
- */
-	uint32_t os_aton(const char *ip_str);
-
-
 /**************************************** system Interface ****************************************/
 
 /** @defgroup group_os_system system
@@ -730,8 +590,7 @@ static inline void *os_zalloc(uint32_t size) {
  * @see None.
  * @note None.
  */
-#define os_printf(fmt, args ...) \
-	platform_printf(fmt, ## args)
+#define os_printf(fmt, args ...) platform_printf(fmt, ## args)
 
 	/** @} */// end of os_io
 
@@ -775,6 +634,24 @@ static inline void *os_zalloc(uint32_t size) {
 	}
 
 /**
+ * @brief    Get Security level for wifi configuration with connection.
+ *           Used for AP solution of router and App.
+ *
+ * @param None.
+ * @return The security level:
+   @verbatim
+    3: aes128cfb with aes-key per product and aes-iv = random
+    4: aes128cfb with aes-key per device and aes-iv = random
+    5: aes128cfb with aes-key per manufacture and aes-iv = random
+    others: invalid
+   @endverbatim
+ * @see None.
+ */
+	static inline int os_get_conn_encrypt_type(void) {
+		return platform_get_conn_encrypt_type();
+	}
+
+/**
  * @brief Get WIFI MAC string with format like: XX:XX:XX:XX:XX:XX.
  *
  * @param[out] mac_str @n Buffer for using to store wifi MAC string.
@@ -804,10 +681,9 @@ static inline void *os_zalloc(uint32_t size) {
  * @see None.
  * @note None.
  */
-static inline uint32_t os_wifi_get_ip(char ip_str[OS_IP_LEN], const char *ifname)
-{
+static inline uint32_t os_wifi_get_ip(char ip_str[OS_IP_LEN], const char *ifname) {
     return platform_wifi_get_ip(ip_str, ifname);
-	}
+}
 
 /**
  * @brief wifi module enter power saving mode for a period

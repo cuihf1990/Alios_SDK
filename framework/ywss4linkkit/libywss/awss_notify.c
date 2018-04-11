@@ -29,6 +29,7 @@
 #include "os.h"
 #include "enrollee.h"
 #include "utils.h"
+#include "zconfig_utils.h"
 #include "passwd.h"
 #include "platform.h"
 #include "awss_notify.h"
@@ -44,7 +45,6 @@ extern "C"
 #endif
 
 #define AWSS_NOTIFY_PORT     (5683)
-//#define AWSS_NOTIFY_HOST     "224.0.1.188"
 #define AWSS_NOTIFY_HOST     "255.255.255.255"
 #define AWSS_DEV_NOTIFY_FMT  "{\"id\":\"%u\",\"version\":\"1.0\",\"method\":\"%s\",\"params\":{%s}}"
 
@@ -58,16 +58,16 @@ int awss_devinfo_notify();
 static struct work_struct awss_connectap_notify_work = {
     .func = (work_func_t)&awss_connectap_notify,
     .prio = 1, /* smaller digit means higher priority */
-    .name = "awss connectap notify",
+    .name = "connectap",
 };
 
 static struct work_struct awss_devinfo_notify_work = {
     .func = (work_func_t)&awss_devinfo_notify,
     .prio = 1, /* smaller digit means higher priority */
-    .name = "awss devinfo notify",
+    .name = "devinfo",
 };
 
-int awss_devinfo_notify_resp(void *context, int result, void *userdata, pplatform_netaddr_t remote, void *message)
+int awss_devinfo_notify_resp(void *context, int result, void *userdata, void *remote, void *message)
 {
     awss_debug("%s\n", __func__);
 
@@ -92,7 +92,7 @@ int awss_devinfo_notify_resp(void *context, int result, void *userdata, pplatfor
  *  "data": {}
  * }
  */
-int awss_connectap_notify_resp(void *context, int result, void *userdata, pplatform_netaddr_t remote, void *message)
+int awss_connectap_notify_resp(void *context, int result, void *userdata, void *remote, void *message)
 {
     awss_debug("%s\n", __func__);
 
@@ -122,8 +122,7 @@ int awss_notify_dev_info(int type, int count)
         if (buf == NULL || dev_info == NULL)
             break;
 
-        platform_netaddr_t notify_sa;
-        memset(&notify_sa, 0, sizeof(platform_netaddr_t));
+        platform_netaddr_t notify_sa = {0};
 
         memcpy(notify_sa.host, AWSS_NOTIFY_HOST, strlen(AWSS_NOTIFY_HOST));
         notify_sa.port = AWSS_NOTIFY_PORT;
@@ -134,7 +133,7 @@ int awss_notify_dev_info(int type, int count)
         snprintf(buf, DEV_INFO_LEN_MAX - 1, AWSS_DEV_NOTIFY_FMT, ++ g_notify_id, method, dev_info);
         void *cb = (type == AWSS_NOTIFY_DEV_TOKEN ? awss_connectap_notify_resp : awss_devinfo_notify_resp);
 
-        log_debug("topic:%s, %s\n", topic, buf);
+        awss_debug("topic:%s, %s\n", topic, buf);
         for (i = 0; i < count; i ++) {
             awss_cmp_coap_send(buf, strlen(buf), &notify_sa, topic, cb, &g_notify_msg_id);
             if (count > 1) os_msleep(200 + 100 * i);
@@ -149,7 +148,7 @@ int awss_notify_dev_info(int type, int count)
     return awss_notify_resp[type];
 }
 
-#define AWSS_NOTIFY_CNT_MAX    (20)
+#define AWSS_NOTIFY_CNT_MAX    (50)
 
 int awss_connectap_notify_stop()
 {
@@ -157,12 +156,12 @@ int awss_connectap_notify_stop()
     return 0;
 }
 
-static int online_get_device_info(void *ctx, void *resource, pplatform_netaddr_t remote, void *request, char is_mcast)
+static int online_get_device_info(void *ctx, void *resource, void *remote, void *request, char is_mcast)
 {
     char *buf = NULL;
     char *dev_info = NULL;
-    char *msg = NULL, *id = NULL;
     int len = 0, id_len = 0;
+    char *msg = NULL, *id = NULL;
     char req_msg_id[MSG_REQ_ID_LEN];
 
     extern char awss_report_token_flag;
@@ -208,12 +207,12 @@ DEV_INFO_ERR:
     return -1;
 }
 
-int online_mcast_get_device_info(void *ctx, void *resource, pplatform_netaddr_t remote, void *request)
+int online_mcast_get_device_info(void *ctx, void *resource, void *remote, void *request)
 {
     return online_get_device_info(ctx, resource, remote, request, 1);
 }
 
-int online_ucast_get_device_info(void *ctx, void *resource, pplatform_netaddr_t remote, void *request)
+int online_ucast_get_device_info(void *ctx, void *resource, void *remote, void *request)
 {
     return online_get_device_info(ctx, resource, remote, request, 0);
 }

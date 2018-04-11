@@ -75,14 +75,14 @@ src.extend(api_src)
 src.extend(net_if_src)
 src.extend(tftp_src)
 
-if not aos_global_config.get_aos_global_config('use_private_lwip'):
+if not aos_global_config.get('use_private_lwip'):
     component = aos_component('net', src)
     component.add_global_includes('include', 'port/include')
-    component.add_global_macro('CONFIG_NET_LWIP')
+    component.add_global_macros('CONFIG_NET_LWIP')
 
 else:
     component = aos_component('net', [])
 
-if aos_global_config.get_aos_global_config('no_with_lwip') != '1':
-    component.add_global_macro('WITH_LWIP')
-    aos_global_config.set_aos_global_config('with_lwip','1')
+if aos_global_config.get('no_with_lwip') != '1':
+    component.add_global_macros('WITH_LWIP')
+    aos_global_config.set('with_lwip','1')

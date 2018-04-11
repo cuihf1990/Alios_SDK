@@ -2,8 +2,8 @@
  * Copyright (C) 2015-2017 Alibaba Group Holding Limited
  */
 
-#ifndef CONFIG_H
-#define CONFIG_H
+#ifndef BLE_CONFIG_H
+#define BLE_CONFIG_H
 
 /**
  * CONFIG_BLUETOOTH: Enable the bluetooh stack
@@ -484,4 +484,4 @@
 }
 #endif
 
-#endif /* CONFIG_H */
+#endif /* BLE_CONFIG_H */

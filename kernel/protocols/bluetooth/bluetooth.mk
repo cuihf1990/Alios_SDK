@@ -1,6 +1,8 @@
 NAME := bluetooth
 
 $(NAME)_TYPE := kernel
+$(NAME)_MBINS_TYPE := kernel
+
 GLOBAL_INCLUDES += include \
                    include/drivers \
                    common/include \

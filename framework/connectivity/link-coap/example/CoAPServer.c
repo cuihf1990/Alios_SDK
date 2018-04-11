@@ -195,7 +195,7 @@ void CoAPServer_loop(CoAPContext *context)
     hal_os_thread_param_t p = {0};
     p.name = "CoAPServer_loop";
     p.stack_size = 8192;
-
+    ---------
     g_coap_running = 1;
     HAL_ThreadCreate(&g_coap_thread, CoAPServer_yield, (void *)context, &p, &stack_used);
 }

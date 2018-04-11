@@ -88,12 +88,12 @@ prebuild_libs = Split('''
 ''')
 
 ld_files = ['bsp/ld/eagle.app.v6.new.1024.app1.ld']
-if aos_global_config.get_aos_global_config('wifi', 0) == 1:
+if aos_global_config.get('wifi', 0) == 1:
     local_cflags.append('ENABLE_WIFI')
 else:
     local_includes.append('bsp')
 
-if aos_global_config.get_aos_global_config('vcall', 'rhino') == 'freertos':
+if aos_global_config.get('vcall', 'rhino') == 'freertos':
     global_includes.append(os.path.join(os.getenv('SDK8266_PATH'), 'include/espos'))
     global_includes.append(os.path.join(os.getenv('SDK8266_PATH'), 'include/freertos'))
     prebuild_libs.append('lib/libespos.a')
@@ -105,7 +105,7 @@ else:
     src.append('aos/soc_impl.c')
     src.append('aos/trace_impl.c')
 
-component = aos_arch_component('esp8266', src)
+component = aos_mcu_component('esp8266', src)
 component.add_component_dependencis(*dependencis)
 
 component.add_includes(*local_includes)
@@ -121,18 +121,16 @@ for ldflag in global_ldflags:
     component.add_global_ldflags(ldflag)
 
 for lib in prebuild_libs:
-    component.add_prebuilt_lib(lib)
+    component.add_prebuilt_libs(lib)
 
 for macro in global_macro:
-    component.add_global_macro(macro)
+    component.add_global_macros(macro)
 
-for ld in ld_files:
-    component.add_global_ld_file(ld)
+aos_global_config.add_ld_files(*ld_files)
 
-# component.set_global_arch('Xtensa')
-component.set_global_mcu_family('esp8266')
+component.set_global_arch('xtensa')
 
-aos_global_config.set_aos_global_config('use_private_lwip', 1)
+aos_global_config.set('use_private_lwip', 1)
 
 tool_chain = aos_global_config.create_tool_chain()
 tool_chain.set_prefix('xtensa-lx106-elf-')

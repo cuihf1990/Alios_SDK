@@ -9,12 +9,6 @@
 
 #include "hal/soc/uart.h"
 
-
-void hal_reboot(void)
-{
-	
-}
-
 #if (RHINO_CONFIG_HW_COUNT > 0)
 void soc_hw_timer_init(void)
 {

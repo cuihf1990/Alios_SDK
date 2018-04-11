@@ -66,7 +66,7 @@ global_macros =Split('''
     CONFIG_ALINK_ILOP
 ''')
 for i in global_macros:
-    component.add_global_macro(i)
+    component.add_global_macros(i)
 
 includes =Split(''' 
     base/log/LITE-log/
@@ -90,4 +90,4 @@ cflags =Split('''
 for i in cflags:
     component.add_cflags(i)
 
-component.add_global_macro('LITE_UTILS_CONFIG_H=\\"'+'ilop_utils_config.h'+'\\"')
+component.add_global_macros('LITE_UTILS_CONFIG_H=\\"'+'ilop_utils_config.h'+'\\"')

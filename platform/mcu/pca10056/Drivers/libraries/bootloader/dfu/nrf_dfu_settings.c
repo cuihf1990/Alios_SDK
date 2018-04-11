@@ -141,7 +141,7 @@ NRF_LOG_MODULE_REGISTER();
 nrf_dfu_settings_t s_dfu_settings;
 
 
-static uint32_t nrf_dfu_settings_crc_get(void)
+uint32_t nrf_dfu_settings_crc_get(void)
 {
     // The crc is calculated from the s_dfu_settings struct, except the crc itself and the init command
     return crc32_compute((uint8_t*)&s_dfu_settings + 4, DFU_SETTINGS_INIT_COMMAND_OFFSET  - 4, NULL);

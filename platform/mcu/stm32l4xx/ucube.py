@@ -31,11 +31,11 @@ src =Split('''
     aos/soc_impl.c
     aos/trace_impl.c
 ''')
-component =aos_arch_component('stm32l4xx', src)
+component =aos_mcu_component('stm32l4xx', src)
 
-HOST_MCU_NAME = aos_global_config.get_aos_global_config('HOST_MCU_NAME')
+HOST_MCU_NAME = aos_global_config.get('HOST_MCU_NAME')
 dependencis =Split(''' 
-    ./platform/arch/arm/armv7m
+    platform/arch/arm/armv7m
     utility/libc
     kernel/rhino
     kernel/hal
@@ -75,14 +75,14 @@ global_macros =Split('''
     CONFIG_AOS_KV_BUFFER_SIZE=8192
 ''')
 for i in global_macros:
-    component.add_global_macro(i)
+    component.add_global_macros(i)
 
 if HOST_MCU_NAME == 'STM32L433RC-Nucleo':
-    component.add_global_macro('STM32L433xx')
+    component.add_global_macros('STM32L433xx')
     component.add_sources('src/'+HOST_MCU_NAME+'/hal/hal_gpio_stm32l4.c')
     component.add_sources('src/'+HOST_MCU_NAME+'/hal/hal_i2c_stm32l4.c')
 elif HOST_MCU_NAME == 'STM32L432KC-Nucleo':
-    component.add_global_macro('STM32L432xx')
+    component.add_global_macros('STM32L432xx')
     
     
 if aos_global_config.compiler == 'armcc':    
@@ -206,9 +206,9 @@ for i in global_ldflags:
     component.add_global_ldflags(i)     
 
 if aos_global_config.compiler == 'armcc':     
-    component.add_external_obj('src/STM32L433RC-Nucleo/startup_stm32l433xx_keil.o')
-    component.add_external_obj('src/'+HOST_MCU_NAME+'/runapp/stm32l4xx_it.o')
-    component.add_external_obj('src/'+HOST_MCU_NAME+'/runapp/stm32l4xx_hal_msp.o')
+    component.add_prebuilt_objs('src/STM32L433RC-Nucleo/startup_stm32l433xx_keil.o')
+    component.add_prebuilt_objs('src/'+HOST_MCU_NAME+'/runapp/stm32l4xx_it.o')
+    component.add_prebuilt_objs('src/'+HOST_MCU_NAME+'/runapp/stm32l4xx_hal_msp.o')
 
 component.add_component_dependencis('kernel/vcall')
 component.add_component_dependencis('kernel/init')

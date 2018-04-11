@@ -287,6 +287,11 @@ void HAL_Awss_Switch_Channel(
     hal_wifi_set_channel(module, (int)primary_channel);
 }
 
+int HAL_Sys_Net_Is_Ready()
+{
+    return netmgr_get_ip_state() == true ? 1 : 0;
+}
+
 /**
  * @brief   要求Wi-Fi网卡连接指定热点(Access Point)的函数
  *
@@ -364,7 +369,7 @@ int HAL_Awss_Connect_Ap(
  * @see None.
  * @note awss use this API send raw frame in wifi monitor mode & station mode
  */
-int HAL_Wifi_Send_80211_Raw_Frame(_IN_ HAL_Awss_Frame_Type_t type,
+int HAL_Wifi_Send_80211_Raw_Frame(_IN_ enum HAL_Awss_Frame_Type type,
                                   _IN_ uint8_t *buffer, _IN_ int len)
 {
     return hal_wlan_send_80211_raw_frame(NULL, buffer, len);
@@ -755,6 +760,17 @@ int HAL_Awss_Get_Encrypt_Type()
     return 3;
 }
 
+int HAL_Awss_Get_Conn_Encrypt_Type()
+{
+    return 4;
+}
+
+void HAL_Sys_reboot(void)
+{
+    aos_reboot();
+}
+
+#if 0
 int platform_sys_net_is_ready(void)
 {
     int ret;
@@ -768,6 +784,7 @@ int platform_sys_net_is_ready(void)
 
     return !!link_stat.is_connected;
 }
+#endif
 
 #ifdef CONFIG_YWSS
 static int smart_config_start(void)

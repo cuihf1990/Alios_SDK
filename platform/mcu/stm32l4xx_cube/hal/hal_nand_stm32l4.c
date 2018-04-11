@@ -5,6 +5,7 @@
 /*
   * Due to FMC is used for external flash, So it's just a sample!!!
   */
+#if defined(HAL_NAND_MODULE_ENABLED)
 #if defined(STM32L471xx) || defined(STM32L475xx) || defined(STM32L476xx) || defined(STM32L485xx) || defined(STM32L486xx) || \
     defined(STM32L496xx) || defined(STM32L4A6xx) || \
     defined(STM32L4R5xx) || defined(STM32L4R7xx) || defined(STM32L4R9xx) || defined(STM32L4S5xx) || defined(STM32L4S7xx) || defined(STM32L4S9xx)
@@ -146,4 +147,5 @@ int32_t hal_nand_erase_block(nand_dev_t *nand, nand_addr_t *addr)
     return HAL_OK;
 }
 
+#endif
 #endif

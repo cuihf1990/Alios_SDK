@@ -7,7 +7,7 @@ component.add_includes('.')
 
 comp_names = [comp.name for comp in aos_global_config.components]
 if 'coap' in  comp_names:
-    FOTA_DL_COAP=aos_global_config.get_aos_global_config('FOTA_DL_COAP')
+    FOTA_DL_COAP=aos_global_config.get('FOTA_DL_COAP')
     if FOTA_DL_COAP != None:
         component.add_component_dependencis('framework/fota/download/coap')
     else:

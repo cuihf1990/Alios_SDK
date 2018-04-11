@@ -132,10 +132,10 @@ extern "C" {
 
 #if defined ( NRF51 )
     #define BOOTLOADER_SETTINGS_ADDRESS     (0x0003FC00UL)
-#elif defined( NRF52832_XXAA )
-    #define BOOTLOADER_SETTINGS_ADDRESS     (0x0007F000UL)
 #elif defined( NRF52840_XXAA )
     #define BOOTLOADER_SETTINGS_ADDRESS     (0x000FF000UL)
+#elif defined( NRF52832_XXAA )
+    #define BOOTLOADER_SETTINGS_ADDRESS     (0x0007F000UL)
 #elif defined( NRF52810_XXAA )
     #define BOOTLOADER_SETTINGS_ADDRESS     (0x0002F000UL)
 #else

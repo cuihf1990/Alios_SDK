@@ -220,11 +220,7 @@ class Server:
                             log += value[len(port):]
                             for s in client['devices'][port]['status_subscribe']:
                                 self.send_packet(s, type, log)
-                    elif type == pkt.DEVICE_ERASE or type == pkt.DEVICE_PROGRAM or \
-                         type == pkt.DEVICE_START or type == pkt.DEVICE_STOP or \
-                         type == pkt.DEVICE_RESET or type == pkt.DEVICE_CMD or \
-                         type == pkt.FILE_BEGIN or type == pkt.FILE_DATA or \
-                         type == pkt.FILE_END:
+                    elif type == pkt.RESPONSE:
                         values = value.split(',')
                         addr = (values[0], int(values[1]))
                         terminal = None
@@ -232,10 +228,7 @@ class Server:
                             if t['addr'] == addr:
                                 terminal = t
                         if terminal != None:
-                            if values[2] != 'success' and values[2] != 'ok':
-                                self.send_packet(terminal['socket'], pkt.CMD_ERROR, ','.join(values[2:]))
-                            else:
-                                self.send_packet(terminal['socket'], pkt.CMD_DONE, ','.join(values[2:]))
+                            self.send_packet(terminal['socket'], type, ','.join(values[2:]))
                     elif type == pkt.CLIENT_TAG:
                         client['tag'] = value
                         print 'client {0} tag: {1}'.format(client['uuid'],repr(value))
@@ -434,7 +427,8 @@ class Server:
                         target_data = value[len(dev_str):]
                         client = self.get_client_by_uuid(uuid)
                         if client == None:
-                            seld.send_packet(terminal['socket'], pkt.CMD_ERROR, 'nonexist')
+                            content = ','.join([type, 'nonexist'])
+                            self.send_packet(terminal['socket'], pkt.RESPONSE, content)
                             continue
                         content  = terminal['addr'][0] + ',' + str(terminal['addr'][1])
                         content += target_data
@@ -444,12 +438,14 @@ class Server:
                          type == pkt.DEVICE_RESET or type == pkt.DEVICE_CMD:
                         dev_str_split = value.split(':')[0].split(',')[0:2]
                         if len(dev_str_split) != 2:
-                            self.send_packet(terminal['socket'], pkt.CMD_ERROR,'argerror')
+                            content = ','.join([type, 'argerror'])
+                            self.send_packet(terminal['socket'], pkt.RESPONSE, content)
                             continue
                         [uuid, port] = dev_str_split
                         client = self.get_client_by_uuid(uuid)
                         if client == None:
-                            self.send_packet(terminal['socket'], pkt.CMD_ERROR,'nonexist')
+                            content = ','.join([type, 'nonexist'])
+                            self.send_packet(terminal['socket'], pkt.RESPONSE, content)
                             continue
                         content = terminal['addr'][0]
                         content += ',' + str(terminal['addr'][1])
@@ -458,8 +454,8 @@ class Server:
                         self.increase_device_refer(client, port, using_list)
                     elif type == pkt.DEVICE_ALLOC:
                         result = self.allocate_devices(value)
-                        content = ','.join(result)
-                        self.send_packet(terminal['socket'], pkt.DEVICE_ALLOC, content)
+                        content = type + ',' + ','.join(result)
+                        self.send_packet(terminal['socket'], pkt.RESPONSE, content)
                     elif type == pkt.LOG_SUB or type == pkt.LOG_UNSUB or \
                          type == pkt.STATUS_SUB or type == pkt.STATUS_UNSUB:
                         dev_str_split = value.split(',')
@@ -507,13 +503,15 @@ class Server:
                         filename = 'server/' + datestr + '/' + uuid + '-' + port.split('/')[-1] + '.log'
                         client = self.get_client_by_uuid(uuid)
                         if client == None or port not in list(client['devices']) or os.path.exists(filename) == False:
-                            self.send_packet(terminal['socket'], pkt.CMD_ERROR,'fail')
+                            content = ','.join([type, 'fail'])
+                            self.send_packet(terminal['socket'], pkt.RESPONSE, content)
                             print "terminal {0}:{1}".format(terminal['addr'][0], terminal['addr'][1]),
                             print "downloading log of device {0}:{1} ... failed".format(uuid, port)
                             continue
                         self.send_file_to_someone(terminal, filename)
                         heartbeat_timeout = time.time() + 30
-                        self.send_packet(terminal['socket'], pkt.CMD_DONE, 'success')
+                        content = ','.join([type, 'success'])
+                        self.send_packet(terminal['socket'], pkt.RESPONSE, content)
                         print "terminal {0}:{1}".format(terminal['addr'][0], terminal['addr'][1]),
                         print "downloading log of device {0}:{1} ... succeed".format(uuid, port)
             except:

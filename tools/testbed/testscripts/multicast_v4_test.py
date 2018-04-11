@@ -32,6 +32,18 @@ def main(firmware='lb-mk3060.bin', model='mk3060'):
             if len(args) != 2:
                 print 'wrong argument {0} input, example: --wifipass=test_password'.format(arg)
             ap_pass = args[1]
+        elif arg.startswith('--server='):
+            args = arg.split('=')
+            if len(args) != 2:
+                print 'wrong argument {0} input, example: --server=192.168.10.16'.format(arg)
+                return [1, 'argument {0} error'.format(arg)]
+            server = args[1]
+        elif arg.startswith('--port='):
+            args = arg.split('=')
+            if len(args) != 2 or args[1].isdigit() == False:
+                print 'wrong argument {0} input, example: --port=34568'.format(arg)
+                return [1, 'argument {0} error'.format(arg)]
+            port = int(args[1])
         elif arg=='--help':
             print 'Usage: python {0} [--firmware=xxx.bin] [--wifissid=wifi_ssid] [--wifipass=password]'.format(sys.argv[0])
             return [0, 'help']

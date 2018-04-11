@@ -1,32 +1,28 @@
 #!/usr/bin/env bash
 
-workdir=autobuild
 linux_posix_targets="alinkapp meshapp networkapp"
-linux_targets="alinkapp networkapp helloworld linuxapp meshapp tls yts"
+linux_targets="alinkapp networkapp helloworld linuxapp meshapp tls yts linkkitapp"
 linux_platforms="linuxhost linuxhost@debug linuxhost@release"
 mk3060_targets="alinkapp helloworld linuxapp meshapp tls uDataapp networkapp"
 mk3060_platforms="mk3060 mk3060@release"
 b_l475e_targets="mqttapp helloworld tls uDataapp networkapp"
 b_l475e_platforms="b_l475e"
+starterkit_targets="ldapp"
+starterkit_platforms="starterkit"
 lpcxpresso54102_targets="helloworld alinkapp mqttapp tls networkapp"
 lpcxpresso54102_platforms="lpcxpresso54102"
 esp32_targets="alinkapp helloworld bluetooth.bleadv bluetooth.bleperipheral networkapp bluetooth.aisapp bluetooth.aisilopapp"
 esp32_platforms="esp32devkitc"
-esp8266_targets="helloworld"
+esp8266_targets="helloworld linkkitapp"
 esp8266_platforms="esp8266"
-bins_type="app framework kernel"
 mk3239_targets="bluetooth.ble_advertisements bluetooth.ble_show_system_time"
 mk3239_platforms="mk3239"
-scons_build_targets="helloworld@b_l475e helloworld@mk3060"
-scons_ide_targets=""
-ide_types="keil iar"
 pca10056_targets="bluetooth.bleperipheral bluetooth.aisilopapp bluetooth.aisapp"
 pca10056_platforms="pca10056"
 
-DEBUG="no"
-if [ $# -gt 0 ]; then
-    DEBUG=$1
-fi
+scons_build_targets="helloworld@b_l475e helloworld@mk3060"
+scons_ide_targets=""
+ide_types="keil iar"
 
 git status > /dev/null 2>&1
 if [ $? -ne 0 ]; then
@@ -46,17 +42,8 @@ cd $(git rev-parse --show-toplevel)
 #scons tmp
 aos make clean > /dev/null 2>&1
 for target in ${scons_build_targets}; do
-    if [ "${DEBUG}" != "no" ]; then
-        echo "before scons ${target}@${branch}"
-        pwd && ls
-    fi
     aos scons ${target} > ${target}@${branch}.log 2>&1
-    ret=$?
-    if [ "${DEBUG}" != "no" ]; then
-        echo "after scons ${target}@${branch}"
-        pwd && ls
-    fi
-    if [ ${ret} -eq 0 ]; then
+    if [ $? -eq 0 ]; then
         echo "build scons ${target} at ${branch} branch succeed"
         rm -f ${target}@${branch}.log
     else
@@ -72,17 +59,8 @@ done
 aos make clean > /dev/null 2>&1
 for target in ${scons_ide_targets}; do
     for ide in ${ide_types}; do
-        if [ "${DEBUG}" != "no" ]; then
-            echo "before scons ${target} IDE=${ide} @${branch}"
-            pwd && ls
-        fi
         aos scons ${target} IDE=${ide} > ${target}2IDE_${ide}@${branch}.log 2>&1
-        ret=$?
-        if [ "${DEBUG}" != "no" ]; then
-            echo "after scons ${target} IDE=${ide} @${branch}"
-            pwd && ls
-        fi
-        if [ ${ret} -eq 0 ]; then
+        if [ $? -eq 0 ]; then
             echo "build scons ${target} IDE=${ide} at ${branch} branch succeed"
             rm -f ${target}2IDE_${ide}@${branch}.log
         else
@@ -99,17 +77,8 @@ done
 aos make clean > /dev/null 2>&1
 for target in ${linux_posix_targets}; do
     for platform in ${linux_platforms}; do
-        if [ "${DEBUG}" != "no" ]; then
-            echo "before make posix ${target}@${platform}@${branch}"
-            pwd && ls
-        fi
         vcall=posix aos make ${target}@${platform} JOBS=${JNUM} > ${target}@${platform}@${branch}.log 2>&1
-        ret=$?
-        if [ "${DEBUG}" != "no" ]; then
-            echo "after make posix ${target}@${platform}@${branch}"
-            pwd && ls
-        fi
-        if [ ${ret} -eq 0 ]; then
+        if [ $? -eq 0 ]; then
             echo "build vcall=posix ${target}@${platform} at ${branch} branch succeed"
             rm -f ${target}@${platform}@${branch}.log
         else
@@ -126,17 +95,8 @@ done
 aos make clean > /dev/null 2>&1
 for target in ${linux_targets}; do
     for platform in ${linux_platforms}; do
-        if [ "${DEBUG}" != "no" ]; then
-            echo "before make ${target}@${platform}@${branch}"
-            pwd && ls
-        fi
         aos make ${target}@${platform} JOBS=${JNUM} > ${target}@${platform}@${branch}.log 2>&1
-        ret=$?
-        if [ "${DEBUG}" != "no" ]; then
-            echo "after make ${target}@${platform}@${branch}"
-            pwd && ls
-        fi
-        if [ ${ret} -eq 0 ]; then
+        if [ $? -eq 0 ]; then
             echo "build ${target}@${platform} at ${branch} branch succeed"
             rm -f ${target}@${platform}@${branch}.log
         else
@@ -153,17 +113,8 @@ done
 aos make clean > /dev/null 2>&1
 for target in ${mk3060_targets}; do
     for platform in ${mk3060_platforms}; do
-        if [ "${DEBUG}" != "no" ]; then
-            echo "before make ${target}@${platform}@${branch}"
-            pwd && ls
-        fi
         aos make ${target}@${platform} JOBS=${JNUM} > ${target}@${platform}@${branch}.log 2>&1
-        ret=$?
-        if [ "${DEBUG}" != "no" ]; then
-            echo "after make ${target}@${platform}@${branch}"
-            pwd && ls
-        fi
-        if [ ${ret} -eq 0 ]; then
+        if [ $? -eq 0 ]; then
             rm -f ${target}@${platform}@${branch}.log
             echo "build ${target}@${platform} at ${branch} branch succeed"
         else
@@ -186,17 +137,8 @@ for target in ${mk3060_targets}; do
             if [ "${target}" = "tls" ] || [ "${target}" = "meshapp" ]; then
                 continue
             fi
-            if [ "${DEBUG}" != "no" ]; then
-                echo "before make ${target}@${platform}@${bins}@${branch}"
-                pwd && ls
-            fi
             aos make ${target}@${platform} BINS=${bins} JOBS=${JNUM} > ${target}@${platform}@${bins}@${branch}.log 2>&1
-            ret=$?
-            if [ "${DEBUG}" != "no" ]; then
-                echo "after make ${target}@${platform}@${bins}@${branch}"
-                pwd && ls
-            fi
-            if [ ${ret} -eq 0 ]; then
+            if [ $? -eq 0 ]; then
                 rm -f ${target}@${platform}@${bins}@${branch}.log
                 echo "build ${target}@${platform} BINS=${bins} as multiple BINs at ${branch} branch succeed"
             else
@@ -210,23 +152,14 @@ for target in ${mk3060_targets}; do
         done
     done
 done
-fi
 `
+
 #single-bin, lpc54102
 aos make clean > /dev/null 2>&1
 for target in ${lpcxpresso54102_targets}; do
     for platform in ${lpcxpresso54102_platforms}; do
-        if [ "${DEBUG}" != "no" ]; then
-            echo "before make ${target}@${platform}@${branch}"
-            pwd && ls
-        fi
         aos make ${target}@${platform} JOBS=${JNUM} > ${target}@${platform}@${branch}.log 2>&1
-        ret=$?
-        if [ "${DEBUG}" != "no" ]; then
-            echo "after make ${target}@${platform}@${branch}"
-            pwd && ls
-        fi
-        if [ ${ret} -eq 0 ]; then
+        if [ $? -eq 0 ]; then
             rm -f ${target}@${platform}@${branch}.log
             echo "build ${target}@${platform} at ${branch} branch succeed"
         else
@@ -244,17 +177,27 @@ done
 aos make clean > /dev/null 2>&1
 for target in ${b_l475e_targets}; do
     for platform in ${b_l475e_platforms}; do
-        if [ "${DEBUG}" != "no" ]; then
-            echo "before make ${target}@${platform}@${branch}"
-            pwd && ls
-        fi
         aos make ${target}@${platform} JOBS=${JNUM} > ${target}@${platform}@${branch}.log 2>&1
-        ret=$?
-        if [ "${DEBUG}" != "no" ]; then
-            echo "after make ${target}@${platform}@${branch}"
-            pwd && ls
+        if [ $? -eq 0 ]; then
+            rm -f ${target}@${platform}@${branch}.log
+            echo "build ${target}@${platform} at ${branch} branch succeed"
+        else
+            echo -e "build ${target}@${platform} at ${branch} branch failed, log:\n"
+            cat ${target}@${platform}@${branch}.log
+            rm -f ${target}@${platform}@${branch}.log
+            echo -e "\nbuild ${target}@${platform} at ${branch} branch failed"
+            aos make clean > /dev/null 2>&1
+            exit 1
         fi
-        if [ ${ret} -eq 0 ]; then
+    done
+done
+
+#single-bin, starterkit
+aos make clean > /dev/null 2>&1
+for target in ${starterkit_targets}; do
+    for platform in ${starterkit_platforms}; do
+        aos make ${target}@${platform} JOBS=${JNUM} > ${target}@${platform}@${branch}.log 2>&1
+        if [ $? -eq 0 ]; then
             rm -f ${target}@${platform}@${branch}.log
             echo "build ${target}@${platform} at ${branch} branch succeed"
         else
@@ -272,17 +215,8 @@ done
 aos make clean > /dev/null 2>&1
 for target in ${esp32_targets}; do
     for platform in ${esp32_platforms}; do
-        if [ "${DEBUG}" != "no" ]; then
-            echo "before make ${target}@${platform}@${branch}"
-            pwd && ls
-        fi
-        aos make -e ${target}@${platform} wifi=1 JOBS=${JNUM} > ${target}@${platform}@${branch}.log 2>&1
-        ret=$?
-        if [ "${DEBUG}" != "no" ]; then
-            echo "after make ${target}@${platform}@${branch}"
-            pwd && ls
-        fi
-        if [ ${ret} -eq 0 ]; then
+        aos make ${target}@${platform} wifi=1 JOBS=${JNUM} > ${target}@${platform}@${branch}.log 2>&1
+        if [ $? -eq 0 ]; then
             rm -f ${target}@${platform}@${branch}.log
             echo "build ${target}@${platform} at ${branch} branch succeed"
         else
@@ -300,17 +234,8 @@ done
 aos make clean > /dev/null 2>&1
 for target in ${esp8266_targets}; do
     for platform in ${esp8266_platforms}; do
-        if [ "${DEBUG}" != "no" ]; then
-            echo "before make ${target}@${platform}@${branch}"
-            pwd && ls
-        fi
-        aos make -e ${target}@${platform} wifi=1 JOBS=${JNUM} > ${target}@${platform}@${branch}.log 2>&1
-        ret=$?
-        if [ "${DEBUG}" != "no" ]; then
-            echo "after make ${target}@${platform}@${branch}"
-            pwd && ls
-        fi
-        if [ ${ret} -eq 0 ]; then
+        aos make ${target}@${platform} wifi=1 JOBS=${JNUM} > ${target}@${platform}@${branch}.log 2>&1
+        if [ $? -eq 0 ]; then
             rm -f ${target}@${platform}@${branch}.log
             echo "build ${target}@${platform} at ${branch} branch succeed"
         else
@@ -328,18 +253,8 @@ done
 aos make clean > /dev/null 2>&1
 for target in ${mk3239_targets}; do
     for platform in ${mk3239_platforms}; do
-        if [ "${DEBUG}" != "no" ]; then
-            echo "before make ${target}@${platform}@${branch}"
-            pwd && ls
-        fi
-        echo "Building mk3239"
         aos make ${target}@${platform} JOBS=${JNUM} > ${target}@${platform}@${branch}.log 2>&1
-        ret=$?
-        if [ "${DEBUG}" != "no" ]; then
-            echo "after make ${target}@${platform}@${branch}"
-            pwd && ls
-        fi
-        if [ ${ret} -eq 0 ]; then
+        if [ $? -eq 0 ]; then
             rm -f ${target}@${platform}@${branch}.log
             echo "build ${target}@${platform} at ${branch} branch succeed"
         else
@@ -357,18 +272,8 @@ done
 aos make clean > /dev/null 2>&1
 for target in ${pca10056_targets}; do
     for platform in ${pca10056_platforms}; do
-        if [ "${DEBUG}" != "no" ]; then
-            echo "before make ${target}@${platform}@${branch}"
-            pwd && ls
-        fi
-        echo "Building pca10056"
         aos make ${target}@${platform} JOBS=${JNUM} > ${target}@${platform}@${branch}.log 2>&1
-        ret=$?
-        if [ "${DEBUG}" != "no" ]; then
-            echo "after make ${target}@${platform}@${branch}"
-            pwd && ls
-        fi
-        if [ ${ret} -eq 0 ]; then
+        if [ $? -eq 0 ]; then
             rm -f ${target}@${platform}@${branch}.log
             echo "build ${target}@${platform} at ${branch} branch succeed"
         else

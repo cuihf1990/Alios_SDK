@@ -33,6 +33,9 @@
 
 #define COAP_DEFAULT_PORT           5683 /* CoAP default UDP port */
 #define COAPS_DEFAULT_PORT          5684 /* CoAP default UDP port for secure transmission */
+#define COAP_DEFAULT_SENDLIST_MAXCOUNT  8
+#define COAP_DEFAULT_RES_MAXCOUNT       32
+#define COAP_DEFAULT_OBS_MAXCOUNT       8
 
 #define COAP_DEFAULT_SCHEME         "coap" /* the default scheme for CoAP URIs */
 #define COAP_DEFAULT_HOST_LEN       128
@@ -97,21 +100,34 @@ CoAPContext *CoAPContext_create(CoAPInitParam *param)
         p_ctx->waittime = param->waittime;
     }
     p_ctx->mutex = HAL_MutexCreate();
+    if(NULL == p_ctx->mutex){
+        COAP_ERR("Mutex Create failed");
+        goto err;
+    }
 
     /*Init message send list mutex*/
     p_ctx->sendlist.list_mutex = HAL_MutexCreate();
     /*CoAP message send list*/
     INIT_LIST_HEAD(&p_ctx->sendlist.list);
     p_ctx->sendlist.count = 0;
-    p_ctx->sendlist.maxcount = param->send_maxcount;
+    if(0 != param->send_maxcount)
+        p_ctx->sendlist.maxcount = param->send_maxcount;
+    else
+        p_ctx->sendlist.maxcount = COAP_DEFAULT_SENDLIST_MAXCOUNT;
 
+    if(0 == param->res_maxcount)
+        param->res_maxcount = COAP_DEFAULT_RES_MAXCOUNT;
     CoAPResource_init(p_ctx, param->res_maxcount);
 
 #ifndef COAP_OBSERVE_SERVER_DISABLE
+    if(0 == param->obs_maxcount)
+        param->obs_maxcount = COAP_DEFAULT_OBS_MAXCOUNT;
     CoAPObsServer_init(p_ctx, param->obs_maxcount);
 #endif
 
 #ifndef COAP_OBSERVE_CLIENT_DISABLE
+    if(0 == param->obs_maxcount)
+        param->obs_maxcount = COAP_DEFAULT_OBS_MAXCOUNT;
     CoAPObsClient_init(p_ctx, param->obs_maxcount);
 #endif
 
@@ -190,8 +206,17 @@ void *CoAPContextAppdata_get(CoAPContext *context)
 
     return (void *)p_ctx->appdata;
 }
-
-
+#ifdef COAP_WITH_YLOOP
+extern void  CoAPMessage_write_with_timeout(void *context);
+static void cancel_write_event(void *context)
+{
+    if(context == NULL){
+        return;
+    }
+    CoAPIntContext *p_ctx = context;
+    aos_cancel_delayed_action(p_ctx->waittime, CoAPMessage_write_with_timeout, context);
+}
+#endif 
 void CoAPContext_free(CoAPContext *context)
 {
     CoAPIntContext *p_ctx = NULL;
@@ -203,8 +228,11 @@ void CoAPContext_free(CoAPContext *context)
     CoAPSendNode *cur, *next;
 
 #ifdef COAP_WITH_YLOOP
+    HAL_MutexLock(p_ctx->sendlist.list_mutex);
     NetworkConf *p_netconf=(NetworkConf *)(p_ctx->p_network);
     aos_cancel_poll_read_fd(p_netconf->fd,cb_recv,p_ctx);
+    aos_schedule_call(cancel_write_event,context);
+    HAL_MutexUnlock(p_ctx->sendlist.list_mutex);
 #endif 
   
     CoAPNetwork_deinit(p_ctx->p_network);

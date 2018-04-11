@@ -22,7 +22,7 @@ macro_tmp = Split('''
     AOS_NETMGR
 ''')
 for i in macro_tmp:
-    component.add_global_macro(i)
+    component.add_global_macros(i)
 
 
 

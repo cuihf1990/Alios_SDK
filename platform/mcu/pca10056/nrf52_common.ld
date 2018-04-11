@@ -49,7 +49,8 @@ OUTPUT_FORMAT ("elf32-littlearm", "elf32-bigarm", "elf32-littlearm")
  
  MEMORY
 {
-  FLASH (rx) : ORIGIN = 0x00000000, LENGTH = 0x100000
+  FLASH (rx) : ORIGIN = 0x00010000, LENGTH = 0xEF000
+  BOOTLOADER_SETTINGS (rw) : ORIGIN = 0x000FF000, LENGTH = 0x1000
   RAM (rwx) :  ORIGIN = 0x20000000, LENGTH = 0x40000
 }
  
@@ -57,9 +58,15 @@ ENTRY(Reset_Handler)
 
 SECTIONS
 {
-    .text :
+	. = 0x00010000;
+    .vectors :
     {
         KEEP(*(.isr_vector))
+    } > FLASH
+
+    . = ALIGN(8);
+    .text :
+    {
         *(.text*)
 
         KEEP(*(.init))
@@ -96,7 +103,13 @@ SECTIONS
     } > FLASH
     __exidx_end = .;
 
+    . = ALIGN(0x8);
     __etext = .;
+
+    .bootloader_settings_page(NOLOAD) :
+    {
+
+    } > BOOTLOADER_SETTINGS
 
     .data : AT (__etext)
     {
@@ -156,7 +169,7 @@ SECTIONS
 
     } > RAM
 
-    .bss :
+    .bss ALIGN(8):
     {
         . = ALIGN(4);
         __bss_start__ = .;

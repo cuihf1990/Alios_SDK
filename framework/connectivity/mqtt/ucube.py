@@ -25,7 +25,7 @@ global_macros =Split('''
     MQTT_DIRECT
 ''')
 for i in global_macros:
-    component.add_global_macro(i)
+    component.add_global_macros(i)
 
 includes =Split(''' 
     ../../protocol/alink-ilop/iotkit-system

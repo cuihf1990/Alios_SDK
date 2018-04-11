@@ -1,5 +1,7 @@
 #!/bin/bash
 
+recipients="lc122798@alibaba-inc.com"
+
 # check network availability
 while true
 do
@@ -19,4 +21,4 @@ done
 IP_ADDR=`ifconfig`
 
 # send the Email
-echo -e "Current time: `date '+%F %T'`\n\n${IP_ADDR}" | mutt -s "`uname -n` IP infomation" lc122798@alibaba-inc.com
+echo -e "Current time: `date '+%F %T'`\n\n${IP_ADDR}" | mutt -s "`uname -n` IP infomation" -- ${recipients}

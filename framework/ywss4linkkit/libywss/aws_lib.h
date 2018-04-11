@@ -94,11 +94,11 @@ int aws_80211_frame_handler(char *buf, int length,
 //启动一键配网服务, 该函数会block，直到配网成功或者超时退出,
 //	超时时间由aws_timeout_period_ms设置
 //参数：
-//	model: 产品model, 如
-//	secret: 产品secret, 如
-//	mac: 产品mac地址，如11:22:33:44:55:66
-//	sn: 产品sn条码，通常填NULL
-void aws_start(char *model, char *secret, char *mac, char *sn);
+//	pk: product key
+//	dn: device name
+//	ds: device security
+//	ps: product security
+void aws_start(char *pk, char *dn, char *ds, char *ps);
 //{该函数大致流程如下:
 //	init();
 //	platform_monitor_open();
@@ -121,6 +121,7 @@ int aws_get_ssid_passwd(char ssid[32 + 1], char passwd[64 + 1], unsigned char bs
 
 //发送广播通知APP，配网成功。
 //默认会广播2min, 广播过程中收到APP应答后，提前终止
+//about 122.5 seconds.
 int awss_connectap_notify_stop();
 int awss_devinfo_notify();
 int awss_devinfo_notify_stop();
