@@ -11,7 +11,21 @@
 #include "mico_wlan.h"
 
 hal_wifi_module_t sim_aos_wifi_mico;
+static int scan_txing = 0;
 
+#pragma pack(1)
+typedef struct
+{
+    uint8_t type;
+    uint8_t flags;
+    uint16_t duration;
+    uint8_t address1[6];
+    uint8_t address2[6];
+    uint8_t address3[6];
+    uint16_t seq;
+    uint8_t data[1];
+} ieee80211_header_t;
+#pragma pack()
 
 static int wifi_init(hal_wifi_module_t *m)
 {
@@ -129,6 +143,7 @@ static void start_monitor(hal_wifi_module_t *m)
 static void stop_monitor(hal_wifi_module_t *m)
 {
 	mico_wlan_stop_monitor();
+    scan_txing = 3;
 }
 
 monitor_data_cb_t aos_monitro_cb = NULL;
@@ -151,9 +166,102 @@ static void register_wlan_mgnt_monitor_cb(hal_wifi_module_t *m, monitor_data_cb_
     
 }
 
+typedef struct
+{
+    uint8_t len;     /**< SSID length */
+    uint8_t val[32]; /**< SSID name (AP name)  */
+} wiced_ssid_t;
+
+static void scan_results_handler( void * arg1, void *arg2 )
+{
+}
+
+static void scan_thread(void*arg)
+{
+    wiced_ssid_t ssid;
+    int i = 0;
+    
+    while(1 == scan_txing) {
+        if (i == 0) {
+            sprintf(ssid.val, "adha");
+            ssid.len = strlen(ssid.val);
+            i = 1;
+        } else {
+            sprintf(ssid.val, "aha");
+            ssid.len = strlen(ssid.val);
+            i = 0;
+        }
+
+        printf("scan  %s\r\n", ssid.val);
+        wiced_wifi_scan(0, 2, &ssid, NULL, NULL, NULL, 
+            scan_results_handler, NULL, NULL);
+        aos_msleep(2000);
+    }
+    printf("scan thread exit\r\n");
+    scan_txing = 0;
+    mico_rtos_delete_thread(NULL);
+}
+
+static void start_scan_thread(void)
+{
+    
+    mico_rtos_create_thread( NULL, 10, "scan", scan_thread,
+                             0x800, 0 );
+}
+
+static /*@null@*/ uint8_t* wlu_parse_tlvs( /*@returned@*/ uint8_t* tlv_buf, int buflen, uint8_t key )
+{
+    uint8_t* cp = tlv_buf;
+    int  totlen = buflen;
+
+    /* find tagged parameter */
+    while ( totlen >= 2 )
+    {
+        uint8_t tag;
+        uint8_t len;
+
+        tag = cp[0];
+        len = cp[1];
+
+        /* validate remaining totlen */
+        if ( ( tag == key ) && ( totlen >= ( len + 2 ) ) )
+        {
+            return ( cp );
+        }
+
+        cp += ( len + 2 );
+        totlen -= ( len + 2 );
+    }
+
+    return NULL;
+}
+
+static const uint8_t oui[] = {0xD8,  0x96,  0xE0};
+
 static int wlan_send_80211_raw_frame(hal_wifi_module_t *m, uint8_t *buf, int len)
 {
-    return kUnsupportedErr;
+    ieee80211_header_t *header = (ieee80211_header_t*)buf;
+    uint8_t *parse, *ie, *ali_ie;
+    int     parse_len;
+    
+    if (scan_txing != 0)
+        return;
+
+    len -= 24;
+    parse = (uint8_t*)header + 24; // IE buffer header
+    parse_len = len;
+    if ( ( ie = wlu_parse_tlvs( parse, parse_len, 0xDD ) ) != 0 )
+    {
+    	if (ie[2] == oui[0] && ie[3] == oui[1] && ie[4] == oui[2]) {
+            printf("start scan ie %d\r\n", ie[1]);
+            wiced_wifi_manage_custom_ie(0, 0, &ie[2], ie[5], 
+                &ie[6], ie[1] - 4, 0x10);
+            scan_txing = 1;
+            start_scan_thread();
+            
+        }
+    }
+    return kNoErr;
 }
 
 void NetCallback(hal_wifi_ip_stat_t *pnet)
