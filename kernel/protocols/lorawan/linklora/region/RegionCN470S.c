@@ -132,35 +132,28 @@ static uint8_t CountNbOfEnabledChannels( bool joined, uint8_t datarate, uint16_t
     uint8_t nbEnabledChannels = 0;
     uint8_t delayTransmission = 0;
 
-    for( uint8_t i = 0, k = 0; i < CN470S_MAX_NB_CHANNELS; i += 16, k++ )
-    {
-        for( uint8_t j = 0; j < 16; j++ )
-        {
-            if( ( channelsMask[k] & ( 1 << j ) ) != 0 )
-            {
-                if( channels[i + j].Frequency == 0 )
-                { // Check if the channel is enabled
-                    continue;
-                }
-                if( joined == false )
-                {
-                    if( ( CN470S_JOIN_CHANNELS & ( 1 << j ) ) == 0 )
-                    {
-                        continue;
-                    }
-                }
-                if( RegionCommonValueInRange( datarate, channels[i + j].DrRange.Fields.Min,
-                                              channels[i + j].DrRange.Fields.Max ) == false )
-                { // Check if the current channel selection supports the given datarate
-                    continue;
-                }
-                if( bands[channels[i + j].Band].TimeOff > 0 )
-                { // Check if the band is available for transmission
-                    delayTransmission++;
-                    continue;
-                }
-                enabledChannels[nbEnabledChannels++] = i + j;
+    for (uint8_t j = 0; j < 16; j++) {
+        if ((channelsMask[0] & (1 << j)) != 0) {
+            // Check if the channel is enabled
+            if (channels[j].Frequency == 0) {
+                continue;
             }
+            if (joined == false) {
+                if ((CN470S_JOIN_CHANNELS & (1 << j)) == 0) {
+                    continue;
+                }
+            }
+            //Check if the current channel selection supports the given datarate
+            if (RegionCommonValueInRange(datarate, channels[j].DrRange.Fields.Min,
+                                         channels[j].DrRange.Fields.Max) == false) {
+                continue;
+            }
+            // Check if the band is available for transmission
+            if(bands[channels[j].Band].TimeOff > 0) {
+                delayTransmission++;
+                continue;
+            }
+            enabledChannels[nbEnabledChannels++] = j;
         }
     }
 
@@ -586,7 +579,7 @@ bool RegionCN470SRxConfig( RxConfigParams_t* rxConfig, int8_t* datarate )
         iqInverted = true;
     }
 
-    PRINTF("Rx,Frequency:%d,configDR:%d,DR_SF:%d,preambleLen:%d,windowIdx:%d,iqInverted:%d,curTime=%d.\r\n",frequency,dr,phyDr,preambleLen,rxConfig->Window,iqInverted,curTime);
+    DBG_LINKLORA("Rx,Frequency:%d,configDR:%d,DR_SF:%d,preambleLen:%d,windowIdx:%d,iqInverted:%d,curTime=%d.\r\n",frequency,dr,phyDr,preambleLen,rxConfig->Window,iqInverted,curTime);
 
     Radio.SetChannel( frequency );
 
@@ -648,7 +641,7 @@ bool RegionCN470STxConfig( TxConfigParams_t* txConfig, int8_t* txPower, TimerTim
         iqInverted = false;
     }
 
-    PRINTF("Tx,Frequency:%d,configDR:%d,DR_SF:%d,preambleLen:%d,NodeWorkMode:%d,iqInverted:%d,curTime=%d.\r\n",frequency,txConfig->Datarate,phyDr,preambleLen,txConfig->NodeWorkMode,iqInverted,curTime);
+    DBG_LINKLORA("Tx,Frequency:%d,configDR:%d,DR_SF:%d,preambleLen:%d,NodeWorkMode:%d,iqInverted:%d,curTime=%d.\r\n",frequency,txConfig->Datarate,phyDr,preambleLen,txConfig->NodeWorkMode,iqInverted,curTime);
 
     // Setup the radio frequency
     Radio.SetChannel( frequency);
@@ -888,9 +881,12 @@ int8_t RegionCN470SAlternateDr( AlternateDrParams_t* alternateDr )
 
     switch (alternateDr->joinmethod) {
         case 0:  // use stored channel and datarate
-           datarate = alternateDr->datarate - 1;
-           if (datarate < DR_2) {
-                datarate = DR_2;
+           datarate = alternateDr->datarate;
+           if (alternateDr->NbTrials > 1) {
+               datarate = alternateDr->datarate - 1;
+               if (datarate < DR_2) {
+                   datarate = DR_2;
+               }
            }
         break;
         case 1:  // use default channel and datarate
@@ -946,34 +942,40 @@ bool RegionCN470SNextChannel( NextChanParams_t* nextChanParams, uint8_t* channel
     TimerTime_t nextTxDelay = 0;
     MibRequestConfirm_t mib_req;
     static uint8_t RxFreqBandNum = 0;
+    static uint8_t TxFreqBandNum = 0;
 
     mib_req.Type = MIB_NETWORK_JOINED;
     LoRaMacMibGetRequestConfirm(&mib_req);
 
     if (mib_req.Param.IsNetworkJoined == false) {
-        if(node_freq_type == FREQ_TYPE_INTER) {
-            if(FreqBandNum[NextAvailableFreqBandIdx] > 7) {
-                RxFreqBandNum = FreqBandNum[NextAvailableFreqBandIdx] - 8;
-            } else {
-                RxFreqBandNum = FreqBandNum[NextAvailableFreqBandIdx] + 8;
+        if (nextChanParams->joinmethod == STORED_JOIN_METHOD) {
+            RxFreqBandNum = nextChanParams->freqband;
+            TxFreqBandNum = nextChanParams->freqband;
+        } else {
+            if(node_freq_type == FREQ_TYPE_INTER) {
+                if(FreqBandNum[NextAvailableFreqBandIdx] > 7) {
+                    RxFreqBandNum = FreqBandNum[NextAvailableFreqBandIdx] - 8;
+                } else {
+                    RxFreqBandNum = FreqBandNum[NextAvailableFreqBandIdx] + 8;
+                }
+            } else { //IntraFreq
+                RxFreqBandNum = FreqBandNum[NextAvailableFreqBandIdx];
             }
-        } else { //IntraFreq
-            RxFreqBandNum = FreqBandNum[NextAvailableFreqBandIdx];
-        }
 
-        NextAvailableFreqBandIdx++;
-        if (NextAvailableFreqBandIdx >= NumFreqBand) {
-            NextAvailableFreqBandIdx = 0;
+            NextAvailableFreqBandIdx++;
+            if (NextAvailableFreqBandIdx >= NumFreqBand) {
+                NextAvailableFreqBandIdx = 0;
+            }
+            TxFreqBandNum = FreqBandNum[NextAvailableFreqBandIdx];
         }
     }
 
     nextChanParams->NextAvailableRxFreqBandNum = RxFreqBandNum;
-    nextChanParams->NextAvailableTxFreqBandNum = FreqBandNum[NextAvailableFreqBandIdx];
+    nextChanParams->NextAvailableTxFreqBandNum = TxFreqBandNum;
 
     //update the freq due to the change of FreqBand Num
     for( uint8_t i = 0; i < CN470S_MAX_NB_CHANNELS; i++ )
     {
-        //Channels[i].Frequency = 471.9e6 + i * 200e3;
         Channels[i].Frequency = 470300000 + (FreqBandStartChannelNum[nextChanParams->NextAvailableRxFreqBandNum]+i) * 200000;
         TxChannels[i].Frequency = 470300000 + (FreqBandStartChannelNum[nextChanParams->NextAvailableTxFreqBandNum]+i) * 200000;
     }

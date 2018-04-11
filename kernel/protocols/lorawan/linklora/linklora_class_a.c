@@ -9,9 +9,9 @@
 #include "Region.h"
 #include "timeServer.h"
 
-static uint8_t dev_eui[] = LORAWAN_DEVICE_EUI;
-static uint8_t app_eui[] = LORAWAN_APPLICATION_EUI;
-static uint8_t app_key[] = LORAWAN_APPLICATION_KEY;
+static uint8_t dev_eui[8] = LORAWAN_DEVICE_EUI;
+static uint8_t app_eui[8] = LORAWAN_APPLICATION_EUI;
+static uint8_t app_key[16] = LORAWAN_APPLICATION_KEY;
 
 #define LORAWAN_APP_DATA_BUFF_SIZE 242
 
@@ -31,8 +31,8 @@ static LoRaParam_t *LoRaParamInit;
 static TimerEvent_t TxNextPacketTimer;
 static DeviceState_t device_state = DEVICE_STATE_INIT;
 
-lora_config_t g_lora_config = {471900000, DR_2, NODE_MODE_NORMAL, VALID_LORA_CONFIG};
-//lora_config_t g_lora_config = {471900000, DR_2, NODE_MODE_NORMAL, INVALID_LORA_CONFIG};
+lora_config_t g_lora_config = {1, DR_5, NODE_MODE_NORMAL, VALID_LORA_CONFIG};
+//lora_config_t g_lora_config = {2, DR_2, NODE_MODE_NORMAL, INVALID_LORA_CONFIG};
 join_method_t g_join_method;
 
 struct ComplianceTest_s {
@@ -54,7 +54,7 @@ static void prepare_tx_frame(uint8_t port)
         case 224:
             break;
         default:
-            app_callbacks->LoraTxData( &app_data, &is_tx_confirmed );
+            app_callbacks->LoraTxData(&app_data, &is_tx_confirmed);
             break;
     }
 }
@@ -117,7 +117,7 @@ static void on_tx_next_packet_timer_event(void)
 static void reset_join_state(void)
 {
     g_lora_config.flag = INVALID_LORA_CONFIG;
-    //  aos_kv_set();
+    // TODO: reset lora config
     device_state = DEVICE_STATE_JOIN;
 }
 
@@ -180,7 +180,7 @@ static void mcps_confirm(McpsConfirm_t *mcpsConfirm)
     next_tx = true;
 }
 
-static void McpsIndication( McpsIndication_t *mcpsIndication )
+static void McpsIndication(McpsIndication_t *mcpsIndication)
 {
     if ( mcpsIndication->Status != LORAMAC_EVENT_INFO_STATUS_OK )
     {
@@ -219,8 +219,8 @@ static void McpsIndication( McpsIndication_t *mcpsIndication )
     // Check Rssi
     // Check Snr
     // Check RxSlot
-    DBG_LINKLORA( "rssi = %d, snr = %d, datarate = %d\n", mcpsIndication->Rssi, mcpsIndication->Snr,
-                mcpsIndication->RxDatarate );
+    DBG_LINKLORA( "rssi = %d, snr = %d, datarate = %d, rxdata %d\n", mcpsIndication->Rssi, mcpsIndication->Snr,
+                 mcpsIndication->RxDatarate, mcpsIndication->RxData);
 
     if ( ComplianceTest.Running == true )
     {
@@ -367,12 +367,10 @@ static void McpsIndication( McpsIndication_t *mcpsIndication )
                 }
                 break;
             default:
-
                 app_data.Port = mcpsIndication->Port;
                 app_data.BuffSize = mcpsIndication->BufferSize;
-                memcpy1( app_data.Buff, mcpsIndication->Buffer, app_data.BuffSize );
-
-                app_callbacks->LoraRxData( &app_data );
+                memcpy1(app_data.Buff, mcpsIndication->Buffer, app_data.BuffSize);
+                app_callbacks->LoraRxData(&app_data);
                 break;
         }
     }
@@ -427,28 +425,15 @@ void lora_init(LoRaMainCallback_t *callbacks, LoRaParam_t *LoRaParam)
 #endif
 
 #if (OVER_THE_AIR_ACTIVATION != 0)
-
-    DBG_LINKLORA( "OTAA\r\n" );
-    DBG_LINKLORA( "DevEui= %02X", dev_eui[0] );
-    for ( int i = 1; i < 8; i++ )
-    {
-        DBG_LINKLORA( "-%02X", dev_eui[i] );
-    };
-    DBG_LINKLORA( "\r\n" );
-    DBG_LINKLORA( "AppEui= %02X", app_eui[0] );
-    for ( int i = 1; i < 8; i++ )
-    {
-        DBG_LINKLORA( "-%02X", app_eui[i] );
-    };
-    DBG_LINKLORA( "\r\n" );
-    DBG_LINKLORA( "AppKey= %02X", app_key[0] );
-    for ( int i = 1; i < 16; i++ )
-    {
-        DBG_LINKLORA( " %02X", app_key[i] );
-    };
-    DBG_LINKLORA( "\n\r\n" );
+    DBG_LINKLORA("OTAA\r\n" );
+    DBG_LINKLORA("DevEui= %02X-%02X-%02X-%02X-%02X-%02X-%02X-%02X\r\n",
+                 dev_eui[0], dev_eui[1], dev_eui[2], dev_eui[3], dev_eui[4], dev_eui[5], dev_eui[6], dev_eui[7]);
+    DBG_LINKLORA("AppEui= %02X-%02X-%02X-%02X-%02X-%02X-%02X-%02X\r\n",
+                 app_eui[0], app_eui[1], app_eui[2], app_eui[3], app_eui[4], app_eui[5], app_eui[6], app_eui[7]);
+    DBG_LINKLORA("AppKey= %02X-%02X-%02X-%02X-%02X-%02X-%02X-%02X-%02X-%02X-%02X-%02X-%02X-%02X-%02X-%02X\r\n",
+                 app_key[0], app_key[1], app_key[2], app_key[3], app_key[4], app_key[5], app_key[6], app_key[7],
+                 app_key[8], app_key[9], app_key[10], app_key[11], app_key[12], app_key[13], app_key[14], app_key[15]);
 #else
-
 #if (STATIC_DEVICE_ADDRESS != 1)
     // Random seed initialization
     srand1(app_callbacks->BoardGetRandomSeed());
@@ -552,7 +537,6 @@ void lora_fsm( void )
 
 #endif
             // TODO: get config from flash
-            //aos_kv_get("lora_cfg", &g_lora_config, sizeof(g_lora_config));
             if (g_lora_config.flag == VALID_LORA_CONFIG) {
                 g_join_method = STORED_JOIN_METHOD;
             }
@@ -572,7 +556,9 @@ void lora_fsm( void )
 
             mlmeReq.Req.Join.method = g_join_method;
             if (g_join_method == STORED_JOIN_METHOD) {
+                mlmeReq.Req.Join.freqband = g_lora_config.freqband;
                 mlmeReq.Req.Join.NbTrials = 3;
+                mlmeReq.Req.Join.datarate = g_lora_config.datarate;
             } else {
                 mlmeReq.Req.Join.NbTrials = 2;
             }
@@ -580,7 +566,8 @@ void lora_fsm( void )
             if ( next_tx == true )
             {
                 LoRaMacMlmeRequest(&mlmeReq);
-                DBG_LINKLORA("Start to Join,Nbtrials:%d\r\n", mlmeReq.Req.Join.NbTrials);
+                DBG_LINKLORA("Start to Join, method %d, nb_trials:%d\r\n",
+                             g_join_method, mlmeReq.Req.Join.NbTrials);
             }
 
             device_state = DEVICE_STATE_SLEEP;
@@ -612,7 +599,7 @@ void lora_fsm( void )
         case DEVICE_STATE_JOINED:
         {
             DBG_LINKLORA("Joined\n\r");
-            //aos_kv_set();
+            // TODO: store lora config
             device_state = DEVICE_STATE_SEND;
             break;
         }

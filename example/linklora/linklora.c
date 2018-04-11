@@ -66,15 +66,14 @@ int application_start( void )
 static void LoraTxData( lora_AppData_t *AppData, int8_t *IsTxConfirmed )
 {
     AppData->BuffSize = sprintf( (char *) AppData->Buff, "app lora demo" );
-    DBG_PRINTF( "tx: %s\n", AppData->Buff );
+    DBG_LINKLORA("tx: %s\n", AppData->Buff );
 
     AppData->Port = LORAWAN_APP_PORT;
- 
     *IsTxConfirmed = LORAWAN_CONFIRMED_MSG;
 }
 
 static void LoraRxData( lora_AppData_t *AppData )
 {
     AppData->Buff[AppData->BuffSize] = '\0';
-    DBG_PRINTF( "rx: port = %d, len = %d, data = %s\n", AppData->Port, AppData->BuffSize, AppData->Buff );
+    DBG_LINKLORA( "rx: port = %d, len = %d, data = %s\n", AppData->Port, AppData->BuffSize, AppData->Buff );
 }
