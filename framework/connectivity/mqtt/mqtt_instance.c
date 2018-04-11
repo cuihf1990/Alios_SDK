@@ -83,6 +83,11 @@ void *mqtt_get_instance()
     return mqtt_client;
 }
 
+void mqtt_remove_instance()
+{
+    mqtt_client = NULL;
+}
+
 int mqtt_set_instance(void* mqtt_t)
 {
     if (mqtt_client || mqtt_t == NULL)

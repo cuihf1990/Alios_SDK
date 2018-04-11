@@ -37,6 +37,7 @@ STM32L071xx
 linklora?=0
 ifeq ($(linklora), 1)
 GLOBAL_DEFINES += CONFIG_LINKLORA
+GLOBAL_DEFINES += CONFIG_DEBUG_LINKLORA
 $(NAME)_SOURCES += linklora/region/RegionCN470S.c
 $(NAME)_SOURCES += linklora/linklora_class_a.c
 

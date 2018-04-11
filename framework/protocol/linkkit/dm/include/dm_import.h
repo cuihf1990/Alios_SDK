@@ -15,10 +15,8 @@ extern "C" {
 #include "esp_common.h"
 
 #define dm_printf      os_printf
-//#define dm_sprintf     os_sprintf
-#define dm_sprintf     sprintf
-//#define dm_snprintf    os_snprintf
-#define dm_snprintf    snprintf
+#define dm_sprintf     os_sprintf
+#define dm_snprintf    os_snprintf
 #define __DM_READ_ONLY__ ICACHE_RODATA_ATTR STORE_ATTR
 #else
 #define dm_printf      printf

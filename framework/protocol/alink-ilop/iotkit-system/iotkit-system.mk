@@ -1,12 +1,13 @@
 #NAME := iotkit-system
 
-SYSTME_SOURCE_DIR = iotkit-system/src
-$(NAME)_SOURCES  += $(SYSTME_SOURCE_DIR)/sdk-impl.c
-$(NAME)_SOURCES  += $(SYSTME_SOURCE_DIR)/ca.c
-$(NAME)_SOURCES  += $(SYSTME_SOURCE_DIR)/device.c
-$(NAME)_SOURCES  += $(SYSTME_SOURCE_DIR)/guider.c
-$(NAME)_SOURCES  += $(SYSTME_SOURCE_DIR)/id2_guider.c
-$(NAME)_SOURCES  += $(SYSTME_SOURCE_DIR)/report.c
+SYSTEM_SOURCE_DIR = iotkit-system/src
+$(NAME)_SOURCES  += $(SYSTEM_SOURCE_DIR)/sdk-impl.c
+$(NAME)_SOURCES  += $(SYSTEM_SOURCE_DIR)/ca.c
+$(NAME)_SOURCES  += $(SYSTEM_SOURCE_DIR)/device.c
+$(NAME)_SOURCES  += $(SYSTEM_SOURCE_DIR)/guider.c
+$(NAME)_SOURCES  += $(SYSTEM_SOURCE_DIR)/id2_guider.c
+$(NAME)_SOURCES  += $(SYSTEM_SOURCE_DIR)/report.c
+$(NAME)_SOURCES  += $(SYSTEM_SOURCE_DIR)/class_interface.c
 
 $(NAME)_INCLUDES  += ./
                  

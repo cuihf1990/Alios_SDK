@@ -123,9 +123,10 @@ void CoAPServer_add_timer (void (*on_timer)(void*))
 {
     coapserver_timer = on_timer;
 }
-#ifndef COAP_WITH_YLOOP
+
 void *CoAPServer_yield(void *param)
 {
+#ifndef COAP_WITH_YLOOP    
     CoAPContext *context = (CoAPContext *)param;
     COAP_DEBUG("Enter to CoAP daemon task");
     while(g_coap_running){
@@ -141,9 +142,10 @@ void *CoAPServer_yield(void *param)
     HAL_ThreadDelete(NULL);
     g_coap_thread = NULL;
 #endif
+#endif//COAP_WITH_YLOOP
     return NULL;
 }
-#endif
+
 void CoAPServer_deinit0(CoAPContext *context)
 {
     if(context != g_context){
@@ -238,9 +240,10 @@ int CoAPServerResp_send(CoAPContext *context, NetworkAddr *remote, unsigned char
 
     return ret;
 }
-#ifndef COAP_WITH_YLOOP
+
 void CoAPServer_loop(CoAPContext *context)
 {
+#ifndef COAP_WITH_YLOOP    
 #ifdef COAP_SERV_MULTITHREAD
     int stack_used;
 #endif
@@ -258,6 +261,6 @@ void CoAPServer_loop(CoAPContext *context)
 #else
     CoAPServer_yield((void *)context);
 #endif
-
+#endif//COAP_WITH_YLOOP
 }
-#endif
+

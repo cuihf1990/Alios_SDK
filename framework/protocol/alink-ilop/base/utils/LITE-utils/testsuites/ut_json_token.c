@@ -8,6 +8,10 @@ const char *module_name = "ut_json_token";
 "{" \
     "\"empty_str\": [2]," \
     "\"empty\": []," \
+    "\"double_str\": 1.8321278982," \
+	"\"neg_double_str\": -1.8321278982," \
+    "\"exp_double_str1\": 0.268E+4," \
+    "\"exp_double_str2\": 0.268e-4," \
     "\"link\":\"/sys/q408EXte2fy/airCondition/thing/\"," \
     "\"profile\": {" \
         "\"productKey\": \"q408EXte2fy\"," \
@@ -152,6 +156,34 @@ CASE(json_token, json_value_of)
 
     val = LITE_json_value_of("events[1]", UNITTEST_JSON_ARRAY_SAMPLE, MEM_MAGIC, module_name);
     ASSERT_NULL(val);
+
+    key = "double_str";
+    val = LITE_json_value_of(key, UNITTEST_JSON_ARRAY_SAMPLE, MEM_MAGIC, module_name);
+    log_info("Get `%s` from `UNITTEST_JSON_ARRAY_SAMPLE`: `%s`", key, val);
+    ASSERT_NOT_NULL(val);
+    ASSERT_STR_EQ(val, "1.8321278982");
+    LITE_free(val);
+
+    key = "neg_double_str";
+    val = LITE_json_value_of(key, UNITTEST_JSON_ARRAY_SAMPLE, MEM_MAGIC, module_name);
+    log_info("Get `%s` from `UNITTEST_JSON_ARRAY_SAMPLE`: `%s`", key, val);
+    ASSERT_NOT_NULL(val);
+    ASSERT_STR_EQ(val, "-1.8321278982");
+    LITE_free(val);
+
+    key = "exp_double_str1";
+    val = LITE_json_value_of(key, UNITTEST_JSON_ARRAY_SAMPLE, MEM_MAGIC, module_name);
+    log_info("Get `%s` from `UNITTEST_JSON_ARRAY_SAMPLE`: `%s`", key, val);
+    ASSERT_NOT_NULL(val);
+    ASSERT_STR_EQ(val, "0.268E+4");
+    LITE_free(val);
+
+    key = "exp_double_str2";
+    val = LITE_json_value_of(key, UNITTEST_JSON_ARRAY_SAMPLE, MEM_MAGIC, module_name);
+    log_info("Get `%s` from `UNITTEST_JSON_ARRAY_SAMPLE`: `%s`", key, val);
+    ASSERT_NOT_NULL(val);
+    ASSERT_STR_EQ(val, "0.268e-4");
+    LITE_free(val);
 
     key = "link";
     val = LITE_json_value_of(key, UNITTEST_JSON_ARRAY_SAMPLE, MEM_MAGIC, module_name);
@@ -331,6 +363,24 @@ CASE(json_token, json_value_of_ext2)
     val = LITE_json_value_of_ext2(key, json_str, strlen(json_str), &val_len);
     log_info("Get `%s` from `%s`: `%.*s`", key, json_str, val_len, val);
     ASSERT_NSTR_EQ(val, "city", val_len);
+
+    json_str = "{\"method\":\"thing.service.property.set\",\"id\":\"14450\",\"params\":{\"PropertyCharacter\":\"dwadw}sdad\"}}";
+    key = "params";
+    val = LITE_json_value_of_ext2(key, json_str, strlen(json_str), &val_len);
+    log_info("Get `%s` from `%s`: `%.*s`", key, json_str, val_len, val);
+    ASSERT_NSTR_EQ(val, "{\"PropertyCharacter\":\"dwadw}sdad\"}", val_len);
+
+    json_str = "{\"method\":\"thing.service.property.set\",\"id\":\"14450\",\"params\":{\"PropertyCharacter\":\"dwadw{sdad\"}}";
+    key = "params";
+    val = LITE_json_value_of_ext2(key, json_str, strlen(json_str), &val_len);
+    log_info("Get `%s` from `%s`: `%.*s`", key, json_str, val_len, val);
+    ASSERT_NSTR_EQ(val, "{\"PropertyCharacter\":\"dwadw{sdad\"}", val_len);
+
+    json_str = "{\"method\":\"thing.service.property.set\",\"id\":\"14450\",\"params\":{\"PropertyCharacter\":\"dwadw{sdad}sdad\"}}";
+    key = "params";
+    val = LITE_json_value_of_ext2(key, json_str, strlen(json_str), &val_len);
+    log_info("Get `%s` from `%s`: `%.*s`", key, json_str, val_len, val);
+    ASSERT_NSTR_EQ(val, "{\"PropertyCharacter\":\"dwadw{sdad}sdad\"}", val_len);
 }
 
 

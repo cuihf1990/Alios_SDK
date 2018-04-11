@@ -5,23 +5,19 @@
 #include <assert.h>
 
 #include "interface/thing_abstract.h"
-#include "interface/thing_manager_abstract.h"
 #include "interface/log_abstract.h"
 #include "interface/list_abstract.h"
-#include "interface/dm_abstract.h"
-
+#include "interface/thing_manager_abstract.h"
 #include "dm_thing_manager.h"
-#include "logger.h"
+#include "dm_logger.h"
 #include "dm_thing.h"
-#include "single_list.h"
-#include "new.h"
-#include "dm_impl.h"
-#include "iot_export.h"
+#include "dm_slist.h"
+#include "iot_export_dm.h"
 #include "iot_import.h"
 #include "lite-utils.h"
+#include "class_interface.h"
 
 #include "dm_import.h"
-#include "dm_export.h"
 
 static const char string_dm_impl_class_name[] __DM_READ_ONLY__ = "dm_impl_cls";
 static const char string_dm_impl_log_object_name[] __DM_READ_ONLY__ = "dm_logger";
@@ -43,7 +39,7 @@ static void* dm_impl_ctor(void* _self, va_list* params)
         self->_log_level = IOT_LOG_DEBUG;
     }
 
-    self->_logger = new_object(LOGGER_CLASS, string_dm_impl_log_object_name, 0);
+    self->_logger = new_object(DM_LOGGER_CLASS, string_dm_impl_log_object_name, 0);
     logger = self->_logger;
     (*logger)->open(logger, "dm");
     (*logger)->set_log_level(logger, self->_log_level);
@@ -172,15 +168,15 @@ static int dm_impl_trigger_event(const void* _self, const void* thing_id, const 
 
     return (*thing_manager)->trigger_event(thing_manager, thing_id, event_identifier, property_identifier);
 }
-#ifdef DEVICEINFO_ENABLED
+#ifdef EXTENDED_INFO_ENABLED
 static int dm_impl_trigger_deviceinfo_update(const void* _self, const void* thing_id, const char* params)
 {
     const dm_impl_t* self = _self;
     thing_manager_t** thing_manager = self->_thing_manager;
 
-    assert(thing_manager && *thing_manager && (*thing_manager)->trigger_deviceinfo_update && thing_id && params);
+    assert(thing_manager && *thing_manager && (*thing_manager)->trigger_extended_info_update && thing_id && params);
 
-    return (*thing_manager)->trigger_deviceinfo_update(thing_manager, thing_id, params);
+    return (*thing_manager)->trigger_extended_info_update(thing_manager, thing_id, params);
 }
 
 static int dm_impl_trigger_deviceinfo_delete(const void* _self, const void* thing_id, const char* params)
@@ -188,11 +184,11 @@ static int dm_impl_trigger_deviceinfo_delete(const void* _self, const void* thin
     const dm_impl_t* self = _self;
     thing_manager_t** thing_manager = self->_thing_manager;
 
-    assert(thing_manager && *thing_manager && (*thing_manager)->trigger_deviceinfo_delete && thing_id && params);
+    assert(thing_manager && *thing_manager && (*thing_manager)->trigger_extended_info_delete && thing_id && params);
 
-    return (*thing_manager)->trigger_deviceinfo_delete(thing_manager, thing_id, params);
+    return (*thing_manager)->trigger_extended_info_delete(thing_manager, thing_id, params);
 }
-#endif /* DEVICEINFO_ENABLED*/
+#endif /* EXTENDED_INFO_ENABLED*/
 #ifdef RRPC_ENABLED
 static int dm_impl_answer_service(const void* _self, const void* thing_id, const void* identifier, int response_id, int code, int rrpc)
 #else
@@ -229,7 +225,7 @@ static int dm_impl_answer_raw_service(const void* _self, const void* thing_id, v
 
     return (*thing_manager)->answer_raw_service(thing_manager, thing_id, raw_data, raw_data_length);
 }
-#ifndef CMP_SUPPORT_MULTI_THREAD
+#ifndef CM_SUPPORT_MULTI_THREAD
 static int dm_impl_yield(const void* _self, int timeout_ms)
 {
     const dm_impl_t* self = _self;
@@ -239,20 +235,28 @@ static int dm_impl_yield(const void* _self, int timeout_ms)
 
     return (*thing_manager)->yield(thing_manager, timeout_ms);
 }
-#endif
+#endif /* CM_SUPPORT_MULTI_THREAD */
 void* dm_lite_calloc(size_t nmemb, size_t size)
 {
+#ifdef CM_SUPPORT_MEMORY_MAGIC
     return LITE_calloc(nmemb, size, MEM_MAGIC, DM_MODULE_NAME);
+#else
+    return LITE_calloc(nmemb, size);
+#endif
 }
 
 void* dm_lite_malloc(size_t size)
 {
+#ifdef CM_SUPPORT_MEMORY_MAGIC
     return LITE_malloc(size, MEM_MAGIC, DM_MODULE_NAME);
+#else
+    return LITE_malloc(size);
+#endif
 }
 
 void dm_lite_free_func(void* ptr)
 {
-    LITE_free_internal(ptr);
+    return LITE_free_internal(ptr);
 }
 
 void dm_lite_free(void* ptr)
@@ -267,12 +271,41 @@ void dm_lite_free(void* ptr)
     LITE_free_internal(ptr);
 }
 
+#ifdef SUBDEV_ENABLE
+int dm_impl_add_subdev_callback_function(void* _self, handle_dm_subdev_callback_fp_t subdev_callback_func)
+{
+    dm_impl_t* self = _self;
+    thing_manager_t** thing_manager = self->_thing_manager;
+
+    if (!subdev_callback_func) return -1;
+
+    return (*thing_manager)->add_subdev_callback_function(thing_manager, subdev_callback_func);
+}
+
+static void* dm_impl_generate_new_subthing(void* _self, const char* product_key, const char* device_name, const char* device_secret, const char* tsl, int tsl_len)
+{
+    dm_impl_t* self = _self;
+    thing_manager_t** thing_manager = self->_thing_manager;
+    void* thing = NULL;
+
+    assert(thing_manager && tsl && tsl_len > 0);
+
+    thing = (*thing_manager)->generate_new_sub_thing(thing_manager, product_key, device_name, device_secret, tsl, tsl_len);
+
+    return thing;
+}
+#endif
+
 static dm_t _dm_impl_class = {
     sizeof(dm_impl_t),
     string_dm_impl_class_name,
     dm_impl_ctor,
     dm_impl_dtor,
     dm_impl_generate_new_thing,
+#ifdef SUBDEV_ENABLE
+    dm_impl_generate_new_subthing,
+    dm_impl_add_subdev_callback_function,
+#endif
     dm_impl_set_property_value,
     dm_impl_set_event_output_value,
     dm_impl_set_service_output_value,
@@ -282,16 +315,16 @@ static dm_t _dm_impl_class = {
     dm_impl_get_event_output_value,
     dm_impl_install_callback_function,
     dm_impl_trigger_event,
-#ifdef DEVICEINFO_ENABLED
+#ifdef EXTENDED_INFO_ENABLED
     dm_impl_trigger_deviceinfo_update,
     dm_impl_trigger_deviceinfo_delete,
-#endif /* DEVICEINFO_ENABLED*/
+#endif /* EXTENDED_INFO_ENABLED*/
     dm_impl_answer_service,
     dm_impl_invoke_raw_service,
     dm_impl_answer_raw_service,
-#ifndef CMP_SUPPORT_MULTI_THREAD
+ #ifndef CM_SUPPORT_MULTI_THREAD
     dm_impl_yield,
-#endif
+#endif /* CM_SUPPORT_MULTI_THREAD */
 };
 
 const void* get_dm_impl_class()

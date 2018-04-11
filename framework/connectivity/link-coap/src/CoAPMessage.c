@@ -871,13 +871,16 @@ void  CoAPMessage_write_with_timeout(void *context)
     aos_post_delayed_action(p_ctx->waittime, CoAPMessage_write_with_timeout, context);
 
 }
-#else
+#endif 
 int CoAPMessage_cycle(CoAPContext *context)
 {
     unsigned int ret = 0;
+#ifdef COAP_WITH_YLOOP
     CoAPIntContext *ctx =  (CoAPIntContext *)context;
 
     CoAPMessage_process(ctx, ctx->waittime);
-    CoAPMessage_write(ctx);
-}
+    ret=CoAPMessage_write(ctx);
 #endif
+    return ret;    
+}
+

@@ -542,7 +542,7 @@ int iotx_guider_authenticate(void)
     conn->port = 1883;
     _fill_conn_string(conn->host_name, sizeof(conn->host_name),
                       "10.125.0.27");
-#elif defined (ON_PRE)    /* pre */
+#elif defined (ON_PRE) || defined (ON_PRE3)    /* pre */
     conn->port = 80;
     _fill_conn_string(conn->host_name, sizeof(conn->host_name),
                       "100.67.80.75");
@@ -560,7 +560,7 @@ int iotx_guider_authenticate(void)
     _fill_conn_string(conn->password, sizeof(conn->password),
                       "%s",
                       guider_sign);
- 
+
 #else   /* MQTT_DIRECT */
 
     conn->port = iotx_conn_port;

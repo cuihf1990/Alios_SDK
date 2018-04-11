@@ -1139,8 +1139,10 @@ typedef struct sNextChanParams
     bool DutyCycleEnabled;
 
 #ifdef CONFIG_LINKLORA
-    uint8_t  NextAvailableTxFreqBandNum;
-    uint8_t  NextAvailableRxFreqBandNum;
+    uint8_t NextAvailableTxFreqBandNum;
+    uint8_t NextAvailableRxFreqBandNum;
+    uint8_t joinmethod;
+    uint32_t freqband;
 #endif
 }NextChanParams_t;
 

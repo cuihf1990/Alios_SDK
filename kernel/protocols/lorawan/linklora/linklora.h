@@ -25,8 +25,8 @@ typedef enum {
 };
 
 typedef struct lora_config_s {
-    uint32_t frequency;
-    int8_t data_rate;
+    uint32_t freqband;
+    int8_t datarate;
     uint8_t mode;  // normal or repeater
     uint16_t flag;
 } lora_config_t;
@@ -39,7 +39,8 @@ typedef enum join_method_s {
 } join_method_t;
 
 #ifdef CONFIG_DEBUG_LINKLORA
-#define DBG_LINKLORA(...)     printf(__VA_ARGS__)
+#include "debug.h"
+#define DBG_LINKLORA(...)     PRINTF(__VA_ARGS__)
 #else
 #define DBG_LINKLORA(...)
 #endif
