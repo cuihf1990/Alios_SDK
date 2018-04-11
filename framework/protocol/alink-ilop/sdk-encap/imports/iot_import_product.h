@@ -56,6 +56,13 @@
 #endif
 #endif
 
+#ifdef TEST_YHB
+#define PRODUCT_KEY             "a1AzoSi5TMc"
+#define PRODUCT_SECRET          "Z9Ze6qgMrWgTOezW"
+#define DEVICE_NAME             "light_mxchip_01"
+#define DEVICE_SECRET           "3pXxfYJlEBXMo2vAtaTsThgtKT0jJe6C"
+#endif
+
 /**
  * @brief   获取设备的`Partner ID`, 仅用于紧密合作伙伴
  *

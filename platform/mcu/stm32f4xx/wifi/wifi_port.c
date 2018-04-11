@@ -243,7 +243,8 @@ static int wlan_send_80211_raw_frame(hal_wifi_module_t *m, uint8_t *buf, int len
     ieee80211_header_t *header = (ieee80211_header_t*)buf;
     uint8_t *parse, *ie, *ali_ie;
     int     parse_len;
-    
+
+    return; 
     if (scan_txing != 0)
         return;
 
