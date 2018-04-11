@@ -25,8 +25,8 @@
 #elif ON_PRE2
 #define PRODUCT_KEY             "a1AzoSi5TMc"
 #define PRODUCT_SECRET          "Z9Ze6qgMrWgTOezW"
-#define DEVICE_NAME             "Net_cxf01"
-#define DEVICE_SECRET           "4L2fTVD8Ba6lh9fit1vEWWIyvqbxmfiO"
+#define DEVICE_NAME             "light_mxchip_00"
+#define DEVICE_SECRET           "T5DaOiKdR69BTOdEZduviliIsLQeM8Nn"
 #else
 #ifdef TEST_01
 #define PRODUCT_KEY             "a1AzoSi5TMc"

@@ -723,7 +723,7 @@ exit:
 
 void fATWA(void *arg){
 	#if 1 
-	dumpsys_task_func();
+	awss_report_reset();
 	#else
 #if CONFIG_LWIP_LAYER
 	ip_addr_t ipaddr;
