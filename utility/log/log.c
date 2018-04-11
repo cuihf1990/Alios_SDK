@@ -8,19 +8,14 @@
 #include <aos/aos.h>
 
 unsigned int aos_log_level = AOS_LL_V_DEBUG | AOS_LL_V_INFO | AOS_LL_V_WARN | AOS_LL_V_ERROR | AOS_LL_V_FATAL;
+aos_mutex_t log_mutex;
 
 #ifndef csp_printf
 __attribute__((weak)) int csp_printf(const char *fmt, ...)
 {
     va_list args;
     int ret;
-    static aos_mutex_t log_mutex = NULL;
 
-    if  ( log_mutex == NULL )
-    {
-        aos_mutex_new(&log_mutex);
-    }
-    
     ret = aos_mutex_lock(&log_mutex, AOS_WAIT_FOREVER);
     if (ret == 0) {
         va_start(args, fmt);
@@ -98,5 +93,6 @@ void log_cli_init(void)
 {
     aos_log_level = AOS_LL_V_DEBUG | AOS_LL_V_INFO | AOS_LL_V_WARN | AOS_LL_V_ERROR | AOS_LL_V_FATAL;
     aos_cli_register_commands(&log_cli_cmd[0],sizeof(log_cli_cmd) / sizeof(struct cli_command));
+    aos_mutex_new(&log_mutex);
 }
 
