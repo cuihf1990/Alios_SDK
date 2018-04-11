@@ -19,6 +19,8 @@ mk3239_targets="bluetooth.ble_advertisements bluetooth.ble_show_system_time"
 mk3239_platforms="mk3239"
 pca10056_targets="bluetooth.bleperipheral bluetooth.aisilopapp bluetooth.aisapp"
 pca10056_platforms="pca10056"
+eml3047_targets="lorawan.lorawanapp lorawan.linklora"
+eml3047_platforms="eml3047"
 
 scons_build_targets="helloworld@b_l475e helloworld@mk3060"
 scons_ide_targets=""
@@ -272,6 +274,25 @@ done
 aos make clean > /dev/null 2>&1
 for target in ${pca10056_targets}; do
     for platform in ${pca10056_platforms}; do
+        aos make ${target}@${platform} JOBS=${JNUM} > ${target}@${platform}@${branch}.log 2>&1
+        if [ $? -eq 0 ]; then
+            rm -f ${target}@${platform}@${branch}.log
+            echo "build ${target}@${platform} at ${branch} branch succeed"
+        else
+            echo -e "build ${target}@${platform} at ${branch} branch failed, log:\n"
+            cat ${target}@${platform}@${branch}.log
+            rm -f ${target}@${platform}@${branch}.log
+            echo -e "\nbuild ${target}@${platform} at ${branch} branch failed"
+            aos make clean > /dev/null 2>&1
+            exit 1
+        fi
+    done
+done
+
+#single-bin, eml3047
+aos make clean > /dev/null 2>&1
+for target in ${eml3047_targets}; do
+    for platform in ${eml3047_platforms}; do
         aos make ${target}@${platform} JOBS=${JNUM} > ${target}@${platform}@${branch}.log 2>&1
         if [ $? -eq 0 ]; then
             rm -f ${target}@${platform}@${branch}.log

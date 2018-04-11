@@ -219,7 +219,7 @@ static void McpsIndication(McpsIndication_t *mcpsIndication)
     // Check Rssi
     // Check Snr
     // Check RxSlot
-    DBG_LINKLORA( "rssi = %d, snr = %d, datarate = %d, rxdata %d\n", mcpsIndication->Rssi, mcpsIndication->Snr,
+    DBG_LINKLORA( "rssi = %d, snr = %d, datarate = %d, rxdata %d\r\n", mcpsIndication->Rssi, mcpsIndication->Snr,
                  mcpsIndication->RxDatarate, mcpsIndication->RxData);
 
     if ( ComplianceTest.Running == true )
