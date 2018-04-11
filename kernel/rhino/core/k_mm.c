@@ -7,14 +7,26 @@
 #include <stdlib.h>
 
 #if (RHINO_CONFIG_MM_TLF > 0)
+
 #if (RHINO_CONFIG_MM_REGION_MUTEX == 0)
+
+#ifdef NMI_INTLOCK_SUPPORTED
+#define MM_CRITICAL_ALLOC()         \
+        CPSR_ALLOC_NMI()
+#define MM_CRITICAL_ENTER(pMutex)   \
+        RHINO_CPU_INTRPT_DISABLE_NMI()
+#define MM_CRITICAL_EXIT(pMutex)    \
+        RHINO_CPU_INTRPT_ENABLE_NMI()
+#else   //not define NMI_INTLOCK_SUPPORTED
 #define MM_CRITICAL_ALLOC()         \
         CPSR_ALLOC()
 #define MM_CRITICAL_ENTER(pMutex)   \
         RHINO_CRITICAL_ENTER()
 #define MM_CRITICAL_EXIT(pMutex)    \
         RHINO_CRITICAL_EXIT()
-#else
+#endif
+
+#else  //(RHINO_CONFIG_MM_REGION_MUTEX != 0)
 #define MM_CRITICAL_ALLOC()         \
         CPSR_ALLOC()
 #define MM_CRITICAL_ENTER(pMutex)   \
