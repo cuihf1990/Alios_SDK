@@ -120,7 +120,7 @@ void alcs_rec_auth (CoAPContext *ctx, const char *paths, NetworkAddr* from, CoAP
     //bool  result = 0;
     int res_code = 200;
     char body[200] = {0};
-    COAP_INFO ("receive data:%.*s, from:%s", resMsg->payloadlen, resMsg->payload, from->addr);
+    COAP_INFO ("alcs_rec_auth:from:%s, payloadlen:%d", from->addr, resMsg->payloadlen);
 
     do {
         if (!req_payload_parser((const char *)resMsg->payload, resMsg->payloadlen, &seq, &seqlen, &data, &datalen)) {
@@ -217,7 +217,6 @@ int add_svr_key (CoAPContext *ctx, const char* keyprefix, const char* secret, bo
         return COAP_ERROR_INVALID_LENGTH;
     }
 
-    COAP_INFO("call coap_malloc\n");
     svr_key_item* item = (svr_key_item*) coap_malloc(sizeof(svr_key_item));
     if (!item) {
         return COAP_ERROR_MALLOC;
@@ -349,6 +348,8 @@ void recv_msg_handler (CoAPContext *context, const char *path, NetworkAddr *remo
         send_err_rsp (context, remote, COAP_MSG_CODE_401_UNAUTHORIZED, message);
         COAP_ERR ("need auth, path:%s, from:%s", path, remote->addr);
         return;
+    } else {
+        session->heart_time = HAL_UptimeMs();    
     }
 
     unsigned int obsVal;
@@ -366,6 +367,8 @@ void recv_msg_handler (CoAPContext *context, const char *path, NetworkAddr *remo
         if (buf) {
             call_cb (context, path, remote, message, session->sessionKey, buf, cur->cb);
             coap_free (buf);
+        } else {
+            COAP_ERR ("fail to malloc %dB", message->payloadlen);
         }
     }
 }
@@ -401,8 +404,9 @@ void alcs_rec_heart_beat(CoAPContext *ctx, const char *paths, NetworkAddr *remot
 
     session_item* session = get_svr_session (ctx, remote);
     if (session) {
-        COAP_INFO ("receive stale heart beat");
         session->heart_time = HAL_UptimeMs();
+    } else {
+        COAP_INFO ("receive stale heart beat");
     }
 
     int seqlen, datalen;
@@ -440,9 +444,13 @@ int observe_data_encrypt(CoAPContext *ctx, NetworkAddr* from, CoAPMessage *messa
     if (session) {
         dest->len = (src->len & 0xfffffff0) + 16;
         dest->data  = (unsigned char*)coap_malloc(dest->len);
-        alcs_encrypt ((const char*)src->data, src->len, session->sessionKey, dest->data);
+        if (alcs_encrypt ((const char*)src->data, src->len, session->sessionKey, dest->data) <= 0) {
+            return COAP_ERROR_ENCRYPT_FAILED;
+        }
         CoAPUintOption_add (message, COAP_OPTION_SESSIONID, session->sessionId);
         return COAP_SUCCESS;
+    } else {
+        COAP_INFO ("observe_data_encrypt, no session found!");
     }
 
     return COAP_ERROR_ENCRYPT_FAILED;
