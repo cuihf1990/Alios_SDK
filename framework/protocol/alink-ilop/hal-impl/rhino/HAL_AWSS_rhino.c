@@ -325,6 +325,8 @@ int HAL_Awss_Connect_Ap(
 
     strncpy(config.ssid, ssid, sizeof(config.ssid) - 1);
     strncpy(config.pwd, passwd, sizeof(config.pwd) - 1);
+    strncpy(config.bssid, bssid, sizeof(config.bssid) - 1);
+
     ret = netmgr_set_ap_config(&config);
 #ifndef ESP8266_CONFIG
     printf("------------------------suspend station");
@@ -511,7 +513,7 @@ int HAL_Wifi_Get_Ap_Info(
         strncpy(passwd, config.pwd, PLATFORM_MAX_PASSWD_LEN);
     }
     if (bssid) {
-        strncpy(bssid, config.bssid, ETH_ALEN);
+        memcpy(bssid, config.bssid, ETH_ALEN);
     }
 
     return 0;
