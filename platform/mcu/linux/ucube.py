@@ -15,13 +15,17 @@ src = Split('''
 ''')
 component = aos_mcu_component('linuximpl', src)
 
-### can't work start ###
-comp_names = [comp.name for comp in aos_global_config.components]
-if 'fatfs' in comp_names:
-    component.add_sources('main/sdmmc.c')
+@post_config
+def linuximpl_post_config(component):
+    comp_names = [comp.name for comp in aos_global_config.components]
+    if 'fatfs' in comp_names:
+        component.add_sources('main/sdmmc.c')
 
-if 'net' in comp_names:
-    aos_global_config.set('LWIP', '1')
+    if 'net' in comp_names:
+        aos_global_config.set('LWIP', '1')
+
+
+linuximpl_post_config(component)
 
 LWIP = aos_global_config.get('LWIP')
 if LWIP == '1':

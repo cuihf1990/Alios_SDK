@@ -32,6 +32,7 @@ class aos_global_config:
     testcases = []
     arch = ''
     mcu_family = ''
+    config_observers = {}
 
     @staticmethod
     def set_append(key, value):
@@ -54,10 +55,18 @@ class aos_global_config:
 
     @staticmethod
     def set(key, value, append=False):
+        last_value = aos_global_config.get(key, None)
+
         if append:
             aos_global_config.set_append(key, value)
         else:
             aos_global_config.set_override(key, value)
+
+        if last_value != value and key in aos_global_config.config_observers:
+            func_comp = aos_global_config.config_observers[key]
+            for func, comp in func_comp.items():
+                func(comp)
+            func_comp.clear()
 
     @staticmethod
     def set_build_type(build_type):
@@ -102,7 +111,7 @@ class aos_component:
         aos_global_config.component_includes.append('#' + self.dir)
 
     def get_component_dependencis(self):
-        return self.dependencis
+        return self.component_dependencis
 
     def add_component_dependencis(self, *dependencis):
         for dependency in dependencis:
@@ -265,6 +274,23 @@ class base_process_impl(process):
         aos_global_config.aos_env.Append(CPPDEFINES='BUILD_BIN')
 
 
+def pre_config(config):
+    def __config(func):
+        def __decorator(component):
+            if config in aos_global_config.config_observers:
+                aos_global_config.config_observers[config][func] = component
+            else:
+                aos_global_config.config_observers[config] = {func: component}
+        return __decorator
+    return __config
+
+
+def post_config(func):
+    def __decorator(component):
+        component.post_config = func
+    return __decorator
+
+
 class dependency_process_impl(process):
     def __init__(self, aos_global_config):
         self.config = aos_global_config
@@ -368,6 +394,22 @@ class dependency_process_impl(process):
 
         aos_component('auto_component', src)
 
+    def __pre_config(self):
+        for config, func_comp in self.config.config_observers.items():
+            for func, comp in func_comp.items():
+                func(comp)
+            func_comp.clear()
+
+    def __post_config(self):
+        for component in self.config.components:
+            if hasattr(component, 'post_config'):
+                len_deps = len(component.get_component_dependencis())
+                component.post_config(component)
+
+                if len_deps != len(component.get_component_dependencis()):
+                    for dep in component.get_component_dependencis():
+                        self.__add_components_dependency(dep)
+
     def __generate_all_components(self):
         print('app=' + aos_global_config.app + ', board=' + aos_global_config.board + ', out_dir=' + aos_global_config.out_dir)
 
@@ -391,6 +433,9 @@ class dependency_process_impl(process):
                 self.__add_components_dependency(dependency)
 
         self.__generate_auto_component()
+
+        self.__pre_config()
+        self.__post_config()
 
         print("all components: %s " % ' '.join([component.name for component in aos_global_config.components]))
 
@@ -519,7 +564,7 @@ class build_rule_process_impl(process):
 
     def __build_rule_components(self):
         for component in self.config.components:
-            if len(component.src):                
+            if len(component.src):
                 env = component.get_self_env()
                 objdir = os.path.join(self.config.out_dir, 'modules')
                 bdir = os.path.join(objdir, component.dir)
@@ -532,7 +577,7 @@ class build_rule_process_impl(process):
                 else:
                     cccomstr = 'Compiling $SOURCE'
                     arcomstr = 'Making $TARGET'
-                
+
                 component.target = env.Library(target=target, source=src, CCCOMSTR=cccomstr, ARCOMSTR=arcomstr,LIBPREFIX='')
 
         self.config.component_targets = []
