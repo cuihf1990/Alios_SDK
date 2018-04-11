@@ -547,10 +547,12 @@ int awss_report_enrollee(unsigned char *payload, int payload_len, int rssi)
         char id[MSG_REQ_ID_LEN] = {0};
         uint8_t bssid[OS_ETH_ALEN] = {0};
         char ssid[OS_MAX_SSID_LEN + 1] = {0};
-        char bssid_str[OS_ETH_ALEN * 2 + 6] = {0};
+        //char bssid_str[OS_ETH_ALEN * 2 + 6] = {0};
+        char *bssid_str = "94:8B:03:03:37:66";
 
         os_wifi_get_ap_info(ssid, NULL, bssid);
-        sprintf(bssid_str, "%02X:%02X:%02X:%02X:%02X:%02X", bssid[0], bssid[1], bssid[2], bssid[3], bssid[4], bssid[5]);
+        printf("**********************************%s, bssid: %s\r\n", __func__, bssid);
+        //sprintf(bssid_str, "%02X:%02X:%02X:%02X:%02X:%02X", bssid[0], bssid[1], bssid[2], bssid[3], bssid[4], bssid[5]);
 
         for (i = 0; i < payload_len; i ++)
             sprintf(&payload_str[i * 2], "%02X", payload[i]);
