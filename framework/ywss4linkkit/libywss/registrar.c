@@ -808,7 +808,7 @@ void awss_wifi_mgnt_frame_callback(uint8_t *buffer, int length, char rssi, int b
 
     switch (type) {
         case MGMT_BEACON:
-            log_trace("beacon");
+            //log_trace("beacon");
             buffer += MGMT_HDR_LEN + 12;/* hdr(24) + 12(timestamp, beacon_interval, cap) */
             length -= MGMT_HDR_LEN + 12;
 
@@ -830,7 +830,7 @@ void awss_wifi_mgnt_frame_callback(uint8_t *buffer, int length, char rssi, int b
             goto find_ie;
             break;
         case MGMT_PROBE_REQ:
-            log_trace("probe req\n");
+            //log_trace("probe req\n");
             buffer += MGMT_HDR_LEN;
             length -= MGMT_HDR_LEN;
 
@@ -845,10 +845,10 @@ ie_handler:
             }
             break;
         case MGMT_PROBE_RESP:
-            log_trace("probe resp");
+            //log_trace("probe resp");
             break;
         default:
-            log_trace("frame (%d): %02x \n", length, type);
+            //log_trace("frame (%d): %02x \n", length, type);
             break;
     }
 }

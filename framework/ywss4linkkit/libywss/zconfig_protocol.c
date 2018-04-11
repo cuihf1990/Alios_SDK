@@ -1586,7 +1586,7 @@ drop:
 
 const char *zc_default_ssid = "aha";
 const char *zc_default_passwd = "12345678";
-const char *zc_adha_ssid = "adha";
+const char *zc_adha_ssid = "abcd";
 const char *zc_adha_passwd = "08d9f22c60157fd01f57645d791a0b610fe0a558c104d6a1f9d9c0a9913c";
 
 int zconfig_recv_callback_adha_ssid(struct parser_res *res)

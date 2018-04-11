@@ -446,9 +446,9 @@ int netmgr_set_ap_config(netmgr_ap_config_t *config)
             sizeof(g_netmgr_cxt.saved_conf.ssid) - 1);
     strncpy(g_netmgr_cxt.saved_conf.pwd, config->pwd,
             sizeof(g_netmgr_cxt.saved_conf.pwd) - 1);
-    if (strcmp(config->ssid, HOTSPOT_AP) != 0) // Do not save hotspot AP
-        ret = aos_kv_set(NETMGR_WIFI_KEY, &g_netmgr_cxt.saved_conf,
-                         sizeof(wifi_conf_t), 1);
+//    if (strcmp(config->ssid, HOTSPOT_AP) != 0) // Do not save hotspot AP
+//        ret = aos_kv_set(NETMGR_WIFI_KEY, &g_netmgr_cxt.saved_conf,
+//                         sizeof(wifi_conf_t), 1);
     return ret;
 }
 
