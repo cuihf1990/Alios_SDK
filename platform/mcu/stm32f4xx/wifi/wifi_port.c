@@ -11,7 +11,7 @@
 #include "mico_wlan.h"
 
 hal_wifi_module_t sim_aos_wifi_mico;
-static int scan_txing = 0;
+static uint16_t _monitor_channel = 1;
 
 #pragma pack(1)
 typedef struct
@@ -132,6 +132,7 @@ static int suspend_soft_ap(hal_wifi_module_t *m)
 
 static int set_channel(hal_wifi_module_t *m, int ch)
 {
+    _monitor_channel = ch;
     return mico_wlan_monitor_set_channel(ch);
 }
 
@@ -143,7 +144,6 @@ static void start_monitor(hal_wifi_module_t *m)
 static void stop_monitor(hal_wifi_module_t *m)
 {
 	mico_wlan_stop_monitor();
-    scan_txing = 3;
 }
 
 monitor_data_cb_t aos_monitro_cb = NULL;
@@ -171,43 +171,19 @@ typedef struct
     uint8_t len;     /**< SSID length */
     uint8_t val[32]; /**< SSID name (AP name)  */
 } wiced_ssid_t;
-
-static void scan_results_handler( void * arg1, void *arg2 )
+typedef struct
 {
+    int32_t number_of_probes_per_channel;                     /**< Number of probes to send on each channel                                               */
+    int32_t scan_active_dwell_time_per_channel_ms;            /**< Period of time to wait on each channel when active scanning                            */
+    int32_t scan_passive_dwell_time_per_channel_ms;           /**< Period of time to wait on each channel when passive scanning                           */
+    int32_t scan_home_channel_dwell_time_between_channels_ms; /**< Period of time to wait on the home channel when scanning. Only relevant if associated. */
+} wiced_scan_extended_params_t;
+
+static void scan_results_handler( void * result, void *arg2 )
+{
+   
 }
 
-static void scan_thread(void*arg)
-{
-    wiced_ssid_t ssid;
-    int i = 0;
-    
-    while(1 == scan_txing) {
-        if (i == 0) {
-            sprintf(ssid.val, "adha");
-            ssid.len = strlen(ssid.val);
-            i = 1;
-        } else {
-            sprintf(ssid.val, "aha");
-            ssid.len = strlen(ssid.val);
-            i = 0;
-        }
-
-        printf("scan  %s\r\n", ssid.val);
-        wiced_wifi_scan(0, 2, &ssid, NULL, NULL, NULL, 
-            scan_results_handler, NULL, NULL);
-        aos_msleep(2000);
-    }
-    printf("scan thread exit\r\n");
-    scan_txing = 0;
-    mico_rtos_delete_thread(NULL);
-}
-
-static void start_scan_thread(void)
-{
-    
-    mico_rtos_create_thread( NULL, 10, "scan", scan_thread,
-                             0x800, 0 );
-}
 
 static /*@null@*/ uint8_t* wlu_parse_tlvs( /*@returned@*/ uint8_t* tlv_buf, int buflen, uint8_t key )
 {
@@ -237,31 +213,49 @@ static /*@null@*/ uint8_t* wlu_parse_tlvs( /*@returned@*/ uint8_t* tlv_buf, int 
 }
 
 static const uint8_t oui[] = {0xD8,  0x96,  0xE0};
+static int custom_ie_added = 0;
 
 static int wlan_send_80211_raw_frame(hal_wifi_module_t *m, uint8_t *buf, int len)
 {
     ieee80211_header_t *header = (ieee80211_header_t*)buf;
     uint8_t *parse, *ie, *ali_ie;
     int     parse_len;
-
-    return; 
-    if (scan_txing != 0)
-        return;
-
+    wiced_ssid_t ssid;
+    uint16_t chlist[2];
+    wiced_scan_extended_params_t extparam = { 2, 50, 50, 50 };
+    
+    
+    if (header->type != 0x40) {
+        return 0;
+    }
     len -= 24;
     parse = (uint8_t*)header + 24; // IE buffer header
     parse_len = len;
-    if ( ( ie = wlu_parse_tlvs( parse, parse_len, 0xDD ) ) != 0 )
+    
+    if ( ( ie = wlu_parse_tlvs( parse, parse_len, (uint8_t) 0 ) ) != 0 )
     {
-    	if (ie[2] == oui[0] && ie[3] == oui[1] && ie[4] == oui[2]) {
-            printf("start scan ie %d\r\n", ie[1]);
-            wiced_wifi_manage_custom_ie(0, 0, &ie[2], ie[5], 
-                &ie[6], ie[1] - 4, 0x10);
-            scan_txing = 1;
-            start_scan_thread();
-            
+    	if (ie[1] > 0) {
+            ssid.len = ie[1];
+            memcpy(ssid.val, &ie[2], ie[1]);
         }
     }
+    if (custom_ie_added == 0) {
+        if ( ( ie = wlu_parse_tlvs( parse, parse_len, 0xDD ) ) != 0 )
+        {
+        	if (ie[2] == oui[0] && ie[3] == oui[1] && ie[4] == oui[2]) {
+                printf("Add custom IE (%d)\r\n", ie[1]);
+                wiced_wifi_manage_custom_ie(0, 0, &ie[2], ie[5], 
+                    &ie[6], ie[1] - 4, 0x10);
+                custom_ie_added = 1;
+            }
+        }
+    }
+    chlist[0] = _monitor_channel;
+    chlist[1] = 0;
+
+    wiced_wifi_scan(0, 2, &ssid, NULL, chlist, &extparam, 
+            scan_results_handler, NULL, NULL);
+
     return kNoErr;
 }
 
