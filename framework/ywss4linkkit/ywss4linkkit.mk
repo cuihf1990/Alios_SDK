@@ -9,11 +9,11 @@ $(NAME)_COMPONENTS += digest_algorithm protocol.alink-ilop connectivity.link-coa
 GLOBAL_DEFINES += CONFIG_YWSS
 
 ifeq ($(CONFIG_SYSINFO_DEVICE_NAME), ESP8266)
-$(NAME)_DEFINES     += ESP8266_CONFIG
+GLOBAL_DEFINES += ESP8266_CONFIG
 endif
 
 
 $(NAME)_INCLUDES += ./libywss/os/  ./libywss/os/platform/ 
-$(NAME)_SOURCES +=  hal/HAL_AWSS_rhino.c
+#$(NAME)_SOURCES +=  hal/HAL_AWSS_rhino.c
 
 

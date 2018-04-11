@@ -9,9 +9,8 @@
 #include "interface/list_abstract.h"
 #include "dm_thing.h"
 #include "dm_import.h"
-#include "logger.h"
-#include "single_list.h"
-#include "new.h"
+#include "dm_logger.h"
+#include "dm_slist.h"
 
 #include "lite-utils.h"
 
@@ -83,7 +82,7 @@ static void property_print_data_type_info(void* dst);
 static void item_print_info(void* _item, int index, va_list* params);
 #endif /* ENABLE_THING_DEBUG */
 
-static void dm_lltoa(long long n, char* str, int radix)
+void dm_lltoa(long long n, char* str, int radix)
 {
     int i, j;
     long long remain;
@@ -129,11 +128,10 @@ static void* dm_thing_ctor(void* _self, va_list* params)
     dm_thing_t* self = _self;
 
     self->_name = va_arg(*params, char*);
-    self->_dsl_string_length = 0;
-    self->_dsl_string = NULL;
+    self->_tsl_string_length = 0;
+    self->_tsl_string = NULL;
 
-    self->_json_object = NULL;
-    memset(&self->dsl_template, 0, sizeof(dsl_template_t));
+    memset(&self->tsl_template, 0, sizeof(tsl_template_t));
 
     return self;
 }
@@ -142,21 +140,21 @@ static void* dm_thing_dtor(void* _self)
 {
     dm_thing_t* self = _self;
 
-    property_iterator((thing_t*)self, free_item_memory, string_property, self->dsl_template.property_number);
-    event_iterator((thing_t*)self, free_item_memory, string_event, self->dsl_template.event_number);
-    service_iterator((thing_t*)self, free_item_memory, string_service, self->dsl_template.service_number);
+    property_iterator((thing_t*)self, free_item_memory, string_property, self->tsl_template.property_number);
+    event_iterator((thing_t*)self, free_item_memory, string_event, self->tsl_template.event_number);
+    service_iterator((thing_t*)self, free_item_memory, string_service, self->tsl_template.service_number);
 
-    if (self->dsl_template.schema) {
-        dm_lite_free(self->dsl_template.schema);
+    if (self->tsl_template.schema) {
+        dm_lite_free(self->tsl_template.schema);
     }
-    if (self->dsl_template.link) {
-        dm_lite_free(self->dsl_template.link);
+    if (self->tsl_template.link) {
+        dm_lite_free(self->tsl_template.link);
     }
-    if (self->dsl_template.profile.device_name) {
-        dm_lite_free(self->dsl_template.profile.device_name);
+    if (self->tsl_template.profile.device_name) {
+        dm_lite_free(self->tsl_template.profile.device_name);
     }
-    if (self->dsl_template.profile.product_key) {
-        dm_lite_free(self->dsl_template.profile.product_key);
+    if (self->tsl_template.profile.product_key) {
+        dm_lite_free(self->tsl_template.profile.product_key);
     }
 
     return self;
@@ -372,7 +370,7 @@ static void install_cjson_item_data_type_value(void *dst, data_type_type_t type,
         data_type_x->data_type_double_t.value_str = dm_lite_calloc(1, strlen(temp_buf) + 2 + data_type_x->data_type_double_t.precise + DM_THING_EXTENTED_ROOM_FOR_STRING_MALLOC);
         assert(data_type_x->data_type_double_t.value_str);
         sprintf_float_double_precise(data_type_x->data_type_double_t.value_str, data_type_x->data_type_double_t.value, data_type_x->data_type_double_t.precise);
-    }else if (type == data_type_type_enum) {
+    } else if (type == data_type_type_enum) {
         /* detect enum item number */
 
         index = get_json_item_size((char*)src, src_len);
@@ -652,7 +650,7 @@ static void install_cjson_obj_property(property_t *dst, const char *src, int src
     return;
 }
 
-static void parse_cjson_obj_to_dsl_template_properties(void *_self, const char *src, int src_len)
+static void parse_cjson_obj_to_tsl_template_properties(void *_self, const char *src, int src_len)
 {
     char _key[KEY_BUFF_SIZE] = {0};
     char *val = NULL;
@@ -665,24 +663,24 @@ static void parse_cjson_obj_to_dsl_template_properties(void *_self, const char *
 
     properties_array_size = get_json_item_size((char*)src, src_len);
 
-    self->dsl_template.property_number = properties_array_size;
+    self->tsl_template.property_number = properties_array_size;
 
-    if (self->dsl_template.property_number == 0) {
+    if (self->tsl_template.property_number == 0) {
         return;
     }
 
-    self->dsl_template.properties = (property_t *)dm_lite_calloc(self->dsl_template.property_number, sizeof(property_t));
+    self->tsl_template.properties = (property_t *)dm_lite_calloc(self->tsl_template.property_number, sizeof(property_t));
 
-    assert(self->dsl_template.properties);
-    if (self->dsl_template.properties == 0) {
-        self->dsl_template.property_number = 0;
+    assert(self->tsl_template.properties);
+    if (self->tsl_template.properties == 0) {
+        self->tsl_template.property_number = 0;
         return;
     }
 
     if (src) {
-        for (index = 0; index < self->dsl_template.property_number; ++index) {
+        for (index = 0; index < self->tsl_template.property_number; ++index) {
             snprintf(_key, KEY_BUFF_SIZE - 1, "[%d]", index + 1);
-            property = self->dsl_template.properties + index;
+            property = self->tsl_template.properties + index;
 
             val = LITE_json_value_of_ext2(_key, (char*)src, src_len, &val_len);
             if (val) {
@@ -761,7 +759,7 @@ static void install_cjson_obj_event(event_t *dst, const char *src, int src_len)
     }
 }
 
-static void parse_cjson_obj_to_dsl_template_events(void *_self, const char *src, int src_len)
+static void parse_cjson_obj_to_tsl_template_events(void *_self, const char *src, int src_len)
 {
     char *val = NULL;
     char _key[KEY_BUFF_SIZE] = {0};
@@ -773,23 +771,23 @@ static void parse_cjson_obj_to_dsl_template_events(void *_self, const char *src,
 
     events_array_size = get_json_item_size((char*)src, src_len);
 
-    self->dsl_template.event_number = events_array_size;
+    self->tsl_template.event_number = events_array_size;
 
-    if (self->dsl_template.event_number == 0) {
+    if (self->tsl_template.event_number == 0) {
         return;
     }
 
-    self->dsl_template.events = (event_t *)dm_lite_calloc(self->dsl_template.event_number, sizeof(event_t));
+    self->tsl_template.events = (event_t *)dm_lite_calloc(self->tsl_template.event_number, sizeof(event_t));
 
-    assert(self->dsl_template.events);
-    if (self->dsl_template.events == NULL) {
-        self->dsl_template.event_number = 0;
+    assert(self->tsl_template.events);
+    if (self->tsl_template.events == NULL) {
+        self->tsl_template.event_number = 0;
         dm_log_err("events malloc fail");
         return;
     }
 
-    for (index = 0; index < self->dsl_template.event_number; ++index) {
-        event = self->dsl_template.events + index;
+    for (index = 0; index < self->tsl_template.event_number; ++index) {
+        event = self->tsl_template.events + index;
         snprintf(_key, KEY_BUFF_SIZE - 1, "[%d]", index + 1);
         val = LITE_json_value_of_ext2(_key, (char*)src, src_len, &val_len);
         if (val) {
@@ -893,7 +891,7 @@ static void install_cjson_obj_service(service_t *dst, const char *src, int src_l
     }
 }
 
-static void parse_cjson_obj_to_dsl_template_services(void *_self, const char *src, int src_len)
+static void parse_cjson_obj_to_tsl_template_services(void *_self, const char *src, int src_len)
 {
     char _key[KEY_BUFF_SIZE] = {0};
     dm_thing_t *self = _self;
@@ -907,17 +905,17 @@ static void parse_cjson_obj_to_dsl_template_services(void *_self, const char *sr
 
     sercives_array_size = get_json_item_size((char*)src, src_len);
 
-    self->dsl_template.service_number = sercives_array_size;
-    self->dsl_template.services = (service_t *)dm_lite_calloc(self->dsl_template.service_number, sizeof(service_t));
+    self->tsl_template.service_number = sercives_array_size;
+    self->tsl_template.services = (service_t *)dm_lite_calloc(self->tsl_template.service_number, sizeof(service_t));
 
-    if (self->dsl_template.services == NULL) {
-        self->dsl_template.service_number = 0;
-        dm_log_err("self->dsl_template.events malloc fail");
+    if (self->tsl_template.services == NULL) {
+        self->tsl_template.service_number = 0;
+        dm_log_err("self->tsl_template.events malloc fail");
         return;
     }
 
-    for (index = 0; index < self->dsl_template.service_number; ++index) {
-        service = self->dsl_template.services + index;
+    for (index = 0; index < self->tsl_template.service_number; ++index) {
+        service = self->tsl_template.services + index;
         snprintf(_key, KEY_BUFF_SIZE, "[%d]", index + 1);
         val = LITE_json_value_of_ext2(_key, (char*)src, src_len, &val_len);
         if (val) {
@@ -926,7 +924,7 @@ static void parse_cjson_obj_to_dsl_template_services(void *_self, const char *sr
     }
 }
 
-static int parse_cjson_obj_to_dsl_template(void *_self, const char *src, int src_len)
+static int parse_cjson_obj_to_tsl_template(void *_self, const char *src, int src_len)
 {
     if(!_self || !src || src_len <= 0) {
         return -1;
@@ -936,61 +934,59 @@ static int parse_cjson_obj_to_dsl_template(void *_self, const char *src, int src
     char *val = NULL;
     int val_len = 0;
 #ifdef LITE_THING_MODEL
-    self->dsl_template.schema = NULL;
-    self->dsl_template.link = NULL;
+    self->tsl_template.schema = NULL;
+    self->tsl_template.link = NULL;
 #else
     /* schema */
-    if(0 != install_cjson_item_string((void **)&self->dsl_template.schema, "schema", src, src_len)) {
+    if(0 != install_cjson_item_string((void **)&self->tsl_template.schema, "schema", src, src_len)) {
         return -1;
     }
     /* link */
-    if(0 != install_cjson_item_string((void **)&self->dsl_template.link, "link", src, src_len)) {
+    if(0 != install_cjson_item_string((void **)&self->tsl_template.link, "link", src, src_len)) {
         return -1;
     }
 #endif
 
     /* profile */
-    if(0 != install_cjson_item_string((void **)&self->dsl_template.profile.product_key, string_profile_productKey, src, src_len)) {
-        self->dsl_template.profile.product_key = NULL;
+    if(0 != install_cjson_item_string((void **)&self->tsl_template.profile.product_key, string_profile_productKey, src, src_len)) {
+        self->tsl_template.profile.product_key = NULL;
     }
-    if(0 != install_cjson_item_string((void **)&self->dsl_template.profile.device_name, string_profile_deviceName, src, src_len)) {
-        self->dsl_template.profile.device_name = NULL;
+    if(0 != install_cjson_item_string((void **)&self->tsl_template.profile.device_name, string_profile_deviceName, src, src_len)) {
+        self->tsl_template.profile.device_name = NULL;
     }
 
     /* properties */
     val = LITE_json_value_of_ext2((char*)string_properties, (char*)src, src_len, &val_len);
     if (val) {
-        parse_cjson_obj_to_dsl_template_properties(self, val, val_len);
-    }else {
+        parse_cjson_obj_to_tsl_template_properties(self, val, val_len);
+    } else {
         return -1;
     }
 
     /* events */
     val = LITE_json_value_of_ext2((char*)string_events, (char*)src, src_len, &val_len);
     if (val) {
-        parse_cjson_obj_to_dsl_template_events(self, val, val_len);
-    }else {
+        parse_cjson_obj_to_tsl_template_events(self, val, val_len);
+    } else {
         return -1;
     }
 
     /* services */
     val = LITE_json_value_of_ext2((char*)string_services, (char*)src, src_len, &val_len);
     if (val) {
-        parse_cjson_obj_to_dsl_template_services(self, val, val_len);
-    }else {
+        parse_cjson_obj_to_tsl_template_services(self, val, val_len);
+    } else {
         return -1;
     }
 
     return 0;
 }
 
-static int dm_thing_set_dsl_string(void *_self, const char *src, int src_len)
+static int dm_thing_set_tsl_string(void *_self, const char *src, int src_len)
 {
     int ret;
     dm_thing_t *self = _self;
-    ret = parse_cjson_obj_to_dsl_template(self, src, src_len);
-
-    self->_json_object = 0;
+    ret = parse_cjson_obj_to_tsl_template(self, src, src_len);
 
     return ret;
 }
@@ -1486,7 +1482,7 @@ static void install_cjson_obj_property(property_t* dst, const cJSON* const cjson
     install_cjson_item_data_type(&property->data_type, property_item_obj, string_dataType);
 }
 
-static void parse_cjson_obj_to_dsl_template_properties(void* _self, const cJSON* cjson_obj)
+static void parse_cjson_obj_to_tsl_template_properties(void* _self, const cJSON* cjson_obj)
 {
     dm_thing_t* self = _self;
     const cJSON* properties_obj = cjson_obj;
@@ -1497,23 +1493,23 @@ static void parse_cjson_obj_to_dsl_template_properties(void* _self, const cJSON*
 
     properties_array_size = cJSON_GetArraySize(properties_obj);
 
-    self->dsl_template.property_number = properties_array_size;
+    self->tsl_template.property_number = properties_array_size;
 
-    if (self->dsl_template.property_number == 0) return;
+    if (self->tsl_template.property_number == 0) return;
 
-    self->dsl_template.properties = (property_t*)dm_lite_calloc(self->dsl_template.property_number, sizeof(property_t));
+    self->tsl_template.properties = (property_t*)dm_lite_calloc(self->tsl_template.property_number, sizeof(property_t));
 
-    assert(self->dsl_template.properties);
+    assert(self->tsl_template.properties);
 
-    if (self->dsl_template.properties == 0) {
-        self->dsl_template.property_number = 0;
+    if (self->tsl_template.properties == 0) {
+        self->tsl_template.property_number = 0;
         return;
     }
 
-    for (index = 0; index < self->dsl_template.property_number; ++index) {
+    for (index = 0; index < self->tsl_template.property_number; ++index) {
         property_item_obj = cJSON_GetArrayItem(properties_obj, index);
         if (property_item_obj) {
-            property = self->dsl_template.properties + index;
+            property = self->tsl_template.properties + index;
             install_cjson_obj_property(property, property_item_obj);
         }
     }
@@ -1581,7 +1577,7 @@ static void install_cjson_obj_event(event_t* dst, const cJSON* const cjson_obj)
     }
 }
 
-static void parse_cjson_obj_to_dsl_template_events(void* _self, const cJSON* cjson_obj)
+static void parse_cjson_obj_to_tsl_template_events(void* _self, const cJSON* cjson_obj)
 {
     dm_thing_t* self = _self;
     const cJSON* events_obj = cjson_obj;
@@ -1592,24 +1588,24 @@ static void parse_cjson_obj_to_dsl_template_events(void* _self, const cJSON* cjs
 
     events_array_size = cJSON_GetArraySize(events_obj);
 
-    self->dsl_template.event_number = events_array_size;
+    self->tsl_template.event_number = events_array_size;
 
-    if (self->dsl_template.event_number == 0) return;
+    if (self->tsl_template.event_number == 0) return;
 
-    self->dsl_template.events = (event_t*)dm_lite_calloc(self->dsl_template.event_number, sizeof(event_t));
+    self->tsl_template.events = (event_t*)dm_lite_calloc(self->tsl_template.event_number, sizeof(event_t));
 
-    assert(self->dsl_template.events);
+    assert(self->tsl_template.events);
 
-    if (self->dsl_template.events == NULL) {
-        self->dsl_template.event_number = 0;
-        dm_log_err("self->dsl_template.events malloc fail");
+    if (self->tsl_template.events == NULL) {
+        self->tsl_template.event_number = 0;
+        dm_log_err("self->tsl_template.events malloc fail");
         return;
     }
 
-    for (index = 0; index < self->dsl_template.event_number; ++index) {
+    for (index = 0; index < self->tsl_template.event_number; ++index) {
         event_item_obj = cJSON_GetArrayItem(events_obj, index);
         if (event_item_obj) {
-            event = self->dsl_template.events + index;
+            event = self->tsl_template.events + index;
 
             install_cjson_obj_event(event, event_item_obj);
         }
@@ -1709,7 +1705,7 @@ static void install_cjson_obj_service(service_t* dst, const cJSON* const cjson_o
     }
 }
 
-static void parse_cjson_obj_to_dsl_template_services(void* _self, const cJSON* cjson_obj)
+static void parse_cjson_obj_to_tsl_template_services(void* _self, const cJSON* cjson_obj)
 {
     dm_thing_t* self = _self;
     const cJSON* services_obj = cjson_obj;
@@ -1721,27 +1717,25 @@ static void parse_cjson_obj_to_dsl_template_services(void* _self, const cJSON* c
 
     sercives_array_size = cJSON_GetArraySize(services_obj);
 
-    self->dsl_template.service_number = sercives_array_size;
-    self->dsl_template.services = (service_t*)dm_lite_calloc(self->dsl_template.service_number, sizeof(service_t));
+    self->tsl_template.service_number = sercives_array_size;
+    self->tsl_template.services = (service_t*)dm_lite_calloc(self->tsl_template.service_number, sizeof(service_t));
 
-    assert(self->dsl_template.services);
-
-    if (self->dsl_template.services == NULL) {
-        self->dsl_template.service_number = 0;
-        dm_log_err("self->dsl_template.events malloc fail");
+    if (self->tsl_template.services == NULL) {
+        self->tsl_template.service_number = 0;
+        dm_log_err("self->tsl_template.events malloc fail");
         return;
     }
 
-    for (index = 0; index < self->dsl_template.service_number; ++index) {
+    for (index = 0; index < self->tsl_template.service_number; ++index) {
         service_item_obj = cJSON_GetArrayItem(services_obj, index);
         if (service_item_obj) {
-            service = self->dsl_template.services + index;
+            service = self->tsl_template.services + index;
             install_cjson_obj_service(service, service_item_obj);
         }
     }
 }
 
-static int parse_cjson_obj_to_dsl_template(void* _self, const cJSON* cjson_obj)
+static int parse_cjson_obj_to_tsl_template(void* _self, const cJSON* cjson_obj)
 {
     if(!_self || !cjson_obj) {
         return -1;
@@ -1756,33 +1750,33 @@ static int parse_cjson_obj_to_dsl_template(void* _self, const cJSON* cjson_obj)
 
     /* schema */
 #ifdef LITE_THING_MODEL
-    self->dsl_template.schema = NULL;
-    self->dsl_template.link = NULL;
+    self->tsl_template.schema = NULL;
+    self->tsl_template.link = NULL;
 #else
-    if(0 != install_cjson_item_string((void**)&self->dsl_template.schema, root_obj, "schema")) {
+    if(0 != install_cjson_item_string((void**)&self->tsl_template.schema, root_obj, "schema")) {
         return -1;
     }
 
     /* link */
-    if(0 != install_cjson_item_string((void**)&self->dsl_template.link, root_obj, "link")) {
+    if(0 != install_cjson_item_string((void**)&self->tsl_template.link, root_obj, "link")) {
         return -1;
     }
 #endif
     /* profile */
     profile_obj = cJSON_GetObjectItem(root_obj, "profile");
     if (profile_obj) {
-        install_cjson_item_string((void**)&self->dsl_template.profile.product_key, profile_obj, "productKey");
-        install_cjson_item_string((void**)&self->dsl_template.profile.device_name, profile_obj, "deviceName");
+        install_cjson_item_string((void**)&self->tsl_template.profile.product_key, profile_obj, "productKey");
+        install_cjson_item_string((void**)&self->tsl_template.profile.device_name, profile_obj, "deviceName");
     } else {
-        self->dsl_template.profile.product_key = NULL;
-        self->dsl_template.profile.device_name = NULL;
+        self->tsl_template.profile.product_key = NULL;
+        self->tsl_template.profile.device_name = NULL;
     }
 
     /* properties */
     properties_obj = cJSON_GetObjectItem(root_obj, string_properties);
     if (properties_obj) {
         assert(cJSON_IsArray(properties_obj));
-        parse_cjson_obj_to_dsl_template_properties(self, properties_obj);
+        parse_cjson_obj_to_tsl_template_properties(self, properties_obj);
     }
     else {
         return -1;
@@ -1791,7 +1785,7 @@ static int parse_cjson_obj_to_dsl_template(void* _self, const cJSON* cjson_obj)
     events_obj = cJSON_GetObjectItem(root_obj, string_events);
     if (events_obj) {
         assert(cJSON_IsArray(events_obj));
-        parse_cjson_obj_to_dsl_template_events(self, events_obj);
+        parse_cjson_obj_to_tsl_template_events(self, events_obj);
     } else {
         return -1;
     }
@@ -1799,24 +1793,24 @@ static int parse_cjson_obj_to_dsl_template(void* _self, const cJSON* cjson_obj)
     sercives_obj = cJSON_GetObjectItem(root_obj, string_services);
     if (sercives_obj) {
         assert(cJSON_IsArray(sercives_obj));
-        parse_cjson_obj_to_dsl_template_services(self, sercives_obj);
-    }else {
+        parse_cjson_obj_to_tsl_template_services(self, sercives_obj);
+    } else {
         return -1;
     }
 
     return 0;
 }
 
-/* set dsl to thing model. */
-static int dm_thing_set_dsl_string(void* _self, const char* dsl, int dsl_str_len)
+/* set tsl to thing model. */
+static int dm_thing_set_tsl_string(void* _self, const char* tsl, int tsl_str_len)
 {
     int ret = -1;
     dm_thing_t* self = _self;
 
-    self->_json_object = cJSON_Parse(dsl);
+    self->_json_object = cJSON_Parse(tsl);
 
     assert(self->_json_object);
-    ret = parse_cjson_obj_to_dsl_template(self, self->_json_object);
+    ret = parse_cjson_obj_to_tsl_template(self, self->_json_object);
 
     cJSON_Delete(self->_json_object);
     self->_json_object = 0;
@@ -1826,35 +1820,35 @@ static int dm_thing_set_dsl_string(void* _self, const char* dsl, int dsl_str_len
 
 #endif
 
-/* get dsl from thing model. */
-static void* dm_thing_get_dsl_string(void* _self)
+/* get tsl from thing model. */
+static void* dm_thing_get_tsl_string(void* _self)
 {
     dm_thing_t* self = _self;
 
     /* TODO */
 
-    return self->_dsl_string;
+    return self->_tsl_string;
 }
 
 static int dm_thing_get_property_number(const void* _self)
 {
     const dm_thing_t* self = _self;
 
-    return self->dsl_template.property_number;
+    return self->tsl_template.property_number;
 }
 
 static int dm_thing_get_service_number(const void* _self)
 {
     const dm_thing_t* self = _self;
 
-    return self->dsl_template.service_number;
+    return self->tsl_template.service_number;
 }
 
 static int dm_thing_get_event_number(const void* _self)
 {
     const dm_thing_t* self = _self;
 
-    return self->dsl_template.event_number;
+    return self->tsl_template.event_number;
 }
 
 static void* dm_thing_get_property_by_identifier(const void* _self, const char* const identifier)
@@ -1862,24 +1856,24 @@ static void* dm_thing_get_property_by_identifier(const void* _self, const char* 
     const dm_thing_t* self = _self;
     property_t* property = NULL;
     lite_property_t* lite_property = NULL;
-    size_t property_number = self->dsl_template.property_number;
+    size_t property_number = self->tsl_template.property_number;
     size_t data_type_specs_number;
     int index;
-    char delimeter[] = {DEFAULT_DSL_DELIMITER, 0};
+    char delimeter[] = {DEFAULT_TSL_DELIMITER, 0};
     char* p;
-    char id_buff[MAX_IDENTIFIER_LENGTH] = {0};
+    char id_buff[DM_THING_MAX_IDENTIFIER_LENGTH] = {0};
 
-    if (property_number == 0 || strlen(identifier) >= MAX_IDENTIFIER_LENGTH) {
+    if (property_number == 0 || strlen(identifier) >= DM_THING_MAX_IDENTIFIER_LENGTH) {
         return NULL;
     }
 
     strcpy(id_buff, identifier);
 
-    if (strchr(identifier, DEFAULT_DSL_DELIMITER)) {
+    if (strchr(identifier, DEFAULT_TSL_DELIMITER)) {
         p = strtok(id_buff, delimeter);
 
         for (index = 0; index < property_number; ++index) {
-            property = self->dsl_template.properties + index;
+            property = self->tsl_template.properties + index;
             if (property) {
                 if (strcmp(property->identifier, p) == 0) {
                     break;
@@ -1898,7 +1892,7 @@ static void* dm_thing_get_property_by_identifier(const void* _self, const char* 
         }
     } else {
         for (index = 0; index < property_number; ++index) {
-            property = self->dsl_template.properties + index;
+            property = self->tsl_template.properties + index;
             if (property) {
                 if (strcmp(property->identifier, identifier) == 0) {
                     return property;
@@ -1916,8 +1910,8 @@ static int dm_thing_get_property_identifier_by_index(const void* _self, int inde
     property_t* property = NULL;
     int ret = -1;
 
-    if (index < self->dsl_template.property_number) {
-        property = self->dsl_template.properties + index;
+    if (index < self->tsl_template.property_number) {
+        property = self->tsl_template.properties + index;
         strcpy(identifier, property->identifier);
         ret = 0;
     }
@@ -1931,25 +1925,25 @@ static void* dm_thing_get_service_by_identifier(const void* _self, const char* c
     service_t* service = NULL;
     lite_property_t* lite_property = NULL;
     input_data_t* input_data;
-    size_t service_number = self->dsl_template.service_number;
+    size_t service_number = self->tsl_template.service_number;
     size_t service_output_data_num;
     size_t service_input_data_num;
     int index;
-    char delimeter[] = {DEFAULT_DSL_DELIMITER, 0};
+    char delimeter[] = {DEFAULT_TSL_DELIMITER, 0};
     char* p;
     char* p_m;
     char* p_l;
-    char id_buff[MAX_IDENTIFIER_LENGTH] = {0};
+    char id_buff[DM_THING_MAX_IDENTIFIER_LENGTH] = {0};
 
-    if (service_number == 0 || strlen(identifier) >= MAX_IDENTIFIER_LENGTH) return NULL;
+    if (service_number == 0 || strlen(identifier) >= DM_THING_MAX_IDENTIFIER_LENGTH) return NULL;
 
     strcpy(id_buff, identifier);
 
-    if (strchr(identifier, DEFAULT_DSL_DELIMITER)) {
+    if (strchr(identifier, DEFAULT_TSL_DELIMITER)) {
         p = strtok(id_buff, delimeter);
 
         for (index = 0; index < service_number; ++index) {
-            service = self->dsl_template.services + index;
+            service = self->tsl_template.services + index;
             if (service) {
                 if (strcmp(service->identifier, p) == 0) {
                     break;
@@ -1985,7 +1979,7 @@ static void* dm_thing_get_service_by_identifier(const void* _self, const char* c
         }
     } else {
         for (index = 0; index < service_number; ++index) {
-            service = self->dsl_template.services + index;
+            service = self->tsl_template.services + index;
             if (service) {
                 if (strcmp(service->identifier, identifier) == 0) {
                     return service;
@@ -2003,10 +1997,10 @@ static int dm_thing_get_service_identifier_by_index(const void* _self, int index
     service_t* service = NULL;
     int ret = -1;
 
-    assert(index < self->dsl_template.service_number);
+    assert(index < self->tsl_template.service_number);
 
-    if (index < self->dsl_template.service_number) {
-        service = self->dsl_template.services + index;
+    if (index < self->tsl_template.service_number) {
+        service = self->tsl_template.services + index;
         strcpy(identifier, service->identifier);
         ret = 0;
     }
@@ -2019,22 +2013,22 @@ static void* dm_thing_get_event_by_identifier(const void* _self, const char* con
     const dm_thing_t* self = _self;
     event_t* event = NULL;
     lite_property_t* lite_property = NULL;
-    size_t event_number = self->dsl_template.event_number;
+    size_t event_number = self->tsl_template.event_number;
     size_t event_output_data_num;
     int index;
-    char delimeter[] = {DEFAULT_DSL_DELIMITER, 0};
+    char delimeter[] = {DEFAULT_TSL_DELIMITER, 0};
     char* p;
-    char id_buff[MAX_IDENTIFIER_LENGTH] = {0};
+    char id_buff[DM_THING_MAX_IDENTIFIER_LENGTH] = {0};
 
-    if (event_number == 0 || strlen(identifier) >= MAX_IDENTIFIER_LENGTH) return NULL;
+    if (event_number == 0 || strlen(identifier) >= DM_THING_MAX_IDENTIFIER_LENGTH) return NULL;
 
     strcpy(id_buff, identifier);
 
-    if (strchr(identifier, DEFAULT_DSL_DELIMITER)) {
+    if (strchr(identifier, DEFAULT_TSL_DELIMITER)) {
         p = strtok(id_buff, delimeter);
 
         for (index = 0; index < event_number; ++index) {
-            event = self->dsl_template.events + index;
+            event = self->tsl_template.events + index;
             if (event) {
                 if (strcmp(event->identifier, p) == 0) {
                     break;
@@ -2053,7 +2047,7 @@ static void* dm_thing_get_event_by_identifier(const void* _self, const char* con
         }
     } else {
         for (index = 0; index < event_number; ++index) {
-            event = self->dsl_template.events + index;
+            event = self->tsl_template.events + index;
             if (event) {
                 if (strcmp(event->identifier, identifier) == 0) {
                     return event;
@@ -2071,8 +2065,8 @@ static int dm_thing_get_event_identifier_by_index(const void* _self, int index, 
     event_t* event = NULL;
     int ret = -1;
 
-    if (index < self->dsl_template.event_number) {
-        event = self->dsl_template.events + index;
+    if (index < self->tsl_template.event_number) {
+        event = self->tsl_template.events + index;
         strcpy(identifier, event->identifier);
         ret = 0;
     }
@@ -2085,10 +2079,10 @@ static int dm_thing_get_schema(const void* _self, char* schema)
     const dm_thing_t* self = _self;
     int ret = -1;
 
-    assert(self->dsl_template.schema);
+    assert(self->tsl_template.schema);
 
-    if (self->dsl_template.schema) {
-        strcpy(schema, self->dsl_template.schema);
+    if (self->tsl_template.schema) {
+        strcpy(schema, self->tsl_template.schema);
         ret = 0;
     }
     return ret;
@@ -2099,12 +2093,37 @@ static int dm_thing_get_link(const void* _self, char* link)
     const dm_thing_t* self = _self;
     int ret = -1;
 
-    assert(self->dsl_template.link);
+    assert(self->tsl_template.link);
 
-    if (self->dsl_template.link) {
-        strcpy(link, self->dsl_template.link);
+    if (self->tsl_template.link) {
+        strcpy(link, self->tsl_template.link);
         ret = 0;
     }
+    return ret;
+}
+
+static int dm_thing_set_product_key(void* _self, const char* product_key)
+{
+    dm_thing_t* self = _self;
+    int ret = -1;
+    int length = 0;
+
+    assert(product_key);
+
+    if (self->tsl_template.profile.product_key) {
+        dm_lite_free(self->tsl_template.profile.product_key);
+    }
+
+    length = strlen(product_key) + 1;
+    self->tsl_template.profile.product_key = dm_lite_calloc(1, length);
+
+    assert(self->tsl_template.profile.product_key);
+    if (!self->tsl_template.profile.product_key) return -1;
+
+    strcpy(self->tsl_template.profile.product_key, product_key);
+
+    ret = 0;
+
     return ret;
 }
 
@@ -2113,10 +2132,10 @@ static int dm_thing_get_product_key(const void* _self, char* product_key)
     const dm_thing_t* self = _self;
     int ret = -1;
 
-    assert(self->dsl_template.profile.product_key);
+    assert(self->tsl_template.profile.product_key);
 
-    if (self->dsl_template.profile.product_key) {
-        strcpy(product_key, self->dsl_template.profile.product_key);
+    if (self->tsl_template.profile.product_key) {
+        strcpy(product_key, self->tsl_template.profile.product_key);
         ret = 0;
     }
 
@@ -2127,20 +2146,46 @@ static char* dm_thing_return_product_key(const void* _self)
 {
     const dm_thing_t* self = _self;
 
-    if (self->dsl_template.profile.product_key) {
-        return self->dsl_template.profile.product_key;
+    if (self->tsl_template.profile.product_key) {
+        return self->tsl_template.profile.product_key;
     }
 
     return NULL;
 }
+
+static int dm_thing_set_device_name(void* _self, const char* device_name)
+{
+    dm_thing_t* self = _self;
+    int ret = -1;
+    int length = 0;
+
+    assert(device_name);
+
+    if (self->tsl_template.profile.device_name) {
+        dm_lite_free(self->tsl_template.profile.device_name);
+    }
+
+    length = strlen(device_name) + 1;
+    self->tsl_template.profile.device_name = dm_lite_calloc(1, length);
+
+    assert(self->tsl_template.profile.device_name);
+    if (!self->tsl_template.profile.device_name) return -1;
+
+    strcpy(self->tsl_template.profile.device_name, device_name);
+
+    ret = 0;
+
+    return ret;
+}
+
 
 static int dm_thing_get_device_name(const void* _self, char* device_name)
 {
     const dm_thing_t* self = _self;
     int ret = -1;
 
-    if (self->dsl_template.profile.device_name) {
-        strcpy(device_name, self->dsl_template.profile.device_name);
+    if (self->tsl_template.profile.device_name) {
+        strcpy(device_name, self->tsl_template.profile.device_name);
         ret = 0;
     }
     return ret;
@@ -2150,8 +2195,8 @@ static char* dm_thing_return_device_name(const void* _self)
 {
     const dm_thing_t* self = _self;
 
-    if (self->dsl_template.profile.device_name) {
-        return self->dsl_template.profile.device_name;
+    if (self->tsl_template.profile.device_name) {
+        return self->tsl_template.profile.device_name;
     }
 
     return NULL;
@@ -2269,7 +2314,11 @@ static int set_lite_property_value(void* _self, void* property, const void* valu
         for(index = 0; index < lite_property->data_type.data_type_specs_number; ++index) {
             lite_sub_property = (lite_property_t*)lite_property->data_type.specs + index;
 
+#ifdef CM_SUPPORT_MEMORY_MAGIC
             val_char_p = LITE_json_value_of_ext(lite_sub_property->identifier, (char*)value_str, MEM_MAGIC, DM_MODULE_NAME);
+#else
+            val_char_p = LITE_json_value_of(lite_sub_property->identifier, (char*)value_str);
+#endif
             if(!val_char_p) return -1;
             set_lite_property_value(self, lite_sub_property, NULL, val_char_p);
             LITE_free(val_char_p);
@@ -2310,11 +2359,11 @@ static int dm_thing_set_property_value_by_identifier(void* _self, const char* co
 #ifdef PROPERTY_ACCESS_MODE_ENABLED
     property_t* property;
 
-    char delimeter[] = {DEFAULT_DSL_DELIMITER, 0};
+    char delimeter[] = {DEFAULT_TSL_DELIMITER, 0};
     const char* p;
     char id_buff[MAX_IDENTIFIER_LENGTH] = {0};
 
-    if (strchr(identifier, DEFAULT_DSL_DELIMITER)) {
+    if (strchr(identifier, DEFAULT_TSL_DELIMITER)) {
         strcpy(id_buff, identifier);
         p = strtok(id_buff, delimeter);
     } else {
@@ -2475,11 +2524,11 @@ static int dm_thing_get_property_value_by_identifier(const void* _self, const ch
     const lite_property_t* lite_property;
 #ifdef PROPERTY_ACCESS_MODE_ENABLED
     property_t* property;
-    char delimeter[] = {DEFAULT_DSL_DELIMITER, 0};
+    char delimeter[] = {DEFAULT_TSL_DELIMITER, 0};
     const char* p;
     char id_buff[MAX_IDENTIFIER_LENGTH] = {0};
 
-    if (strchr(identifier, DEFAULT_DSL_DELIMITER)) {
+    if (strchr(identifier, DEFAULT_TSL_DELIMITER)) {
         strcpy(id_buff, identifier);
         p = strtok(id_buff, delimeter);
     } else {
@@ -2507,11 +2556,11 @@ static void dm_thing_property_iterator(void* _self, handle_item_t handle_fp, va_
 {
     dm_thing_t* self = _self;
     property_t* property = NULL;
-    size_t property_number = self->dsl_template.property_number;
+    size_t property_number = self->tsl_template.property_number;
     int index;
 
     for (index = 0; index < property_number; ++index) {
-        property = self->dsl_template.properties + index;
+        property = self->tsl_template.properties + index;
         if (property) {
             va_list args;
             va_copy(args, *params);
@@ -2525,11 +2574,11 @@ static void dm_thing_event_iterator(void* _self, handle_item_t handle_fp, va_lis
 {
     dm_thing_t* self = _self;
     event_t* event = NULL;
-    size_t event_number = self->dsl_template.event_number;
+    size_t event_number = self->tsl_template.event_number;
     int index;
 
     for (index = 0; index < event_number; ++index) {
-        event = self->dsl_template.events + index;
+        event = self->tsl_template.events + index;
         if (event) {
             va_list args;
             va_copy(args, *params);
@@ -2543,11 +2592,11 @@ static void dm_thing_service_iterator(void* _self, handle_item_t handle_fp, va_l
 {
     dm_thing_t* self = _self;
     service_t* service = NULL;
-    size_t service_number = self->dsl_template.service_number;
+    size_t service_number = self->tsl_template.service_number;
     int index;
 
     for (index = 0; index < service_number; ++index) {
-        service = self->dsl_template.services + index;
+        service = self->tsl_template.services + index;
         if (service) {
             va_list args;
             va_copy(args, *params);
@@ -3268,12 +3317,12 @@ static int dm_thing_set_event_value_by_identifier(void* _self, const char* const
     thing_t* self = _self;
     lite_property_t* lite_property;
     event_t* event;
-    char delimeter[] = {DEFAULT_DSL_DELIMITER, 0};
+    char delimeter[] = {DEFAULT_TSL_DELIMITER, 0};
     char* p;
-    char id_buff[MAX_IDENTIFIER_LENGTH] = {0};
+    char id_buff[DM_THING_MAX_IDENTIFIER_LENGTH] = {0};
 
-    assert(strchr(identifier, DEFAULT_DSL_DELIMITER)); /* set lite property value of outputData. */
-    if (strchr(identifier, DEFAULT_DSL_DELIMITER)  == NULL || strlen(identifier) >= MAX_IDENTIFIER_LENGTH) return -1;
+    assert(strchr(identifier, DEFAULT_TSL_DELIMITER)); /* set lite property value of outputData. */
+    if (strchr(identifier, DEFAULT_TSL_DELIMITER)  == NULL || strlen(identifier) >= DM_THING_MAX_IDENTIFIER_LENGTH) return -1;
     /* do some checks. */
     strcpy(id_buff, identifier);
     p = strtok(id_buff, delimeter);
@@ -3296,12 +3345,12 @@ static int dm_thing_get_event_value_by_identifier(void* _self, const char* const
     lite_property_t* lite_property;
 #ifdef PROPERTY_ACCESS_MODE_ENABLED
     event_t* event;
-    char delimeter[] = {DEFAULT_DSL_DELIMITER, 0};
+    char delimeter[] = {DEFAULT_TSL_DELIMITER, 0};
     char* p;
     char id_buff[MAX_IDENTIFIER_LENGTH] = {0};
 #endif
-    assert(strchr(identifier, DEFAULT_DSL_DELIMITER)); /* set lite property value of outputData. */
-    if (strchr(identifier, DEFAULT_DSL_DELIMITER) == NULL) return -1;
+    assert(strchr(identifier, DEFAULT_TSL_DELIMITER)); /* set lite property value of outputData. */
+    if (strchr(identifier, DEFAULT_TSL_DELIMITER) == NULL) return -1;
 #ifdef PROPERTY_ACCESS_MODE_ENABLED
     /* do some checks. */
     strcpy(id_buff, identifier);
@@ -3326,12 +3375,12 @@ static int dm_thing_set_service_input_output_data_value_by_identifier(void* _sel
     service_t* service;
     char* p;
     char id_buff[MAX_IDENTIFIER_LENGTH] = {0};
-    char delimeter[] = {DEFAULT_DSL_DELIMITER, 0};
+    char delimeter[] = {DEFAULT_TSL_DELIMITER, 0};
 #endif
     lite_property_t* lite_property;
 
-    assert(strchr(identifier, DEFAULT_DSL_DELIMITER)); /* set lite property value of inputData. */
-    if (strchr(identifier, DEFAULT_DSL_DELIMITER) == NULL) return -1;
+    assert(strchr(identifier, DEFAULT_TSL_DELIMITER)); /* set lite property value of inputData. */
+    if (strchr(identifier, DEFAULT_TSL_DELIMITER) == NULL) return -1;
 #ifdef PROPERTY_ACCESS_MODE_ENABLED
     /* do some checks. */
     strcpy(id_buff, identifier);
@@ -3340,7 +3389,7 @@ static int dm_thing_set_service_input_output_data_value_by_identifier(void* _sel
     service = dm_thing_get_service_by_identifier(self, p);
 
     assert(strcmp(service->method, string_thing_service_property_get) != 0 &&
-           strcmp(service->method, string_thing_service_property_set) != 0); /* not allowed to set value to this type of service. */
+            strcmp(service->method, string_thing_service_property_set) != 0); /* not allowed to set value to this type of service. */
 #endif
     lite_property = dm_thing_get_service_by_identifier(self, identifier);
     if (lite_property == NULL) return -1;
@@ -3356,12 +3405,12 @@ static int dm_thing_get_service_input_output_data_value_by_identifier(const void
     service_t* service;
     char* p;
     char id_buff[MAX_IDENTIFIER_LENGTH] = {0};
-    char delimeter[] = {DEFAULT_DSL_DELIMITER, 0};
+    char delimeter[] = {DEFAULT_TSL_DELIMITER, 0};
 #endif
     lite_property_t* lite_property;
 
-    assert(strchr(identifier, DEFAULT_DSL_DELIMITER)); /* set lite property value of inputData. */
-    if (strchr(identifier, DEFAULT_DSL_DELIMITER) == NULL) return -1;
+    assert(strchr(identifier, DEFAULT_TSL_DELIMITER)); /* set lite property value of inputData. */
+    if (strchr(identifier, DEFAULT_TSL_DELIMITER) == NULL) return -1;
 #ifdef PROPERTY_ACCESS_MODE_ENABLED
     /* do some checks. */
     strcpy(id_buff, identifier);
@@ -3369,7 +3418,7 @@ static int dm_thing_get_service_input_output_data_value_by_identifier(const void
 
     service = dm_thing_get_service_by_identifier(self, p);
     assert(strcmp(service->method, string_thing_service_property_get) != 0 &&
-           strcmp(service->method, string_thing_service_property_set) != 0); /* not allowed to set value to this type of service. */
+            strcmp(service->method, string_thing_service_property_set) != 0); /* not allowed to set value to this type of service. */
 #endif
     lite_property = dm_thing_get_service_by_identifier(self, identifier);
 
@@ -3383,8 +3432,8 @@ static thing_t _dm_thing_class = {
     string_dm_thing_class_name,
     dm_thing_ctor,
     dm_thing_dtor,
-    dm_thing_set_dsl_string,
-    dm_thing_get_dsl_string,
+    dm_thing_set_tsl_string,
+    dm_thing_get_tsl_string,
     dm_thing_get_property_number,
     dm_thing_get_service_number,
     dm_thing_get_event_number,
@@ -3396,8 +3445,10 @@ static thing_t _dm_thing_class = {
     dm_thing_get_event_identifier_by_index,
     dm_thing_get_schema,
     dm_thing_get_link,
+    dm_thing_set_product_key,
     dm_thing_get_product_key,
     dm_thing_return_product_key,
+    dm_thing_set_device_name,
     dm_thing_get_device_name,
     dm_thing_return_device_name,
     dm_thing_set_property_value_by_identifier,
@@ -3407,14 +3458,14 @@ static thing_t _dm_thing_class = {
     dm_thing_property_iterator,
     dm_thing_event_iterator,
     dm_thing_service_iterator,
-#ifdef ENABLE_THING_DEBUG
+    #ifdef ENABLE_THING_DEBUG
     dm_thing_print_property_lite_info,
     dm_thing_print_property_detail_info,
     dm_thing_print_event_lite_info,
     dm_thing_print_event_detail_info,
     dm_thing_print_service_lite_info,
     dm_thing_print_service_detail_info,
-#endif /* ENABLE_THING_DEBUG */
+    #endif /* ENABLE_THING_DEBUG */
     dm_thing_set_event_value_by_identifier,
     dm_thing_get_event_value_by_identifier,
     dm_thing_set_service_input_output_data_value_by_identifier,
