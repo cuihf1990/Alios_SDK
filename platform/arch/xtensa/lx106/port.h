@@ -26,18 +26,21 @@ void   cpu_task_switch(void);
 void   cpu_first_task_start(void);
 void  *cpu_task_stack_init(cpu_stack_t *base, size_t size, void *arg, task_entry_t entry);
 
-#if 0
+//normal int lock (can not lock the NMI)
 #define CPSR_ALLOC() size_t cpsr
 #define RHINO_CPU_INTRPT_DISABLE() { cpsr = XTOS_SET_INTLEVEL(XCHAL_EXCM_LEVEL); }
 #define RHINO_CPU_INTRPT_ENABLE()  { XTOS_RESTORE_JUST_INTLEVEL(cpsr); }
-#else
+
+//NMI int lock
+#define NMI_INTLOCK_SUPPORTED
+
 #define INT_ENA_WDEV        0x3ff20c18
 #define WDEV_TSF0_REACH_INT (BIT(27))
 extern volatile uint32_t g_nmilock_cnt;
 extern uint32_t WDEV_INTEREST_EVENT;
 
-#define CPSR_ALLOC() size_t cpsr = 0
-#define RHINO_CPU_INTRPT_DISABLE() do {       \
+#define CPSR_ALLOC_NMI() size_t cpsr = 0
+#define RHINO_CPU_INTRPT_DISABLE_NMI() do {       \
         if (NMIIrqIsOn == 0) {      \
             cpsr = XTOS_SET_INTLEVEL(XCHAL_EXCM_LEVEL);     \
             if (g_nmilock_cnt == 0) \
@@ -52,7 +55,7 @@ extern uint32_t WDEV_INTEREST_EVENT;
         }   \
     } while(0)
 
-#define RHINO_CPU_INTRPT_ENABLE()    do {   \
+#define RHINO_CPU_INTRPT_ENABLE_NMI()    do {   \
         if (NMIIrqIsOn == 0) {      \
             if (g_nmilock_cnt > 0) {g_nmilock_cnt--;}       \
             if  ( g_nmilock_cnt == 0 )  \
@@ -64,7 +67,6 @@ extern uint32_t WDEV_INTEREST_EVENT;
             XTOS_RESTORE_JUST_INTLEVEL(cpsr);               \
         }   \
     } while(0)
-#endif
 
 RHINO_INLINE uint8_t cpu_cur_get(void)
 {
