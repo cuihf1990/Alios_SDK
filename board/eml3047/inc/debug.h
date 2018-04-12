@@ -75,6 +75,8 @@ extern "C" {
 
 #define DBG_PRINTF(format, ...)    do {DBG_Send("[%d][%s:%4d] " format "", HW_RTC_GetTimerValue(), __FILE__, __LINE__, ##__VA_ARGS__);}while(0==1)//DBG_Send(__VA_ARGS__)//vcom_Send(__VA_ARGS__)
 
+#define LOG_PRINTF(format, ...) do {DBG_Send(format, HW_RTC_GetTimerValue(), ##__VA_ARGS__);}while(0==1)
+
 #define DBG_PRINTF_CRITICAL(...)  
 
 #else /*TRACE*/

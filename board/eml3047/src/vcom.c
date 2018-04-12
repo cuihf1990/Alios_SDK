@@ -104,7 +104,7 @@ static int dbg_buffer_transmit( int start, int len )
             ;
         }
     }
-    LL_LPUART_ClearFlag_TC( USART4 );
+    LL_USART_ClearFlag_TC( USART4 );
     return len;
 }
 
@@ -160,7 +160,11 @@ void DBG_Uart_Init( void )
     USART_InitStruct.DataWidth = LL_USART_DATAWIDTH_8B;
     USART_InitStruct.StopBits = LL_USART_STOPBITS_1;
     USART_InitStruct.Parity = LL_USART_PARITY_NONE;
+#ifdef CONFIG_LINKLORA_TEST
+    USART_InitStruct.TransferDirection = LL_USART_DIRECTION_TX_RX;
+#else
     USART_InitStruct.TransferDirection = LL_USART_DIRECTION_TX;
+#endif
     USART_InitStruct.HardwareFlowControl = LL_USART_HWCONTROL_NONE;
     USART_InitStruct.OverSampling = LL_USART_OVERSAMPLING_16;
 
@@ -171,6 +175,9 @@ void DBG_Uart_Init( void )
     LL_USART_ConfigAsyncMode( USART4 );
 
     LL_USART_Enable( USART4 );
+    NVIC_SetPriority(USART4_5_IRQn, 0);
+    NVIC_EnableIRQ(USART4_5_IRQn);
+    LL_USART_EnableIT_RXNE(USART4);
 }
 
 void DBG_Send( const char *format, ... )

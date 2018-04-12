@@ -200,7 +200,7 @@ static void McpsIndication(McpsIndication_t *mcpsIndication)
     // Check Rssi
     // Check Snr
     // Check RxSlot
-    DBG_LINKLORA( "rssi = %d, snr = %d, datarate = %d\n", mcpsIndication->Rssi, mcpsIndication->Snr,
+    DBG_LINKLORA( "rssi = %d, snr = %d, datarate = %d\r\n", mcpsIndication->Rssi, mcpsIndication->Snr,
                  mcpsIndication->RxDatarate);
 
     if ( mcpsIndication->RxData == true )

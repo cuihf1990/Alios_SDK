@@ -16,6 +16,8 @@
 #include "Region.h"
 #include "commissioning.h"
 
+#include <k_api.h>
+
 #define APP_TX_DUTYCYCLE 30000
 #define LORAWAN_ADR_ON 1
 #define LORAWAN_CONFIRMED_MSG ENABLE
@@ -43,11 +45,8 @@ static LoRaParam_t LoRaParamInit = {
     JOINREQ_NBTRIALS
 };
 
-int application_start( void )
+static void lora_task_entry(void *arg)
 {
-    HW_Init( );
-    DBG_Init( );
-
     lora_init( &LoRaMainCallbacks, &LoRaParamInit );
 
     while (1) {
@@ -61,6 +60,18 @@ int application_start( void )
         }
         ENABLE_IRQ();
     }
+}
+
+ktask_t g_lora_task;
+cpu_stack_t g_lora_task_stack[512];
+int application_start( void )
+{
+    HW_Init( );
+    DBG_Init( );
+
+    krhino_task_create(&g_lora_task, "lora_task", NULL,
+                       5, 0u, g_lora_task_stack,
+                       512, lora_task_entry, 1u);
 }
 
 static void LoraTxData( lora_AppData_t *AppData, int8_t *IsTxConfirmed )
