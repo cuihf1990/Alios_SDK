@@ -322,10 +322,13 @@ int HAL_Awss_Connect_Ap(
 {
     int ret, ms_cnt = 0;
     netmgr_ap_config_t config;
-
-    strncpy(config.ssid, ssid, sizeof(config.ssid) - 1);
-    strncpy(config.pwd, passwd, sizeof(config.pwd) - 1);
-    if(bssid){
+    if(ssid!=NULL){
+        strncpy(config.ssid, ssid, sizeof(config.ssid) - 1);
+    }
+    if(passwd!=NULL){
+        strncpy(config.pwd, passwd, sizeof(config.pwd) - 1);
+    }
+    if(bssid!=NULL){
         strncpy(config.bssid, bssid, sizeof(config.bssid) - 1);
     }
     ret = netmgr_set_ap_config(&config);
