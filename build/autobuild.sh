@@ -1,16 +1,19 @@
 #!/usr/bin/env bash
-IS_LINUX=0
-IS_WINDOWS=0
+OS_LINUX=0
+OS_WINDOWS=1
+OS_MAC=2
+
+CUR_OS=0
 OS_INFO=$(uname)
 echo uname: ${OS_INFO}
 
 result=$(echo $OS_INFO | grep "Linux")
 if [[ "$result" != "" ]];then
-    IS_LINUX=1
-    echo IS_LINUX=1
+    CUR_OS=$OS_LINUX
+    echo CUR_OS: Linux
 else
-    IS_WINDOWS=1
-    echo IS_WINDOWS=1
+    CUR_OS=$OS_WINDOWS
+    echo CUR_OS: Windows
 fi
 
 linux_posix_targets="alinkapp meshapp networkapp"
@@ -35,8 +38,8 @@ pca10056_platforms="pca10056"
 eml3047_targets="lorawan.lorawanapp lorawan.linklora"
 eml3047_platforms="eml3047"
 
-scons_build_targets="helloworld@b_l475e helloworld@mk3060"
-scons_ide_targets=""
+scons_build_targets="helloworld@b_l475e mqttapp@b_l475e helloworld@starterkit"
+scons_ide_targets="helloworld@b_l475e helloworld@starterkit"
 ide_types="keil iar"
 compiler_types="armcc iar"
 
@@ -58,7 +61,7 @@ branch=`git status | grep "On branch" | sed -r 's/.*On branch //g'`
 cd $(git rev-parse --show-toplevel)
 
 #windows only test
-if [ $IS_WINDOWS -eq 1 ];then
+if [ $CUR_OS -eq $OS_WINDOWS ];then
     for target in ${windows_targets}; do
         for compiler in ${compiler_types}; do
             aos make clean > /dev/null 2>&1
@@ -77,42 +80,42 @@ if [ $IS_WINDOWS -eq 1 ];then
     done
 fi
 
-#linux only
-if [ $IS_LINUX -eq 1 ];then
-    #scons tmp
-    aos make clean > /dev/null 2>&1
-    for target in ${scons_build_targets}; do
-        aos scons ${target} > ${target}@${branch}.log 2>&1
+#scons tmp
+aos make clean > /dev/null 2>&1
+for target in ${scons_build_targets}; do
+    aos scons ${target} > ${target}@${branch}.log 2>&1
+    if [ $? -eq 0 ]; then
+        echo "build scons ${target} at ${branch} branch succeed"
+        rm -f ${target}@${branch}.log
+    else
+        echo -e "build scons ${target} at ${branch} branch failed, log:\n"
+        cat ${target}@${branch}.log
+        echo -e "\nbuild ${target} at ${branch} branch failed"
+        aos make clean > /dev/null 2>&1
+        exit 1
+    fi
+done
+
+#tarsfer test
+aos make clean > /dev/null 2>&1
+for target in ${scons_ide_targets}; do
+    for ide in ${ide_types}; do
+        aos scons ${target} IDE=${ide} > ${target}2IDE_${ide}@${branch}.log 2>&1
         if [ $? -eq 0 ]; then
-            echo "build scons ${target} at ${branch} branch succeed"
-            rm -f ${target}@${branch}.log
+            echo "build scons ${target} IDE=${ide} at ${branch} branch succeed"
+            rm -f ${target}2IDE_${ide}@${branch}.log
         else
-            echo -e "build scons ${target} at ${branch} branch failed, log:\n"
-            cat ${target}@${branch}.log
-            echo -e "\nbuild ${target} at ${branch} branch failed"
+            echo -e "build scons ${target} IDE=${ide} at ${branch} branch failed, log:\n"
+            cat ${target}2IDE_${ide}@${branch}.log
+            echo -e "\nbuild scons ${target} IDE=${ide} at ${branch} branch failed"
             aos make clean > /dev/null 2>&1
             exit 1
         fi
     done
+done
 
-    #tarsfer test
-    aos make clean > /dev/null 2>&1
-    for target in ${scons_ide_targets}; do
-        for ide in ${ide_types}; do
-            aos scons ${target} IDE=${ide} > ${target}2IDE_${ide}@${branch}.log 2>&1
-            if [ $? -eq 0 ]; then
-                echo "build scons ${target} IDE=${ide} at ${branch} branch succeed"
-                rm -f ${target}2IDE_${ide}@${branch}.log
-            else
-                echo -e "build scons ${target} IDE=${ide} at ${branch} branch failed, log:\n"
-                cat ${target}2IDE_${ide}@${branch}.log
-                echo -e "\nbuild scons ${target} IDE=${ide} at ${branch} branch failed"
-                aos make clean > /dev/null 2>&1
-                exit 1
-            fi
-        done
-    done
-
+#linux only
+if [ $CUR_OS -eq $OS_LINUX ];then
     #linuxhost posix
     aos make clean > /dev/null 2>&1
     for target in ${linux_posix_targets}; do
@@ -148,129 +151,7 @@ if [ $IS_LINUX -eq 1 ];then
             fi
         done
     done
-
-
-    #single-bin, mk3060
-    aos make clean > /dev/null 2>&1
-    for target in ${mk3060_targets}; do
-        for platform in ${mk3060_platforms}; do
-            aos make ${target}@${platform} JOBS=${JNUM} > ${target}@${platform}@${branch}.log 2>&1
-            if [ $? -eq 0 ]; then
-                rm -f ${target}@${platform}@${branch}.log
-                echo "build ${target}@${platform} at ${branch} branch succeed"
-            else
-                echo -e "build ${target}@${platform} at ${branch} branch failed, log:\n"
-                cat ${target}@${platform}@${branch}.log
-                rm -f ${target}@${platform}@${branch}.log
-                echo -e "\nbuild ${target}@${platform} at ${branch} branch failed"
-                aos make clean > /dev/null 2>&1
-                exit 1
-            fi
-        done
-    done
-
-    #multi-bins, mk3060
-    :`
-    aos make clean > /dev/null 2>&1
-    for target in ${mk3060_targets}; do
-        for platform in ${mk3060_platforms}; do
-            for bins in ${bins_type}; do
-                if [ "${target}" = "tls" ] || [ "${target}" = "meshapp" ]; then
-                    continue
-                fi
-                aos make ${target}@${platform} BINS=${bins} JOBS=${JNUM} > ${target}@${platform}@${bins}@${branch}.log 2>&1
-                if [ $? -eq 0 ]; then
-                    rm -f ${target}@${platform}@${bins}@${branch}.log
-                    echo "build ${target}@${platform} BINS=${bins} as multiple BINs at ${branch} branch succeed"
-                else
-                    echo -e "build ${target}@${platform} BINS=${bins} as multiple BINs at ${branch} branch failed, log:\n"
-                    cat ${target}@${platform}@${bins}@${branch}.log
-                    rm -f ${target}@${platform}@${bins}@${branch}.log
-                    echo -e "\nbuild ${target}@${platform} BINS=${bins} as multiple BINs at ${branch} branch failed"
-                    aos make clean > /dev/null 2>&1
-                    exit 1
-                fi
-            done
-        done
-    done
-    `
-
-    #single-bin, lpc54102
-    aos make clean > /dev/null 2>&1
-    for target in ${lpcxpresso54102_targets}; do
-        for platform in ${lpcxpresso54102_platforms}; do
-            aos make ${target}@${platform} JOBS=${JNUM} > ${target}@${platform}@${branch}.log 2>&1
-            if [ $? -eq 0 ]; then
-                rm -f ${target}@${platform}@${branch}.log
-                echo "build ${target}@${platform} at ${branch} branch succeed"
-            else
-                echo -e "build ${target}@${platform} at ${branch} branch failed, log:\n"
-                cat ${target}@${platform}@${branch}.log
-                rm -f ${target}@${platform}@${branch}.log
-                echo -e "\nbuild ${target}@${platform} at ${branch} branch failed"
-                aos make clean > /dev/null 2>&1
-                exit 1
-            fi
-        done
-    done
-
-    #single-bin, b_l475e
-    aos make clean > /dev/null 2>&1
-    for target in ${b_l475e_targets}; do
-        for platform in ${b_l475e_platforms}; do
-            aos make ${target}@${platform} JOBS=${JNUM} > ${target}@${platform}@${branch}.log 2>&1
-            if [ $? -eq 0 ]; then
-                rm -f ${target}@${platform}@${branch}.log
-                echo "build ${target}@${platform} at ${branch} branch succeed"
-            else
-                echo -e "build ${target}@${platform} at ${branch} branch failed, log:\n"
-                cat ${target}@${platform}@${branch}.log
-                rm -f ${target}@${platform}@${branch}.log
-                echo -e "\nbuild ${target}@${platform} at ${branch} branch failed"
-                aos make clean > /dev/null 2>&1
-                exit 1
-            fi
-        done
-    done
-
-    #single-bin, starterkit
-    aos make clean > /dev/null 2>&1
-    for target in ${starterkit_targets}; do
-        for platform in ${starterkit_platforms}; do
-            aos make ${target}@${platform} JOBS=${JNUM} > ${target}@${platform}@${branch}.log 2>&1
-            if [ $? -eq 0 ]; then
-                rm -f ${target}@${platform}@${branch}.log
-                echo "build ${target}@${platform} at ${branch} branch succeed"
-            else
-                echo -e "build ${target}@${platform} at ${branch} branch failed, log:\n"
-                cat ${target}@${platform}@${branch}.log
-                rm -f ${target}@${platform}@${branch}.log
-                echo -e "\nbuild ${target}@${platform} at ${branch} branch failed"
-                aos make clean > /dev/null 2>&1
-                exit 1
-            fi
-        done
-    done
-
-    #single-bin, esp32
-    aos make clean > /dev/null 2>&1
-    for target in ${esp32_targets}; do
-        for platform in ${esp32_platforms}; do
-            aos make ${target}@${platform} wifi=1 JOBS=${JNUM} > ${target}@${platform}@${branch}.log 2>&1
-            if [ $? -eq 0 ]; then
-                rm -f ${target}@${platform}@${branch}.log
-                echo "build ${target}@${platform} at ${branch} branch succeed"
-            else
-                echo -e "build ${target}@${platform} at ${branch} branch failed, log:\n"
-                cat ${target}@${platform}@${branch}.log
-                rm -f ${target}@${platform}@${branch}.log
-                echo -e "\nbuild ${target}@${platform} at ${branch} branch failed"
-                aos make clean > /dev/null 2>&1
-                exit 1
-            fi
-        done
-    done
-
+    
     #single-bin, esp8266
     aos make clean > /dev/null 2>&1
     for target in ${esp8266_targets}; do
@@ -289,64 +170,188 @@ if [ $IS_LINUX -eq 1 ];then
             fi
         done
     done
-      
-    #single-bin, mk3239
-    aos make clean > /dev/null 2>&1
-    for target in ${mk3239_targets}; do
-        for platform in ${mk3239_platforms}; do
-            aos make ${target}@${platform} JOBS=${JNUM} > ${target}@${platform}@${branch}.log 2>&1
-            if [ $? -eq 0 ]; then
-                rm -f ${target}@${platform}@${branch}.log
-                echo "build ${target}@${platform} at ${branch} branch succeed"
-            else
-                echo -e "build ${target}@${platform} at ${branch} branch failed, log:\n"
-                cat ${target}@${platform}@${branch}.log
-                rm -f ${target}@${platform}@${branch}.log
-                echo -e "\nbuild ${target}@${platform} at ${branch} branch failed"
-                aos make clean > /dev/null 2>&1
-                exit 1
-            fi
-        done
-    done
-
-    #single-bin, pca10056
-    aos make clean > /dev/null 2>&1
-    for target in ${pca10056_targets}; do
-        for platform in ${pca10056_platforms}; do
-            aos make ${target}@${platform} JOBS=${JNUM} > ${target}@${platform}@${branch}.log 2>&1
-            if [ $? -eq 0 ]; then
-                rm -f ${target}@${platform}@${branch}.log
-                echo "build ${target}@${platform} at ${branch} branch succeed"
-            else
-                echo -e "build ${target}@${platform} at ${branch} branch failed, log:\n"
-                cat ${target}@${platform}@${branch}.log
-                rm -f ${target}@${platform}@${branch}.log
-                echo -e "\nbuild ${target}@${platform} at ${branch} branch failed"
-                aos make clean > /dev/null 2>&1
-                exit 1
-            fi
-        done
-    done
-
-    #single-bin, eml3047
-    aos make clean > /dev/null 2>&1
-    for target in ${eml3047_targets}; do
-        for platform in ${eml3047_platforms}; do
-            aos make ${target}@${platform} JOBS=${JNUM} > ${target}@${platform}@${branch}.log 2>&1
-            if [ $? -eq 0 ]; then
-                rm -f ${target}@${platform}@${branch}.log
-                echo "build ${target}@${platform} at ${branch} branch succeed"
-            else
-                echo -e "build ${target}@${platform} at ${branch} branch failed, log:\n"
-                cat ${target}@${platform}@${branch}.log
-                rm -f ${target}@${platform}@${branch}.log
-                echo -e "\nbuild ${target}@${platform} at ${branch} branch failed"
-                aos make clean > /dev/null 2>&1
-                exit 1
-            fi
-        done
-    done
 fi #linux only over
+
+#single-bin, mk3060
+aos make clean > /dev/null 2>&1
+for target in ${mk3060_targets}; do
+    for platform in ${mk3060_platforms}; do
+        aos make ${target}@${platform} JOBS=${JNUM} > ${target}@${platform}@${branch}.log 2>&1
+        if [ $? -eq 0 ]; then
+            rm -f ${target}@${platform}@${branch}.log
+            echo "build ${target}@${platform} at ${branch} branch succeed"
+        else
+            echo -e "build ${target}@${platform} at ${branch} branch failed, log:\n"
+            cat ${target}@${platform}@${branch}.log
+            rm -f ${target}@${platform}@${branch}.log
+            echo -e "\nbuild ${target}@${platform} at ${branch} branch failed"
+            aos make clean > /dev/null 2>&1
+            exit 1
+        fi
+    done
+done
+
+#multi-bins, mk3060
+:`
+aos make clean > /dev/null 2>&1
+for target in ${mk3060_targets}; do
+    for platform in ${mk3060_platforms}; do
+        for bins in ${bins_type}; do
+            if [ "${target}" = "tls" ] || [ "${target}" = "meshapp" ]; then
+                continue
+            fi
+            aos make ${target}@${platform} BINS=${bins} JOBS=${JNUM} > ${target}@${platform}@${bins}@${branch}.log 2>&1
+            if [ $? -eq 0 ]; then
+                rm -f ${target}@${platform}@${bins}@${branch}.log
+                echo "build ${target}@${platform} BINS=${bins} as multiple BINs at ${branch} branch succeed"
+            else
+                echo -e "build ${target}@${platform} BINS=${bins} as multiple BINs at ${branch} branch failed, log:\n"
+                cat ${target}@${platform}@${bins}@${branch}.log
+                rm -f ${target}@${platform}@${bins}@${branch}.log
+                echo -e "\nbuild ${target}@${platform} BINS=${bins} as multiple BINs at ${branch} branch failed"
+                aos make clean > /dev/null 2>&1
+                exit 1
+            fi
+        done
+    done
+done
+`
+
+#single-bin, lpc54102
+aos make clean > /dev/null 2>&1
+for target in ${lpcxpresso54102_targets}; do
+    for platform in ${lpcxpresso54102_platforms}; do
+        aos make ${target}@${platform} JOBS=${JNUM} > ${target}@${platform}@${branch}.log 2>&1
+        if [ $? -eq 0 ]; then
+            rm -f ${target}@${platform}@${branch}.log
+            echo "build ${target}@${platform} at ${branch} branch succeed"
+        else
+            echo -e "build ${target}@${platform} at ${branch} branch failed, log:\n"
+            cat ${target}@${platform}@${branch}.log
+            rm -f ${target}@${platform}@${branch}.log
+            echo -e "\nbuild ${target}@${platform} at ${branch} branch failed"
+            aos make clean > /dev/null 2>&1
+            exit 1
+        fi
+    done
+done
+
+#single-bin, b_l475e
+aos make clean > /dev/null 2>&1
+for target in ${b_l475e_targets}; do
+    for platform in ${b_l475e_platforms}; do
+        aos make ${target}@${platform} JOBS=${JNUM} > ${target}@${platform}@${branch}.log 2>&1
+        if [ $? -eq 0 ]; then
+            rm -f ${target}@${platform}@${branch}.log
+            echo "build ${target}@${platform} at ${branch} branch succeed"
+        else
+            echo -e "build ${target}@${platform} at ${branch} branch failed, log:\n"
+            cat ${target}@${platform}@${branch}.log
+            rm -f ${target}@${platform}@${branch}.log
+            echo -e "\nbuild ${target}@${platform} at ${branch} branch failed"
+            aos make clean > /dev/null 2>&1
+            exit 1
+        fi
+    done
+done
+
+#single-bin, starterkit
+aos make clean > /dev/null 2>&1
+for target in ${starterkit_targets}; do
+    for platform in ${starterkit_platforms}; do
+        aos make ${target}@${platform} JOBS=${JNUM} > ${target}@${platform}@${branch}.log 2>&1
+        if [ $? -eq 0 ]; then
+            rm -f ${target}@${platform}@${branch}.log
+            echo "build ${target}@${platform} at ${branch} branch succeed"
+        else
+            echo -e "build ${target}@${platform} at ${branch} branch failed, log:\n"
+            cat ${target}@${platform}@${branch}.log
+            rm -f ${target}@${platform}@${branch}.log
+            echo -e "\nbuild ${target}@${platform} at ${branch} branch failed"
+            aos make clean > /dev/null 2>&1
+            exit 1
+        fi
+    done
+done
+
+#single-bin, esp32
+aos make clean > /dev/null 2>&1
+for target in ${esp32_targets}; do
+    for platform in ${esp32_platforms}; do
+        aos make ${target}@${platform} wifi=1 JOBS=${JNUM} > ${target}@${platform}@${branch}.log 2>&1
+        if [ $? -eq 0 ]; then
+            rm -f ${target}@${platform}@${branch}.log
+            echo "build ${target}@${platform} at ${branch} branch succeed"
+        else
+            echo -e "build ${target}@${platform} at ${branch} branch failed, log:\n"
+            cat ${target}@${platform}@${branch}.log
+            rm -f ${target}@${platform}@${branch}.log
+            echo -e "\nbuild ${target}@${platform} at ${branch} branch failed"
+            aos make clean > /dev/null 2>&1
+            exit 1
+        fi
+    done
+done
+
+
+  
+#single-bin, mk3239
+aos make clean > /dev/null 2>&1
+for target in ${mk3239_targets}; do
+    for platform in ${mk3239_platforms}; do
+        aos make ${target}@${platform} JOBS=${JNUM} > ${target}@${platform}@${branch}.log 2>&1
+        if [ $? -eq 0 ]; then
+            rm -f ${target}@${platform}@${branch}.log
+            echo "build ${target}@${platform} at ${branch} branch succeed"
+        else
+            echo -e "build ${target}@${platform} at ${branch} branch failed, log:\n"
+            cat ${target}@${platform}@${branch}.log
+            rm -f ${target}@${platform}@${branch}.log
+            echo -e "\nbuild ${target}@${platform} at ${branch} branch failed"
+            aos make clean > /dev/null 2>&1
+            exit 1
+        fi
+    done
+done
+
+#single-bin, pca10056
+aos make clean > /dev/null 2>&1
+for target in ${pca10056_targets}; do
+    for platform in ${pca10056_platforms}; do
+        aos make ${target}@${platform} JOBS=${JNUM} > ${target}@${platform}@${branch}.log 2>&1
+        if [ $? -eq 0 ]; then
+            rm -f ${target}@${platform}@${branch}.log
+            echo "build ${target}@${platform} at ${branch} branch succeed"
+        else
+            echo -e "build ${target}@${platform} at ${branch} branch failed, log:\n"
+            cat ${target}@${platform}@${branch}.log
+            rm -f ${target}@${platform}@${branch}.log
+            echo -e "\nbuild ${target}@${platform} at ${branch} branch failed"
+            aos make clean > /dev/null 2>&1
+            exit 1
+        fi
+    done
+done
+
+#single-bin, eml3047
+aos make clean > /dev/null 2>&1
+for target in ${eml3047_targets}; do
+    for platform in ${eml3047_platforms}; do
+        aos make ${target}@${platform} JOBS=${JNUM} > ${target}@${platform}@${branch}.log 2>&1
+        if [ $? -eq 0 ]; then
+            rm -f ${target}@${platform}@${branch}.log
+            echo "build ${target}@${platform} at ${branch} branch succeed"
+        else
+            echo -e "build ${target}@${platform} at ${branch} branch failed, log:\n"
+            cat ${target}@${platform}@${branch}.log
+            rm -f ${target}@${platform}@${branch}.log
+            echo -e "\nbuild ${target}@${platform} at ${branch} branch failed"
+            aos make clean > /dev/null 2>&1
+            exit 1
+        fi
+    done
+done
+
     
 aos make clean > /dev/null 2>&1
 echo "build ${branch} branch succeed"
