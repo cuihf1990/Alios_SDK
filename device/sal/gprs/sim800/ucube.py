@@ -6,7 +6,7 @@ dependencis =Split('''
     kernel/yloop
 ''')
 for i in dependencis:
-    component.add_component_dependencis(i)
+    component.add_comp_deps(i)
 
 global_includes =Split(''' 
     ./
@@ -22,6 +22,6 @@ for i in global_macros:
 
 at_adapter = aos_global_config.get('at_adapter')
 if at_adapter == 1:
-    component.add_component_dependencis('device/sal')
-    component.add_component_dependencis('framework/atparser')
+    component.add_comp_deps('device/sal')
+    component.add_comp_deps('framework/atparser')
     src.add_sources('sim800.c')

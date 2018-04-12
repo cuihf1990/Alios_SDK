@@ -157,7 +157,7 @@ else:
 
 component = aos_mcu_component('csky', src)
 component.add_global_includes(*global_includes)
-component.add_component_dependencis(*dependencis)
+component.add_comp_deps(*dependencis)
 
 for cflag in global_cflags:
     component.add_global_cflags(cflag)

@@ -76,7 +76,7 @@ component.add_global_includes('include')
 if aos_global_config.board != 'linuxhost':
     component.add_macros('LWIP_ENABLED')
 
-component.add_component_dependencis('security/alicrypto')
+component.add_comp_deps('security/alicrypto')
 
 
 

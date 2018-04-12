@@ -17,7 +17,7 @@ dependencis =Split('''
     device/sensor
 ''')
 for i in dependencis:
-    component.add_component_dependencis(i)
+    component.add_comp_deps(i)
 
 global_includes =Split(''' 
     .
@@ -42,7 +42,7 @@ if aos_global_config.get('no_tls') == None:
     aos_global_config.set('no_tls',1)
     
 if aos_global_config.get('sal') == 1:
-    component.add_component_dependencis('device/sal')
+    component.add_comp_deps('device/sal')
     if aos_global_config.get('module') == None:
         aos_global_config.set('module','wifi.mk3060')
     else:
@@ -57,7 +57,7 @@ component.add_global_macros('SYSINFO_OS_VERSION=\\"'+str(CONFIG_SYSINFO_OS_VERSI
 component.add_global_macros('SYSINFO_PRODUCT_MODEL=\\"'+'ALI_AOS_starterkit'+'\\"')
 component.add_global_macros('SYSINFO_DEVICE_NAME=\\"'+'starterkit'+'\\"')
 
-component.add_component_dependencis('platform/mcu/stm32l4xx')
+component.add_comp_deps('platform/mcu/stm32l4xx')
     
 tool_chain = aos_global_config.create_tool_chain()
 if aos_global_config.compiler == 'armcc':

@@ -9,7 +9,7 @@ component = aos_board_component('board_b_l475e', 'stm32l475', src)
 if aos_global_config.get('sal') == None:
     aos_global_config.set('sal',1)
 if aos_global_config.get('sal') == 1:
-    component.add_component_dependencis('device/sal')
+    component.add_comp_deps('device/sal')
     if aos_global_config.get('module') == None:
         aos_global_config.set('module','wifi.mk3060')
 else:

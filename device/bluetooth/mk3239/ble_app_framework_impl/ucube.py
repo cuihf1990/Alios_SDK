@@ -11,7 +11,7 @@ dependencis =Split('''
     device/bluetooth/mk3239/low_energy
 ''')
 for i in dependencis:
-    component.add_component_dependencis(i)
+    component.add_comp_deps(i)
 
 
 
