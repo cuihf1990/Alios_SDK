@@ -134,7 +134,6 @@ int aos_poll_read_fd(int sock, aos_poll_call_t cb, void *private_data)
     ctx->reader_count++;
 
     memcpy(new_sock, ctx->readers, (cnt - 1) * sizeof(yloop_sock_t));
-
     aos_free(ctx->readers);
     ctx->readers = new_sock;
 
