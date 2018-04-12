@@ -34,8 +34,8 @@ src = Split('''
 component = aos_component('mesh_test', src)
 component.add_includes('include','../../../../../tools/dda')
 
-component.add_component_dependencis('kernel/protocols/mesh')
-component.add_component_dependencis('tools/dda')
+component.add_comp_deps('kernel/protocols/mesh')
+component.add_comp_deps('tools/dda')
 
 
 

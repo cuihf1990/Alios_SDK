@@ -299,7 +299,7 @@ deps = Split('''
         kernel/vcall
         kernel/init
 ''')
-component.add_component_dependencis(*deps)
+component.add_comp_deps(*deps)
 
 
 global_macro = Split('''

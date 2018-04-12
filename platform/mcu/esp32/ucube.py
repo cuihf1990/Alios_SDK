@@ -174,7 +174,7 @@ for ld in ld_files:
 
 component.set_global_arch('xtensa')
 
-component.add_component_dependencis(*dependencis)
+component.add_comp_deps(*dependencis)
 
 tool_chain = aos_global_config.create_tool_chain()
 tool_chain.set_prefix('xtensa-esp32-elf-')

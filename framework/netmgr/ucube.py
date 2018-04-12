@@ -9,7 +9,7 @@ dependencis = Split('''
     kernel/hal
 ''')
 for i in dependencis:
-    component.add_component_dependencis(i)
+    component.add_comp_deps(i)
     
 include_tmp = Split('''
     include 

@@ -13,7 +13,7 @@ dependencis = Split('''
     utility/cjson 
 ''')
 for i in dependencis:
-    component.add_component_dependencis(i)
+    component.add_comp_deps(i)
     
 component.add_global_includes('.')
 component.add_global_macros('AOS_FOTA')

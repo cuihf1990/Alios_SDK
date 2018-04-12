@@ -169,7 +169,7 @@ includes =Split('''
 for i in includes:
     component.add_global_includes(i)
     
-component.add_component_dependencis('device/bluetooth/mk3239/firmware')
+component.add_comp_deps('device/bluetooth/mk3239/firmware')
 
 src =Split(''' 
     ../BTE_platform/mico_bt_bus.c
