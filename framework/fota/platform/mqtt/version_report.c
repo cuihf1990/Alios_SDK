@@ -255,7 +255,7 @@ int version_report()
     uint8_t chip_code[4]={0};
     char output[ACTIVE_INFO_LEN]={0};
     //AOS-R-1.2.1
-    ret = get_hex_version(aos_get_kernel_version(),version);
+    ret = get_hex_version((char*)aos_get_kernel_version(),version);
     if(ret==-1){
         ACT_LOGE("get os version failed");
     }
