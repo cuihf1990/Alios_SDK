@@ -22,9 +22,29 @@ pca10056_platforms="pca10056"
 eml3047_targets="lorawan.lorawanapp lorawan.linklora"
 eml3047_platforms="eml3047"
 
-scons_build_targets="helloworld@b_l475e helloworld@mk3060"
-scons_ide_targets=""
+scons_build_targets="helloworld@b_l475e helloworld@starterkit"
+scons_ide_targets="helloworld@b_l475e helloworld@starterkit"
 ide_types="keil iar"
+
+keil_iar_targets="helloworld@b_l475e"
+compiler_types="armcc iar"
+
+if [ "$(uname)" = "Linux" ]; then
+    OS="Linux"
+    keil_iar_targets=""
+elif [ "$(uname)" = "Darwin" ]; then
+    OS="OSX"
+    linux_platforms=""
+    keil_iar_targets=""
+elif [ "$(uname | grep NT)" != "" ]; then
+    OS="Windows"
+    linux_platforms=""
+    esp8266_platforms=""
+else
+    echo "error: unkonw OS"
+    exit 1
+fi
+echo "OS: ${OS}"
 
 git status > /dev/null 2>&1
 if [ $? -ne 0 ]; then
@@ -40,6 +60,23 @@ fi
 
 branch=`git status | grep "On branch" | sed -r 's/.*On branch //g'`
 cd $(git rev-parse --show-toplevel)
+
+for target in ${keil_iar_targets}; do
+    for compiler in ${compiler_types}; do
+        aos make clean > /dev/null 2>&1
+        aos make ${target} COMPILER=${compiler} > ${target}_${compiler}@${branch}.log 2>&1
+        if [ $? -eq 0 ]; then
+            echo "build make ${target} COMPILER=${compiler} at ${branch} branch succeed"
+            rm -f ${target}_${compiler}@${branch}.log
+        else
+            echo -e "build make ${target} COMPILER=${compiler} at ${branch} branch failed, log:\n"
+            cat ${target}_${compiler}@${branch}.log
+            echo -e "\nbuild make ${target} COMPILER=${compiler} at ${branch} branch failed"
+            aos make clean > /dev/null 2>&1
+            exit 1
+        fi
+    done
+done
 
 #scons tmp
 aos make clean > /dev/null 2>&1
@@ -307,6 +344,7 @@ for target in ${eml3047_targets}; do
         fi
     done
 done
+
 
 aos make clean > /dev/null 2>&1
 echo "build ${branch} branch succeed"
