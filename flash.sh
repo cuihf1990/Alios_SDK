@@ -1,1 +1,0 @@
-openocd -f build/OpenOCD/interface/jlink_swd.cfg -f build/OpenOCD/rtl8710/rtl8710.cfg -c init -c erase_chip -c "program_flash out/linkkitapp@amebaz_dev/binary/boot_all.bin 0" -c "program_flash board/amebaz_dev/system.bin 0x9000" -c "program_flash out/linkkitapp@amebaz_dev/binary/image2_all_ota1.bin 0xB000" -c shutdown
