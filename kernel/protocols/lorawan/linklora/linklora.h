@@ -40,9 +40,10 @@ typedef enum join_method_s {
 
 #ifdef CONFIG_DEBUG_LINKLORA
 #include "debug.h"
-#define DBG_LINKLORA(...)     PRINTF(__VA_ARGS__)
+#define DBG_LINKLORA(...)     DBG_PRINTF(__VA_ARGS__)
 #else
 #define DBG_LINKLORA(...)
+#define LORA_LOG(...)
 #endif
 
 typedef enum eTxEventType {
