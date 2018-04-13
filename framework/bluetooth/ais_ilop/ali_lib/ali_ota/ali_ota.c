@@ -668,7 +668,7 @@ ret_code_t ali_ota_init(ali_ota_t * p_ota, ali_ota_init_t const * p_init)
     VERIFY_SUCCESS(err_code);
 
     /* Initialize DFU modules. */
-    ais_ota_flash_init(true);
+    ais_ota_flash_init();
 
     ais_ota_settings_init();
 
