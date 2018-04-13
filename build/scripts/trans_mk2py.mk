@@ -57,7 +57,7 @@ ifneq ($($(NAME)_COMPONENTS),)
 	$(foreach dep, $($(NAME)_COMPONENTS), $(call WRITE_FILE_APPEND, $(py_path),$(tab_space)$(call FIND_COMP_DIR,$(dep))))
 	$(call WRITE_FILE_APPEND, $(py_path),$(split_end))
 	$(call WRITE_FILE_APPEND, $(py_path),for i in dependencis$(colon))
-	$(call WRITE_FILE_APPEND, $(py_path),$(tab_space)component.add_component_dependencis(i))
+	$(call WRITE_FILE_APPEND, $(py_path),$(tab_space)component.add_comp_deps(i))
 endif
 	
 #GLOBAL_INCLUDES += .

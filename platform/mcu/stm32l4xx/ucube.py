@@ -43,7 +43,7 @@ dependencis =Split('''
     utility/digest_algorithm
 ''')
 for i in dependencis:
-    component.add_component_dependencis(i)
+    component.add_comp_deps(i)
 
 global_includes =Split(''' 
     Drivers/STM32L4xx_HAL_Driver/Inc
@@ -210,8 +210,8 @@ if aos_global_config.compiler == 'armcc':
     component.add_prebuilt_objs('src/'+HOST_MCU_NAME+'/runapp/stm32l4xx_it.o')
     component.add_prebuilt_objs('src/'+HOST_MCU_NAME+'/runapp/stm32l4xx_hal_msp.o')
 
-component.add_component_dependencis('kernel/vcall')
-component.add_component_dependencis('kernel/init')
+component.add_comp_deps('kernel/vcall')
+component.add_comp_deps('kernel/init')
     
     
     

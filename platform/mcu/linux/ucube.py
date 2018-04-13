@@ -57,7 +57,7 @@ if aos_global_config.app == 'yts':
         component.add_sources(s)
 
 
-component.add_component_dependencis('utility/log', 'platform/arch/linux')
+component.add_comp_deps('utility/log', 'platform/arch/linux', 'kernel/vcall', 'kernel/init')
 
 component.add_global_includes('include', 'csp/lwip/include')
 

@@ -101,7 +101,6 @@ void do_awss_active()
 {
     LOG("do_awss_active %d\n", awss_running);
     awss_running = 1;
-    netmgr_clear_ap_config();
     awss_config_press();
 }
 

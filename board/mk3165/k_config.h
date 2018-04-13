@@ -35,9 +35,9 @@
 #ifndef RHINO_CONFIG_MM_BLK
 #define RHINO_CONFIG_MM_BLK                  1
 #endif
-#ifndef RHINO_CONFIG_MM_DEBUG
-#define RHINO_CONFIG_MM_DEBUG                1
-#endif
+
+#define RHINO_CONFIG_MM_DEBUG                0
+
 #ifndef RHINO_CONFIG_MM_TLF
 #define RHINO_CONFIG_MM_TLF                  1
 #endif
@@ -51,9 +51,9 @@
 #ifndef RHINO_CONFIG_GCC_RETADDR
 #define RHINO_CONFIG_GCC_RETADDR             1
 #endif
-#ifndef RHINO_CONFIG_MM_LEAKCHECK
-#define RHINO_CONFIG_MM_LEAKCHECK            1
-#endif
+
+#define RHINO_CONFIG_MM_LEAKCHECK            0
+
 #ifndef RHINO_CONFIG_RINGBUF_VENDOR
 #define RHINO_CONFIG_RINGBUF_VENDOR          0
 #endif

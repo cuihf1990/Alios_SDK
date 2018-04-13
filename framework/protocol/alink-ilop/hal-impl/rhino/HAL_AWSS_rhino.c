@@ -322,14 +322,18 @@ int HAL_Awss_Connect_Ap(
 {
     int ret, ms_cnt = 0;
     netmgr_ap_config_t config;
-
-    strncpy(config.ssid, ssid, sizeof(config.ssid) - 1);
-    strncpy(config.pwd, passwd, sizeof(config.pwd) - 1);
-    strncpy(config.bssid, bssid, sizeof(config.bssid) - 1);
-
+    if(ssid!=NULL){
+        strncpy(config.ssid, ssid, sizeof(config.ssid) - 1);
+    }
+    if(passwd!=NULL){
+        strncpy(config.pwd, passwd, sizeof(config.pwd) - 1);
+    }
+    if(bssid!=NULL){
+        strncpy(config.bssid, bssid, sizeof(config.bssid) - 1);
+    }
     ret = netmgr_set_ap_config(&config);
 #ifndef ESP8266_CONFIG
-    printf("------------------------suspend station");
+    printf("------------------------suspend station\n");
     hal_wifi_suspend_station(NULL);
 #endif
     LOGI("aos_awss", "Will reconnect wifi: %s %s", ssid, passwd);
@@ -395,7 +399,7 @@ typedef void (*awss_wifi_mgmt_frame_cb_t)(_IN_ uint8_t *buffer, _IN_ int len,
 static void mgnt_rx_cb(uint8_t *data, int len, hal_wifi_link_info_t *info)
 {
     if (monitor_cb) {
-        monitor_cb(data, len, 16, 0);
+        monitor_cb(data, len, info->rssi, 0);
     }
 }
 

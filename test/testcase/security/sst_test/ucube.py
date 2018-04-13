@@ -12,4 +12,4 @@ dependencis = Split('''
 ''')
 
 for d in dependencis:
-    component.add_component_dependencis(d)
+    component.add_comp_deps(d)

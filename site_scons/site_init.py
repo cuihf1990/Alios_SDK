@@ -110,10 +110,10 @@ class aos_component:
         aos_global_config.components.append(self)
         aos_global_config.component_includes.append('#' + self.dir)
 
-    def get_component_dependencis(self):
+    def get_comp_deps(self):
         return self.component_dependencis
 
-    def add_component_dependencis(self, *dependencis):
+    def add_comp_deps(self, *dependencis):
         for dependency in dependencis:
             self.component_dependencis.append(dependency)
 
@@ -177,11 +177,11 @@ class aos_component:
             aos_global_config.aos_env.Append(CPPDEFINES=macro)
 
     @staticmethod
-    def get_global_arch():
+    def get_arch():
         return aos_global_config.arch
 
     @staticmethod
-    def get_global_mcu_family():
+    def get_mcu_family():
         return aos_global_config.mcu_family
 
 
@@ -213,7 +213,7 @@ class aos_board_component(aos_component):
     def __init__(self, name, mcu, src):
         aos_component.__init__(self, name, src)
         self.set_global_mcu_family(mcu)
-        self.add_component_dependencis(os.path.join('platform/mcu', mcu))
+        self.add_comp_deps(os.path.join('platform/mcu', mcu))
 
     @staticmethod
     def set_global_testcases(testcases):
@@ -403,11 +403,11 @@ class dependency_process_impl(process):
     def __post_config(self):
         for component in self.config.components:
             if hasattr(component, 'post_config'):
-                len_deps = len(component.get_component_dependencis())
+                len_deps = len(component.get_comp_deps())
                 component.post_config(component)
 
-                if len_deps != len(component.get_component_dependencis()):
-                    for dep in component.get_component_dependencis():
+                if len_deps != len(component.get_comp_deps()):
+                    for dep in component.get_comp_deps():
                         self.__add_components_dependency(dep)
 
     def __generate_all_components(self):

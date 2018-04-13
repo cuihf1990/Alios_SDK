@@ -106,7 +106,7 @@ else:
     src.append('aos/trace_impl.c')
 
 component = aos_mcu_component('esp8266', src)
-component.add_component_dependencis(*dependencis)
+component.add_comp_deps(*dependencis)
 
 component.add_includes(*local_includes)
 component.add_global_includes(*global_includes)

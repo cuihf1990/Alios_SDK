@@ -11,10 +11,10 @@ def pre_vacll(component):
         component.add_sources('aos/aos_posix.c')
     else:
         component.add_global_macros('VCALL_RHINO')
-        component.add_component_dependencis('kernel/rhino')
+        component.add_comp_deps('kernel/rhino')
 
         if aos_global_config.mcu_family == 'esp32' or aos_global_config.mcu_family == 'esp8266':
-            component.add_component_dependencis('kernel/vcall/espos')
+            component.add_comp_deps('kernel/vcall/espos')
 
         if aos_global_config.board == 'linuxhost' or aos_global_config.board == 'mk3060' \
                 or aos_global_config.board == 'mk3239' or aos_global_config.board == 'mk3166' or aos_global_config.board == 'hobbit1_evb':

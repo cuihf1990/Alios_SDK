@@ -4,7 +4,7 @@ src     = Split('''
 
 component = aos_component('kv', src)
 
-component.add_component_dependencis('utility/log')
+component.add_comp_deps('utility/log')
 
 component.add_global_includes('include')
 

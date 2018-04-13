@@ -28,7 +28,7 @@ src = Split('''
 
 component = aos_component('mesh', src)
 component.add_global_includes('include')
-component.add_component_dependencis('kernel/yloop')
+component.add_comp_deps('kernel/yloop')
 
 if aos_global_config.get('SDK') != '1':
     component.add_sources('src/platform/aos.c')

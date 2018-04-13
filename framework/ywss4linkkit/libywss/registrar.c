@@ -632,7 +632,7 @@ static void enrollee_report(void)
                 memcpy(&payload[idx], &enrollee->sign, enrollee->sign_len);
                 idx += enrollee->sign_len;
 
-                int ret = awss_report_enrollee(payload, idx, 0 - enrollee->rssi);
+                int ret = awss_report_enrollee(payload, idx, enrollee->rssi > 0 ? 0 - enrollee->rssi : enrollee->rssi);
 
                 enrollee->state = ENR_FOUND;
                 enrollee->report_timestamp = os_get_time_ms();
