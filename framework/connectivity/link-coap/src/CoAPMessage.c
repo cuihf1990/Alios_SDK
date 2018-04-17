@@ -204,8 +204,11 @@ int CoAPOption_present(CoAPMessage *message, unsigned short option)
 
 unsigned short CoAPMessageId_gen(CoAPContext *context)
 {
-    CoAPIntContext *ctx = (CoAPIntContext *)context;
     unsigned short msg_id = 0;
+    if(!context){
+        return msg_id;
+    }
+    CoAPIntContext *ctx = (CoAPIntContext *)context;
     HAL_MutexLock(ctx->mutex);
     msg_id = ((COAP_MAX_MESSAGE_ID == ctx->message_id)  ? (ctx->message_id = 1) : ctx->message_id++);
     HAL_MutexUnlock(ctx->mutex);
