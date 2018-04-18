@@ -61,6 +61,7 @@
 #define COAP_MAX_TRANSMISSION_SPAN   10
 
 #ifdef COAP_WITH_YLOOP
+extern int coap_inited;
 void  CoAPMessage_write_with_timeout(void *context);
 #endif
 
@@ -868,7 +869,10 @@ int CoAPMessage_write(CoAPContext *context)
 #ifdef COAP_WITH_YLOOP
 void  CoAPMessage_write_with_timeout(void *context)
 {
-     CoAPIntContext *p_ctx = (CoAPIntContext *)context;
+    if(context==NULL || coap_inited==0){
+        return;
+    }
+    CoAPIntContext *p_ctx = (CoAPIntContext *)context;
     CoAPMessage_write(p_ctx);
     aos_cancel_delayed_action(p_ctx->waittime, CoAPMessage_write_with_timeout, context);
     aos_post_delayed_action(p_ctx->waittime, CoAPMessage_write_with_timeout, context);
