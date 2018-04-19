@@ -1183,7 +1183,6 @@ int iotx_cm_parse_message(iotx_cm_conntext_t* cm_ctx, iotx_cm_message_info_t* me
     (*payload) = CM_malloc((*payload_length));
     if (NULL == (*payload)) {
         CM_ERR(cm_log_error_memory);
-        LITE_free((*payload));
         return FAIL_RETURN;
     }
 
