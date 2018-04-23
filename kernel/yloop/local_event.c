@@ -30,6 +30,7 @@ static void handle_events(input_event_t *event);
 static int  input_add_event(int fd, input_event_t *event);
 static void event_read_cb(int fd, void *param);
 
+extern yloop_ctx_t    *g_main_ctx;
 /* Handle events
  * just dispatch
  */
@@ -160,7 +161,8 @@ AOS_EXPORT(int, aos_unregister_event_filter, uint16_t, aos_event_cb, void *);
 static int _schedule_call(aos_loop_t *loop, aos_call_t fun, void *arg,
                           bool urgent)
 {
-    if (fun == NULL) {
+
+    if (fun == NULL || g_main_ctx == NULL) {
         return -EINVAL;
     }
 
