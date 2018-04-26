@@ -94,10 +94,19 @@ int awss_report_cloud()
     awss_cmp_online_init();
     awss_report_token();
     awss_cmp_local_init();
+    awss_connectap_notify_stop();
     awss_connectap_notify();
 #ifndef AWSS_DISABLE_REGISTRAR
     awss_registrar_init();
 #endif
+    return 0;
+}
+
+int awss_success_notify()
+{
+    awss_cmp_local_init();
+    awss_suc_notify_stop();
+    awss_suc_notify();
     return 0;
 }
 
@@ -167,6 +176,8 @@ int awss_start()
 
     if (os_sys_net_is_ready() == 0)
         return -1;
+
+    awss_success_notify();
 
     return 0;
 }

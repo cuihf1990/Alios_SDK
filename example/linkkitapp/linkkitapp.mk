@@ -13,7 +13,4 @@ $(NAME)_COMPONENTS  += protocols.net
 no_with_lwip := 0
 endif
 
-$(NAME)_COMPONENTS  += cli
-GLOBAL_DEFINES += CONFIG_AOS_CLI
-
-GLOBAL_CFLAGS += -DON_PRE2=1
+#GLOBAL_CFLAGS += -DON_PRE2=1

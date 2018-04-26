@@ -35,6 +35,7 @@
 #define ETH_ALEN    6
 #endif
 
+#define WIFI_RX_SENSITIVITY   (-85)
 #define __le16    unsigned short
 
 #if defined(__cplusplus)  /* If this is a C++ compiler, use C linkage */

@@ -42,13 +42,11 @@ extern "C"
 #define MATCH_MONITOR_TIMEOUT_MS  (30 * 1000)
 #define MATCH_REPORT_CNT_MAX      (2)
 
-static char awss_report_token_suc = 0;
+volatile char awss_report_token_suc = 0;
 static char awss_report_reset_suc = 0;
-static char awss_report_token_cnt = 0;
+volatile char awss_report_token_cnt = 0;
 static char awss_report_reset_cnt = 0;
 static char awss_report_id = 0;
-
-char awss_report_token_flag = 0;
 
 static int awss_report_token_to_cloud();
 static int awss_report_reset_to_cloud();
@@ -81,12 +79,15 @@ int awss_report_reset_reply(char *topic, int topic_len, void *payload, int paylo
 
 int awss_online_switchap(char *topic, int topic_len, void *payload, int payload_len, void *ctx)
 {
-#define SWITCHAP_RSP_LEN  (64)
-#define AWSS_SSID         "ssid"
-#define AWSS_PASSWD       "passwd"
-#define AWSS_BSSID        "bssid"
-#define AWSS_SWITCH_MODE  "switchMode"
-    int len = 0, switch_mode = 0;
+#define SWITCHAP_RSP_LEN   (64)
+#define AWSS_BSSID_STR_LEN (17)
+#define AWSS_SSID          "ssid"
+#define AWSS_PASSWD        "passwd"
+#define AWSS_BSSID         "bssid"
+#define AWSS_SWITCH_MODE   "switchMode"
+#define AWSS_TIMEOUT       "timeout"
+
+    int len = 0, switch_mode = 1, timeout;
     char *packet = NULL, *awss_info = NULL, *elem = NULL;
     int packet_len = SWITCHAP_RSP_LEN, awss_info_len = 0;
     char ssid[OS_MAX_SSID_LEN + 1] = {0}, passwd[OS_MAX_PASSWD_LEN] = {0};
@@ -105,6 +106,9 @@ int awss_online_switchap(char *topic, int topic_len, void *payload, int payload_
     if (awss_info == NULL || awss_info_len == 0)
         goto ONLINE_SWITCHAP_FAIL;
 
+   /*
+    * get SSID , PASSWD, BSSID of router
+    */
     elem = json_get_value_by_name(awss_info, awss_info_len, AWSS_SSID, &len, NULL);
     if (elem == NULL || len <= 0 || len >= OS_MAX_SSID_LEN)
         goto ONLINE_SWITCHAP_FAIL;
@@ -117,13 +121,35 @@ int awss_online_switchap(char *topic, int topic_len, void *payload, int payload_
 
     len = 0;
     elem = json_get_value_by_name(awss_info, awss_info_len, AWSS_BSSID, &len, NULL);
-    if (elem != NULL && len == ETH_ALEN)
-        memcpy(bssid, elem, len);
+    if (elem != NULL && len == AWSS_BSSID_STR_LEN) {
+        uint8_t i = 0;
+        char *bssid_str = elem;
+        // convert bssid string to bssid value
+        while(i < OS_ETH_ALEN) {
+            bssid[i ++] = (uint8_t)strtol(bssid_str, &bssid_str, 16);
+            ++ bssid_str;
+            /*
+             * fix the format of bssid string is not legal.
+             */
+            if ((uint32_t)((uint32_t)bssid_str - (uint32_t)elem) > AWSS_BSSID_STR_LEN) {
+                memset(bssid, 0, sizeof(bssid));
+                break;
+            }
+        }
+    }
 
     len = 0;
     elem = json_get_value_by_name(awss_info, awss_info_len, AWSS_SWITCH_MODE, &len, NULL);
-    if (elem != NULL && elem[0] != '0')
-        switch_mode = 1;
+    if (elem != NULL && (elem[0] == '0' || elem[0] == 0))
+        switch_mode = 0;
+
+    if (switch_mode == 0) {
+        elem = json_get_value_by_name(awss_info, awss_info_len, AWSS_TIMEOUT, &len, NULL);
+        if (elem)
+            timeout = (int)strtol(elem, &elem, 16);
+        if (timeout < 1000)
+            timeout = 1000;
+    }
 
     {  // reduce stack used
         char *id = NULL;
@@ -141,13 +167,20 @@ int awss_online_switchap(char *topic, int topic_len, void *payload, int payload_
     /* make sure the packet is sent to cloud */
     os_msleep(1000);
 
-    if (switch_mode) {
-        int ret = os_awss_connect_ap(WLAN_CONNECTION_TIMEOUT_MS, ssid, passwd,
+    /*
+     * wait for timeout to switch ap instantaneously
+     */
+    if (switch_mode == 0 && timeout > 1000)
+        os_msleep(timeout - 1000);
+
+    int ret = os_awss_connect_ap(WLAN_CONNECTION_TIMEOUT_MS, ssid, passwd,
                                  AWSS_AUTH_TYPE_INVALID, AWSS_ENC_TYPE_INVALID, bssid, 0);
-        if (ret != 0) { // connect fail
-            os_reboot();
-            while (1);
-        }
+    /*
+     * if swich ap fail, we reboot device and restore the last ap
+     */
+    if (ret != 0) { // connect fail
+        os_reboot();
+        while (1);
     }
 
     return 0;
@@ -164,13 +197,13 @@ static int awss_report_token_to_cloud()
     if (awss_report_token_suc || awss_report_token_cnt ++ > MATCH_REPORT_CNT_MAX)
         return 0;
 
+    queue_delayed_work(&match_work, MATCH_MONITOR_TIMEOUT_MS);
+
     int packet_len = AWSS_REPORT_LEN_MAX;
 
     char *packet = os_zalloc(packet_len + 1);
     if (packet == NULL)
         return -1;
-
-    queue_delayed_work(&match_work, MATCH_MONITOR_TIMEOUT_MS);
 
     {  // reduce stack used
         unsigned char i;
@@ -202,7 +235,7 @@ static int awss_report_token_to_cloud()
 
 static int awss_report_reset_to_cloud()
 {
-    if (awss_report_reset_suc || awss_report_reset_cnt ++ > MATCH_REPORT_CNT_MAX)
+    if (awss_report_reset_suc || awss_report_reset_cnt ++ >= MATCH_REPORT_CNT_MAX)
         return 0;
 
     char topic[TOPIC_LEN_MAX] = {0};
@@ -210,10 +243,11 @@ static int awss_report_reset_to_cloud()
     int ret = 0;
     int packet_len = AWSS_REPORT_LEN_MAX;
     char *packet = os_zalloc(packet_len + 1);
-    if (packet == NULL)
-        return -1;
 
     queue_delayed_work(&reset_work, MATCH_MONITOR_TIMEOUT_MS);
+
+    if (packet == NULL)
+        return -1;
     
     {
         char id_str[MSG_REQ_ID_LEN] = {0};
@@ -234,7 +268,6 @@ int awss_report_token()
 {
     awss_report_token_cnt = 0;
     awss_report_token_suc = 0;
-    awss_report_token_flag = 1;
 
     return awss_report_token_to_cloud();
 }
@@ -252,10 +285,11 @@ int awss_report_reset()
     while (1) {
         if (awss_report_reset_suc)
             break;
-        if (awss_report_reset_cnt > MATCH_REPORT_CNT_MAX)
+        if (awss_report_reset_cnt >= MATCH_REPORT_CNT_MAX)
             return -1;
         os_msleep(100);
     }
+    cancel_work(&reset_work);
 
     return 0;
 }

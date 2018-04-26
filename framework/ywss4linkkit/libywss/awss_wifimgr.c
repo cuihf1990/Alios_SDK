@@ -40,8 +40,7 @@
 #include "work_queue.h"
 #include "zconfig_utils.h"
 
-#define MAX_AP_NUM_IN_MSG       (5)
-#define WIFI_APINFO_LIST_LEN    (MAX_AP_NUM_IN_MSG * 256 + 128)
+#define WIFI_APINFO_LIST_LEN    (512)
 #define DEV_SIMPLE_ACK_LEN      (64)
 
 #if defined(__cplusplus)  /* If this is a C++ compiler, use C linkage */
@@ -123,7 +122,7 @@ static int awss_scan_cb(const char ssid[PLATFORM_MAX_SSID_LEN],
            uint8_t channel, char rssi,
            int last_ap)
 {
-
+#define ONE_AP_INFO_LEN_MAX           (141)
     static char ap_num_in_msg = 0;
     static char *aplist = NULL;
     static int msg_len = 0;
@@ -151,13 +150,13 @@ static int awss_scan_cb(const char ssid[PLATFORM_MAX_SSID_LEN],
                 msg_len += snprintf(aplist + msg_len, WIFI_APINFO_LIST_LEN - msg_len - 1,
                                    "{\"ssid\":\"%s\",\"bssid\":\"%02X:%02X:%02X:%02X:%02X:%02X\",\"rssi\":\"%d\",%s},",
                                    ssid, bssid[0], bssid[1], bssid[2], bssid[3], bssid[4], bssid[5],
-                                   -(256 - (unsigned char)rssi), other_apinfo);
+                                   rssi > 0 ? rssi - 256 : rssi, other_apinfo);
             } else {
                 utils_hex_to_str((unsigned char *)ssid, strlen(ssid), encode_ssid, OS_MAX_SSID_LEN * 2);
                 msg_len += snprintf(aplist + msg_len, WIFI_APINFO_LIST_LEN - msg_len - 1,
                                    "{\"xssid\":\"%s\",\"bssid\":\"%02X:%02X:%02X:%02X:%02X:%02X\",\"rssi\":\"%d\",%s},",
                                    encode_ssid, bssid[0], bssid[1], bssid[2], bssid[3], bssid[4], bssid[5],
-                                   -(256 - (unsigned char)rssi), other_apinfo);
+                                   rssi > 0 ? rssi - 256 : rssi, other_apinfo);
             }
             ap_num_in_msg ++;
         }
@@ -167,7 +166,7 @@ static int awss_scan_cb(const char ssid[PLATFORM_MAX_SSID_LEN],
     }
     awss_debug("last_ap:%u\r\n", last_ap);
 
-    if (last_ap || (MAX_AP_NUM_IN_MSG == ap_num_in_msg)) {
+    if (last_ap || WIFI_APINFO_LIST_LEN < msg_len + ONE_AP_INFO_LEN_MAX + strlen(AWSS_ACK_FMT)) {
         if (aplist[msg_len - 1] == ',') {
             msg_len--;    /* eating the last ',' */
         }
