@@ -30,7 +30,9 @@
 #include "aws_lib.h"
 #include "zconfig_utils.h"
 #include "zconfig_lib.h"
+#include "awss_cmp.h"
 #include "awss_main.h"
+#include "awss_notify.h"
 #include "os.h"
 #include "passwd.h"
 #include "utils.h"
@@ -98,10 +100,11 @@ int __awss_start(void)
 
             if (awss_notify_needed == 0) {
                 awss_connectap_notify_stop();
+                awss_suc_notify_stop();
+                awss_cmp_local_init();
                 awss_devinfo_notify();
             } else {
                 awss_devinfo_notify_stop();
-                //awss_connectap_notify();
                 produce_random(aes_random, sizeof(aes_random));
             }
             goto end;
@@ -131,6 +134,7 @@ int __awss_stop(void)
     aws_destroy();
     awss_connectap_notify_stop();
     awss_devinfo_notify_stop();
+    awss_suc_notify_stop();
 
     awss_registrar_exit();
 

@@ -529,7 +529,7 @@ REPORT_REPLY_FAIL:
     return -1;
 }
 
-int awss_report_enrollee(unsigned char *payload, int payload_len, int rssi)
+int awss_report_enrollee(unsigned char *payload, int payload_len, char rssi)
 {
     int i;
     char *payload_str = NULL;
@@ -559,7 +559,7 @@ int awss_report_enrollee(unsigned char *payload, int payload_len, int rssi)
         snprintf(id, MSG_REQ_ID_LEN - 1, "\"%u\"", registrar_id ++);
 
         snprintf(param, AWSS_REPORT_PKT_LEN - 1, AWSS_REPORT_PARAM_FMT,
-                 AWSS_VER, ssid, bssid_str, rssi, payload_str);
+                 AWSS_VER, ssid, bssid_str, rssi > 0 ? rssi - 256 : rssi, payload_str);
         os_free(payload_str);
         awss_build_packet(AWSS_CMP_PKT_TYPE_REQ, id, ILOP_VER, METHOD_EVENT_ZC_ENROLLEE, param, 0, packet, &packet_len);
         os_free(param);
@@ -632,7 +632,7 @@ static void enrollee_report(void)
                 memcpy(&payload[idx], &enrollee->sign, enrollee->sign_len);
                 idx += enrollee->sign_len;
 
-                int ret = awss_report_enrollee(payload, idx, enrollee->rssi > 0 ? 0 - enrollee->rssi : enrollee->rssi);
+                int ret = awss_report_enrollee(payload, idx, enrollee->rssi);
 
                 enrollee->state = ENR_FOUND;
                 enrollee->report_timestamp = os_get_time_ms();
@@ -734,7 +734,7 @@ int enrollee_put(struct enrollee_info *in)
 {
     uint8_t i, empty_slot = MAX_ENROLLEE_NUM;
     {  // reduce stack used
-        if (!os_sys_net_is_ready()) // not ready to work as registerar
+        if (in == NULL || !os_sys_net_is_ready()) // not ready to work as registerar
             return -1;
         char ssid[OS_MAX_SSID_LEN + 1] = {0};
         os_wifi_get_ap_info(ssid, NULL, NULL);
@@ -744,10 +744,17 @@ int enrollee_put(struct enrollee_info *in)
 
     for (i = 0; i < MAX_ENROLLEE_NUM; i++) {
         if (enrollee_info[i].state) {
-            if (!memcmp(in, &enrollee_info[i], ENROLLEE_INFO_HDR_SIZE)) {
-                queue_work(&enrollee_report_work);
+            if (in->dev_name_len == enrollee_info[i].dev_name_len &&
+                0 == memcmp(in->dev_name, enrollee_info[i].dev_name, enrollee_info[i].dev_name_len) &&
+                in->pk_len == enrollee_info[i].pk_len &&
+                0 == memcmp(in->pk, enrollee_info[i].pk, enrollee_info[i].pk_len)) {
+                if (enrollee_info[i].state == ENR_FOUND &&
+                    time_elapsed_ms_since(enrollee_info[i].report_timestamp) > enrollee_info[i].interval * 1000) {
+                    queue_work(&enrollee_report_work);
+                }
                 if (enrollee_info[i].state != ENR_IN_QUEUE)  // already reported
                     return 1;
+                memcpy(&enrollee_info[i], in, ENROLLEE_INFO_HDR_SIZE);
                 enrollee_info[i].rssi = (2 * enrollee_info[i].rssi + in->rssi) / 3;
                 return 1;/* wait for report */
             }

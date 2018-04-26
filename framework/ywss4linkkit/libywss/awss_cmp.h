@@ -43,6 +43,7 @@ extern "C" {
 #define TOPIC_GETDEVICEINFO_MCAST       "/sys/device/info/get"
 #define TOPIC_GETDEVICEINFO_UCAST       "/sys/%s/%s/device/info/get"
 #define TOPIC_AWSS_NOTIFY               "/sys/awss/device/info/notify"
+#define TOPIC_AWSS_CONNECTAP_NOTIFY     "/sys/awss/event/connectap/notify"
 #define TOPIC_NOTIFY                    "/sys/device/info/notify"
 #define TOPIC_SWITCHAP                  "/sys/%s/%s/thing/awss/device/switchap"
 #define TOPIC_SWITCHAP_REPLY            "/sys/%s/%s/thing/awss/device/switchap_reply"
@@ -59,6 +60,7 @@ extern "C" {
 
 #define METHOD_DEV_INFO_NOTIFY          "device.info.notify"
 #define METHOD_AWSS_DEV_INFO_NOTIFY     "awss.device.info.notify"
+#define METHOD_AWSS_CONNECTAP_NOTIFY    "awss.event.connectap.notify"
 #define METHOD_EVENT_ZC_SWITCHAP        "thing.awss.device.switchap"
 #define METHOD_EVENT_ZC_ENROLLEE        "thing.awss.enrollee.found"
 #define METHOD_EVENT_ZC_CHECKIN         "thing.awss.enrollee.checkin"
@@ -69,6 +71,7 @@ extern "C" {
 #define AWSS_ACK_FMT                    "{\"id\":%s, \"code\":%d, \"data\":%s}"
 #define AWSS_REQ_FMT                    "{\"id\":%s, \"version\":\"%s\", \"method\":\"%s\", \"params\":%s}"
 #define AWSS_JSON_PARAM                 "params"
+#define AWSS_JSON_CODE                  "code"
 #define AWSS_JSON_ID                    "id"
 
 #if(AWSS_CMP_DEBUG==1)
@@ -89,6 +92,12 @@ typedef struct
 struct awss_cmp_couple {
     char *topic;
     void *cb;
+};
+
+struct coap_session_ctx_t {
+    void *request;
+    void *remote;
+    char is_mcast;
 };
 
 enum {
@@ -113,6 +122,9 @@ int awss_cmp_coap_deinit();
 int awss_cmp_mqtt_register_cb(char *topic, void *cb);
 int awss_cmp_mqtt_unregister_cb(char *topic);
 int awss_cmp_mqtt_send(char *topic, void *pkt, int pkt_len);
+
+int awss_release_coap_ctx(void *session);
+void *awss_cpy_coap_ctx(void *request, void *remote, char mcast);
 
 char *awss_cmp_get_coap_payload(void *request, int *payload_len);
 char *awss_build_sign_src(char *sign_src, int *sign_src_len);

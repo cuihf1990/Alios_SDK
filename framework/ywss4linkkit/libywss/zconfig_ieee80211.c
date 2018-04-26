@@ -1089,12 +1089,12 @@ static inline int __zconfig_save_apinfo(u8 *ssid, u8* bssid, u8 channel, u8 auth
             adha_aplist->aplist[adha_aplist->cnt ++] = i;
     }
 
-    awss_debug("[%d] ssid:%s, mac:%02x%02x%02x%02x%02x%02x, chn:%d, auth:%s, %s, %s, rssi:%d, adha:%d\r\n",
+    log_debug("[%d] ssid:%s, mac:%02x%02x%02x%02x%02x%02x, chn:%d, auth:%s, %s, %s, rssi:%d, adha:%d\r\n",
         i, ssid, bssid[0], bssid[1], bssid[2],
         bssid[3], bssid[4], bssid[5], channel,
         zconfig_auth_str(auth),
         zconfig_encry_str(pairwise_cipher),
-        zconfig_encry_str(group_cipher), rssi - 256, adha_aplist->cnt);
+        zconfig_encry_str(group_cipher), rssi > 0 ? rssi - 256 : rssi, adha_aplist->cnt);
     /*
      * if chn already locked(zc_bssid set),
      * copy ssid to zc_ssid for ssid-auto-completion
@@ -1147,10 +1147,15 @@ static inline int zconfig_extract_apinfo_from_beacon(u8 *data, u16 len, char rss
         return 0;
 
     channel = cfg80211_get_bss_channel(data, len);
+    rssi = rssi > 0 ? rssi - 256 : rssi;
 
-    cfg80211_get_cipher_info(data, len, &auth, &pairwise_cipher, &group_cipher);
-    __zconfig_save_apinfo(ssid, bssid, channel, auth,
-            pairwise_cipher, group_cipher, rssi);
+    if (strcmp((const char *)ssid, zc_default_ssid) == 0 ||
+        strcmp((const char *)ssid, zc_adha_ssid) == 0 ||
+        rssi > (char)WIFI_RX_SENSITIVITY) {
+        cfg80211_get_cipher_info(data, len, &auth, &pairwise_cipher, &group_cipher);
+        __zconfig_save_apinfo(ssid, bssid, channel, auth,
+                              pairwise_cipher, group_cipher, rssi);
+    }
 
     /*
      * If user press the configure button,
