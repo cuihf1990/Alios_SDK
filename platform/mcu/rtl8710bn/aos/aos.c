@@ -42,7 +42,7 @@ static void board_cli_init(void)
 {
      kinit.argc = 0;
      kinit.argv = NULL;
-     kinit.cli_enable = 1;
+     kinit.cli_enable = 0;
 }
 
 
@@ -78,7 +78,8 @@ static void hal_wlan_init()
 
     hw_start_hal();
 
-    hal_wlan_init();
+    hal_wlan_init();
+
         
     board_cli_init();
 
