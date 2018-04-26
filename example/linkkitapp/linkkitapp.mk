@@ -13,4 +13,4 @@ $(NAME)_COMPONENTS  += protocols.net
 no_with_lwip := 0
 endif
 
-GLOBAL_CFLAGS += -DON_PRE2=1
+#GLOBAL_CFLAGS += -DON_PRE2=1

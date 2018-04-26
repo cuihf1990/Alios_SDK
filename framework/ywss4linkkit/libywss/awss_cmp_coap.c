@@ -40,6 +40,55 @@ extern "C"
 
 static void *g_coap_ctx = NULL;
 
+int awss_release_coap_ctx(void *session)
+{
+    struct coap_session_ctx_t *ctx = (struct coap_session_ctx_t *)session;
+    if (ctx == NULL)
+        return 0;
+    if (ctx->request) {
+        void *payload = ((struct CoAPMessage *)ctx->request)->payload;
+        if (payload) os_free(payload);
+        os_free(ctx->request);
+    }
+    if (ctx->remote) os_free(ctx->remote);
+    os_free(ctx);
+    return 0;
+}
+
+void *awss_cpy_coap_ctx(void *request, void *remote, char mcast)
+{
+    struct coap_session_ctx_t *ctx = os_zalloc(sizeof(struct coap_session_ctx_t));
+    if (ctx == NULL)
+        goto CPY_CTX_FAIL;
+    ctx->request = os_zalloc(sizeof(struct CoAPMessage));
+    if (ctx->request == NULL)
+        goto CPY_CTX_FAIL;
+    memcpy(ctx->request, request, sizeof(struct CoAPMessage));
+    do {
+        char *payload = NULL;
+        int len = 0;
+        struct CoAPMessage *req = (struct CoAPMessage *)ctx->request;
+        payload = awss_cmp_get_coap_payload(request, &len);
+        req->payloadlen = len;
+        if (payload == NULL)
+            break;
+        req->payload = os_zalloc(len + 1);
+        if (req->payload == NULL)
+            goto CPY_CTX_FAIL;
+        memcpy(req->payload, payload, len);
+    } while (0);
+    ctx->remote = os_zalloc(sizeof(platform_netaddr_t));
+    if (ctx->remote == NULL)
+        goto CPY_CTX_FAIL;
+    memcpy(ctx->remote, remote, sizeof(platform_netaddr_t));
+    ctx->is_mcast = mcast;
+    return ctx;
+
+CPY_CTX_FAIL:
+    awss_release_coap_ctx(ctx);
+    return NULL;
+}
+
 unsigned char awss_cmp_get_coap_code(void *request)
 {
     if (request == NULL)

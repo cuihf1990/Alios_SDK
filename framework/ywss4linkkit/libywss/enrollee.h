@@ -95,7 +95,7 @@ struct ieee80211_registrar_alibaba_ie {
 #define MAX_PK_LEN                  (20)
 #define MAX_KEY_LEN                 (32)
 #define MAX_TOKEN_LEN               (32)
-#define ZC_PROBE_LEN                (64)
+#define ZC_PROBE_LEN                (46)
 #define ENROLLEE_SIGN_SIZE          (SHA1_DIGEST_SIZE)
 #define ENROLLEE_IE_FIX_LEN         (sizeof(struct ieee80211_enrollee_alibaba_ie) + RANDOM_MAX_LEN + ENROLLEE_SIGN_SIZE)
 #define REGISTRAR_IE_FIX_LEN        (sizeof(struct ieee80211_registrar_alibaba_ie))

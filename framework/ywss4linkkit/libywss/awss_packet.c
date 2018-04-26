@@ -36,6 +36,7 @@
 
 #define AWSS_DEV_RAND_FMT       ",\"random\":\"%s\",\"signMethod\":%d,\"sign\":\"%s\""
 #define AWSS_DEV_TOKEN_FMT      ",\"token\":\"%s\",\"type\":%d"
+#define AWSS_SUC_FMT            ",\"type\":%d"
 #define AWSS_DEV_INFO_FMT       "\"awssVer\":%s,\"productKey\":\"%s\",\"deviceName\":\"%s\",\"mac\":\"%s\",\"ip\":\"%s\",\"cipherType\":%d"
 
 #if defined(__cplusplus)  /* If this is a C++ compiler, use C linkage */
@@ -85,6 +86,11 @@ void *awss_build_dev_info(int type, void *dev_info, int info_len)
             char rand_str[(RANDOM_MAX_LEN << 1) + 1] = {0};
             utils_hex_to_str(aes_random, RANDOM_MAX_LEN, rand_str, sizeof(rand_str));
             len += snprintf(dev_info + len, info_len - len - 1, AWSS_DEV_TOKEN_FMT, rand_str, 0);
+            break;
+        }
+        case AWSS_NOTIFY_SUC:
+        {
+            len += snprintf(dev_info + len, info_len - len - 1, AWSS_SUC_FMT, 0);
             break;
         }
         case AWSS_NOTIFY_DEV_RAND:
