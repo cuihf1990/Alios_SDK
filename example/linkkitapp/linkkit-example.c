@@ -154,30 +154,6 @@ static struct cli_command ncmd = {
 };
 #endif
 
-static void uart_echo_thread(void *p)
-{
-    #include "hal/soc/soc.h"
-
-    uart_dev_t uart_1;
-    uart_1.port                = 0;
-    uart_1.config.baud_rate    = 115200;
-    uart_1.config.data_width   = DATA_WIDTH_8BIT;
-    uart_1.config.parity       = NO_PARITY;
-    uart_1.config.stop_bits    = STOP_BITS_1;
-    uart_1.config.flow_control = FLOW_CONTROL_DISABLED;
-
-    uint8_t buf[8];
-    uint32_t size;
-    
-    hal_uart_init(&uart_1);
-    for(;;)
-    {
-        hal_uart_recv_II(&uart_1, buf, 1, &size, 0xFFFFFFFF);
-        printf("Got char: %c\r\n", buf[0]);
-        hal_uart_send(&uart_1, buf, 1, 0xFFFFFFFF);
-    }
-}
-
 int application_start(int argc, char **argv)
 {
 #ifdef CSP_LINUXHOST
@@ -196,7 +172,6 @@ int application_start(int argc, char **argv)
     aos_cli_register_command(&ncmd);
 #endif
     aos_task_new("netmgr", start_netmgr, NULL, 4096);
-    aos_task_new("uart echo", uart_echo_thread, NULL, 4096);
 
     aos_loop_run();
 
