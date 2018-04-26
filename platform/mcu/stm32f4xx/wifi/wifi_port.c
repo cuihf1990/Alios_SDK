@@ -224,14 +224,14 @@ static int wlan_send_80211_raw_frame(hal_wifi_module_t *m, uint8_t *buf, int len
     uint16_t chlist[2];
     wiced_scan_extended_params_t extparam = { 2, 50, 50, 50 };
     
-    
     if (header->type != 0x40) {
         return 0;
     }
     len -= 24;
     parse = (uint8_t*)header + 24; // IE buffer header
     parse_len = len;
-    
+
+    ssid.len = 0;
     if ( ( ie = wlu_parse_tlvs( parse, parse_len, (uint8_t) 0 ) ) != 0 )
     {
     	if (ie[1] > 0) {
@@ -253,7 +253,8 @@ static int wlan_send_80211_raw_frame(hal_wifi_module_t *m, uint8_t *buf, int len
     chlist[0] = _monitor_channel;
     chlist[1] = 0;
 
-    wiced_wifi_scan(0, 2, &ssid, NULL, chlist, &extparam, 
+    if (ssid.len > 0)
+        wiced_wifi_scan(0, 2, &ssid, NULL, chlist, &extparam, 
             scan_results_handler, NULL, NULL);
 
     return kNoErr;
