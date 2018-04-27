@@ -171,6 +171,7 @@ $(NAME)_SOURCES := aos/soc_impl.c          \
                    aos/aos.c \
                    aos/aos_osdep.c \
                    aos/ethernetif.c \
+                   aos/qc.c \
                    hal/uart.c \
                    hal/flash.c  \
                    hal/hw.c  \

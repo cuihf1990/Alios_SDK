@@ -11,7 +11,7 @@ ota_idx = 1
 ota_offset = 0x0800B000
 ota1_offset = 0x0800B000
 ota2_offset = 0x08100000
-EXTRA_POST_BUILD_TARGETS += gen_standard_images
+EXTRA_POST_BUILD_TARGETS += gen_crc_bin gen_standard_images 
 #cmd /c  %cd%\platform\mcu\$(HOST_MCU_FAMILY)\script\postbuild_img2.bat $(ota_offset) %cd% $(APP_FULL) $(PLATFORM)
 #$(eval OUT_MSG := $(shell cmd /c %cd%\platform\mcu\$(HOST_MCU_FAMILY)\script\postbuild_img2.bat $(ota_offset) %cd% $(APP_FULL) $(PLATFORM)))	
 #$(QUIET) $(ECHO) $(HOST_MCU_FAMILY)
