@@ -20,6 +20,10 @@
 #define CHIP_ID "AosAwssChiID"
 
 
+int Platform_GetProductKey(char product_key[PRODUCT_KEY_MAXLEN]);
+int Platform_GetDeviceName(char device_name[DEVICE_NAME_MAXLEN]);
+int Platform_GetDeviceSecret(char device_secret[DEVICE_SECRET_MAXLEN]);
+int Platform_GetProductSecret(char product_secret[DEVICE_SECRET_MAXLEN]);
 
 /**
  * @brief   获取设备的`Partner ID`, 仅用于紧密合作伙伴
@@ -56,9 +60,7 @@ int HAL_GetModuleID(_OU_ char mid_str[MID_STR_MAXLEN])
  */
 int HAL_GetProductKey(_OU_ char product_key[PRODUCT_KEY_MAXLEN])
 {
-    int len = sizeof(PRODUCT_KEY);
-    strncpy(product_key, PRODUCT_KEY, len);
-    return len;
+    return Platform_GetProductKey(product_key);
 }
 
 /**
@@ -69,9 +71,7 @@ int HAL_GetProductKey(_OU_ char product_key[PRODUCT_KEY_MAXLEN])
  */
 int HAL_GetDeviceName(_OU_ char device_name[DEVICE_NAME_MAXLEN])
 {
-    int len = sizeof(DEVICE_NAME);
-    strncpy(device_name, DEVICE_NAME, len);
-    return len;
+    return Platform_GetDeviceName(device_name);
 }
 
 /**
@@ -82,9 +82,7 @@ int HAL_GetDeviceName(_OU_ char device_name[DEVICE_NAME_MAXLEN])
  */
 int HAL_GetDeviceSecret(_OU_ char device_secret[DEVICE_SECRET_MAXLEN])
 {
-    int len = sizeof(DEVICE_SECRET);
-    strncpy(device_secret, DEVICE_SECRET, len);
-    return len;
+    return Platform_GetDeviceSecret(device_secret);
 }
 
 /**
@@ -95,9 +93,7 @@ int HAL_GetDeviceSecret(_OU_ char device_secret[DEVICE_SECRET_MAXLEN])
  */
 int HAL_GetProductSecret(_OU_ char product_secret[DEVICE_SECRET_MAXLEN])
 {
-    int len = sizeof(PRODUCT_SECRET);
-    strncpy(product_secret, PRODUCT_SECRET, len);
-    return len;
+    return Platform_GetProductSecret(product_secret);
 }
 
 /**

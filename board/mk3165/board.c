@@ -54,6 +54,12 @@ void board_init(void)
     hal_partitions[HAL_PARTITION_PARAMETER_4].partition_start_addr       = 0xD9000;
     hal_partitions[HAL_PARTITION_PARAMETER_4].partition_length           = 0x1000; //4k bytes
     hal_partitions[HAL_PARTITION_PARAMETER_4].partition_options          = PAR_OPT_READ_EN | PAR_OPT_WRITE_EN;
+
+    hal_partitions[HAL_PARTITION_LINK_KEY].partition_owner               = HAL_FLASH_SPI;
+    hal_partitions[HAL_PARTITION_LINK_KEY].partition_description         = "LINK KEY";
+    hal_partitions[HAL_PARTITION_LINK_KEY].partition_start_addr          = 0xDC000;
+    hal_partitions[HAL_PARTITION_LINK_KEY].partition_length              = 0x1000; //4k bytes
+    hal_partitions[HAL_PARTITION_LINK_KEY].partition_options             = PAR_OPT_READ_EN | PAR_OPT_WRITE_EN;
 }
 
 

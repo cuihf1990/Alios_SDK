@@ -2656,10 +2656,20 @@ void fATWL(void *arg){
 #endif
 }
 
+void Board_SecrectUpdate(int argc, char **argv);
+
 void fATWI(void *arg){
 
 	#if 1
-	do_awss_active();
+	int argc;
+	char *argv[MAX_ARGC] = {0};
+
+	argv[0] = "update";
+
+	if((argc = parse_param(arg, argv)) == 5)
+	{
+		Board_SecrectUpdate(argc, argv);
+	}
 	#else
 	int argc;
 	char *argv[MAX_ARGC] = {0};
