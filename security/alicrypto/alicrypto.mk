@@ -18,7 +18,6 @@ GLOBAL_INCLUDES      += ./libalicrypto/inc
 
 $(NAME)_CFLAGS       += -DCONFIG_CRYPT_MBED=1 -DCONFIG_DBG_CRYPT=1
 GLOBAL_DEFINES       += CONFIG_ALICRYPTO
-GLOBAL_DEFINES       += MBEDTLS_AES_ROM_TABLES
 
 ifeq ($(COMPILER),)
 $(NAME)_CFLAGS      += -W -Wdeclaration-after-statement 
