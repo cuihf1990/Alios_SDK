@@ -55,11 +55,14 @@ static void wifi_service_event(input_event_t *event, void *priv_data) {
         //clear_wifi_ssid();
         return;
     }
-   
+    
+    /* reduce the time of net config for 3080/3165 */
+#if 0
     if(awss_running) {
         aos_post_delayed_action(200,reboot_system,NULL);
         return;
     }
+#endif
     if (!linkkit_started) {
         awss_success_notify();
         linkkit_app();

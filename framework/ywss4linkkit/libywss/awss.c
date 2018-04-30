@@ -189,7 +189,8 @@ int awss_stop()
     cancel_work(&adha_work);
     cancel_work(&aha_work);
     __awss_stop();
-    awss_cmp_local_deinit();
+    /* fixed the hard fault for 3080/3165 here */
+    //awss_cmp_local_deinit();
     awss_stopped = 1;
     return 0;
 }
