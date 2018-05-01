@@ -229,21 +229,21 @@ int Platform_GetProductKey(char product_key[PRODUCT_KEY_MAXLEN])
 
 int Platform_GetDeviceName(char device_name[DEVICE_NAME_MAXLEN])
 {
-    int len = sizeof(dn);
+    int len = strlen(dn);
     strncpy(device_name, dn, len);
     return len;
 }
 
 int Platform_GetDeviceSecret(char device_secret[DEVICE_SECRET_MAXLEN])
 {
-    int len = sizeof(ds);
+    int len = strlen(ds);
     strncpy(device_secret, ds, len);
     return len;
 }
 
 int Platform_GetProductSecret(char product_secret[DEVICE_SECRET_MAXLEN])
 {
-    int len = sizeof(ps);
+    int len = strlen(ps);
     strncpy(product_secret, ps, len);
     return len;
 }
