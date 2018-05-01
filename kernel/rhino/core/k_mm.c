@@ -265,6 +265,20 @@ kstat_t krhino_init_mm_head(k_mm_head **ppmmhead, void *addr, size_t len )
     return RHINO_SUCCESS;
 }
 
+extern int printf(const char * format, ...);
+void show_mm()
+{
+
+#if (K_MM_STATISTIC > 0)
+
+    printf("     free     |     used     |     maxused\r\n");
+    printf("  %10d  |  %10d  |  %10d\r\n", g_kmm_head->free_size, g_kmm_head->used_size,
+          g_kmm_head->maxused_size);
+    printf("\r\n");
+#endif
+}
+
+
 kstat_t krhino_deinit_mm_head(k_mm_head *mmhead)
 {
 #if (RHINO_CONFIG_MM_REGION_MUTEX > 0)

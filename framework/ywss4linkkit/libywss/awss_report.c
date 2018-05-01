@@ -87,7 +87,7 @@ int awss_online_switchap(char *topic, int topic_len, void *payload, int payload_
 #define AWSS_SWITCH_MODE   "switchMode"
 #define AWSS_TIMEOUT       "timeout"
 
-    int len = 0, switch_mode = 1, timeout;
+    int len = 0, switch_mode = 1, timeout = 0;
     char *packet = NULL, *awss_info = NULL, *elem = NULL;
     int packet_len = SWITCHAP_RSP_LEN, awss_info_len = 0;
     char ssid[OS_MAX_SSID_LEN + 1] = {0}, passwd[OS_MAX_PASSWD_LEN] = {0};
