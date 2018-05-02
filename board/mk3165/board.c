@@ -63,7 +63,6 @@ void board_init(void)
 }
 
 
-
 #include "platform_config.h"
 #include "platform_peripheral.h"
 #include "platform_config.h"
@@ -447,6 +446,7 @@ void Board_SecrectInit(void)
 
 int Platform_GetProductKey(char product_key[PRODUCT_KEY_MAXLEN])
 {
+    Board_SecrectInit();
     int len = strlen(pk);
     strncpy(product_key, pk, len);
     return len;
@@ -454,6 +454,7 @@ int Platform_GetProductKey(char product_key[PRODUCT_KEY_MAXLEN])
 
 int Platform_GetDeviceName(char device_name[DEVICE_NAME_MAXLEN])
 {
+    Board_SecrectInit();
     int len = strlen(dn);
     strncpy(device_name, dn, len);
     return len;
@@ -461,6 +462,7 @@ int Platform_GetDeviceName(char device_name[DEVICE_NAME_MAXLEN])
 
 int Platform_GetDeviceSecret(char device_secret[DEVICE_SECRET_MAXLEN])
 {
+    Board_SecrectInit();
     int len = strlen(ds);
     strncpy(device_secret, ds, len);
     return len;
@@ -468,6 +470,7 @@ int Platform_GetDeviceSecret(char device_secret[DEVICE_SECRET_MAXLEN])
 
 int Platform_GetProductSecret(char product_secret[DEVICE_SECRET_MAXLEN])
 {
+    Board_SecrectInit();
     int len = strlen(ps);
     strncpy(product_secret, ps, len);
     return len;
