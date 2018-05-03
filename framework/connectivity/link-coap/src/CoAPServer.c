@@ -148,6 +148,8 @@ void *CoAPServer_yield(void *param)
 
 void CoAPServer_deinit0(CoAPContext *context)
 {
+/* fixed the hard fault for 3080/3165 here */
+#if 0
     if(context != g_context){
         COAP_INFO("Invalid CoAP Server context");
         return;
@@ -168,6 +170,7 @@ void CoAPServer_deinit0(CoAPContext *context)
         CoAPContext_free(context);
         g_context = NULL;
     }
+#endif
 }
 
 void CoAPServer_deinit(CoAPContext *context)
