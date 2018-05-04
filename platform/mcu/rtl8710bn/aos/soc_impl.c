@@ -88,7 +88,7 @@ extern BOOT_EXPORT_SYMB_TABLE boot_export_symbol;
 //const uint8_t *heap2_start = boot_export_symbol.boot_ram_end;
 //const size_t heap2_size = (uint8_t*)0x10005000 - (uint8_t*)boot_export_symbol.boot_ram_end);
 
-k_mm_region_t g_mm_region[] = {{(uint8_t*)&heap_start,(size_t)&heap_len}};
+k_mm_region_t g_mm_region[] = {{(uint8_t*)&heap_start,(size_t)&heap_len},{(uint8_t*)0x10005000, (size_t)0x8000}};
 
 #endif
 int           g_region_num  = sizeof(g_mm_region)/sizeof(k_mm_region_t);
