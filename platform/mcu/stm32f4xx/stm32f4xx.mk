@@ -93,6 +93,7 @@ $(NAME)_CFLAGS  += -Wno-unused-value -Wno-strict-aliasing
 
 
 $(NAME)_SOURCES := platform_init.c          \
+				   platform_common.c \
                    platform_vector_table.c \
                    hardfault_handler.c \
                    startup/startup_stm32f4xx.s \

@@ -38,7 +38,7 @@ GLOBAL_DEFINES += CONFIG_AOS_CLI_STACK_SIZE=4096
 #GLOBAL_DEFINES += WITH_LWIP
 
 GLOBAL_INCLUDES += ../../arch/arm/armv7m/gcc/m4
-GLOBAL_INCLUDES += ../../../board/amebaz_dev
+#GLOBAL_INCLUDES += ../../../board/amebaz_dev
 GLOBAL_INCLUDES += .
 GLOBAL_INCLUDES += arch
 GLOBAL_INCLUDES += sdk

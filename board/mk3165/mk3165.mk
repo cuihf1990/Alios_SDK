@@ -11,7 +11,7 @@ SUPPORT_BINS         := no
 
 BUS := SDIO
 
-$(NAME)_SOURCES := board.c mico_spi.c
+$(NAME)_SOURCES := board.c
 $(NAME)_PREBUILT_LIBRARY := MiCO.$(MODULE).$(TOOLCHAIN_NAME).a
 
 GLOBAL_INCLUDES += ./
