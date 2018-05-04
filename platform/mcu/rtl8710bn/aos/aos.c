@@ -141,7 +141,7 @@ static void board_mode_check(void)
     krhino_task_dyn_del(NULL);
 }
 
-void main(void)
+int entry_main(void)
 {
     aos_init();
 

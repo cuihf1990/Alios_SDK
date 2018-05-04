@@ -144,7 +144,7 @@ void APP_Start(void)
 		"mov sp, r0\n"
 	);
 
-	main();
+	entry_main();
 #endif // end of #if CONFIG_APP_DEMO
 #endif  // end of else of "#ifdef CONFIG_MBED_ENABLED"
 }

@@ -46,15 +46,7 @@ $(NAME)_INCLUDES += ../sdk/project/realtek_amebaz_va0_example/inc
 #$(NAME)_INCLUDES += platform\mcu\rtl8710bn\peripherals\include
 
 $(NAME)_SOURCES := platform_8711.c \
-                   platform_adc.c \
-                   platform_rtc.c \
-                   platform_gpio.c \
-                   platform_i2c.c \
-                   platform_rng.c \
-                   platform_mcu_powersave.c \
-                   platform_pwm.c \
-                   platform_spi.c \
                    platform_uart.c \
-                   platform_watchdog.c \
+                   platform_mcu_powersave.c \
                    RingBufferUtils.c
                    
