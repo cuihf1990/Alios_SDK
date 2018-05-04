@@ -139,18 +139,118 @@ static void netmgr_ip_got_event(hal_wifi_module_t *m,
     start_mesh(true);
 }
 
+#ifdef WITH_LWIP
+#define TCP_LOCAL_PORT_SEED "lport_seed"
+#define SEED_HISTORAY_MAX 10
+
+static uint8_t char_to_hex(char c)
+{
+    uint8_t t;
+
+    if (c >= '0' && c <= '9') t = c - '0';
+    else if (c >= 'a' && c <= 'f') t = c - 'a' + 10;
+    else if (c >= 'A' && c <= 'F') t = c - 'A' + 10;
+    else return 0;
+
+    return t;
+}
+
+static long long str_to_hex(char *s)
+{
+    char *p = s;
+    long long hex = 0;
+    uint8_t t;
+
+    if (!s) return 0;
+
+    while (*p != '\0') {
+        if (*p >= '0' && *p <= '9') t = *p - '0';
+        else if (*p >= 'a' && *p <= 'f') t = *p - 'a' + 10;
+        else if (*p >= 'A' && *p <= 'F') t = *p - 'A' + 10;
+        else return 0;
+
+        hex <<= 4;
+        hex |= t & 0x0f;
+        p++;
+    }
+
+    return hex;
+}
+
+/* Caller to ensure history memory. */
+static void ensure_different_seed(unsigned int *seed, char *history, int *num)
+{
+    unsigned int entry = 0;
+    char *p = history;
+    uint8_t t;
+
+    if (!seed || !history || !num) {*num = 0; return;}
+
+    *num = 0;
+    while (*p != 0) {
+        if (*p == ' ') { /* entry found */
+            if (entry == *seed) *seed = *seed + aos_now(); /* Renew seed if same found */
+            p++; (*num)++; entry = 0; continue;
+        }
+
+        entry = (entry << 4) | (char_to_hex(*p) & 0x0f);
+        p++;
+
+        if (*p == 0) { /* last entry */
+            if (entry == *seed) *seed = *seed + aos_now();
+            (*num)++;
+        }
+    }
+}
+
+/* Caller to ensure history memory. */
+static void update_seed_history(char *history, int num, unsigned int new_seed)
+{
+    char *p = history, *q = history;
+
+    if (num >= SEED_HISTORAY_MAX) { /* remove last entry */
+        while (*q != ' ' && *q != 0) q++;
+        if (*q == 0) return;
+        q++; /* skip the space char */
+        while (*q != 0) *p++ = *q++;
+        *p++ = ' ';
+    } else {
+        while (*p != 0) p++; /* go to the end */
+        if (p != history) *p++ = ' ';
+    }
+
+    /* space as delimiter among seed entries. */
+    snprintf(p, sizeof(long long) * 2, "%x", new_seed);
+}
+#endif
+
 static void netmgr_stat_chg_event(hal_wifi_module_t *m, hal_wifi_event_t stat,
                                   void *arg)
 {
 #ifdef WITH_LWIP
-    long long ts = aos_now();
+    unsigned int ts = (unsigned int)aos_now();
+    int ret, len, history_num = 0;
+    char seed_history[(sizeof(unsigned int) * 2 + 1) * SEED_HISTORAY_MAX] = {0};
 #endif
+
     switch (stat) {
         case NOTIFY_STATION_UP:
 #ifdef WITH_LWIP
+            printf("The ts generated from system time is %d\r\n", ts);
+            len = sizeof(seed_history);
+            ret = aos_kv_get(TCP_LOCAL_PORT_SEED, seed_history, &len);
+            if (ret == 0) {
+                printf("Seed found in kv: %s\r\n", seed_history);
+                ensure_different_seed(&ts, seed_history, &history_num);
+            }
+            printf("The final seed to use is %d\r\n", ts);
             srand((unsigned int)ts);
             tcp_init();
             udp_init();
+            update_seed_history(seed_history, history_num, ts);
+            printf("The new seed history to be saved is %s\r\n", seed_history);
+            ret = aos_kv_set(TCP_LOCAL_PORT_SEED, seed_history,
+                             strlen(seed_history) + 1, 1);
 #endif
             g_station_is_up = true;
             aos_post_event(EV_WIFI, CODE_WIFI_ON_CONNECTED,
