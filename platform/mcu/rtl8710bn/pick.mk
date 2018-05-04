@@ -1,9 +1,21 @@
-EXTRA_POST_BUILD_TARGETS += image_xip
+EXTRA_POST_BUILD_TARGETS += image_xip all_bin 
 
 TEXT_OUTPUT_FILE           :=$(LINK_OUTPUT_FILE:$(LINK_OUTPUT_SUFFIX)=.text.bin)
 DATA_OUTPUT_FILE           :=$(LINK_OUTPUT_FILE:$(LINK_OUTPUT_SUFFIX)=.data.bin)
 
-image_xip:
+image_xip: 
 	$(OBJCOPY) -j .xip_image2.text -Obinary $(LINK_OUTPUT_FILE) $(TEXT_OUTPUT_FILE)
 	$(OBJCOPY) -j .ram_image2.entry -j .ram_image2.text -j .ram_image2.data -Obinary $(LINK_OUTPUT_FILE) $(DATA_OUTPUT_FILE)
 	$(PYTHON) platform/mcu/rtl8710bn/pick.py $(TEXT_OUTPUT_FILE) $(DATA_OUTPUT_FILE) $(BIN_OUTPUT_FILE)
+	$(RM) $(TEXT_OUTPUT_FILE) $(DATA_OUTPUT_FILE)
+
+GEN_COMMON_BIN_OUTPUT_FILE_SCRIPT:= $(SCRIPTS_PATH)/gen_common_bin_output_file.py
+
+ALL_BIN_OUTPUT_FILE :=$(LINK_OUTPUT_FILE:$(LINK_OUTPUT_SUFFIX)=.all$(BIN_OUTPUT_SUFFIX))
+
+all_bin: image_xip
+	$(QUIET)$(ECHO) Generate $(ALL_BIN_OUTPUT_FILE) ...
+	$(QUIET)$(RM) $(ALL_BIN_OUTPUT_FILE)
+	$(PYTHON) $(GEN_COMMON_BIN_OUTPUT_FILE_SCRIPT) -o $(ALL_BIN_OUTPUT_FILE) -f 0x00 board/mk3080/boot.bin
+	$(PYTHON) $(GEN_COMMON_BIN_OUTPUT_FILE_SCRIPT) -o $(ALL_BIN_OUTPUT_FILE) -f 0x13000 $(BIN_OUTPUT_FILE)
+	$(PYTHON) $(GEN_COMMON_BIN_OUTPUT_FILE_SCRIPT) -o $(ALL_BIN_OUTPUT_FILE) -f 0xD0000 board/mk3080/ate.bin
