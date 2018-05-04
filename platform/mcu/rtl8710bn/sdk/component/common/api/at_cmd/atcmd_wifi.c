@@ -722,7 +722,7 @@ exit:
 }
 
 void fATWA(void *arg){
-	#if 1 
+	#if 0 
 	awss_report_reset();
 	#else
 #if CONFIG_LWIP_LAYER

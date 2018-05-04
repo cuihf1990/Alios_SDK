@@ -30,7 +30,6 @@
 */ 
 
 
-#include "mico_platform.h"
 #include "mico_rtos.h"
 
 #include "board.h"

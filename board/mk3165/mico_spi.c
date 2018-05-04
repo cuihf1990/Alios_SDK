@@ -11,7 +11,7 @@ extern const platform_gpio_t            platform_gpio_pins[];
 extern const platform_spi_t             platform_spi_peripherals[];
 
 
-OSStatus MicoSpiInitialize( const platforom_spi_device_t* spi )
+OSStatus MicoSpiInitialize( const platform_spi_device_t* spi )
 {
   platform_spi_config_t config;
   OSStatus              err = kNoErr;
@@ -41,7 +41,7 @@ OSStatus MicoSpiInitialize( const platforom_spi_device_t* spi )
   return err;
 }
 
-OSStatus MicoSpiFinalize( const platforom_spi_device_t* spi )
+OSStatus MicoSpiFinalize( const platform_spi_device_t* spi )
 {
   OSStatus err = kNoErr;
 
@@ -66,7 +66,7 @@ OSStatus MicoSpiFinalize( const platforom_spi_device_t* spi )
   return err;
 }
 
-OSStatus MicoSpiTransfer( const platforom_spi_device_t* spi, const platform_spi_message_segment_t* segments, uint16_t number_of_segments )
+OSStatus MicoSpiTransfer( const platform_spi_device_t* spi, const platform_spi_message_segment_t* segments, uint16_t number_of_segments )
 {
   platform_spi_config_t config;
   OSStatus err = kNoErr;

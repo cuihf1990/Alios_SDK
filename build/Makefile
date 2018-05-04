@@ -7,6 +7,7 @@ export AOS_SDK_VERSION_REVISION :=  3
 export SOURCE_ROOT ?= ./
 
 export MAKEFILES_PATH := $(SOURCE_ROOT)/build
+export ALIOS_PATH := $(SOURCE_ROOT)
 export SCRIPTS_PATH := $(SOURCE_ROOT)/build/scripts
 
 export BINSTYPE_UPPER

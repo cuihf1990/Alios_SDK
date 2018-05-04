@@ -3,7 +3,9 @@ NAME := vcall
 $(NAME)_TYPE := kernel
 $(NAME)_MBINS_TYPE := share
 
+ifeq ($(MICO_OS_PATH),)
 GLOBAL_INCLUDES += ./mico/include
+endif
 
 #default gcc
 ifeq ($(COMPILER),)

@@ -8,7 +8,7 @@ with_lwip := 1
 endif
 
 ifneq ($(use_private_lwip),1)
-include kernel/protocols/net/Filelists.mk
+include $(CURDIR)/Filelists.mk
 
 GLOBAL_INCLUDES += include port/include
 

@@ -65,11 +65,14 @@ $(if $(TEMP_MAKEFILE),,\
 $(if $(filter 1,$(words $(TEMP_MAKEFILE))),,$(error More than one component with the name "$(COMP)". See $(TEMP_MAKEFILE)))
 
 $(eval TEMP_MAKEFILE := $(subst ././,./,$(TEMP_MAKEFILE)))
+$(eval OLD_CURDIR := $(CURDIR))
+$(eval CURDIR := $(CURDIR)$(dir $(TEMP_MAKEFILE)))
 $(eval include $(TEMP_MAKEFILE))
 $(eval deps :=)
 $(eval deps_src := $($(NAME)_COMPONENTS))
 $(eval components_cube := $(subst .,/,$(COMPONENTS)))
 $(eval deps_cube := $(subst .,/,$($(NAME)_COMPONENTS)))
+$(eval CURDIR := $(OLD_CURDIR))
 
 $(foreach dep, $(deps_cube),\
 	$(eval comp_dep := $(firstword $(deps_src))) \

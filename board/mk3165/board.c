@@ -16,7 +16,7 @@ void board_init(void)
     hal_partitions[HAL_PARTITION_APPLICATION].partition_owner            = HAL_FLASH_EMBEDDED;
     hal_partitions[HAL_PARTITION_APPLICATION].partition_description      = "Application";
     hal_partitions[HAL_PARTITION_APPLICATION].partition_start_addr       = 0x0800C000;
-    hal_partitions[HAL_PARTITION_APPLICATION].partition_length           = 0x98000;    //608K bytes
+    hal_partitions[HAL_PARTITION_APPLICATION].partition_length           = 0x74000;    //608K bytes
     hal_partitions[HAL_PARTITION_APPLICATION].partition_options          = PAR_OPT_READ_EN | PAR_OPT_WRITE_EN;
 
     hal_partitions[HAL_PARTITION_RF_FIRMWARE].partition_owner            = HAL_FLASH_SPI;
@@ -256,7 +256,7 @@ platform_flash_driver_t platform_flash_drivers[HAL_FLASH_MAX];
 
 
 #if defined ( USE_MICO_SPI_FLASH )
-const platforom_spi_device_t mico_spi_flash =
+const platform_spi_device_t mico_spi_flash =
 {
   .port        = MICO_SPI_1,
   .chip_select = FLASH_PIN_SPI_CS,

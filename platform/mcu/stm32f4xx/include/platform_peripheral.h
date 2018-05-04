@@ -162,7 +162,7 @@ typedef struct
     uint32_t     speed;
     uint8_t      mode;
     uint8_t      bits;
-} platforom_spi_device_t;
+} platform_spi_device_t;
 
 typedef enum
 {

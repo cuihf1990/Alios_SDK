@@ -31,7 +31,6 @@
 
 
 #include "mico_rtos.h"
-#include "mico_platform.h"
 
 #include "board.h"
 #include "platform_peripheral.h"

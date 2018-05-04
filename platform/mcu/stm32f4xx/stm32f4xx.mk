@@ -148,7 +148,7 @@ ifneq ($(filter spi_flash_write, $(APP)),)
 ####################################################################################
 
 PRE_APP_BUILDS      += bootloader
-GLOBAL_LDFLAGS += -T platform/mcu/$(NAME)/$(TOOLCHAIN_NAME)/app_ram$(LINK_SCRIPT_SUFFIX)
+GLOBAL_LDFLAGS += -T $(ALIOS_PATH)/platform/mcu/$(NAME)/$(TOOLCHAIN_NAME)/app_ram$(LINK_SCRIPT_SUFFIX)
 GLOBAL_DEFINES      += __JTAG_FLASH_WRITER_DATA_BUFFER_SIZE__=16384
 GLOBAL_INCLUDES     += 
 
@@ -158,7 +158,7 @@ else
 ####################################################################################
 
 PRE_APP_BUILDS      += bootloader
-GLOBAL_LDFLAGS += -T  platform/mcu/$(NAME)/$(TOOLCHAIN_NAME)/app_with_bootloader$(LINK_SCRIPT_SUFFIX)
+GLOBAL_LDFLAGS += -T  $(ALIOS_PATH)/platform/mcu/$(NAME)/$(TOOLCHAIN_NAME)/app_with_bootloader$(LINK_SCRIPT_SUFFIX)
 GLOBAL_INCLUDES     += 
 
 endif # APP=spi_flash_write

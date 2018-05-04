@@ -1,6 +1,6 @@
 #NAME := iot-utils
 
-include framework/protocol/alink-ilop/base/utils/LITE-utils/LITE-utils.mk
+include $(ALIOS_PATH)/framework/protocol/alink-ilop/base/utils/LITE-utils/LITE-utils.mk
 
 UTIL_SOURCE_DIR = base/utils/
 
