@@ -79,27 +79,6 @@ extern WEAK void bootloader_start(void);
 static uint32_t _default_start_time = 0;
 static mico_timer_t _button_EL_timer;
 
-platform_gpio_t platform_gpio_pins[] =
-{
-  /* Common GPIOs for internal use */
- // [MICO_SYS_LED]                      = { GPIOB,  0 }, 
- // [MICO_RF_LED]                       = { GPIOB,  1 }, //MICO_GPIO_16
- // [BOOT_SEL]                          = { GPIOB,  1 }, //MICO_GPIO_16
-//  [MFG_SEL]                           = { GPIOB,  9 }, //MICO_GPIO_30
- // [EasyLink_BUTTON]                   = { GPIOA,  1 }, //MICO_GPIO_11
-  
-  /* GPIOs for external use */
-  [MICO_GPIO_1]  = 
-  { 
-    .pin = PA_5,
-  },
-
-  [MICO_GPIO_2]  = 
-  { 
-    .pin = PA_12,
-  },
-};
-
 /*
 * Possible compile time inputs:
 * - Set which ADC peripheral to use for each ADC. All on one ADC allows sequential conversion on all inputs. All on separate ADCs allows concurrent conversion.
