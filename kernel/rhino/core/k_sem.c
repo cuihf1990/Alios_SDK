@@ -194,6 +194,11 @@ static kstat_t sem_give(ksem_t *sem, uint8_t opt_wake_all)
 
         TRACE_SEM_CNT_INCREASE(g_active_task[cur_cpu_num], sem);
         RHINO_CRITICAL_EXIT();
+
+#ifdef CONFIG_ENABLE_MXCHIP
+        event_rx_cb(sem);
+#endif
+
         return RHINO_SUCCESS;
     }
 

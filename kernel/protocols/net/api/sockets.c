@@ -190,6 +190,20 @@ static void sockaddr_to_ipaddr_port(const struct sockaddr* sockaddr, ip_addr_t* 
 #define NUM_SOCKETS MEMP_NUM_NETCONN
 #define NUM_EVENTS  MEMP_NUM_NETCONN
 
+#ifdef CONFIG_ENABLE_MXCHIP
+#include <k_api.h>
+
+#define NUM_OS_EVENTS (8)
+
+typedef kbuf_queue_t * mico_event;
+
+struct mico_event_t {
+    mico_event event;
+    int events; // 1:has event. 0:no event
+    int select_waiting;
+};
+#endif 
+
 /** This is overridable for the rare case where more than 255 threads
  * select on the same socket...
  */
@@ -292,6 +306,10 @@ struct lwip_event {
   sys_sem_t * psem;
 };
 
+#ifdef CONFIG_ENABLE_MXCHIP
+static struct mico_event_t os_events[NUM_OS_EVENTS];
+#endif
+
 /** The global array of available sockets */
 static struct lwip_sock sockets[NUM_SOCKETS];
 /** The global array of available events */
@@ -324,6 +342,10 @@ static void lwip_setsockopt_callback(void *arg);
 #endif
 static u8_t lwip_getsockopt_impl(int s, int level, int optname, void *optval, socklen_t *optlen);
 static u8_t lwip_setsockopt_impl(int s, int level, int optname, const void *optval, socklen_t optlen);
+
+#ifdef CONFIG_ENABLE_MXCHIP
+static struct mico_event_t *get_event_by_fd(int fd);
+#endif
 
 #if LWIP_IPV4 && LWIP_IPV6
 static void
@@ -1355,6 +1377,11 @@ lwip_selscan(int maxfdp1, fd_set *readset_in, fd_set *writeset_in, fd_set *excep
   struct lwip_event *event;
   SYS_ARCH_DECL_PROTECT(lev);
 
+#ifdef CONFIG_ENABLE_MXCHIP
+	struct mico_event_t *p_event;
+	int nset;
+#endif
+
   FD_ZERO(&lreadset);
   FD_ZERO(&lwriteset);
   FD_ZERO(&lexceptset);
@@ -1368,6 +1395,22 @@ lwip_selscan(int maxfdp1, fd_set *readset_in, fd_set *writeset_in, fd_set *excep
         !(exceptset_in && FD_ISSET(i, exceptset_in))) {
       continue;
     }
+#ifdef CONFIG_ENABLE_MXCHIP
+		if (i >= NUM_SOCKETS) {
+			p_event = get_event_by_fd(i);
+			if (p_event == NULL)
+				continue;
+	
+			nset = p_event->event->cur_num;
+			/* See if netconn of this socket is ready for read */
+			if (readset_in && FD_ISSET(i, readset_in) && (nset > 0)) {
+			  FD_SET(i, &lreadset);
+			  LWIP_DEBUGF(SOCKETS_DEBUG, ("lwip_selscan: fd=%d ready for reading\n", i));
+			  nready++;
+			}
+			continue;
+		}
+#endif
     /* First get the socket's status (protected)... */
     SYS_ARCH_PROTECT(lev);
     sock = tryget_socket(i);
@@ -1511,6 +1554,10 @@ lwip_select(int maxfdp1, fd_set *readset, fd_set *writeset, fd_set *exceptset,
       if ((readset && FD_ISSET(i, readset)) ||
           (writeset && FD_ISSET(i, writeset)) ||
           (exceptset && FD_ISSET(i, exceptset))) {
+#ifdef CONFIG_ENABLE_MXCHIP
+        if (i >= NUM_SOCKETS) 
+            break;
+#endif
         struct lwip_sock *sock;
         struct lwip_event *event;
         SYS_ARCH_PROTECT(lev);
@@ -2896,4 +2943,98 @@ lwip_socket_drop_registered_memberships(int s)
   }
 }
 #endif /* LWIP_IGMP */
+#ifdef CONFIG_ENABLE_MXCHIP
+static struct mico_event_t *get_event_by_fd(int fd)
+{
+  struct mico_event_t *handle;
+
+  fd -= NUM_SOCKETS;
+  if ((fd < 0) || (fd >= NUM_OS_EVENTS)) {
+    LWIP_DEBUGF(SOCKETS_DEBUG, ("get_event_by_fd(%d): invalid\n", fd));
+    set_errno(EBADF);
+    return NULL;
+  }
+
+  handle = &os_events[fd];
+
+  if (!handle->event) {
+    LWIP_DEBUGF(SOCKETS_DEBUG, ("get_event_by_fd(%d): not active\n", fd));
+    set_errno(EBADF);
+    return NULL;
+  }
+
+  return handle;
+}
+
+static int get_fd_by_event(mico_event handle)
+{
+  int i;
+
+  for(i=0; i<NUM_OS_EVENTS; i++) {
+    if (os_events[i].event == handle)
+        return i+NUM_SOCKETS;
+  }
+
+  return -1;
+}
+
+/* bind a event handle to fd */
+int mico_create_event_fd(mico_event handle)
+{
+  int i;
+
+  for(i=0; i<NUM_OS_EVENTS; i++) {
+    if (os_events[i].event == NULL) {
+        os_events[i].event = handle;
+        return i+NUM_SOCKETS;
+    }
+  }
+
+  return -1;
+}
+
+/* delete event handle */
+int mico_delete_event_fd(int fd)
+{
+  fd -= NUM_SOCKETS;
+  
+  if ((fd < 0) || (fd >= NUM_OS_EVENTS)) {
+    LWIP_DEBUGF(SOCKETS_DEBUG, ("get_event_by_fd(%d): invalid\n", fd));
+    set_errno(EBADF);
+    return -1;
+  }
+
+  os_events[fd].event = NULL;
+  memset(&os_events[fd], 0, sizeof(struct mico_event_t));
+  return 0;
+}
+
+void event_rx_cb(mico_event handle)
+{
+    struct lwip_select_cb *scb;
+    int fd;
+
+    SYS_ARCH_DECL_PROTECT(lev);
+
+    fd = get_fd_by_event(handle);
+    if (fd < 0)
+        return;
+
+    SYS_ARCH_PROTECT(lev);
+    for (scb = select_cb_list; scb; scb = scb->next) {
+      /* @todo: unprotect with each loop and check for changes? */
+      if (scb->sem_signalled == 0) {
+        /* Test this select call for event */
+        if (scb->readset && FD_ISSET(fd, scb->readset)) {
+            break;
+        }
+      }
+    }
+    SYS_ARCH_UNPROTECT(lev);
+    if (scb) {
+      scb->sem_signalled = 1;
+      sys_sem_signal(&scb->sem);
+    } 
+}
+#endif /* CONFIG_ENABLE_MXCHIP */
 #endif /* LWIP_SOCKET */

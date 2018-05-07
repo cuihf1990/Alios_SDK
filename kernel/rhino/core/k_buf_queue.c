@@ -187,6 +187,10 @@ kstat_t krhino_buf_queue_dyn_del(kbuf_queue_t *queue)
 }
 #endif
 
+#ifdef CONFIG_ENABLE_MXCHIP
+void event_rx_cb(kbuf_queue_t *queue);
+#endif
+
 static kstat_t buf_queue_send(kbuf_queue_t *queue, void *msg, size_t msg_size)
 {
     CPSR_ALLOC();
@@ -251,6 +255,11 @@ static kstat_t buf_queue_send(kbuf_queue_t *queue, void *msg, size_t msg_size)
         TRACE_BUF_QUEUE_POST(g_active_task[cur_cpu_num], queue, msg, msg_size);
 
         RHINO_CRITICAL_EXIT();
+
+#ifdef CONFIG_ENABLE_MXCHIP
+        event_rx_cb(queue);
+#endif
+
         return RHINO_SUCCESS;
     }
 
