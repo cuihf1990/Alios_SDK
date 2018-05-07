@@ -6,11 +6,11 @@ $(NAME)_MBINS_TYPE := kernel
 GLOBAL_INCLUDES += .
 $(NAME)_SOURCES  := service_manager.c
 
-include framework/protocol/alink/accs/accs.mk
-include framework/protocol/alink/json/json.mk
-include framework/protocol/alink/system/system.mk
-include framework/protocol/alink/cota/cota.mk
-include framework/protocol/alink/os/os.mk
+include $(ALIOS_PATH)/framework/protocol/alink/accs/accs.mk
+include $(ALIOS_PATH)/framework/protocol/alink/json/json.mk
+include $(ALIOS_PATH)/framework/protocol/alink/system/system.mk
+include $(ALIOS_PATH)/framework/protocol/alink/cota/cota.mk
+include $(ALIOS_PATH)/framework/protocol/alink/os/os.mk
 
 #defalut gcc
 ifeq ($(COMPILER),)
