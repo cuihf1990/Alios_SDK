@@ -231,21 +231,21 @@ OSStatus mico_gpio_deinit( int32_t gpio )
   return (OSStatus) platform_gpio_deinit( &platform_gpio_pins[gpio] );
 }
 
-bool MicoGpioInputGet( int32_t gpio )
+bool mico_gpio_input_get( int32_t gpio )
 {
   if ( gpio >= MICO_GPIO_NONE )
     return kUnsupportedErr;
   return platform_gpio_input_get( &platform_gpio_pins[gpio] );
 }
 
-OSStatus MicoGpioEnableIRQ( int32_t gpio, mico_gpio_irq_trigger_t trigger, mico_gpio_irq_handler_t handler, void* arg )
+OSStatus mico_gpio_enable_irq( int32_t gpio, mico_gpio_irq_trigger_t trigger, mico_gpio_irq_handler_t handler, void* arg )
 {
   if ( gpio >= MICO_GPIO_NONE )
     return kUnsupportedErr;
   return (OSStatus) platform_gpio_irq_enable( &platform_gpio_pins[gpio], trigger, handler, arg );
 }
 
-OSStatus MicoGpioDisableIRQ( int32_t gpio )
+OSStatus mico_gpio_disable_irq( int32_t gpio )
 {
   if ( gpio >= MICO_GPIO_NONE )
     return kUnsupportedErr;
