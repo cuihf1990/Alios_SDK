@@ -28,6 +28,9 @@ typedef struct
 } ieee80211_header_t;
 #pragma pack()
 
+static int custom_ie_added = 0;
+static void mico_wlan_monitor_cb(uint8_t*data, int len);
+
 static int wifi_init(hal_wifi_module_t *m)
 {
     printf("wifi init success!!\n");
@@ -133,17 +136,28 @@ static int suspend_soft_ap(hal_wifi_module_t *m)
 
 static int set_channel(hal_wifi_module_t *m, int ch)
 {
+    int ret;
+    
     if (ch == _monitor_channel) {
         return 0;
     }
     _monitor_channel = ch;
     _set_channel_time = aos_now_ms();
-    return mico_wlan_monitor_set_channel(ch);
+
+    ret = mico_wlan_monitor_set_channel(ch);
+    if (ret != 0) {
+        printf("set channel %d error %d\r\n", ch, ret);
+        wifi_reboot_only();
+        mico_wlan_register_monitor_cb(mico_wlan_monitor_cb);
+        mico_wlan_start_monitor();
+        custom_ie_added = 0;
+    }
+    return ret;
 }
 
 static void start_monitor(hal_wifi_module_t *m)
 {
-    suspend_station(m);
+    //suspend_station(m);
 	mico_wlan_start_monitor();
 }
 
@@ -219,7 +233,6 @@ static /*@null@*/ uint8_t* wlu_parse_tlvs( /*@returned@*/ uint8_t* tlv_buf, int 
 }
 
 static const uint8_t oui[] = {0xD8,  0x96,  0xE0};
-static int custom_ie_added = 0;
 
 static int wlan_send_80211_raw_frame(hal_wifi_module_t *m, uint8_t *buf, int len)
 {
