@@ -282,6 +282,7 @@ static u8_t                   dns_seqno;
 static struct dns_table_entry dns_table[DNS_TABLE_SIZE];
 static struct dns_req_entry   dns_requests[DNS_MAX_REQUESTS];
 static ip_addr_t              dns_servers[DNS_MAX_SERVERS];
+static uint8_t                num_dns;
 
 /**
  * Initialize the resolver: set up the UDP pcb and configure the default server
@@ -336,6 +337,8 @@ dns_init(void)
 void
 dns_setserver(u8_t numdns, const ip_addr_t *dnsserver)
 {
+  num_dns = numdns;
+
   if (numdns < DNS_MAX_SERVERS) {
     if (dnsserver != NULL) {
       dns_servers[numdns] = (*dnsserver);
@@ -933,31 +936,28 @@ dns_check_entry(u8_t i)
       break;
     case DNS_STATE_ASKING:
       if (--entry->tmr == 0) {
-        if (++entry->retries == DNS_MAX_RETRIES) {
-          if ((entry->server_idx + 1 < DNS_MAX_SERVERS) && !ip_addr_isany_val(dns_servers[entry->server_idx + 1])) {
-            /* change of server */
-            entry->server_idx++;
-            entry->tmr = 1;
-            entry->retries = 0;
-          } else {
-            LWIP_DEBUGF(DNS_DEBUG, ("dns_check_entry: \"%s\": timeout\n", entry->name));
-            /* call specified callback function if provided */
-            dns_call_found(i, NULL);
-            /* flush this entry */
-            entry->state = DNS_STATE_UNUSED;
-            break;
-          }
-        } else {
-          /* wait longer for the next retry */
-          entry->tmr = entry->retries;
-        }
+          if (++entry->retries == DNS_MAX_RETRIES * num_dns) {
+              entry->tmr = 1;
+              entry->retries = 0;
 
-        /* send DNS packet for this entry */
-        err = dns_send(i);
-        if (err != ERR_OK) {
-          LWIP_DEBUGF(DNS_DEBUG | LWIP_DBG_LEVEL_WARNING,
-                      ("dns_send returned error: %s\n", lwip_strerr(err)));
-        }
+              LWIP_DEBUGF(DNS_DEBUG, ("dns_check_entry: \"%s\": timeout\n", entry->name));
+              dns_call_found(i, NULL);
+              entry->state = DNS_STATE_UNUSED;
+              break;
+          } else {
+              entry->tmr = 1;
+          }
+
+          /* send DNS packet for this entry */
+          err = dns_send(i);
+          if (err != ERR_OK) {
+            LWIP_DEBUGF(DNS_DEBUG | LWIP_DBG_LEVEL_WARNING,
+                        ("dns_send returned error: %s\n", lwip_strerr(err)));
+          }
+
+          if ((entry->server_idx + 1 < DNS_MAX_SERVERS) && !ip_addr_isany_val(dns_servers[entry->server_idx + 1])) {
+              entry->server_idx = (entry->server_idx + 1) % num_dns;
+          }
       }
       break;
     case DNS_STATE_DONE:
