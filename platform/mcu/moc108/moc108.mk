@@ -32,7 +32,9 @@ GLOBAL_CFLAGS += -mcpu=arm968e-s \
                  -mthumb -mthumb-interwork \
                  -mlittle-endian
 
+ifeq ($(MICO_OS_PATH),)
 GLOBAL_CFLAGS += -w
+endif
 
 $(NAME)_CFLAGS  += -Wall -Werror -Wno-unused-variable -Wno-unused-parameter -Wno-implicit-function-declaration
 $(NAME)_CFLAGS  += -Wno-type-limits -Wno-sign-compare -Wno-pointer-sign -Wno-uninitialized

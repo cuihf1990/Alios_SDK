@@ -11,7 +11,9 @@ extern "C" {
 
 #define SHORT_FILE __FILENAME__
 
+#ifndef debug_print_assert
 #define debug_print_assert(A,B,C,D,E,F)
+#endif
 
 #if (!defined(unlikely))
 #define unlikely(EXPRESSSION) !!(EXPRESSSION)

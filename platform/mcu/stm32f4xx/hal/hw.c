@@ -65,7 +65,7 @@ void hw_start_hal(void)
     //hal_wifi_register_module(&sim_aos_wifi_stm23l475);
     //hal_ota_register_module(&stm32l475_ota_module);
     uart_0.port                = STDIO_UART;
-    uart_0.config.baud_rate    = STDIO_UART_BUADRATE;
+    uart_0.config.baud_rate    = STDIO_UART_BAUDRATE;
     uart_0.config.data_width   = DATA_WIDTH_8BIT;
     uart_0.config.parity       = NO_PARITY;
     uart_0.config.stop_bits    = STOP_BITS_1;

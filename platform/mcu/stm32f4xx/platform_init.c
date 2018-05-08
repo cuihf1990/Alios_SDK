@@ -47,7 +47,7 @@ extern platform_uart_driver_t platform_uart_drivers[];
 #ifndef MICO_DISABLE_STDIO
 static const platform_uart_config_t stdio_uart_config =
 {
-  .baud_rate    = STDIO_UART_BUADRATE,
+  .baud_rate    = STDIO_UART_BAUDRATE,
   .data_width   = DATA_WIDTH_8BIT,
   .parity       = NO_PARITY,
   .stop_bits    = STOP_BITS_1,

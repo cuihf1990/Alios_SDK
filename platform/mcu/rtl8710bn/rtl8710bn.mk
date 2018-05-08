@@ -114,14 +114,15 @@ $(NAME)_INCLUDES += sdk/component/common/mbed/targets/hal/rtl8711b
                  -fno-short-enums
 
 GLOBAL_CFLAGS += -mcpu=cortex-m4 \
-                 -march=armv7-m \
                  -mthumb -mthumb-interwork \
                  -mlittle-endian \
                  -DCONFIG_PLATFORM_8711B \
                  -DM3\
                  -fno-short-enums                 
 
+ifeq ($(MICO_OS_PATH),)
 GLOBAL_CFLAGS += -w
+endif
 
 GLOBAL_LDFLAGS += -L $(ALIOS_PATH)/platform/mcu/rtl8710bn
 #GLOBAL_LDFLAGS += -I $(SOURCE_ROOT)/platform/mcu/rtl8710bn

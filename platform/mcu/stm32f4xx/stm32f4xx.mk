@@ -57,11 +57,12 @@ GLOBAL_INCLUDES += include \
 GLOBAL_CFLAGS += -DSTM32F4xx 
 
 GLOBAL_CFLAGS += -mcpu=cortex-m4 \
-                 -march=armv7-m \
                  -mthumb -mthumb-interwork \
                  -mlittle-endian
 
+ifeq ($(MICO_OS_PATH),)
 GLOBAL_CFLAGS += -w
+endif
 
 
 ifeq ($(COMPILER),armcc)
