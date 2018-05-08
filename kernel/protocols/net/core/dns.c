@@ -915,6 +915,7 @@ dns_check_entry(u8_t i)
 {
   err_t err;
   struct dns_table_entry *entry = &dns_table[i];
+  uint8_t index;
 
   LWIP_ASSERT("array index out of bounds", i < DNS_TABLE_SIZE);
 
@@ -955,8 +956,9 @@ dns_check_entry(u8_t i)
                         ("dns_send returned error: %s\n", lwip_strerr(err)));
           }
 
-          if ((entry->server_idx + 1 < DNS_MAX_SERVERS) && !ip_addr_isany_val(dns_servers[entry->server_idx + 1])) {
-              entry->server_idx = (entry->server_idx + 1) % num_dns;
+          index = (entry->server_idx + 1) % num_dns;
+          if ((index < DNS_MAX_SERVERS) && !ip_addr_isany_val(dns_servers[index])) {
+              entry->server_idx = index;
           }
       }
       break;

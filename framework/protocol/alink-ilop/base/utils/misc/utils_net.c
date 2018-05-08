@@ -194,6 +194,12 @@ int iotx_net_connect(utils_network_pt pNetwork)
 #ifndef IOTX_WITHOUT_TLS
     } else {
         ret = connect_ssl(pNetwork);
+#ifdef BOARD_MK3165
+        if (ret != 0) {
+            extern void wifi_reboot_reconnect(void);
+            wifi_reboot_reconnect();
+        }
+#endif
 #endif
     }
 
