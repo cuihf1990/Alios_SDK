@@ -12,7 +12,7 @@
 
 hal_wifi_module_t sim_aos_wifi_mico;
 static uint16_t _monitor_channel = 1;
-
+static uint8_t  _station_mode_start = 0;
 static uint32_t _set_channel_time = 0; // use this VAR to check AWS channel is locked.
 #pragma pack(1)
 typedef struct
@@ -60,7 +60,7 @@ static int wifi_start(hal_wifi_module_t *m, hal_wifi_init_type_t *init_para)
     memcpy(conf.dnsServer_ip_addr, init_para->dns_server_ip_addr, 16);
     conf.wifi_retry_interval = init_para->wifi_retry_interval;
 	ret = micoWlanStart(&conf);
-
+    _station_mode_start = 1;
     return ret;
 }
 
@@ -69,7 +69,7 @@ static int wifi_start_adv(hal_wifi_module_t *m, hal_wifi_init_type_adv_t *init_p
     int ret;
 
  	ret = micoWlanStartAdv((network_InitTypeDef_adv_st*)init_para_adv);
-	
+	_station_mode_start = 1;
     return ret;
 }
 
@@ -120,11 +120,13 @@ static int power_on(hal_wifi_module_t *m)
 
 static int suspend(hal_wifi_module_t *m)
 {
+    _station_mode_start = 0;
     return micoWlanSuspend();
 }
 
 static int suspend_station(hal_wifi_module_t *m)
 {
+    _station_mode_start = 0;
     return micoWlanSuspendStation();
 }
 
@@ -157,8 +159,10 @@ static int set_channel(hal_wifi_module_t *m, int ch)
 
 static void start_monitor(hal_wifi_module_t *m)
 {
-    //suspend_station(m);
-	mico_wlan_start_monitor();
+    if (_station_mode_start == 1) {
+        suspend_station(m); // softap mode -> monitor mode, must do suspend station. 
+    }
+    mico_wlan_start_monitor();
 }
 
 static void stop_monitor(hal_wifi_module_t *m)

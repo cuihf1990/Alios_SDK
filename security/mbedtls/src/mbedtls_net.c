@@ -232,10 +232,6 @@ int mbedtls_net_connect(mbedtls_net_context *ctx, const char *host, const char *
 
     if (getaddrinfo(host, port, &hints, &addr_list) != 0) {
         MBEDTLS_NET_PRINT("getaddrinfo fail- errno: %d\n", errno);
-#ifdef BOARD_MK3165
-        extern void wifi_reboot_connect(void);
-        wifi_reboot_connect();
-#endif
         return MBEDTLS_ERR_NET_UNKNOWN_HOST;
     }
 
