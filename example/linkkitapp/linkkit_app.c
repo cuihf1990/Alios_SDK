@@ -383,7 +383,7 @@ void linkkit_action(void *params)
     sample_context_t* sample_ctx = params;
 
     linkkit_dispatch();
-
+#if 0
     now += 1;
 
 
@@ -404,7 +404,7 @@ void linkkit_action(void *params)
     }
 
 
-#if 0
+
     now_size = system_get_free_heap_size();
     if (now_size != last_size) {
         last_size = now_size;
@@ -442,7 +442,7 @@ int linkkit_main()
     linkkit_subdev_init(&subdev_ops, &g_subdev_sample_context);
 #endif
 
-    //aos_post_delayed_action(100, linkkit_action, sample_ctx);    ///1分钟的主动上报
+    aos_post_delayed_action(100, linkkit_action, sample_ctx);    ///1分钟的主动上报
 
     return 0;
 }

@@ -277,7 +277,7 @@ void uart_cmd_process(uint8_t * buf , int recv_len)
         {	
 			if(cloud_connect_status == 0)
 				return ;
-			if((buf[6]) ==0x18){
+			if((buf[6]) ==0x18 || buf[6] ==0x19){
 				hiFuncStr[CURRENTTEMPERATURE].idx = (cmd_header->f_data - 32);
 				if(hiFuncStr[CURRENTTEMPERATURE].idx  != uartcmd.CurrentTemperature ){
 					uartcmd.CurrentTemperature = hiFuncStr[CURRENTTEMPERATURE].idx;
