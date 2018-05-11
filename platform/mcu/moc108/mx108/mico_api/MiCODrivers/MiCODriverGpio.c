@@ -9,14 +9,14 @@ void gpio_test_func(uint8_t cmd, uint8_t id, uint32_t mode, void(*p_handle)(char
     else
         BkGpioDisableIRQ(id);
 }
-OSStatus MicoGpioEnableIRQ( uint32_t gpio, platform_gpio_irq_trigger_t trigger, platform_gpio_irq_callback_t handler, void *arg )
-{
-    BkGpioEnableIRQ(gpio, trigger, handler, arg);
-}
-OSStatus MicoGpioDisableIRQ( uint32_t gpio )
-{
-    BkGpioDisableIRQ(gpio);
-}
+// OSStatus MicoGpioEnableIRQ( uint32_t gpio, platform_gpio_irq_trigger_t trigger, platform_gpio_irq_callback_t handler, void *arg )
+// {
+//     BkGpioEnableIRQ(gpio, trigger, handler, arg);
+// }
+// OSStatus MicoGpioDisableIRQ( uint32_t gpio )
+// {
+//     BkGpioDisableIRQ(gpio);
+// }
 
 OSStatus MicoGpioOp(char cmd, uint32_t id, char mode)
 {
