@@ -240,7 +240,7 @@ int aws_is_chnscan_timeout(void)
         awss_debug("aws will stop...\r\n");
         return CHNSCAN_TIMEOUT;
     }
-
+    
     if (time_elapsed_ms_since(aws_chn_timestamp) > os_awss_get_channelscan_interval_ms()) {
         if ((0 != os_awss_get_timeout_interval_ms()) &&
             (time_elapsed_ms_since(aws_start_timestamp) > os_awss_get_timeout_interval_ms()))
@@ -297,6 +297,7 @@ int aws_force_scanning(void)
 #endif
 }
 
+static unsigned int lock_start;
 /*
  * channel scanning/re-scanning control
  * Note: 修改该函数时，需考虑到各平台差异
@@ -356,6 +357,11 @@ rescanning:
     os_awss_switch_channel(aws_locked_chn, 0, aws_locked_bssid);
 
     while (aws_state != AWS_SUCCESS) {
+        if (time_elapsed_ms_since(lock_start) > aws_channel_lock_timeout_ms) {
+            /* set to rescanning */
+            awss_debug("!!!! double channel lock timeout !!!!\n");
+            aws_state = AWS_SCANNING;
+        }
         /* 80211 frame handled by callback */
         os_msleep(100);
 
@@ -430,7 +436,7 @@ static void clr_aplist_monitor()
 
 int aws_80211_frame_handler(char *buf, int length, enum AWSS_LINK_TYPE link_type, int with_fcs, char rssi)
 {
-    static unsigned int lock_start;
+    
 
     int ret = zconfig_recv_callback(buf, length, aws_cur_chn, link_type, with_fcs, rssi);
 
