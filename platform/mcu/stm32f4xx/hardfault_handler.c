@@ -190,6 +190,9 @@ void hard_fault_handler_c (unsigned int * hardfault_args)
     strcat(full_msg, logString);
     break;
   }
+
+  hal_reboot();
+
   sprintf (logString, ",corrupt>>>>>>>>>>>>>>>>>>\n\r");
   strcat(full_msg, logString);
 

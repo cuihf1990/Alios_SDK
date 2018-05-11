@@ -171,7 +171,7 @@ char *HAL_Wifi_Get_Os_Version(_OU_ char version_str[STR_SHORT_LEN])
  */
 int HAL_Awss_Get_Timeout_Interval_Ms(void)
 {
-    return 3 * 60 * 1000;
+    return 10 * 60 * 1000;
 }
 
 /**

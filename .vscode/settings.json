@@ -1,23 +1,67 @@
 {
     "aliosStudio.inner.yosBin": "aos",
-    "aliosStudio.hardware.board": "starterkit",
-    "aliosStudio.name": "helloworld",
+    "aliosStudio.hardware.board": "mk3165",
+    "aliosStudio.name": "linkkitapp",
     "aliosStudio.buildList": [
         {
-            "name": "clean"
+            "name": "linkkitapp@mk3165"
         },
         {
-            "name": "helloworld@starterkit"
+            "name": "linkkitapp@mk3165 download"
         },
         {
-            "name": "starterkitgui@starterkit"
+            "name": "linkkitapp@mk3080 download"
         },
         {
-            "name": "mqttapp@starterkit"
+            "name": "linkkitapp@mk3080"
+        },
+        {
+            "name": "clean@mk3165"
         }
     ],
     "aliosStudio.build.multiBin": false,
     "aliosStudio.build.multiBinTarget": "app",
     "aliosStudio.flashAllBin": false,
-    "aliosStudio.isAosSource": true
+    "aliosStudio.isAosSource": true,
+    "files.associations": {
+        "ratio": "c",
+        "system_error": "c",
+        "type_traits": "c",
+        "typeindex": "cpp",
+        "typeinfo": "cpp",
+        "array": "c",
+        "aos.h": "c",
+        "platform.h": "c",
+        "uart.h": "c",
+        "soc.h": "c",
+        "kernel.h": "c",
+        "*.tcc": "c",
+        "functional": "c",
+        "future": "c",
+        "istream": "c",
+        "tuple": "c",
+        "utility": "c",
+        "flash.h": "c",
+        "linkkit_export.h": "c",
+        "streambuf": "c",
+        "chrono": "c",
+        "bitset": "cpp",
+        "rope": "cpp",
+        "slist": "cpp",
+        "initializer_list": "cpp",
+        "valarray": "cpp",
+        "unistd.h": "c",
+        "stdarg.h": "c",
+        "stdlib.h": "c",
+        "board.h": "c",
+        "stdio.h": "c",
+        "cstring": "c",
+        "condition_variable": "c",
+        "complex": "c",
+        "assert.h": "c",
+        "random": "cpp",
+        "limits": "c",
+        "uart_device.h": "c"
+    },
+    "aliosStudio.sdkPath": "${workspaceRoot}"
 }

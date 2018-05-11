@@ -19,6 +19,8 @@ download_app: all_bin display_map_summary kill_openocd
 download: download_app $(if $(findstring total,$(MAKECMDGOALS)), EXT_IMAGE_DOWNLOAD,)
 
 
+<<<<<<< HEAD
+=======
 copy_output_for_eclipse: build_done kill_openocd
 	$(QUIET)$(call MKDIR, $(BUILD_DIR)/eclipse_debug/)
 	$(QUIET)$(CP) $(LINK_OUTPUT_FILE) $(BUILD_DIR)/eclipse_debug/last_built.elf
@@ -29,3 +31,4 @@ kill_openocd:
 else
 kill_openocd:
 endif
+>>>>>>> remotes/origin/mxchip

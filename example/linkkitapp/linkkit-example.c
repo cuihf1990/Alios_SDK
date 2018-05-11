@@ -29,13 +29,14 @@
 #include "iot_export.h"
 #include "iot_export_mqtt.h"
 #include "linkkit_app.h"
+#include "Uart_Device.h"
 
 #ifdef CSP_LINUXHOST
 #include <signal.h>
 #endif
 
-static int linkkit_started = 0;
-static int awss_running = 0;
+static int linkkit_started = 0;      ////是否连接服务器
+static int awss_running = 0;         ////是否本地发现过设备
 
 void reboot_system(void *parms);
 static void wifi_service_event(input_event_t *event, void *priv_data) {
@@ -112,14 +113,22 @@ void do_awss_active()
     awss_config_press();
 }
 
-static void do_awss_reset()
+void do_awss_reset()
 {
+    int  ret = -1;
     if(linkkit_started) {
-	aos_task_new("reset", awss_report_reset, NULL, 2048);
+	aos_task_new("reset", awss_report_reset, NULL, 2048);   ///// 解绑服务器信息
     }
-    netmgr_clear_ap_config();
-    LOG("SSID cleared. Please reboot the system.\n");
-    aos_post_delayed_action(1000,reboot_system,NULL);
+    netmgr_clear_ap_config();   ////清除配网信息
+    LOG("SSID cleared.==> Please reboot the system.\n");
+    
+    ret = aos_post_delayed_action(1000,reboot_system,NULL);   ////系统重启
+    LOG("start action = %d",ret);
+    if(ret != 0){
+        aos_msleep(2000);
+        aos_reboot();
+    }
+
 }
 
 void linkkit_key_process(input_event_t *eventinfo, void *priv_data)
@@ -131,9 +140,9 @@ void linkkit_key_process(input_event_t *eventinfo, void *priv_data)
 
     if (eventinfo->code == CODE_BOOT) {
         if (eventinfo->value == VALUE_KEY_CLICK) {
-            do_awss_active();
+            do_awss_active();      /////激活本地发现    单次有效
         } else if(eventinfo->value == VALUE_KEY_LTCLICK) {
-            do_awss_reset();
+            do_awss_reset();     /////解绑模块信息
         }
     }
 }
@@ -164,21 +173,32 @@ static struct cli_command ncmd = {
 
 int application_start(int argc, char **argv)
 {
+    
 #ifdef CSP_LINUXHOST
     signal(SIGPIPE, SIG_IGN);
 #endif
 
-    aos_set_log_level(AOS_LL_DEBUG);
+    aos_set_log_level(AOS_LL_NONE);
 
+    app_uart_init();
+
+#if 0
+    netmgr_ap_config_t config;
+    strncpy(config.ssid, "WDNEZPL", sizeof("WDNEZPL"));
+   // strncpy(config.pwd, "123456789", sizeof("123456789"));
+    netmgr_set_ap_config(&config);   
+#endif    
+    
     netmgr_init();
-    aos_register_event_filter(EV_KEY, linkkit_key_process, NULL);
-    aos_register_event_filter(EV_WIFI, wifi_service_event, NULL);
-    aos_register_event_filter(EV_YUNIO, cloud_service_event, NULL);
+    aos_register_event_filter(EV_KEY, linkkit_key_process, NULL);    ////按键事件
+    aos_register_event_filter(EV_WIFI, wifi_service_event, NULL);     ///// wifi配网事件
+    aos_register_event_filter(EV_YUNIO, cloud_service_event, NULL);     /////服务器事件
 
 #ifdef CONFIG_AOS_CLI
     aos_cli_register_command(&resetcmd);
     aos_cli_register_command(&ncmd);
 #endif
+
     aos_task_new("netmgr", start_netmgr, NULL, 4096);
 
     aos_loop_run();

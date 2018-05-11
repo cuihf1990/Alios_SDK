@@ -350,6 +350,7 @@ static void reconnect_wifi(void *arg)
     type.dhcp_mode = DHCP_CLIENT;
     strncpy(type.wifi_ssid, ap_config->ssid, sizeof(type.wifi_ssid) - 1);
     strncpy(type.wifi_key, ap_config->pwd, sizeof(type.wifi_key) - 1);
+    LOG("CONNECT  ssid = %s ,key =%s",ap_config->ssid,ap_config->pwd);
     hal_wifi_start(module, &type);
 }
 
@@ -492,6 +493,10 @@ static void netmgr_wifi_config_start(void)
 {
     autoconfig_plugin_t *valid_plugin = g_netmgr_cxt.autoconfig_chain;
 
+    LOG("start config");
+//////
+    do_awss_active();
+    
     if (valid_plugin != NULL) {
         g_netmgr_cxt.doing_smartconfig = true;
         valid_plugin->autoconfig_start();

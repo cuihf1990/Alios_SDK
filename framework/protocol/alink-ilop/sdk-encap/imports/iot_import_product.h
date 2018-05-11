@@ -18,10 +18,10 @@
 #define DEVICE_NAME             "test_3060_01"
 #define DEVICE_SECRET           "6BhvTPQqCEj48gIHChFQKCWgDjNnQX5f"
 #elif ON_PRE 
-#define PRODUCT_KEY             "a1DQA90NlFe"
-#define PRODUCT_SECRET          "0VDRjoQAbieMcYyZ"
-#define DEVICE_NAME             "jaVam0S5dTq8XKUoI2NW"
-#define DEVICE_SECRET           "IpGIaDsdUEpSvcOz237woypTlcxAV5RC"
+#define PRODUCT_KEY             "a1f5ycK5hkC"
+#define PRODUCT_SECRET          "JUv6nUZKUEtzUcqw"
+#define DEVICE_NAME             "k72a2wDR67HbzL3rQoMK"
+#define DEVICE_SECRET           "GEDHrUYoCv3YQWqt136DCD0NPtdGUfag"
 #elif ON_PRE2
 #define PRODUCT_KEY             "a1AzoSi5TMc"
 #define PRODUCT_SECRET          "Z9Ze6qgMrWgTOezW"
@@ -49,10 +49,10 @@
 #define DEVICE_SECRET           "fSCl9Ns5YPnYN8Ocg0VEel1kXFnRlV6c"
 #define PRODUCT_SECRET          ""
 #else
-#define PRODUCT_KEY             "a1AzoSi5TMc"
-#define PRODUCT_SECRET          "Z9Ze6qgMrWgTOezW"
-#define DEVICE_NAME             "test_light_03"
-#define DEVICE_SECRET           "oIdAOeech8fM7aHtq0QSvV1oSle30SxP"
+#define PRODUCT_KEY             "a1f5ycK5hkC"
+#define PRODUCT_SECRET          "JUv6nUZKUEtzUcqw"
+#define DEVICE_NAME             "k72a2wDR67HbzL3rQoMK"
+#define DEVICE_SECRET           "GEDHrUYoCv3YQWqt136DCD0NPtdGUfag"
 #endif
 #endif
 

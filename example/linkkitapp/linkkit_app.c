@@ -12,19 +12,16 @@
 #include <stdarg.h>
 #include <unistd.h>
 #include <aos/aos.h>
+#include "Uart_Device.h"
 
 #include "linkkit_export.h"
 
 #include "iot_import.h"
 
 #include "linkkit_app.h"
-
-
 /*
  * example for product "灯-Demo"
  */
-
-
 #define LINKKIT_PRINTF(...)  \
     do {                                                     \
         printf("\e[0;32m%s@line%d:\t", __FUNCTION__, __LINE__);  \
@@ -33,29 +30,14 @@
     } while (0)
 
 /* identifier of property/service/event, users should modify this macros according to your own product TSL. */
-#define EVENT_ERROR_IDENTIFIER                 "Error"
-#define EVENT_ERROR_OUTPUT_INFO_IDENTIFIER     "ErrorCode"
-#define EVENT_CUSTOM_IDENTIFIER                "Custom"
+
 
 /* specify ota buffer size for ota service, ota service will use this buffer for bin download. */
 static void ota_init();
 
 /* PLEASE set RIGHT tsl string according to your product. */
-const char TSL_STRING[] = "{\"schema\":\"http://aliyun/iot/thing/desc/schema\",\"profile\":{\"productKey\":\"a1I6ZYgfWMK\"},\"services\":[{\"outputData\":[],\"identifier\":\"set\",\"inputData\":[{\"identifier\":\"LightSwitch\",\"dataType\":{\"specs\":{\"0\":\"关闭\",\"1\":\"开启\"},\"type\":\"bool\"},\"name\":\"主灯开关\"},{\"identifier\":\"RGBColor\",\"dataType\":{\"specs\":[{\"identifier\":\"Red\",\"dataType\":{\"specs\":{\"min\":\"0\",\"unitName\":\"无\",\"max\":\"255\"},\"type\":\"int\"},\"name\":\"红色\"},{\"identifier\":\"Green\",\"dataType\":{\"specs\":{\"min\":\"0\",\"unitName\":\"无\",\"max\":\"255\"},\"type\":\"int\"},\"name\":\"绿色\"},{\"identifier\":\"Blue\",\"dataType\":{\"specs\":{\"min\":\"0\",\"unitName\":\"无\",\"max\":\"255\"},\"type\":\"int\"},\"name\":\"蓝色\"}],\"type\":\"struct\"},\"name\":\"RGB调色\"},{\"identifier\":\"NightLightSwitch\",\"dataType\":{\"specs\":{\"0\":\"关闭\",\"1\":\"开启\"},\"type\":\"bool\"},\"name\":\"夜灯开关\"},{\"identifier\":\"WorkMode\",\"dataType\":{\"specs\":{\"0\":\"手动\",\"1\":\"阅读\",\"2\":\"影院\",\"3\":\"夜灯\",\"4\":\"生活\",\"5\":\"柔和\"},\"type\":\"enum\"},\"name\":\"工作模式\"},{\"identifier\":\"ColorTemperature\",\"dataType\":{\"specs\":{\"unit\":\"K\",\"min\":\"2700\",\"unitName\":\"开尔文\",\"max\":\"6500\"},\"type\":\"int\"},\"name\":\"冷暖色温\"},{\"identifier\":\"Brightness\",\"dataType\":{\"specs\":{\"unit\":\"%\",\"min\":\"0\",\"unitName\":\"百分比\",\"max\":\"100\"},\"type\":\"int\"},\"name\":\"明暗度\"},{\"identifier\":\"HSLColor\",\"dataType\":{\"specs\":[{\"identifier\":\"Hue\",\"dataType\":{\"specs\":{\"unit\":\"°\",\"min\":\"0\",\"unitName\":\"度\",\"max\":\"360\"},\"type\":\"int\"},\"name\":\"色调\"},{\"identifier\":\"Saturation\",\"dataType\":{\"specs\":{\"unit\":\"%\",\"min\":\"0\",\"unitName\":\"百分比\",\"max\":\"100\"},\"type\":\"int\"},\"name\":\"饱和度\"},{\"identifier\":\"Lightness\",\"dataType\":{\"specs\":{\"unit\":\"%\",\"min\":\"0\",\"unitName\":\"百分比\",\"max\":\"100\"},\"type\":\"int\"},\"name\":\"亮度\"}],\"type\":\"struct\"},\"name\":\"HSL调色\"},{\"identifier\":\"HSVColor\",\"dataType\":{\"specs\":[{\"identifier\":\"Hue\",\"dataType\":{\"specs\":{\"unit\":\"%\",\"min\":\"0\",\"unitName\":\"百分比\",\"max\":\"100\"},\"type\":\"int\"},\"name\":\"色调\"},{\"identifier\":\"Saturation\",\"dataType\":{\"specs\":{\"unit\":\"%\",\"min\":\"0\",\"unitName\":\"百分比\",\"max\":\"100\"},\"type\":\"int\"},\"name\":\"饱和度\"},{\"identifier\":\"Value\",\"dataType\":{\"specs\":{\"unit\":\"%\",\"min\":\"0\",\"unitName\":\"百分比\",\"max\":\"100\"},\"type\":\"int\"},\"name\":\"明度\"}],\"type\":\"struct\"},\"name\":\"HSV调色\"}],\"method\":\"thing.service.property.set\",\"name\":\"set\",\"required\":true,\"callType\":\"sync\",\"desc\":\"属性设置\"},{\"outputData\":[{\"identifier\":\"LightSwitch\",\"dataType\":{\"specs\":{\"0\":\"关闭\",\"1\":\"开启\"},\"type\":\"bool\"},\"name\":\"主灯开关\"},{\"identifier\":\"RGBColor\",\"dataType\":{\"specs\":[{\"identifier\":\"Red\",\"dataType\":{\"specs\":{\"min\":\"0\",\"unitName\":\"无\",\"max\":\"255\"},\"type\":\"int\"},\"name\":\"红色\"},{\"identifier\":\"Green\",\"dataType\":{\"specs\":{\"min\":\"0\",\"unitName\":\"无\",\"max\":\"255\"},\"type\":\"int\"},\"name\":\"绿色\"},{\"identifier\":\"Blue\",\"dataType\":{\"specs\":{\"min\":\"0\",\"unitName\":\"无\",\"max\":\"255\"},\"type\":\"int\"},\"name\":\"蓝色\"}],\"type\":\"struct\"},\"name\":\"RGB调色\"},{\"identifier\":\"NightLightSwitch\",\"dataType\":{\"specs\":{\"0\":\"关闭\",\"1\":\"开启\"},\"type\":\"bool\"},\"name\":\"夜灯开关\"},{\"identifier\":\"WorkMode\",\"dataType\":{\"specs\":{\"0\":\"手动\",\"1\":\"阅读\",\"2\":\"影院\",\"3\":\"夜灯\",\"4\":\"生活\",\"5\":\"柔和\"},\"type\":\"enum\"},\"name\":\"工作模式\"},{\"identifier\":\"ColorTemperature\",\"dataType\":{\"specs\":{\"unit\":\"K\",\"min\":\"2700\",\"unitName\":\"开尔文\",\"max\":\"6500\"},\"type\":\"int\"},\"name\":\"冷暖色温\"},{\"identifier\":\"Brightness\",\"dataType\":{\"specs\":{\"unit\":\"%\",\"min\":\"0\",\"unitName\":\"百分比\",\"max\":\"100\"},\"type\":\"int\"},\"name\":\"明暗度\"},{\"identifier\":\"HSLColor\",\"dataType\":{\"specs\":[{\"identifier\":\"Hue\",\"dataType\":{\"specs\":{\"unit\":\"°\",\"min\":\"0\",\"unitName\":\"度\",\"max\":\"360\"},\"type\":\"int\"},\"name\":\"色调\"},{\"identifier\":\"Saturation\",\"dataType\":{\"specs\":{\"unit\":\"%\",\"min\":\"0\",\"unitName\":\"百分比\",\"max\":\"100\"},\"type\":\"int\"},\"name\":\"饱和度\"},{\"identifier\":\"Lightness\",\"dataType\":{\"specs\":{\"unit\":\"%\",\"min\":\"0\",\"unitName\":\"百分比\",\"max\":\"100\"},\"type\":\"int\"},\"name\":\"亮度\"}],\"type\":\"struct\"},\"name\":\"HSL调色\"},{\"identifier\":\"HSVColor\",\"dataType\":{\"specs\":[{\"identifier\":\"Hue\",\"dataType\":{\"specs\":{\"unit\":\"%\",\"min\":\"0\",\"unitName\":\"百分比\",\"max\":\"100\"},\"type\":\"int\"},\"name\":\"色调\"},{\"identifier\":\"Saturation\",\"dataType\":{\"specs\":{\"unit\":\"%\",\"min\":\"0\",\"unitName\":\"百分比\",\"max\":\"100\"},\"type\":\"int\"},\"name\":\"饱和度\"},{\"identifier\":\"Value\",\"dataType\":{\"specs\":{\"unit\":\"%\",\"min\":\"0\",\"unitName\":\"百分比\",\"max\":\"100\"},\"type\":\"int\"},\"name\":\"明度\"}],\"type\":\"struct\"},\"name\":\"HSV调色\"}],\"identifier\":\"get\",\"inputData\":[\"LightSwitch\",\"RGBColor\",\"NightLightSwitch\",\"WorkMode\",\"ColorTemperature\",\"Brightness\",\"HSLColor\",\"HSVColor\"],\"method\":\"thing.service.property.get\",\"name\":\"get\",\"required\":true,\"callType\":\"sync\",\"desc\":\"属性获取\"}],\"properties\":[{\"identifier\":\"LightSwitch\",\"dataType\":{\"specs\":{\"0\":\"关闭\",\"1\":\"开启\"},\"type\":\"bool\"},\"name\":\"主灯开关\",\"accessMode\":\"rw\",\"required\":true},{\"identifier\":\"RGBColor\",\"dataType\":{\"specs\":[{\"identifier\":\"Red\",\"dataType\":{\"specs\":{\"min\":\"0\",\"unitName\":\"无\",\"max\":\"255\"},\"type\":\"int\"},\"name\":\"红色\"},{\"identifier\":\"Green\",\"dataType\":{\"specs\":{\"min\":\"0\",\"unitName\":\"无\",\"max\":\"255\"},\"type\":\"int\"},\"name\":\"绿色\"},{\"identifier\":\"Blue\",\"dataType\":{\"specs\":{\"min\":\"0\",\"unitName\":\"无\",\"max\":\"255\"},\"type\":\"int\"},\"name\":\"蓝色\"}],\"type\":\"struct\"},\"name\":\"RGB调色\",\"accessMode\":\"rw\",\"required\":false},{\"identifier\":\"NightLightSwitch\",\"dataType\":{\"specs\":{\"0\":\"关闭\",\"1\":\"开启\"},\"type\":\"bool\"},\"name\":\"夜灯开关\",\"accessMode\":\"rw\",\"required\":false},{\"identifier\":\"WorkMode\",\"dataType\":{\"specs\":{\"0\":\"手动\",\"1\":\"阅读\",\"2\":\"影院\",\"3\":\"夜灯\",\"4\":\"生活\",\"5\":\"柔和\"},\"type\":\"enum\"},\"name\":\"工作模式\",\"accessMode\":\"rw\",\"required\":false},{\"identifier\":\"ColorTemperature\",\"dataType\":{\"specs\":{\"unit\":\"K\",\"min\":\"2700\",\"unitName\":\"开尔文\",\"max\":\"6500\"},\"type\":\"int\"},\"name\":\"冷暖色温\",\"accessMode\":\"rw\",\"required\":false},{\"identifier\":\"Brightness\",\"dataType\":{\"specs\":{\"unit\":\"%\",\"min\":\"0\",\"unitName\":\"百分比\",\"max\":\"100\"},\"type\":\"int\"},\"name\":\"明暗度\",\"accessMode\":\"rw\",\"required\":false},{\"identifier\":\"HSLColor\",\"dataType\":{\"specs\":[{\"identifier\":\"Hue\",\"dataType\":{\"specs\":{\"unit\":\"°\",\"min\":\"0\",\"unitName\":\"度\",\"max\":\"360\"},\"type\":\"int\"},\"name\":\"色调\"},{\"identifier\":\"Saturation\",\"dataType\":{\"specs\":{\"unit\":\"%\",\"min\":\"0\",\"unitName\":\"百分比\",\"max\":\"100\"},\"type\":\"int\"},\"name\":\"饱和度\"},{\"identifier\":\"Lightness\",\"dataType\":{\"specs\":{\"unit\":\"%\",\"min\":\"0\",\"unitName\":\"百分比\",\"max\":\"100\"},\"type\":\"int\"},\"name\":\"亮度\"}],\"type\":\"struct\"},\"name\":\"HSL调色\",\"accessMode\":\"rw\",\"required\":false},{\"identifier\":\"HSVColor\",\"dataType\":{\"specs\":[{\"identifier\":\"Hue\",\"dataType\":{\"specs\":{\"unit\":\"%\",\"min\":\"0\",\"unitName\":\"百分比\",\"max\":\"100\"},\"type\":\"int\"},\"name\":\"色调\"},{\"identifier\":\"Saturation\",\"dataType\":{\"specs\":{\"unit\":\"%\",\"min\":\"0\",\"unitName\":\"百分比\",\"max\":\"100\"},\"type\":\"int\"},\"name\":\"饱和度\"},{\"identifier\":\"Value\",\"dataType\":{\"specs\":{\"unit\":\"%\",\"min\":\"0\",\"unitName\":\"百分比\",\"max\":\"100\"},\"type\":\"int\"},\"name\":\"明度\"}],\"type\":\"struct\"},\"name\":\"HSV调色\",\"accessMode\":\"rw\",\"required\":false}],\"events\":[{\"outputData\":[{\"identifier\":\"LightSwitch\",\"dataType\":{\"specs\":{\"0\":\"关闭\",\"1\":\"开启\"},\"type\":\"bool\"},\"name\":\"主灯开关\"},{\"identifier\":\"RGBColor\",\"dataType\":{\"specs\":[{\"identifier\":\"Red\",\"dataType\":{\"specs\":{\"min\":\"0\",\"unitName\":\"无\",\"max\":\"255\"},\"type\":\"int\"},\"name\":\"红色\"},{\"identifier\":\"Green\",\"dataType\":{\"specs\":{\"min\":\"0\",\"unitName\":\"无\",\"max\":\"255\"},\"type\":\"int\"},\"name\":\"绿色\"},{\"identifier\":\"Blue\",\"dataType\":{\"specs\":{\"min\":\"0\",\"unitName\":\"无\",\"max\":\"255\"},\"type\":\"int\"},\"name\":\"蓝色\"}],\"type\":\"struct\"},\"name\":\"RGB调色\"},{\"identifier\":\"NightLightSwitch\",\"dataType\":{\"specs\":{\"0\":\"关闭\",\"1\":\"开启\"},\"type\":\"bool\"},\"name\":\"夜灯开关\"},{\"identifier\":\"WorkMode\",\"dataType\":{\"specs\":{\"0\":\"手动\",\"1\":\"阅读\",\"2\":\"影院\",\"3\":\"夜灯\",\"4\":\"生活\",\"5\":\"柔和\"},\"type\":\"enum\"},\"name\":\"工作模式\"},{\"identifier\":\"ColorTemperature\",\"dataType\":{\"specs\":{\"unit\":\"K\",\"min\":\"2700\",\"unitName\":\"开尔文\",\"max\":\"6500\"},\"type\":\"int\"},\"name\":\"冷暖色温\"},{\"identifier\":\"Brightness\",\"dataType\":{\"specs\":{\"unit\":\"%\",\"min\":\"0\",\"unitName\":\"百分比\",\"max\":\"100\"},\"type\":\"int\"},\"name\":\"明暗度\"},{\"identifier\":\"HSLColor\",\"dataType\":{\"specs\":[{\"identifier\":\"Hue\",\"dataType\":{\"specs\":{\"unit\":\"°\",\"min\":\"0\",\"unitName\":\"度\",\"max\":\"360\"},\"type\":\"int\"},\"name\":\"色调\"},{\"identifier\":\"Saturation\",\"dataType\":{\"specs\":{\"unit\":\"%\",\"min\":\"0\",\"unitName\":\"百分比\",\"max\":\"100\"},\"type\":\"int\"},\"name\":\"饱和度\"},{\"identifier\":\"Lightness\",\"dataType\":{\"specs\":{\"unit\":\"%\",\"min\":\"0\",\"unitName\":\"百分比\",\"max\":\"100\"},\"type\":\"int\"},\"name\":\"亮度\"}],\"type\":\"struct\"},\"name\":\"HSL调色\"},{\"identifier\":\"HSVColor\",\"dataType\":{\"specs\":[{\"identifier\":\"Hue\",\"dataType\":{\"specs\":{\"unit\":\"%\",\"min\":\"0\",\"unitName\":\"百分比\",\"max\":\"100\"},\"type\":\"int\"},\"name\":\"色调\"},{\"identifier\":\"Saturation\",\"dataType\":{\"specs\":{\"unit\":\"%\",\"min\":\"0\",\"unitName\":\"百分比\",\"max\":\"100\"},\"type\":\"int\"},\"name\":\"饱和度\"},{\"identifier\":\"Value\",\"dataType\":{\"specs\":{\"unit\":\"%\",\"min\":\"0\",\"unitName\":\"百分比\",\"max\":\"100\"},\"type\":\"int\"},\"name\":\"明度\"}],\"type\":\"struct\"},\"name\":\"HSV调色\"}],\"identifier\":\"post\",\"method\":\"thing.event.property.post\",\"name\":\"post\",\"type\":\"info\",\"required\":true,\"desc\":\"属性上报\"},{\"outputData\":[{\"identifier\":\"ErrorCode\",\"dataType\":{\"specs\":{\"0\":\"恢复正常\"},\"type\":\"enum\"},\"name\":\"故障代码\"}],\"identifier\":\"Error\",\"method\":\"thing.event.Error.post\",\"name\":\"故障上报\",\"type\":\"info\",\"required\":true}]}";
-//const char TSL_STRING[] = "{\"schema\":\"https://iot-tsl.oss-cn-shanghai.aliyuncs.com/schema.json\",\"profile\":{\"productKey\":\"a1fG355fLM5\",\"deviceName\":\"zhengcheng\"},\"link\":\"/sys/a1fG355fLM5/led_light_test_dev1/thing/\",\"services\":[{\"outputData\":[],\"identifier\":\"set\",\"inputData\":[{\"identifier\":\"LightSwitch\",\"dataType\":{\"specs\":{\"0\":\"关闭\",\"1\":\"开启\"},\"type\":\"bool\"},\"name\":\"主灯开关\"},{\"identifier\":\"RGBColor\",\"dataType\":{\"specs\":[{\"identifier\":\"Red\",\"dataType\":{\"specs\":{\"min\":\"0\",\"unitName\":\"无\",\"max\":\"255\"},\"type\":\"int\"},\"name\":\"红色\"},{\"identifier\":\"Green\",\"dataType\":{\"specs\":{\"min\":\"0\",\"unitName\":\"无\",\"max\":\"255\"},\"type\":\"int\"},\"name\":\"绿色\"},{\"identifier\":\"Blue\",\"dataType\":{\"specs\":{\"min\":\"0\",\"unitName\":\"无\",\"max\":\"255\"},\"type\":\"int\"},\"name\":\"蓝色\"}],\"type\":\"struct\"},\"name\":\"RGB调色\"},{\"identifier\":\"HSVColor\",\"dataType\":{\"specs\":[{\"identifier\":\"Hue\",\"dataType\":{\"specs\":{\"unit\":\"%\",\"min\":\"0\",\"unitName\":\"百分比\",\"max\":\"100\"},\"type\":\"int\"},\"name\":\"色调\"},{\"identifier\":\"Saturation\",\"dataType\":{\"specs\":{\"unit\":\"%\",\"min\":\"0\",\"unitName\":\"百分比\",\"max\":\"100\"},\"type\":\"int\"},\"name\":\"饱和度\"},{\"identifier\":\"Value\",\"dataType\":{\"specs\":{\"unit\":\"%\",\"min\":\"0\",\"unitName\":\"百分比\",\"max\":\"100\"},\"type\":\"int\"},\"name\":\"明度\"}],\"type\":\"struct\"},\"name\":\"HSV调色\"},{\"identifier\":\"NightLightSwitch\",\"dataType\":{\"specs\":{\"0\":\"关闭\",\"1\":\"开启\"},\"type\":\"bool\"},\"name\":\"夜灯开关\"},{\"identifier\":\"WorkMode\",\"dataType\":{\"specs\":{\"0\":\"手动\",\"1\":\"阅读\",\"2\":\"影院\",\"3\":\"夜灯\",\"4\":\"生活\",\"5\":\"柔和\"},\"type\":\"enum\"},\"name\":\"工作模式\"},{\"identifier\":\"ColorTemperature\",\"dataType\":{\"specs\":{\"unit\":\"K\",\"min\":\"2700\",\"unitName\":\"开尔文\",\"max\":\"6500\"},\"type\":\"int\"},\"name\":\"冷暖色温\"},{\"identifier\":\"HSLColor\",\"dataType\":{\"specs\":[{\"identifier\":\"Hue\",\"dataType\":{\"specs\":{\"unit\":\"°\",\"min\":\"0\",\"unitName\":\"度\",\"max\":\"360\"},\"type\":\"int\"},\"name\":\"色调\"},{\"identifier\":\"Saturation\",\"dataType\":{\"specs\":{\"unit\":\"%\",\"min\":\"0\",\"unitName\":\"百分比\",\"max\":\"100\"},\"type\":\"int\"},\"name\":\"饱和度\"},{\"identifier\":\"Lightness\",\"dataType\":{\"specs\":{\"unit\":\"%\",\"min\":\"0\",\"unitName\":\"百分比\",\"max\":\"100\"},\"type\":\"int\"},\"name\":\"亮度\"}],\"type\":\"struct\"},\"name\":\"HSL调色\"},{\"identifier\":\"Brightness\",\"dataType\":{\"specs\":{\"unit\":\"%\",\"min\":\"0\",\"unitName\":\"百分比\",\"max\":\"100\"},\"type\":\"int\"},\"name\":\"明暗度\"}],\"method\":\"thing.service.property.set\",\"name\":\"set\",\"required\":true,\"callType\":\"sync\",\"desc\":\"属性设置\"},{\"outputData\":[{\"identifier\":\"LightSwitch\",\"dataType\":{\"specs\":{\"0\":\"关闭\",\"1\":\"开启\"},\"type\":\"bool\"},\"name\":\"主灯开关\"},{\"identifier\":\"RGBColor\",\"dataType\":{\"specs\":[{\"identifier\":\"Red\",\"dataType\":{\"specs\":{\"min\":\"0\",\"unitName\":\"无\",\"max\":\"255\"},\"type\":\"int\"},\"name\":\"红色\"},{\"identifier\":\"Green\",\"dataType\":{\"specs\":{\"min\":\"0\",\"unitName\":\"无\",\"max\":\"255\"},\"type\":\"int\"},\"name\":\"绿色\"},{\"identifier\":\"Blue\",\"dataType\":{\"specs\":{\"min\":\"0\",\"unitName\":\"无\",\"max\":\"255\"},\"type\":\"int\"},\"name\":\"蓝色\"}],\"type\":\"struct\"},\"name\":\"RGB调色\"},{\"identifier\":\"HSVColor\",\"dataType\":{\"specs\":[{\"identifier\":\"Hue\",\"dataType\":{\"specs\":{\"unit\":\"%\",\"min\":\"0\",\"unitName\":\"百分比\",\"max\":\"100\"},\"type\":\"int\"},\"name\":\"色调\"},{\"identifier\":\"Saturation\",\"dataType\":{\"specs\":{\"unit\":\"%\",\"min\":\"0\",\"unitName\":\"百分比\",\"max\":\"100\"},\"type\":\"int\"},\"name\":\"饱和度\"},{\"identifier\":\"Value\",\"dataType\":{\"specs\":{\"unit\":\"%\",\"min\":\"0\",\"unitName\":\"百分比\",\"max\":\"100\"},\"type\":\"int\"},\"name\":\"明度\"}],\"type\":\"struct\"},\"name\":\"HSV调色\"},{\"identifier\":\"NightLightSwitch\",\"dataType\":{\"specs\":{\"0\":\"关闭\",\"1\":\"开启\"},\"type\":\"bool\"},\"name\":\"夜灯开关\"},{\"identifier\":\"WorkMode\",\"dataType\":{\"specs\":{\"0\":\"手动\",\"1\":\"阅读\",\"2\":\"影院\",\"3\":\"夜灯\",\"4\":\"生活\",\"5\":\"柔和\"},\"type\":\"enum\"},\"name\":\"工作模式\"},{\"identifier\":\"ColorTemperature\",\"dataType\":{\"specs\":{\"unit\":\"K\",\"min\":\"2700\",\"unitName\":\"开尔文\",\"max\":\"6500\"},\"type\":\"int\"},\"name\":\"冷暖色温\"},{\"identifier\":\"HSLColor\",\"dataType\":{\"specs\":[{\"identifier\":\"Hue\",\"dataType\":{\"specs\":{\"unit\":\"°\",\"min\":\"0\",\"unitName\":\"度\",\"max\":\"360\"},\"type\":\"int\"},\"name\":\"色调\"},{\"identifier\":\"Saturation\",\"dataType\":{\"specs\":{\"unit\":\"%\",\"min\":\"0\",\"unitName\":\"百分比\",\"max\":\"100\"},\"type\":\"int\"},\"name\":\"饱和度\"},{\"identifier\":\"Lightness\",\"dataType\":{\"specs\":{\"unit\":\"%\",\"min\":\"0\",\"unitName\":\"百分比\",\"max\":\"100\"},\"type\":\"int\"},\"name\":\"亮度\"}],\"type\":\"struct\"},\"name\":\"HSL调色\"},{\"identifier\":\"Brightness\",\"dataType\":{\"specs\":{\"unit\":\"%\",\"min\":\"0\",\"unitName\":\"百分比\",\"max\":\"100\"},\"type\":\"int\"},\"name\":\"明暗度\"}],\"identifier\":\"get\",\"inputData\":[\"LightSwitch\",\"RGBColor\",\"HSVColor\",\"NightLightSwitch\",\"WorkMode\",\"ColorTemperature\",\"HSLColor\",\"Brightness\"],\"method\":\"thing.service.property.get\",\"name\":\"get\",\"required\":true,\"callType\":\"sync\",\"desc\":\"属性获取\"}],\"properties\":[{\"identifier\":\"LightSwitch\",\"dataType\":{\"specs\":{\"0\":\"关闭\",\"1\":\"开启\"},\"type\":\"bool\"},\"name\":\"主灯开关\",\"accessMode\":\"rw\",\"required\":true},{\"identifier\":\"RGBColor\",\"dataType\":{\"specs\":[{\"identifier\":\"Red\",\"dataType\":{\"specs\":{\"min\":\"0\",\"unitName\":\"无\",\"max\":\"255\"},\"type\":\"int\"},\"name\":\"红色\"},{\"identifier\":\"Green\",\"dataType\":{\"specs\":{\"min\":\"0\",\"unitName\":\"无\",\"max\":\"255\"},\"type\":\"int\"},\"name\":\"绿色\"},{\"identifier\":\"Blue\",\"dataType\":{\"specs\":{\"min\":\"0\",\"unitName\":\"无\",\"max\":\"255\"},\"type\":\"int\"},\"name\":\"蓝色\"}],\"type\":\"struct\"},\"name\":\"RGB调色\",\"accessMode\":\"rw\",\"required\":false},{\"identifier\":\"HSVColor\",\"dataType\":{\"specs\":[{\"identifier\":\"Hue\",\"dataType\":{\"specs\":{\"unit\":\"%\",\"min\":\"0\",\"unitName\":\"百分比\",\"max\":\"100\"},\"type\":\"int\"},\"name\":\"色调\"},{\"identifier\":\"Saturation\",\"dataType\":{\"specs\":{\"unit\":\"%\",\"min\":\"0\",\"unitName\":\"百分比\",\"max\":\"100\"},\"type\":\"int\"},\"name\":\"饱和度\"},{\"identifier\":\"Value\",\"dataType\":{\"specs\":{\"unit\":\"%\",\"min\":\"0\",\"unitName\":\"百分比\",\"max\":\"100\"},\"type\":\"int\"},\"name\":\"明度\"}],\"type\":\"struct\"},\"name\":\"HSV调色\",\"accessMode\":\"rw\",\"required\":false},{\"identifier\":\"NightLightSwitch\",\"dataType\":{\"specs\":{\"0\":\"关闭\",\"1\":\"开启\"},\"type\":\"bool\"},\"name\":\"夜灯开关\",\"accessMode\":\"rw\",\"required\":false},{\"identifier\":\"WorkMode\",\"dataType\":{\"specs\":{\"0\":\"手动\",\"1\":\"阅读\",\"2\":\"影院\",\"3\":\"夜灯\",\"4\":\"生活\",\"5\":\"柔和\"},\"type\":\"enum\"},\"name\":\"工作模式\",\"accessMode\":\"rw\",\"required\":false},{\"identifier\":\"ColorTemperature\",\"dataType\":{\"specs\":{\"unit\":\"K\",\"min\":\"2700\",\"unitName\":\"开尔文\",\"max\":\"6500\"},\"type\":\"int\"},\"name\":\"冷暖色温\",\"accessMode\":\"rw\",\"required\":false},{\"identifier\":\"HSLColor\",\"dataType\":{\"specs\":[{\"identifier\":\"Hue\",\"dataType\":{\"specs\":{\"unit\":\"°\",\"min\":\"0\",\"unitName\":\"度\",\"max\":\"360\"},\"type\":\"int\"},\"name\":\"色调\"},{\"identifier\":\"Saturation\",\"dataType\":{\"specs\":{\"unit\":\"%\",\"min\":\"0\",\"unitName\":\"百分比\",\"max\":\"100\"},\"type\":\"int\"},\"name\":\"饱和度\"},{\"identifier\":\"Lightness\",\"dataType\":{\"specs\":{\"unit\":\"%\",\"min\":\"0\",\"unitName\":\"百分比\",\"max\":\"100\"},\"type\":\"int\"},\"name\":\"亮度\"}],\"type\":\"struct\"},\"name\":\"HSL调色\",\"accessMode\":\"rw\",\"required\":false},{\"identifier\":\"Brightness\",\"dataType\":{\"specs\":{\"unit\":\"%\",\"min\":\"0\",\"unitName\":\"百分比\",\"max\":\"100\"},\"type\":\"int\"},\"name\":\"明暗度\",\"accessMode\":\"rw\",\"required\":false}],\"events\":[{\"outputData\":[{\"identifier\":\"LightSwitch\",\"dataType\":{\"specs\":{\"0\":\"关闭\",\"1\":\"开启\"},\"type\":\"bool\"},\"name\":\"主灯开关\"},{\"identifier\":\"RGBColor\",\"dataType\":{\"specs\":[{\"identifier\":\"Red\",\"dataType\":{\"specs\":{\"min\":\"0\",\"unitName\":\"无\",\"max\":\"255\"},\"type\":\"int\"},\"name\":\"红色\"},{\"identifier\":\"Green\",\"dataType\":{\"specs\":{\"min\":\"0\",\"unitName\":\"无\",\"max\":\"255\"},\"type\":\"int\"},\"name\":\"绿色\"},{\"identifier\":\"Blue\",\"dataType\":{\"specs\":{\"min\":\"0\",\"unitName\":\"无\",\"max\":\"255\"},\"type\":\"int\"},\"name\":\"蓝色\"}],\"type\":\"struct\"},\"name\":\"RGB调色\"},{\"identifier\":\"HSVColor\",\"dataType\":{\"specs\":[{\"identifier\":\"Hue\",\"dataType\":{\"specs\":{\"unit\":\"%\",\"min\":\"0\",\"unitName\":\"百分比\",\"max\":\"100\"},\"type\":\"int\"},\"name\":\"色调\"},{\"identifier\":\"Saturation\",\"dataType\":{\"specs\":{\"unit\":\"%\",\"min\":\"0\",\"unitName\":\"百分比\",\"max\":\"100\"},\"type\":\"int\"},\"name\":\"饱和度\"},{\"identifier\":\"Value\",\"dataType\":{\"specs\":{\"unit\":\"%\",\"min\":\"0\",\"unitName\":\"百分比\",\"max\":\"100\"},\"type\":\"int\"},\"name\":\"明度\"}],\"type\":\"struct\"},\"name\":\"HSV调色\"},{\"identifier\":\"NightLightSwitch\",\"dataType\":{\"specs\":{\"0\":\"关闭\",\"1\":\"开启\"},\"type\":\"bool\"},\"name\":\"夜灯开关\"},{\"identifier\":\"WorkMode\",\"dataType\":{\"specs\":{\"0\":\"手动\",\"1\":\"阅读\",\"2\":\"影院\",\"3\":\"夜灯\",\"4\":\"生活\",\"5\":\"柔和\"},\"type\":\"enum\"},\"name\":\"工作模式\"},{\"identifier\":\"ColorTemperature\",\"dataType\":{\"specs\":{\"unit\":\"K\",\"min\":\"2700\",\"unitName\":\"开尔文\",\"max\":\"6500\"},\"type\":\"int\"},\"name\":\"冷暖色温\"},{\"identifier\":\"HSLColor\",\"dataType\":{\"specs\":[{\"identifier\":\"Hue\",\"dataType\":{\"specs\":{\"unit\":\"°\",\"min\":\"0\",\"unitName\":\"度\",\"max\":\"360\"},\"type\":\"int\"},\"name\":\"色调\"},{\"identifier\":\"Saturation\",\"dataType\":{\"specs\":{\"unit\":\"%\",\"min\":\"0\",\"unitName\":\"百分比\",\"max\":\"100\"},\"type\":\"int\"},\"name\":\"饱和度\"},{\"identifier\":\"Lightness\",\"dataType\":{\"specs\":{\"unit\":\"%\",\"min\":\"0\",\"unitName\":\"百分比\",\"max\":\"100\"},\"type\":\"int\"},\"name\":\"亮度\"}],\"type\":\"struct\"},\"name\":\"HSL调色\"},{\"identifier\":\"Brightness\",\"dataType\":{\"specs\":{\"unit\":\"%\",\"min\":\"0\",\"unitName\":\"百分比\",\"max\":\"100\"},\"type\":\"int\"},\"name\":\"明暗度\"}],\"identifier\":\"post\",\"method\":\"thing.event.property.post\",\"name\":\"post\",\"type\":\"info\",\"required\":true,\"desc\":\"属性上报\"},{\"outputData\":[{\"identifier\":\"ErrorCode\",\"dataType\":{\"specs\":{\"0\":\"正常\"},\"type\":\"enum\"},\"name\":\"故障代码\"}],\"identifier\":\"Error\",\"method\":\"thing.event.Error.post\",\"name\":\"故障上报\",\"type\":\"info\",\"required\":true}]}";
-/* user sample context struct. */
-typedef struct _sample_context {
-    const void* thing;
 
-    int cloud_connected;
-    int thing_enabled;
-
-    int service_custom_input_transparency;
-    int service_custom_output_contrastratio;
-#ifdef SERVICE_OTA_ENABLED
-    char ota_buffer[OTA_BUFFER_SIZE];
-#endif /* SERVICE_OTA_ENABLED */
-} sample_context_t;
+const char AUX_TSL_STRING[] ="{\"schema\":\"https://iot-tsl.oss-cn-shanghai.aliyuncs.com/schema.json\",\"profile\":{\"productKey\":\"a1f5ycK5hkC\"},\"services\":[{\"outputData\":[],\"identifier\":\"set\",\"inputData\":[{\"identifier\":\"TargetTemperature\",\"dataType\":{\"specs\":{\"unit\":\"°C\",\"min\":\"16\",\"unitName\":\"摄氏度\",\"max\":\"32\"},\"type\":\"double\"},\"name\":\"目标温度\"},{\"identifier\":\"PowerSwitch\",\"dataType\":{\"specs\":{\"0\":\"关闭\",\"1\":\"开启\"},\"type\":\"bool\"},\"name\":\"电源开关\"},{\"identifier\":\"WindSpeed\",\"dataType\":{\"specs\":{\"0\":\"自动\",\"1\":\"静音档\",\"2\":\"低档\",\"3\":\"中档\",\"4\":\"高档\",\"5\":\"最高档\"},\"type\":\"enum\"},\"name\":\"风速\"},{\"identifier\":\"WorkMode\",\"dataType\":{\"specs\":{\"0\":\"自动\",\"1\":\"制冷\",\"2\":\"制热\",\"3\":\"通风\",\"4\":\"除湿\"},\"type\":\"enum\"},\"name\":\"工作模式\"},{\"identifier\":\"Sleep\",\"dataType\":{\"specs\":{\"0\":\"关闭\",\"1\":\"开启\"},\"type\":\"bool\"},\"name\":\"睡眠\"},{\"identifier\":\"ECO\",\"dataType\":{\"specs\":{\"0\":\"关闭\",\"1\":\"开启\"},\"type\":\"enum\"},\"name\":\"ECO\"},{\"identifier\":\"Ions\",\"dataType\":{\"specs\":{\"0\":\"关闭\",\"1\":\"开启\"},\"type\":\"bool\"},\"name\":\"健康_负离子\"},{\"identifier\":\"PTC\",\"dataType\":{\"specs\":{\"0\":\"关闭\",\"1\":\"开启\"},\"type\":\"bool\"},\"name\":\"电辅_辅热\"},{\"identifier\":\"Screen\",\"dataType\":{\"specs\":{\"0\":\"关闭\",\"1\":\"开启\"},\"type\":\"bool\"},\"name\":\"背景灯_屏显\"},{\"identifier\":\"VerticalSwitch\",\"dataType\":{\"specs\":{\"0\":\"关闭\",\"1\":\"开启\"},\"type\":\"bool\"},\"name\":\"上下摆风开关\"},{\"identifier\":\"Clean\",\"dataType\":{\"specs\":{\"0\":\"关\",\"1\":\"开\"},\"type\":\"bool\"},\"name\":\"清洁\"},{\"identifier\":\"MildewProof\",\"dataType\":{\"specs\":{\"0\":\"关\",\"1\":\"开\"},\"type\":\"bool\"},\"name\":\"防霉\"},{\"identifier\":\"PowerLimitPercent\",\"dataType\":{\"specs\":{\"unit\":\"%\",\"min\":\"30\",\"unitName\":\"百分比\",\"max\":\"100\"},\"type\":\"int\"},\"name\":\"用电功率可调\"}],\"method\":\"thing.service.property.set\",\"name\":\"set\",\"required\":true,\"callType\":\"sync\",\"desc\":\"属性设置\"},{\"outputData\":[{\"identifier\":\"CurrentTemperature\",\"dataType\":{\"specs\":{\"unit\":\"°C\",\"min\":\"-20\",\"unitName\":\"摄氏度\",\"max\":\"55\"},\"type\":\"double\"},\"name\":\"当前温度\"},{\"identifier\":\"TargetTemperature\",\"dataType\":{\"specs\":{\"unit\":\"°C\",\"min\":\"16\",\"unitName\":\"摄氏度\",\"max\":\"32\"},\"type\":\"double\"},\"name\":\"目标温度\"},{\"identifier\":\"PowerSwitch\",\"dataType\":{\"specs\":{\"0\":\"关闭\",\"1\":\"开启\"},\"type\":\"bool\"},\"name\":\"电源开关\"},{\"identifier\":\"WindSpeed\",\"dataType\":{\"specs\":{\"0\":\"自动\",\"1\":\"静音档\",\"2\":\"低档\",\"3\":\"中档\",\"4\":\"高档\",\"5\":\"最高档\"},\"type\":\"enum\"},\"name\":\"风速\"},{\"identifier\":\"WorkMode\",\"dataType\":{\"specs\":{\"0\":\"自动\",\"1\":\"制冷\",\"2\":\"制热\",\"3\":\"通风\",\"4\":\"除湿\"},\"type\":\"enum\"},\"name\":\"工作模式\"},{\"identifier\":\"Sleep\",\"dataType\":{\"specs\":{\"0\":\"关闭\",\"1\":\"开启\"},\"type\":\"bool\"},\"name\":\"睡眠\"},{\"identifier\":\"ECO\",\"dataType\":{\"specs\":{\"0\":\"关闭\",\"1\":\"开启\"},\"type\":\"enum\"},\"name\":\"ECO\"},{\"identifier\":\"Ions\",\"dataType\":{\"specs\":{\"0\":\"关闭\",\"1\":\"开启\"},\"type\":\"bool\"},\"name\":\"健康_负离子\"},{\"identifier\":\"PTC\",\"dataType\":{\"specs\":{\"0\":\"关闭\",\"1\":\"开启\"},\"type\":\"bool\"},\"name\":\"电辅_辅热\"},{\"identifier\":\"Screen\",\"dataType\":{\"specs\":{\"0\":\"关闭\",\"1\":\"开启\"},\"type\":\"bool\"},\"name\":\"背景灯_屏显\"},{\"identifier\":\"VerticalSwitch\",\"dataType\":{\"specs\":{\"0\":\"关闭\",\"1\":\"开启\"},\"type\":\"bool\"},\"name\":\"上下摆风开关\"},{\"identifier\":\"Clean\",\"dataType\":{\"specs\":{\"0\":\"关\",\"1\":\"开\"},\"type\":\"bool\"},\"name\":\"清洁\"},{\"identifier\":\"MildewProof\",\"dataType\":{\"specs\":{\"0\":\"关\",\"1\":\"开\"},\"type\":\"bool\"},\"name\":\"防霉\"},{\"identifier\":\"PowerLimitPercent\",\"dataType\":{\"specs\":{\"unit\":\"%\",\"min\":\"30\",\"unitName\":\"百分比\",\"max\":\"100\"},\"type\":\"int\"},\"name\":\"用电功率可调\"},{\"identifier\":\"Model\",\"dataType\":{\"specs\":{\"length\":\"50\"},\"type\":\"text\"},\"name\":\"型号\"}],\"identifier\":\"get\",\"inputData\":[\"CurrentTemperature\",\"TargetTemperature\",\"PowerSwitch\",\"WindSpeed\",\"WorkMode\",\"Sleep\",\"ECO\",\"Ions\",\"PTC\",\"Screen\",\"VerticalSwitch\",\"Clean\",\"MildewProof\",\"PowerLimitPercent\",\"Model\"],\"method\":\"thing.service.property.get\",\"name\":\"get\",\"required\":true,\"callType\":\"sync\",\"desc\":\"属性获取\"}],\"properties\":[{\"identifier\":\"CurrentTemperature\",\"dataType\":{\"specs\":{\"unit\":\"°C\",\"min\":\"-20\",\"unitName\":\"摄氏度\",\"max\":\"55\"},\"type\":\"double\"},\"name\":\"当前温度\",\"accessMode\":\"r\",\"required\":true},{\"identifier\":\"TargetTemperature\",\"dataType\":{\"specs\":{\"unit\":\"°C\",\"min\":\"16\",\"unitName\":\"摄氏度\",\"max\":\"32\"},\"type\":\"double\"},\"name\":\"目标温度\",\"accessMode\":\"rw\",\"required\":true},{\"identifier\":\"PowerSwitch\",\"dataType\":{\"specs\":{\"0\":\"关闭\",\"1\":\"开启\"},\"type\":\"bool\"},\"name\":\"电源开关\",\"accessMode\":\"rw\",\"required\":true},{\"identifier\":\"WindSpeed\",\"dataType\":{\"specs\":{\"0\":\"自动\",\"1\":\"静音档\",\"2\":\"低档\",\"3\":\"中档\",\"4\":\"高档\",\"5\":\"最高档\"},\"type\":\"enum\"},\"name\":\"风速\",\"accessMode\":\"rw\",\"required\":true},{\"identifier\":\"WorkMode\",\"dataType\":{\"specs\":{\"0\":\"自动\",\"1\":\"制冷\",\"2\":\"制热\",\"3\":\"通风\",\"4\":\"除湿\"},\"type\":\"enum\"},\"name\":\"工作模式\",\"accessMode\":\"rw\",\"required\":true},{\"identifier\":\"Sleep\",\"dataType\":{\"specs\":{\"0\":\"关闭\",\"1\":\"开启\"},\"type\":\"bool\"},\"name\":\"睡眠\",\"accessMode\":\"rw\",\"required\":false},{\"identifier\":\"ECO\",\"dataType\":{\"specs\":{\"0\":\"关闭\",\"1\":\"开启\"},\"type\":\"enum\"},\"name\":\"ECO\",\"accessMode\":\"rw\",\"required\":false},{\"identifier\":\"Ions\",\"dataType\":{\"specs\":{\"0\":\"关闭\",\"1\":\"开启\"},\"type\":\"bool\"},\"name\":\"健康_负离子\",\"accessMode\":\"rw\",\"required\":false},{\"identifier\":\"PTC\",\"dataType\":{\"specs\":{\"0\":\"关闭\",\"1\":\"开启\"},\"type\":\"bool\"},\"name\":\"电辅_辅热\",\"accessMode\":\"rw\",\"required\":false},{\"identifier\":\"Screen\",\"dataType\":{\"specs\":{\"0\":\"关闭\",\"1\":\"开启\"},\"type\":\"bool\"},\"name\":\"背景灯_屏显\",\"accessMode\":\"rw\",\"required\":false},{\"identifier\":\"VerticalSwitch\",\"dataType\":{\"specs\":{\"0\":\"关闭\",\"1\":\"开启\"},\"type\":\"bool\"},\"name\":\"上下摆风开关\",\"accessMode\":\"rw\",\"required\":false},{\"identifier\":\"Clean\",\"dataType\":{\"specs\":{\"0\":\"关\",\"1\":\"开\"},\"type\":\"bool\"},\"name\":\"清洁\",\"accessMode\":\"rw\",\"required\":true},{\"identifier\":\"MildewProof\",\"dataType\":{\"specs\":{\"0\":\"关\",\"1\":\"开\"},\"type\":\"bool\"},\"name\":\"防霉\",\"accessMode\":\"rw\",\"required\":false},{\"identifier\":\"PowerLimitPercent\",\"dataType\":{\"specs\":{\"unit\":\"%\",\"min\":\"30\",\"unitName\":\"百分比\",\"max\":\"100\"},\"type\":\"int\"},\"name\":\"用电功率可调\",\"accessMode\":\"rw\",\"required\":false},{\"identifier\":\"Model\",\"dataType\":{\"specs\":{\"length\":\"50\"},\"type\":\"text\"},\"name\":\"型号\",\"accessMode\":\"r\",\"required\":true}],\"events\":[{\"outputData\":[{\"identifier\":\"CurrentTemperature\",\"dataType\":{\"specs\":{\"unit\":\"°C\",\"min\":\"-20\",\"unitName\":\"摄氏度\",\"max\":\"55\"},\"type\":\"double\"},\"name\":\"当前温度\"},{\"identifier\":\"TargetTemperature\",\"dataType\":{\"specs\":{\"unit\":\"°C\",\"min\":\"16\",\"unitName\":\"摄氏度\",\"max\":\"32\"},\"type\":\"double\"},\"name\":\"目标温度\"},{\"identifier\":\"PowerSwitch\",\"dataType\":{\"specs\":{\"0\":\"关闭\",\"1\":\"开启\"},\"type\":\"bool\"},\"name\":\"电源开关\"},{\"identifier\":\"WindSpeed\",\"dataType\":{\"specs\":{\"0\":\"自动\",\"1\":\"静音档\",\"2\":\"低档\",\"3\":\"中档\",\"4\":\"高档\",\"5\":\"最高档\"},\"type\":\"enum\"},\"name\":\"风速\"},{\"identifier\":\"WorkMode\",\"dataType\":{\"specs\":{\"0\":\"自动\",\"1\":\"制冷\",\"2\":\"制热\",\"3\":\"通风\",\"4\":\"除湿\"},\"type\":\"enum\"},\"name\":\"工作模式\"},{\"identifier\":\"Sleep\",\"dataType\":{\"specs\":{\"0\":\"关闭\",\"1\":\"开启\"},\"type\":\"bool\"},\"name\":\"睡眠\"},{\"identifier\":\"ECO\",\"dataType\":{\"specs\":{\"0\":\"关闭\",\"1\":\"开启\"},\"type\":\"enum\"},\"name\":\"ECO\"},{\"identifier\":\"Ions\",\"dataType\":{\"specs\":{\"0\":\"关闭\",\"1\":\"开启\"},\"type\":\"bool\"},\"name\":\"健康_负离子\"},{\"identifier\":\"PTC\",\"dataType\":{\"specs\":{\"0\":\"关闭\",\"1\":\"开启\"},\"type\":\"bool\"},\"name\":\"电辅_辅热\"},{\"identifier\":\"Screen\",\"dataType\":{\"specs\":{\"0\":\"关闭\",\"1\":\"开启\"},\"type\":\"bool\"},\"name\":\"背景灯_屏显\"},{\"identifier\":\"VerticalSwitch\",\"dataType\":{\"specs\":{\"0\":\"关闭\",\"1\":\"开启\"},\"type\":\"bool\"},\"name\":\"上下摆风开关\"},{\"identifier\":\"Clean\",\"dataType\":{\"specs\":{\"0\":\"关\",\"1\":\"开\"},\"type\":\"bool\"},\"name\":\"清洁\"},{\"identifier\":\"MildewProof\",\"dataType\":{\"specs\":{\"0\":\"关\",\"1\":\"开\"},\"type\":\"bool\"},\"name\":\"防霉\"},{\"identifier\":\"PowerLimitPercent\",\"dataType\":{\"specs\":{\"unit\":\"%\",\"min\":\"30\",\"unitName\":\"百分比\",\"max\":\"100\"},\"type\":\"int\"},\"name\":\"用电功率可调\"},{\"identifier\":\"Model\",\"dataType\":{\"specs\":{\"length\":\"50\"},\"type\":\"text\"},\"name\":\"型号\"}],\"identifier\":\"post\",\"method\":\"thing.event.property.post\",\"name\":\"post\",\"type\":\"info\",\"required\":true,\"desc\":\"属性上报\"},{\"outputData\":[{\"identifier\":\"ErrorCode\",\"dataType\":{\"specs\":{\"0\":\"恢复正常\"},\"type\":\"enum\"},\"name\":\"故障代码\"}],\"identifier\":\"Error\",\"method\":\"thing.event.Error.post\",\"name\":\"故障上报\",\"type\":\"info\",\"required\":true}]}";
 
 #ifdef SUBDEV_ENABLE
 #define DEMO_SUBDEV1_PRODUCT_KEY       "a1jwrlrp3f5"
@@ -76,6 +58,8 @@ subdev_sample_context_t g_subdev_sample_context;
 
 sample_context_t g_sample_context;
 
+uint8_t cloud_connect_status = 0;
+
 #ifdef LOCAL_CONN_ENABLE
 static int on_connect(void* ctx, int cloud)
 #else
@@ -85,7 +69,7 @@ static int on_connect(void* ctx)
     sample_context_t* sample = ctx;
 
     sample->cloud_connected = 1;
-
+    cloud_connect_status= 1;
     ota_init();
 
 #ifdef LOCAL_CONN_ENABLE
@@ -109,6 +93,8 @@ static int on_disconnect(void* ctx)
 
     sample->cloud_connected = 0;
 
+    cloud_connect_status = 0;
+    
 #ifdef LOCAL_CONN_ENABLE
     LINKKIT_PRINTF("%s is disconnect\n", cloud ? "cloud" : "local");
 #else
@@ -222,63 +208,37 @@ static int thing_call_service(const void* thing_id, const char* service, int req
     return 0;
 }
 
+extern device_func_index hiFuncStr[MAX_PARAMS];
+
 static int thing_prop_changed(const void* thing_id, const char* property, void* ctx)
 {
     char* value_str = NULL;
     char property_buf[64] = {0};
 
-    /* get new property value */
-    if (strstr(property, "HSVColor") != 0) {
-        int hue, saturation, value;
+        LINKKIT_PRINTF("=============================%s===========================",property);
 
-        snprintf(property_buf, sizeof(property_buf), "%s.%s", property, "Hue");
-        linkkit_get_value(linkkit_method_get_property_value, thing_id, property_buf, &hue, &value_str);
+        for(int i =0;i<MAX_PARAMS ;i++)
+        {
+            if(strstr(property, hiFuncStr[i].name) != 0)
+            {
+                if( i == TARGETTEMPERATURE || i == CURRENTTEMPERATURE)
+                {
+                    double temperature ;
+                    linkkit_get_value(linkkit_method_get_property_value, thing_id, hiFuncStr[i].name, &temperature, &value_str);
+                    LINKKIT_PRINTF("property(%s), name :%f\n", property, temperature);
+                    cloud_cmd_process(hiFuncStr[i].name,(int)temperature); 
 
-        snprintf(property_buf, sizeof(property_buf), "%s.%s", property, "Saturation");
-        linkkit_get_value(linkkit_method_get_property_value, thing_id, property_buf, &saturation, &value_str);
+                }else 
+                {
+                    int  value;
+                    linkkit_get_value(linkkit_method_get_property_value, thing_id, hiFuncStr[i].name, &value, &value_str);
+                    LINKKIT_PRINTF("property(%s), name :%d\n", property, value);
+                    cloud_cmd_process(hiFuncStr[i].name,value);
+                }
+                break;
+            }
 
-        snprintf(property_buf, sizeof(property_buf), "%s.%s", property, "Value");
-        linkkit_get_value(linkkit_method_get_property_value, thing_id, property_buf, &value, &value_str);
-
-        LINKKIT_PRINTF("property(%s), Hue:%d, Saturation:%d, Value:%d\n", property, hue, saturation, value);
-
-        /* XXX: do user's process logical here. */
-    } else if (strstr(property, "HSLColor") != 0) {
-        int hue, saturation, lightness;
-
-        snprintf(property_buf, sizeof(property_buf), "%s.%s", property, "Hue");
-        linkkit_get_value(linkkit_method_get_property_value, thing_id, property_buf, &hue, &value_str);
-
-        snprintf(property_buf, sizeof(property_buf), "%s.%s", property, "Saturation");
-        linkkit_get_value(linkkit_method_get_property_value, thing_id, property_buf, &saturation, &value_str);
-
-        snprintf(property_buf, sizeof(property_buf), "%s.%s", property, "Lightness");
-        linkkit_get_value(linkkit_method_get_property_value, thing_id, property_buf, &lightness, &value_str);
-
-        LINKKIT_PRINTF("property(%s), Hue:%d, Saturation:%d, Lightness:%d\n", property, hue, saturation, lightness);
-        /* XXX: do user's process logical here. */
-    }  else if (strstr(property, "RGBColor") != 0) {
-        int red, green, blue;
-
-        snprintf(property_buf, sizeof(property_buf), "%s.%s", property, "Red");
-        linkkit_get_value(linkkit_method_get_property_value, thing_id, property_buf, &red, &value_str);
-
-        snprintf(property_buf, sizeof(property_buf), "%s.%s", property, "Green");
-        linkkit_get_value(linkkit_method_get_property_value, thing_id, property_buf, &green, &value_str);
-
-        snprintf(property_buf, sizeof(property_buf), "%s.%s", property, "Blue");
-        linkkit_get_value(linkkit_method_get_property_value, thing_id, property_buf, &blue, &value_str);
-
-        LINKKIT_PRINTF("property(%s), Red:%d, Green:%d, Blue:%d\n", property, red, green, blue);
-        /* XXX: do user's process logical here. */
-    } else {
-        linkkit_get_value(linkkit_method_get_property_value, thing_id, property, NULL, &value_str);
-
-        LINKKIT_PRINTF("#### property(%s) new value set: %s ####\n", property, value_str);
-    }
-
-    /* do user's process logical here. */
-    linkkit_post_property(thing_id, property);
+        }
 
     return 0;
 }
@@ -397,15 +357,15 @@ static unsigned long long uptime_sec(void)
 static int post_event_error(sample_context_t* sample)
 {
     char event_output_identifier[64];
-    snprintf(event_output_identifier, sizeof(event_output_identifier), "%s.%s", EVENT_ERROR_IDENTIFIER, EVENT_ERROR_OUTPUT_INFO_IDENTIFIER);
+    snprintf(event_output_identifier, sizeof(event_output_identifier), "%s", "WindSpeed");
 
-    int errorCode = 0;
-    linkkit_set_value(linkkit_method_set_event_output_value,
+    int errorCode = 2;
+    linkkit_set_value(linkkit_method_set_property_value,   
                       sample->thing,
                       event_output_identifier,
                       &errorCode, NULL);
 
-    return linkkit_trigger_event(sample->thing, EVENT_ERROR_IDENTIFIER);
+    return linkkit_trigger_event(sample->thing, "WindSpeed");
 }
 
 static int is_active(sample_context_t* sample)
@@ -426,9 +386,9 @@ void linkkit_action(void *params)
 
     now += 1;
 
-#if 1
+#if 0
 	/* about 60 seconds, assume trigger event about every 60s. */
-    if (now % 600 == 0 && is_active(sample_ctx)) {
+    if (now % 60 == 0 && is_active(sample_ctx)) {
         int id_send = 0;
         int ret;
         ret = post_event_error(sample_ctx);
@@ -475,12 +435,14 @@ int linkkit_main()
 
     linkkit_start(16, get_tsl_from_cloud, linkkit_loglevel_debug, &alinkops, linkkit_cloud_domain_sh, sample_ctx);
     if (!get_tsl_from_cloud) {
-        linkkit_set_tsl(TSL_STRING, strlen(TSL_STRING));
+         linkkit_set_tsl(AUX_TSL_STRING, strlen(AUX_TSL_STRING)); //  linkkit_set_tsl(TSL_STRING, strlen(TSL_STRING));   ///注册参数
     }
+
 #ifdef SUBDEV_ENABLE
     linkkit_subdev_init(&subdev_ops, &g_subdev_sample_context);
 #endif
-    aos_post_delayed_action(100, linkkit_action, sample_ctx);
+
+    //aos_post_delayed_action(100, linkkit_action, sample_ctx);    ///1分钟的主动上报
 
     return 0;
 }
@@ -502,4 +464,3 @@ static void ota_init()
 
     aos_post_event(EV_SYS, CODE_SYS_ON_START_FOTA, 0);
 }
-

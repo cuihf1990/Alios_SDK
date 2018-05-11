@@ -30,7 +30,7 @@ static void wifi_get_mac_addr(hal_wifi_module_t *m, uint8_t *mac)
 };
 
 
-static void connet_wifi_ap(void *arg)
+static void     (void *arg)
 {
     WIFI_Status_t wifi_res;
     int connect_counter = 0;
@@ -40,7 +40,7 @@ static void connet_wifi_ap(void *arg)
 
     wifi_res = WIFI_Disconnect();
     if (WIFI_STATUS_OK != wifi_res) {
-        printf("WIFI_Disconnect failed\n");
+        LOG("WIFI_Disconnect failed\n");
     }
 
     do {
