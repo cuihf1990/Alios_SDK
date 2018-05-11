@@ -36,6 +36,7 @@ typedef struct {
     char device_secret[DEVICE_SECRET_MAXLEN];
 }request_info_t;
 #endif
+static void *g_dm_thing_manager_mutex = NULL;
 static const char string_dm_thing_manager_class_name[] __DM_READ_ONLY__ = "dm_thg_mng_cls";
 static const char string_thing_service_property_set[] __DM_READ_ONLY__ = "thing.service.property.set";
 static const char string_thing_service_property_get[] __DM_READ_ONLY__ = "thing.service.property.get";
@@ -689,6 +690,7 @@ static void dm_cm_register_handler(iotx_cm_send_peer_t* _source, iotx_cm_message
     int array_size, index;
     char* property_get_param_identifier;
 
+	HAL_MutexLock(g_dm_thing_manager_mutex);
 #ifdef _PLATFORM_IS_LINUX_
     char file_name[DEVICE_ID_MAXLEN + 6] = {0};
     FILE* fp_tsl;
@@ -698,7 +700,7 @@ static void dm_cm_register_handler(iotx_cm_send_peer_t* _source, iotx_cm_message
 #endif
 
     assert(dm_thing_manager && iotx_cm_send_peer && cm_message_info);
-
+	
     print_iotx_cm_message_info(iotx_cm_send_peer, cm_message_info);
 
     list = dm_thing_manager->_local_thing_list;
@@ -714,7 +716,7 @@ static void dm_cm_register_handler(iotx_cm_send_peer_t* _source, iotx_cm_message
 #endif
     if (dm_thing_manager->_thing_id == NULL && strstr(cm_message_info->URI, string_method_name_thing_tsl_get_reply) == NULL) {
         dm_log_err("thing id NOT match");
-
+		HAL_MutexUnlock(g_dm_thing_manager_mutex);
         return;
     }
 
@@ -751,6 +753,7 @@ static void dm_cm_register_handler(iotx_cm_send_peer_t* _source, iotx_cm_message
 #endif
             if (dm_thing_manager->_service_identifier_requested == NULL) {
                 dm_log_err("method NOT match of service requested");
+				HAL_MutexUnlock(g_dm_thing_manager_mutex);
                 return;
             }
 #ifdef LOCAL_CONN_ENABLE
@@ -797,6 +800,7 @@ static void dm_cm_register_handler(iotx_cm_send_peer_t* _source, iotx_cm_message
             thing = dm_thing_manager_generate_new_local_thing(dm_thing_manager, cm_message_info->parameter, cm_message_info->parameter_length);
             if (NULL == thing) {
                 dm_log_err("generate new thing failed");
+				HAL_MutexUnlock(g_dm_thing_manager_mutex);
                 return;
             }
 #ifdef _PLATFORM_IS_LINUX_
@@ -823,7 +827,7 @@ static void dm_cm_register_handler(iotx_cm_send_peer_t* _source, iotx_cm_message
             dm_thing_manager_answer_service(dm_thing_manager, thing, dm_thing_manager->_service_identifier_requested,
                                             dm_thing_manager->_request_id, dm_thing_manager->_ret == 0 ? 200 : 400);
 #endif /* RRPC_ENABLED */
-
+			
             cJSON_Delete(property_set_param_obj);
 
         } else if (strstr(cm_message_info->URI, string_method_name_property_get)) { /* thing/service/property/get match */
@@ -835,6 +839,7 @@ static void dm_cm_register_handler(iotx_cm_send_peer_t* _source, iotx_cm_message
 
             if (property_get_param_obj == NULL || cJSON_IsArray(property_get_param_obj) == 0) {
                 dm_log_err("UNABLE to resolve %s params format", string_method_name_property_get);
+				HAL_MutexUnlock(g_dm_thing_manager_mutex);
                 return;
             }
 
@@ -996,6 +1001,8 @@ static void dm_cm_register_handler(iotx_cm_send_peer_t* _source, iotx_cm_message
         dm_lite_free(cm_message_info->message);
         cm_message_info->message = NULL;
     }
+
+	HAL_MutexUnlock(g_dm_thing_manager_mutex);
 }
 
 static void send_request_to_uri(void* _dm_thing_manager, const char* _uri)
@@ -1109,6 +1116,7 @@ static void* dm_thing_manager_ctor(void* _self, va_list* params)
     handle_dm_callback_fp_t callback_func;
     list_t** list;
 
+	g_dm_thing_manager_mutex = HAL_MutexCreate();
     self->_name = va_arg(*params, char*);
     self->_get_tsl_from_cloud = va_arg(*params, int);
     callback_func = va_arg(*params, void*);
@@ -1575,6 +1583,7 @@ static int dm_thing_manager_set_thing_property_value(void* _self, const void* th
 
     assert(thing_id && identifier && (value || value_str));
 
+	HAL_MutexLock(g_dm_thing_manager_mutex);
     self->_thing_id = (void*)thing_id;
     self->_identifier = (void*)identifier;
     self->_set_value = (void*)value;
@@ -1588,6 +1597,7 @@ static int dm_thing_manager_set_thing_property_value(void* _self, const void* th
         sub_thing_list_iterator(self, set_property_value);
     }
 #endif
+	HAL_MutexUnlock(g_dm_thing_manager_mutex);
     return self->_ret;
 }
 
@@ -2042,6 +2052,7 @@ static int dm_thing_manager_trigger_event(void* _self, const void* thing_id, con
 
     assert(thing_id && event_identifier && cm && *cm);
 
+	HAL_MutexLock(g_dm_thing_manager_mutex);
     self->_thing_id = (void*)thing_id;
     self->_identifier = (void*)event_identifier;
     self->_property_identifier_post = (void*)property_identifier;
@@ -2059,12 +2070,14 @@ static int dm_thing_manager_trigger_event(void* _self, const void* thing_id, con
         ret = (*message_info)->serialize_to_payload_request(message_info);
         if (ret == -1) {
             dm_log_err("serialize_to_payload_request FAIL");
+			HAL_MutexUnlock(g_dm_thing_manager_mutex);
             return ret;
         }
 
         self->_ret = (*cm)->send(cm, message_info);
     }
 
+	HAL_MutexUnlock(g_dm_thing_manager_mutex);
     return self->_ret < 0 ? self->_ret : self->_current_id;
 }
 
