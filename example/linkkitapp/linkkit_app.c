@@ -357,15 +357,15 @@ static unsigned long long uptime_sec(void)
 static int post_event_error(sample_context_t* sample)
 {
     char event_output_identifier[64];
-    snprintf(event_output_identifier, sizeof(event_output_identifier), "%s", "WindSpeed");
+    snprintf(event_output_identifier, sizeof(event_output_identifier), "%s.%s", EVENT_ERROR_IDENTIFIER, EVENT_ERROR_OUTPUT_INFO_IDENTIFIER);
 
-    int errorCode = 2;
-    linkkit_set_value(linkkit_method_set_property_value,   
+    int errorCode = 0;
+    linkkit_set_value(linkkit_method_set_event_output_value,
                       sample->thing,
                       event_output_identifier,
                       &errorCode, NULL);
 
-    return linkkit_trigger_event(sample->thing, "WindSpeed");
+    return linkkit_trigger_event(sample->thing, EVENT_ERROR_IDENTIFIER);
 }
 
 static int is_active(sample_context_t* sample)
@@ -386,9 +386,9 @@ void linkkit_action(void *params)
 
     now += 1;
 
-#if 0
+
 	/* about 60 seconds, assume trigger event about every 60s. */
-    if (now % 60 == 0 && is_active(sample_ctx)) {
+    if (now % 600 == 0 && is_active(sample_ctx)) {
         int id_send = 0;
         int ret;
         ret = post_event_error(sample_ctx);
@@ -402,7 +402,7 @@ void linkkit_action(void *params)
             LINKKIT_PRINTF("send id:%d\n", id_send);
         }
     }
-#endif
+
 
 #if 0
     now_size = system_get_free_heap_size();

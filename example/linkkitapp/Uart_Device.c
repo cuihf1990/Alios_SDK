@@ -29,22 +29,22 @@ static uint8_t Get_Deviceinfo[] = {0xBB, 0x00, 0x06, 0x80, 0x00, 0x00, 0x02, 0x0
 static uint8_t Get_Info[] =       {0xBB, 0x00, 0x06, 0x80, 0x00, 0x00, 0x02, 0x00, 0x21, 0x01, 0x1B, 0x7E};
 
 device_func_index hiFuncStr[MAX_PARAMS] = {
-  {0,"CurrentTemperature"},	
-  {0, "TargetTemperature"},
-  {0, "PowerSwitch"},
-  {0, "WindSpeed"},
-  {0, "WorkMode"},
-  {0, "Sleep"},
-  {0, "ECO"},
-  {0, "Ions"},
-  {0, "PTC"},
-  {0, "Screen"},
-  {0,"VerticalSwitch"},
-  {0,"Clean"},
-  {0,"MildewProof"},
-  {0,"PowerLimitPercent"},
-  {0,"ERRORCODE"},
-  {0, NULL}
+  {-1,"CurrentTemperature"},	
+  {-1, "TargetTemperature"},
+  {-1, "PowerSwitch"},
+  {-1, "WindSpeed"},
+  {-1, "WorkMode"},
+  {-1, "Sleep"},
+  {-1, "ECO"},
+  {-1, "Ions"},
+  {-1, "PTC"},
+  {-1, "Screen"},
+  {-1,"VerticalSwitch"},
+  {-1,"Clean"},
+  {-1,"MildewProof"},
+  {-1,"PowerLimitPercent"},
+  {-1,"ERRORCODE"},
+  {-1, NULL}
 };
 
 

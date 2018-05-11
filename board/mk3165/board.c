@@ -448,7 +448,7 @@ int Platform_GetProductKey(char product_key[PRODUCT_KEY_MAXLEN])
 {
     Board_SecrectInit();
     int len = strlen(pk);
-    strncpy(product_key, pk, len);
+    strncpy(product_key, pk, PRODUCT_KEY_MAXLEN);
     return len;
 }
 
@@ -456,7 +456,7 @@ int Platform_GetDeviceName(char device_name[DEVICE_NAME_MAXLEN])
 {
     Board_SecrectInit();
     int len = strlen(dn);
-    strncpy(device_name, dn, len);
+    strncpy(device_name, dn, DEVICE_NAME_MAXLEN);
     return len;
 }
 
@@ -464,7 +464,7 @@ int Platform_GetDeviceSecret(char device_secret[DEVICE_SECRET_MAXLEN])
 {
     Board_SecrectInit();
     int len = strlen(ds);
-    strncpy(device_secret, ds, len);
+    strncpy(device_secret, ds, DEVICE_SECRET_MAXLEN);
     return len;
 }
 
@@ -472,7 +472,7 @@ int Platform_GetProductSecret(char product_secret[DEVICE_SECRET_MAXLEN])
 {
     Board_SecrectInit();
     int len = strlen(ps);
-    strncpy(product_secret, ps, len);
+    strncpy(product_secret, ps, DEVICE_SECRET_MAXLEN);
     return len;
 }
 

@@ -191,6 +191,7 @@ int application_start(int argc, char **argv)
     aos_set_log_level(AOS_LL_NONE);
 
     app_uart_init();
+    wifimgr_debug_enable(1);
 
 #if 0
     netmgr_ap_config_t config;
