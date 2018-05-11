@@ -495,7 +495,7 @@ static void netmgr_wifi_config_start(void)
 
     LOG("start config");
 //////
-    do_awss_active();
+    linkkit_post_awss_active();
     
     if (valid_plugin != NULL) {
         g_netmgr_cxt.doing_smartconfig = true;

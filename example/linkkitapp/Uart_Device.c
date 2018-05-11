@@ -49,6 +49,8 @@ device_func_index hiFuncStr[MAX_PARAMS] = {
 
 
 
+void linkkit_post_awss_reset(void);
+
 void Timer_Function()   ////定时查询4s
 {
 //	LOG("get device status");
@@ -301,7 +303,8 @@ void uart_cmd_process(uint8_t * buf , int recv_len)
           	buf[10] = cksum & 0x00ff;
           	buf[11] = (cksum & 0x0ff00) >> 8;
           	hal_uart_send(UART_FOR_APP,buf,12,UART_WAIT_FOREVER);
-			do_awss_reset();
+			//do_awss_reset();
+			linkkit_post_awss_reset();
 		break;
 		case MSG_TYPE_TEST:
 		break;

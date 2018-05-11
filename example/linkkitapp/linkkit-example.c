@@ -147,15 +147,25 @@ void linkkit_key_process(input_event_t *eventinfo, void *priv_data)
     }
 }
 
-#ifdef CONFIG_AOS_CLI
-static void handle_reset_cmd(char *pwbuf, int blen, int argc, char **argv)
+void linkkit_post_awss_reset(void)
 {
     aos_schedule_call(do_awss_reset, NULL);
 }
 
-static void handle_active_cmd(char *pwbuf, int blen, int argc, char **argv)
+void linkkit_post_awss_active(void)
 {
     aos_schedule_call(do_awss_active, NULL);
+}
+
+#ifdef CONFIG_AOS_CLI
+static void handle_reset_cmd(char *pwbuf, int blen, int argc, char **argv)
+{
+    linkkit_post_awss_reset();
+}
+
+static void handle_active_cmd(char *pwbuf, int blen, int argc, char **argv)
+{
+    linkkit_post_awss_active();
 }
 
 static struct cli_command resetcmd = {

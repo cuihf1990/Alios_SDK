@@ -29,3 +29,12 @@ build/scripts/config_mk.py
 build/scripts/*.pyc
 $Recycle.Bin
 .sconsign.dblite
+tmp-chf.IAB
+tmp-chf.IAD
+tmp-chf.IMB
+tmp-chf.IMD
+tmp-chf.PFI
+tmp-chf.PO
+tmp-chf.PR
+tmp-chf.PRI
+tmp-chf.PS
