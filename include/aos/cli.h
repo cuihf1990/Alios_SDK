@@ -51,8 +51,8 @@ struct cli_st {
     do {                                                           \
         if (xWriteBufferLen > 0) {                                 \
             snprintf(pcWriteBuffer, xWriteBufferLen, __VA_ARGS__); \
-            xWriteBufferLen-= os_strlen(pcWriteBuffer);            \
-            pcWriteBuffer+= os_strlen(pcWriteBuffer);              \
+            xWriteBufferLen-= strlen(pcWriteBuffer);            \
+            pcWriteBuffer+= strlen(pcWriteBuffer);              \
         }                                                          \
     } while(0)
 
