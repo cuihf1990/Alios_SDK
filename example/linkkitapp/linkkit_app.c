@@ -216,12 +216,11 @@ static int thing_prop_changed(const void* thing_id, const char* property, void* 
     char property_buf[64] = {0};
 
         LINKKIT_PRINTF("=============================%s===========================",property);
-
         for(int i =0;i<MAX_PARAMS ;i++)
         {
             if(strstr(property, hiFuncStr[i].name) != 0)
             {
-                if( i == TARGETTEMPERATURE || i == CURRENTTEMPERATURE)
+                if( i == TARGETTEMPERATURE)// || i == CURRENTTEMPERATURE) 当前温度不处理
                 {
                     double temperature ;
                     linkkit_get_value(linkkit_method_get_property_value, thing_id, hiFuncStr[i].name, &temperature, &value_str);

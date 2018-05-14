@@ -53,7 +53,8 @@ void linkkit_post_awss_reset(void);
 
 void Timer_Function()   ////定时查询4s
 {
-//	LOG("get device status");
+	//LOG("get device status");
+	aos_msleep(100);
 	hal_uart_send(&uart_dev,Get_Deviceinfo,sizeof(Get_Deviceinfo),UART_WAIT_FOREVER);
 	aos_msleep(500);
 	hal_uart_send(&uart_dev,Get_Info,sizeof(Get_Info),UART_WAIT_FOREVER);
@@ -93,6 +94,8 @@ int app_uart_init(void)
 	uart_dev.config.parity = EVEN_PARITY;
 	uart_dev.config.flow_control = FLOW_CONTROL_DISABLED;
 
+	memset(&uartcmd,-1,sizeof(uart_cmd_t));
+
 	hal_uart_init(&uart_dev);
 	aos_task_new("uart_recv", uart_recv_thread, NULL, 0x2000);
 
@@ -122,64 +125,6 @@ void uart_recv_thread(void *p)
  
 	while (1)
 	{
-		#if 0
-		aos_msleep(500);
-		snprintf(property_output_identifier, sizeof(property_output_identifier), "%s", "WorkMode");
-   		int WorkMode = 5;
-		linkkit_set_value(linkkit_method_set_property_value,   
-                      g_sample_context.thing,
-                      property_output_identifier,
-                      &WorkMode, NULL);
-		memset(property_output_identifier,0,64);
-			snprintf(property_output_identifier, sizeof(property_output_identifier), "%s", "22222");
-		linkkit_set_value(linkkit_method_set_property_value,   
-                      g_sample_context.thing,
-                      property_output_identifier,
-                      &WorkMode, NULL);
-					  		aos_msleep(500);
-		memset(property_output_identifier,0,64);
-			snprintf(property_output_identifier, sizeof(property_output_identifier), "%s", "33333");
-		linkkit_set_value(linkkit_method_set_property_value,   
-                      g_sample_context.thing,
-                      property_output_identifier,
-                      &WorkMode, NULL);
-					  		aos_msleep(500);
-		memset(property_output_identifier,0,64);
-			snprintf(property_output_identifier, sizeof(property_output_identifier), "%s", "44444");
-		linkkit_set_value(linkkit_method_set_property_value,   
-                      g_sample_context.thing,
-                      property_output_identifier,
-                      &WorkMode, NULL);
-					  		aos_msleep(500);
-		memset(property_output_identifier,0,64);
-			snprintf(property_output_identifier, sizeof(property_output_identifier), "%s", "55555");
-		linkkit_set_value(linkkit_method_set_property_value,   
-                      g_sample_context.thing,
-                      property_output_identifier,
-                      &WorkMode, NULL);
-					  		aos_msleep(500);
-		memset(property_output_identifier,0,64);
-			snprintf(property_output_identifier, sizeof(property_output_identifier), "%s", "66666");
-		linkkit_set_value(linkkit_method_set_property_value,   
-                      g_sample_context.thing,
-                      property_output_identifier,
-                      &WorkMode, NULL);
-					  		aos_msleep(500);
-		memset(property_output_identifier,0,64);
-			snprintf(property_output_identifier, sizeof(property_output_identifier), "%s", "WorkMode");
-		linkkit_set_value(linkkit_method_set_property_value,   
-                      g_sample_context.thing,
-                      property_output_identifier,
-                      &WorkMode, NULL);
-		aos_msleep(500);
-		memset(property_output_identifier,0,64);
-			snprintf(property_output_identifier, sizeof(property_output_identifier), "%s", "WorkMode");
-		linkkit_set_value(linkkit_method_set_property_value,   
-                      g_sample_context.thing,
-                      property_output_identifier,
-                      &WorkMode, NULL);
-		aos_msleep(500);
-		#endif
 		memset(inDataBuffer, 0x00, UART_ONE_PACKAGE_LENGTH);
 		recv_len = _uart_get_one_packet(inDataBuffer, UART_ONE_PACKAGE_LENGTH);
 		if (recv_len <= 0)
@@ -244,9 +189,9 @@ void uart_cmd_process(uint8_t * buf , int recv_len)
 
 	//LOG("datalen = %d",recv_len);
 	
-	//for(int i =0 ;i<recv_len ;i++){
-	//	LOG(" buf[%d] = %02x",i,buf[i]);
-	//	}
+	// for(int i =0 ;i<recv_len ;i++){
+	// 	LOG(" buf[%d] = %02x",i,buf[i]);
+	// 	}
 
 	switch(cmd_header->cmd){
 		case CMD_READ_VERSION:
@@ -257,7 +202,7 @@ void uart_cmd_process(uint8_t * buf , int recv_len)
          	cksum = _calc_sum(buf, 10);
           	buf[10] = cksum & 0x00ff;
           	buf[11] = (cksum & 0x0ff00) >> 8;
-          	hal_uart_send(UART_FOR_APP,buf,12,UART_WAIT_FOREVER);
+			hal_uart_send(&uart_dev,buf,12,UART_WAIT_FOREVER);
 		break;
 		case CMD_COM2NET:
         if((buf[9]>>4) ==1)     // control command    
@@ -277,12 +222,15 @@ void uart_cmd_process(uint8_t * buf , int recv_len)
         {	
 			if(cloud_connect_status == 0)
 				return ;
-			if((buf[6]) ==0x18 || buf[6] ==0x19){
-				hiFuncStr[CURRENTTEMPERATURE].idx = (cmd_header->f_data - 32);
+			if(buf[6] ==0x19){
+				hiFuncStr[CURRENTTEMPERATURE].idx = (cmd_header->f_data - 32);		
+				if(hiFuncStr[CURRENTTEMPERATURE].idx <= 0)
+					hiFuncStr[CURRENTTEMPERATURE].idx =0;		
 				if(hiFuncStr[CURRENTTEMPERATURE].idx  != uartcmd.CurrentTemperature ){
 					uartcmd.CurrentTemperature = hiFuncStr[CURRENTTEMPERATURE].idx;
 					start_property_report_cloud(CURRENTTEMPERATURE);						
 				}
+
 				hiFuncStr[ERROR].idx = cmd_header->t_data;;
 				if(hiFuncStr[ERROR].idx  != uartcmd.ErrorCode ){
 					uartcmd.ErrorCode = hiFuncStr[ERROR].idx;
@@ -302,7 +250,7 @@ void uart_cmd_process(uint8_t * buf , int recv_len)
 			cksum = _calc_sum(buf, 8);
           	buf[10] = cksum & 0x00ff;
           	buf[11] = (cksum & 0x0ff00) >> 8;
-          	hal_uart_send(UART_FOR_APP,buf,12,UART_WAIT_FOREVER);
+			hal_uart_send(&uart_dev,buf,12,UART_WAIT_FOREVER);
 			//do_awss_reset();
 			linkkit_post_awss_reset();
 		break;
@@ -439,10 +387,12 @@ void parseDeviceStatus(uint8_t *inBuf, uint8_t send)
 		start_property_report_cloud(MILDEWPROOF);	
 	}
 
-	hiFuncStr[POWERLIMITPERCENT].idx = cmd_header->l_data;;
+	if(cmd_header->l_data>>7 == 1){
+		hiFuncStr[POWERLIMITPERCENT].idx = cmd_header->l_data;
 	if(hiFuncStr[POWERLIMITPERCENT].idx != uartcmd.PowerLimitPercent){
 		uartcmd.PowerLimitPercent = hiFuncStr[POWERLIMITPERCENT].idx;
 		start_property_report_cloud(POWERLIMITPERCENT);	
+	}
 	}
     hiFuncStr[TARGETTEMPERATURE].idx = ((cmd_header->a_data)>>3) + 8;
 	//	if(hiFuncStr[TARGETTEMPERATURE].idx >= 23)
@@ -467,17 +417,13 @@ uint8_t start_property_report_cloud(uint8_t type)
                       g_sample_context.thing,
                       property_output_identifier,
                       &CurrentTemperature, NULL);		
-		LOG("=============identifier = %s",property_output_identifier);
-		LOG("=============value = %d ",hiFuncStr[type].idx);
-		LOG("=============type = %d ",type);
+		LOG("=============identifier = %s,%d,%d",property_output_identifier,hiFuncStr[type].idx,type);
 	}else 
 	{	linkkit_set_value(linkkit_method_set_property_value,   
                       g_sample_context.thing,
                       property_output_identifier,
                       &(hiFuncStr[type].idx), NULL);
-		LOG("=============identifier = %s",property_output_identifier);
-		LOG("=============value = %d ",hiFuncStr[type].idx);
-		LOG("=============type = %d ",type);
+		LOG("=============identifier = %s,%d,%d",property_output_identifier,hiFuncStr[type].idx,type);
 	}
 		linkkit_post_property(g_sample_context.thing,property_output_identifier);
 		return 1;
@@ -491,10 +437,11 @@ uint8_t start_property_report_cloud(uint8_t type)
 void cloud_cmd_process(uint8_t * input_name , int value)
 {
 	char *value_str = NULL, *attr_str = NULL;
-
     for (int i = 0; i<MAX_PARAMS; i++) {
 		if(strstr(hiFuncStr[i].name,input_name) !=0){
-			LOG(" i = %d,idx = %d , value =%d",i,hiFuncStr[i].idx,value);
+			if(strstr(hiFuncStr[i].name , "CurrentTemperature")  != 0)
+				return;
+			LOG(" name = %s,idx = %d , value =%d",hiFuncStr[i].name,hiFuncStr[i].idx,value);
 			if(hiFuncStr[i].idx != value)
 			{
 				Send_MCU_DATA(i,value);
@@ -510,7 +457,10 @@ void Send_MCU_DATA(int type ,int value)
 {
     uint16_t cksum;
 	device_cmd_head_t *p_out;
+	int send_datalen = 0;
 	p_out = (device_cmd_head_t *)Storage_Wifi2Uart_Data;
+	if(Storage_Wifi2Uart_Data[0] == 0 && Storage_Wifi2Uart_Data[1] ==0)    ///状态未同步前，APP无法下发
+		return;
 	p_out->flag = 0xBB;
 	p_out->cmd  = 0x06;
 	p_out->cmd |=0x8000;
@@ -519,6 +469,7 @@ void Send_MCU_DATA(int type ,int value)
 	p_out->dst = 0x01;
 	p_out->c_data &= ~(1<<7);
 	p_out->k_data &= ~(1<<5);
+	send_datalen = (p_out->datalen +10);
 	switch(type){
 		case POWERSWITCH:
 			if(value == 0)
@@ -529,7 +480,7 @@ void Send_MCU_DATA(int type ,int value)
 				p_out->i_data &= ~(1<<3);  //关闭ECO
 				p_out->i_data &= ~(1<<1);  //关闭健康
 			}
-			if(value == 1)
+			else if(value == 1)
 			{
         		p_out->i_data &=~(3<<2);
 			}
@@ -672,11 +623,21 @@ void Send_MCU_DATA(int type ,int value)
 		cksum = _calc_sum(Storage_Wifi2Uart_Data, 23);
 		Storage_Wifi2Uart_Data[23] = cksum & 0x00ff;
 		Storage_Wifi2Uart_Data[24] = (cksum & 0x0ff00) >> 8;
-		hal_uart_send(&uart_dev,Storage_Wifi2Uart_Data,sizeof(Storage_Wifi2Uart_Data),100);	
+		int ret =-1;	
+		ret = aos_timer_stop(&refresh_timer);
+	  	if(ret != 0)	LOG("stop timer error");
 
+		LOG("send data   powerswitch %02x ",Storage_Wifi2Uart_Data[18]);
+
+		hal_uart_send(&uart_dev,Storage_Wifi2Uart_Data,send_datalen,UART_WAIT_FOREVER);
+		aos_msleep(150);	
 /////发完控制命令之后，立马查询
 		hal_uart_send(&uart_dev,Get_Deviceinfo,sizeof(Get_Deviceinfo),UART_WAIT_FOREVER);
-		aos_msleep(500);
+		aos_msleep(150);
 		hal_uart_send(&uart_dev,Get_Info,sizeof(Get_Info),UART_WAIT_FOREVER);
-		aos_msleep(500);
+		aos_msleep(150);
+
+		ret = aos_timer_start(&refresh_timer);
+	  	if(ret != 0)	LOG("start timer error");
+		
 }
