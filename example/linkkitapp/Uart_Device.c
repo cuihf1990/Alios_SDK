@@ -406,6 +406,7 @@ void parseDeviceStatus(uint8_t *inBuf, uint8_t send)
 
 uint8_t start_property_report_cloud(uint8_t type)
 {  
+	int report_result = -1;
  	char property_output_identifier[64];
     snprintf(property_output_identifier, sizeof(property_output_identifier), "%s", hiFuncStr[type].name);
 
@@ -413,19 +414,22 @@ uint8_t start_property_report_cloud(uint8_t type)
 	{
 		double CurrentTemperature;
 		CurrentTemperature= (double)hiFuncStr[type].idx;
-  		linkkit_set_value(linkkit_method_set_property_value,   
+  		report_result = linkkit_set_value(linkkit_method_set_property_value,   
                       g_sample_context.thing,
                       property_output_identifier,
                       &CurrentTemperature, NULL);		
 		LOG("=============identifier = %s,%d,%d",property_output_identifier,hiFuncStr[type].idx,type);
 	}else 
-	{	linkkit_set_value(linkkit_method_set_property_value,   
+	{	
+		report_result = linkkit_set_value(linkkit_method_set_property_value,   
                       g_sample_context.thing,
                       property_output_identifier,
                       &(hiFuncStr[type].idx), NULL);
 		LOG("=============identifier = %s,%d,%d",property_output_identifier,hiFuncStr[type].idx,type);
 	}
-		linkkit_post_property(g_sample_context.thing,property_output_identifier);
+		
+		report_result = linkkit_post_property(g_sample_context.thing,property_output_identifier);
+		LOG("========report_result = %d =====",report_result);
 		return 1;
 
 }
@@ -441,7 +445,7 @@ void cloud_cmd_process(uint8_t * input_name , int value)
 		if(strstr(hiFuncStr[i].name,input_name) !=0){
 			if(strstr(hiFuncStr[i].name , "CurrentTemperature")  != 0)
 				return;
-			LOG(" name = %s,idx = %d , value =%d",hiFuncStr[i].name,hiFuncStr[i].idx,value);
+		//	LOG(" name = %s,idx = %d , value =%d",hiFuncStr[i].name,hiFuncStr[i].idx,value);
 			if(hiFuncStr[i].idx != value)
 			{
 				Send_MCU_DATA(i,value);

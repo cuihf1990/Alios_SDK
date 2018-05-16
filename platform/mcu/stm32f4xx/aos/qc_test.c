@@ -10,7 +10,7 @@
 static uart_dev_t qc_uart;
 
 #ifndef SERIAL_NUMBER
-#define SERIAL_NUMBER "UNDF.0000.0000"
+#define SERIAL_NUMBER "0515.KT04.FY01"
 #endif
 
 #ifndef BOOT_VERSION

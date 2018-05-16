@@ -61,7 +61,9 @@
         "assert.h": "c",
         "random": "cpp",
         "limits": "c",
-        "uart_device.h": "c"
+        "uart_device.h": "c",
+        "cmath": "cpp",
+        "cstdarg": "c"
     },
     "aliosStudio.sdkPath": "${workspaceRoot}"
 }
