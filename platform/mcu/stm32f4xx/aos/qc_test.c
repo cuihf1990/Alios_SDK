@@ -6,12 +6,15 @@
 #include "CheckSumUtils.h"
 #include "platform_toolchain.h"
 #include "hal/soc/soc.h"
+#include "mico.h"
 
 static uart_dev_t qc_uart;
 
 #ifndef SERIAL_NUMBER
 #define SERIAL_NUMBER "0515.KT04.FY01"
 #endif
+
+#define APP_VERSION  "AUX_Alios_3165_FY01"
 
 #ifndef BOOT_VERSION
 #define BOOT_VERSION "1.0.0"
@@ -112,7 +115,8 @@ void qc_test(void)
 {
     uint8_t mac[6];
     uint32_t prov_res, ret;
-    
+    char Rf_Driver[50] = {0};
+
     qc_uart.port                = 1;
     qc_uart.config.baud_rate    = 921600;
     qc_uart.config.data_width   = DATA_WIDTH_8BIT;
@@ -122,11 +126,14 @@ void qc_test(void)
 
     hal_uart_init(&qc_uart);
 
+    MicoGetRfVer(Rf_Driver, sizeof(Rf_Driver));
     qc_printf( "==== MXCHIP Manufacture Test ====\r\n" );
     qc_printf( "Serial Number: %s\r\n", get_sn() );
     qc_printf( "App CRC: %04X\r\n", qc_crc() );
     qc_printf( "Bootloader Version: %s\r\n", get_bootloader_ver() );
-
+    qc_printf( "Mico Version = %s \r\n", MicoGetVer());
+    qc_printf( "APP: %s %s %s\r\n", APP_VERSION, __TIME__, __DATE__ );
+    qc_printf( "Mico RF Driver %s \r\n",Rf_Driver);
     qc_scan();
 
     while(1) // dead loop, DONOT exit QC mode

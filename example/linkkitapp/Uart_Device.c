@@ -236,6 +236,7 @@ void uart_cmd_process(uint8_t * buf , int recv_len)
 					uartcmd.ErrorCode = hiFuncStr[ERROR].idx;
 				char event_output_identifier[64];
 				snprintf(event_output_identifier, sizeof(event_output_identifier), "%s.%s", EVENT_ERROR_IDENTIFIER, EVENT_ERROR_OUTPUT_INFO_IDENTIFIER);
+				LOG("=============identifier = %s,%d",event_output_identifier,hiFuncStr[ERROR].idx);
 				linkkit_set_value(linkkit_method_set_event_output_value,   
 								g_sample_context.thing,
 								event_output_identifier,
